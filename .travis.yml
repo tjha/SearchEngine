@@ -2,8 +2,9 @@ language: cpp
 compiler: gcc
 
 script:
- - g++ example.cpp -o example
- - ./example
+ - make build
+ - make test
+ - make clean
 
 after_success:
   - wget https://raw.githubusercontent.com/DiscordHooks/travis-ci-discord-webhook/master/send.sh
