@@ -1,6 +1,8 @@
 // basicString.hpp
 // Homemade version of std::basic_string that keeps all of the interfaces.
 // We omit the following functions:
+//    std::basic_string( initializer_list < charT > );
+//    std::basic_string::operator=( std::initializer_list < charT > );
 //    std::basic_string::operator+=( std::initializer_list < charT > );
 //    std::basic_string::append( std::initializer_list < charT > );
 //    std::basic_string::assign( std::basic_string < charT > && ) noexcept;
@@ -22,9 +24,22 @@ namespace dex
 
 		public:
 			static const unsigned npos = unsigned ( -1 );
+
 			basicString( );
+			basicString( const basicString < charT > &other );
+			basicString( const basicString < charT > &other, unsigned position, unsigned length = npos );
+			basicString( const charT* other );
+			basicString( const charT* other, unsigned n );
+			basicString( unsigned n, charT c );
+			template < class InputIterator > basicString( InputIterator first, InputIterator last );
+			basicString( basicString < charT > &&other );
+
 			~basicString( );
-			basicString < charT > operator=(basicString < charT > other);
+
+			basicString < charT > &operator=( basicString < charT > other );
+			basicString < charT > &operator=( const charT* other );
+			basicString < charT > &operator=( charT c );
+			basicString < charT > &operator=( basicString < charT > &&other );
 
 			// Capacity
 			unsigned size( ) const;
