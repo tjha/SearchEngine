@@ -15,7 +15,7 @@ namespace dex
          {
          if ( size + 1 > capacity / 2 ) 
             {
-            grow() // you might not want to do a simple grow when inserting
+            grow(); // you might not want to do a simple grow when inserting
             }
          
          T old;
@@ -29,7 +29,7 @@ namespace dex
       void clear()
          {
          T *ptr = arr;
-         for ( int i = index;  i < size;  ++i )
+         for ( int i = 0;  i < size;  ++i )
             {
                *ptr = nullptr; 
             }
@@ -41,10 +41,6 @@ namespace dex
          T *arr_old = &arr;
          arr = new T[capacity];
          delete(arr_old);
-         }
-      int size() 
-         {
-         return size;
          }
       private:
       T *arr;
