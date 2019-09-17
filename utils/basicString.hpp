@@ -25,16 +25,46 @@ namespace dex
 		public:
 			static const unsigned npos = unsigned ( -1 );
 
-			basicString( );
-			basicString( const basicString < charT > &other );
+         basicString( )
+            {
+            arraySize = 1;
+            stringSize = 0;
+            array = new charT[ arraySize ];
+            }
+			basicString( const basicString < charT > &other )
+            {
+            arraySize = other.arraySize;
+            array = new charT[ arraySize ];
+            stringSize = other.stringSize;
+
+            for ( unsigned index = 0;  index != stringSize;  ++index )
+               {
+               array[ index ] = other.array[ index ];
+               }
+            }
 			basicString( const basicString < charT > &other, unsigned position, unsigned length = npos );
-			basicString( const charT* other );
+			basicString( const charT* other )
+            {
+            for ( stringSize = 0;  other[ stringSize ] != charT ( 0 );  ++stringSize );
+            // We are making here the assumption that the number of appendations
+            //    string will not be significant. Therefore, we will do no 
+            //    optimizations for allocating arraySize, allocating lazily.
+            arraySize = stringSize;
+            array = new charT[ arraySize ];
+            for ( unsigned index = 0;  index != stringSize;  ++index )
+               {
+               array[ index ] = other[ index ];
+               }
+            }
 			basicString( const charT* other, unsigned n );
 			basicString( unsigned n, charT c );
 			template < class InputIterator > basicString( InputIterator first, InputIterator last );
 			basicString( basicString < charT > &&other );
 
-			~basicString( );
+			~basicString( )
+            {
+            delete [ ] array;
+            }
 
 			basicString < charT > &operator=( basicString < charT > other );
 			basicString < charT > &operator=( const charT* other );
@@ -76,17 +106,17 @@ namespace dex
 			constIterator cend( ) const;
 
 			reverseIterator rbegin( );
-			reverseIterator rend( )
+			reverseIterator rend( );
 
 			constReverseIterator crbegin( ) const;
 			constReverseIterator crend( ) const;
 
 			// Element Access
-			const charT &operator[ ]( unsigned );
+			const charT &operator[ ]( unsigned ) const;
 			charT &operator[ ]( unsigned );
-			const charT &at( unsigned );
+			const charT &at( unsigned ) const;
 			charT &at( unsigned );
-			const charT &back( );
+			const charT &back( ) const;
 			charT &back();
 
 			// Modifiers
@@ -100,6 +130,7 @@ namespace dex
 			basicString < charT > &append( const charT *other, unsigned length );
 			basicString < charT > &append( unsigned number, charT character );
 			basicString < charT > &append( iterator first, iterator last );
+
 			void pushBack( charT character );
 
 			basicString < charT > &assign( const basicString < charT > &other );
@@ -110,7 +141,7 @@ namespace dex
 			basicString < charT > &assign( iterator first, iterator last );
 			
 			basicString < charT > &insert( unsigned position, const basicString < charT > &other );
-			basicString < charT > &insert( unsigned position, const basicString < charT > &other, unsigned position, unsigned length );
+			basicString < charT > &insert( unsigned position, const basicString < charT > &other, unsigned subposition, unsigned sublength );
 			basicString < charT > &insert( unsigned position, const charT *other );
 			basicString < charT > &insert( unsigned position, const charT *other, unsigned length );
 			basicString < charT > &insert( unsigned position, unsigned length, charT character );
@@ -142,7 +173,7 @@ namespace dex
 
 			const charT* cStr( ) const;
 
-			const chart* data( ) const;
+			const charT* data( ) const;
 
 			unsigned copy( charT *characterArray, unsigned length, unsigned position = 0 ) const;
 
