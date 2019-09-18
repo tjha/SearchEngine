@@ -17,6 +17,9 @@ namespace dex
       vector( unsigned int num );
       vector ( unsigned int num, const T& val );
       ~vector( );
+      void insert( size_t index, T obj);
+      void grow( );
+      void clear( );
 
       private:
       T *arr;                  // dynamic array 
@@ -56,5 +59,42 @@ namespace dex
    vector< T >::~vector( )
       {
       delete[ ] arr;
+      }
+
+   template < class T >
+   void vector< T >::insert( size_t index, T obj )
+      {
+      // if adding one means its at least half full, then grow by 2x
+      if ( size == capacity ) 
+         {
+         grow(); // you might not want to do a simple grow when inserting
+         }
+      
+      T old;
+      for ( size_t i = index;  i <= size;  ++i )
+         {
+            old = arr[ index ];
+            arr[ index ] = obj;
+            obj = old;
+         }
+      }
+
+   template < class T >
+   void vector< T >::clear()
+      {
+      size = 0;
+      }
+
+   template < class T >
+   void vector< T >::grow()
+      {
+      capacity *= 2;
+      T *arr_old = &arr;
+      arr = new T[ capacity ];
+      for ( size_t i = 0;  i < size;  ++i )
+         {
+         arr[ i ] = arr_old[ i ];
+         }
+      delete[] arr_old;
       }
    }
