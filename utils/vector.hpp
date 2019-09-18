@@ -20,42 +20,43 @@ namespace dex
       int capacity;
       int size;
       };
+
+   template < class T >
+   void vector< T >::insert( int index, T obj )
+      {
+      // if adding one means its at least half full, then grow by 2x
+      if ( size == capacity ) 
+         {
+         grow(); // you might not want to do a simple grow when inserting
+         }
+      
+      T old;
+      for ( int i = index;  i <= size;  ++i )
+         {
+            old = arr[ index ];
+            arr[ index ] = obj;
+            obj = old;
+         }
+      }
+
+   template < class T >
+   void vector< T >::clear()
+      {
+      size = 0;
+      }
+
+   template < class T >
+   void vector< T >::grow()
+      {
+      capacity *= 2;
+      T *arr_old = &arr;
+      arr = new T[ capacity ];
+      for ( int i = 0;  i < size;  ++i )
+         {
+         arr[ i ] = arr_old[ i ];
+         }
+      delete[] arr_old;
+      }
    }
 
-template < class T >
-vector< T >::insert( int index, T obj )
-   {
-   // if adding one means its at least half full, then grow by 2x
-   if ( size == capacity ) 
-      {
-      grow(); // you might not want to do a simple grow when inserting
-      }
-   
-   T old;
-   for ( int i = index;  i <= size;  ++i )
-      {
-         old = arr[ index ];
-         arr[ index ] = obj;
-         obj = old;
-      }
-   }
-
-template < class T >
-vector< T >::clear()
-   {
-   size = 0;
-   }
-
-template < class T >
-vector< T >::grow()
-   {
-   capacity *= 2;
-   T *arr_old = &arr;
-   arr = new T[ capacity ];
-   for ( int i = 0;  i < size;  ++i )
-      {
-      arr[ i ] = arr_old[ i ];
-      }
-   delete[] arr_old;
-   }
 
