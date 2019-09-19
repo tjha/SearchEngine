@@ -9,6 +9,7 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
+// 2019-09-19: Formatting fixes: jasina
 // 2019-09-16: Defined Interface: combsc, jasina, lougheem
 // 2019-09-14: File created: combsc, jasina, lougheem
 
@@ -25,46 +26,46 @@ namespace dex
 		public:
 			static const unsigned npos = unsigned ( -1 );
 
-         basicString( )
-            {
-            arraySize = 1;
-            stringSize = 0;
-            array = new charT[ arraySize ];
-            }
+			basicString( )
+				{
+				arraySize = 1;
+				stringSize = 0;
+				array = new charT[ arraySize ];
+				}
 			basicString( const basicString < charT > &other )
-            {
-            arraySize = other.arraySize;
-            array = new charT[ arraySize ];
-            stringSize = other.stringSize;
+				{
+				arraySize = other.arraySize;
+				array = new charT[ arraySize ];
+				stringSize = other.stringSize;
 
-            for ( unsigned index = 0;  index != stringSize;  ++index )
-               {
-               array[ index ] = other.array[ index ];
-               }
-            }
+				for ( unsigned index = 0;  index != stringSize;  ++index )
+					{
+					array[ index ] = other.array[ index ];
+					}
+				}
 			basicString( const basicString < charT > &other, unsigned position, unsigned length = npos );
 			basicString( const charT* other )
-            {
-            for ( stringSize = 0;  other[ stringSize ] != charT ( 0 );  ++stringSize );
-            // We are making here the assumption that the number of appendations
-            //    string will not be significant. Therefore, we will do no 
-            //    optimizations for allocating arraySize, allocating lazily.
-            arraySize = stringSize;
-            array = new charT[ arraySize ];
-            for ( unsigned index = 0;  index != stringSize;  ++index )
-               {
-               array[ index ] = other[ index ];
-               }
-            }
+				{
+				for ( stringSize = 0;  other[ stringSize ] != charT ( 0 );  ++stringSize );
+				// We are making here the assumption that the number of appendations
+				//    string will not be significant. Therefore, we will do no 
+				//    optimizations for allocating arraySize, allocating lazily.
+				arraySize = stringSize;
+				array = new charT[ arraySize ];
+				for ( unsigned index = 0;  index != stringSize;  ++index )
+					{
+					array[ index ] = other[ index ];
+					}
+				}
 			basicString( const charT* other, unsigned n );
 			basicString( unsigned n, charT c );
 			template < class InputIterator > basicString( InputIterator first, InputIterator last );
 			basicString( basicString < charT > &&other );
 
 			~basicString( )
-            {
-            delete [ ] array;
-            }
+				{
+				delete [ ] array;
+				}
 
 			basicString < charT > &operator=( basicString < charT > other );
 			basicString < charT > &operator=( const charT* other );
@@ -73,49 +74,56 @@ namespace dex
 
 			// Capacity
 			unsigned size( ) const;
+
 			unsigned length( ) const;
+
 			unsigned max_size( ) const;
+
 			void resize(unsigned newStringLength, charT character);
+
 			unsigned capacity( ) const;
+
 			void reserve(unsigned newStringLength);
+
 			void clear( );
+
 			bool empty( ) const;
+
 			void shrink_to_fit( );
 
 			// Iterators
 			class iterator
 				{
 				};
+			iterator begin( );
+			iterator end( );
 
 			class constIterator
 				{
 				};
+			constIterator cbegin( ) const;
+			constIterator cend( ) const;
+
 
 			class reverseIterator
 				{
 				};
+			reverseIterator rbegin( );
+			reverseIterator rend( );
 
 			class constReverseIterator
 				{
 				};
-
-			iterator begin( );
-			iterator end( );
-
-			constIterator cbegin( ) const;
-			constIterator cend( ) const;
-
-			reverseIterator rbegin( );
-			reverseIterator rend( );
-
 			constReverseIterator crbegin( ) const;
 			constReverseIterator crend( ) const;
 
 			// Element Access
 			const charT &operator[ ]( unsigned ) const;
 			charT &operator[ ]( unsigned );
+
 			const charT &at( unsigned ) const;
 			charT &at( unsigned );
+
 			const charT &back( ) const;
 			charT &back();
 
@@ -145,6 +153,7 @@ namespace dex
 			basicString < charT > &insert( unsigned position, const charT *other );
 			basicString < charT > &insert( unsigned position, const charT *other, unsigned length );
 			basicString < charT > &insert( unsigned position, unsigned length, charT character );
+
 			iterator insert( constIterator first, unsigned length, charT character );
 			iterator insert( constIterator first, charT character );
 			template < class InputIterator >
