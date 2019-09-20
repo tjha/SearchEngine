@@ -9,7 +9,7 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
-// 2019-09-19: Formatting fixes: jasina
+// 2019-09-19: Formatting fixes: combsc, jasina
 // 2019-09-16: Defined Interface: combsc, jasina, lougheem
 // 2019-09-14: File created: combsc, jasina, lougheem
 
@@ -32,39 +32,78 @@ namespace dex
 				stringSize = 0;
 				array = new charT[ arraySize ];
 				}
-			basicString( const basicString < charT > &other )
+			basicString( const basicString < charT > &other, unsigned position = 0, unsigned length = npos )
 				{
-				arraySize = other.arraySize;
-				array = new charT[ arraySize ];
-				stringSize = other.stringSize;
+				// Make the final length be length, unless the string is too short. In that case, make it be to the end of the string.
+				unsigned finalLength = length > other.size() - position ? other.size() - position : length;
 
-				for ( unsigned index = 0;  index != stringSize;  ++index )
+				arraySize = other.capacity();
+				array = new charT[ arraySize ];
+				stringSize = other.size();
+
+				for ( unsigned i = 0;  i != finalLength;  ++i )
 					{
-					array[ index ] = other.array[ index ];
+					array[ i ] = other[ i + position ];
 					}
 				}
-			basicString( const basicString < charT > &other, unsigned position, unsigned length = npos );
-			basicString( const charT* other )
+			basicString( const charT* other, unsigned n = npos )
 				{
-				for ( stringSize = 0;  other[ stringSize ] != charT ( 0 );  ++stringSize );
+				for ( stringSize = 0;  other[ stringSize ] != charT ( { } ) && stringSize != n;  ++stringSize );
 				// We are making here the assumption that the number of appendations
 				//    string will not be significant. Therefore, we will do no 
 				//    optimizations for allocating arraySize, allocating lazily.
 				arraySize = stringSize;
 				array = new charT[ arraySize ];
-				for ( unsigned index = 0;  index != stringSize;  ++index )
+				for ( unsigned i = 0;  i != stringSize;  ++i )
 					{
-					array[ index ] = other[ index ];
+					array[ i ] = other[ i ];
 					}
 				}
-			basicString( const charT* other, unsigned n );
-			basicString( unsigned n, charT c );
-			template < class InputIterator > basicString( InputIterator first, InputIterator last );
-			basicString( basicString < charT > &&other );
+			basicString( unsigned n, charT c )
+				{
+				arraySize = n;
+				array = new charT[ arraySize ];
+				stringSize = arraySize;
+
+				for ( unsigned i = 0; i != arraySize; ++i )
+					{
+					array[ i ] = c;
+					}
+				}
+			template < class InputIterator > basicString( InputIterator first, InputIterator last )
+				{
+				// TODO: This is an uber-naive way to allocate memory. Maybe we should change this later.
+				arraySize = 1;
+				array = new charT[ arraySize ];
+				stringSize = 0;
+
+				while ( first != last )
+					{
+					if ( ++stringSize > arraySize )
+						{
+						reserve( arraySize <<= 1 );
+						}
+
+					array[stringSize - 1] = *(first++);
+					}
+				}
+			basicString( basicString < charT > &&other )
+				{
+				arraySize = other.arraySize;
+				array = other.array;
+				stringSize = other.stringSize;
+
+				other.arraySize = 0;
+				other.array = nullptr;
+				other.stringSize = 0;
+				}
 
 			~basicString( )
 				{
-				delete [ ] array;
+				if ( array )
+					{
+					delete [ ] array;
+					}
 				}
 
 			basicString < charT > &operator=( basicString < charT > other );
@@ -73,23 +112,80 @@ namespace dex
 			basicString < charT > &operator=( basicString < charT > &&other );
 
 			// Capacity
-			unsigned size( ) const;
+			unsigned size( ) const
+				{
+				return stringSize;
+				}
 
-			unsigned length( ) const;
+			unsigned length( ) const
+				{
+				return stringSize;
+				}
 
-			unsigned max_size( ) const;
+			unsigned max_size( ) const
+				{
+				return npos;
+				}
 
-			void resize(unsigned newStringLength, charT character);
+			void resize( unsigned newStringSize, charT character = { } )
+				{
+				reserve(newStringSize);
+				for ( unsigned i = stringSize; i < newStringSize; ++i )
+					{
+					array[ i ] = character;
+					}
+				stringSize = newStringSize;
+				}
 
-			unsigned capacity( ) const;
+			unsigned capacity( ) const
+				{
+				return arraySize;
+				}
 
-			void reserve(unsigned newStringLength);
+			void reserve( unsigned newArraySize )
+				{
+				if (newArraySize == stringSize )
+					{
+					return;
+					}
 
-			void clear( );
+				charT *newArray = new charT[ newArraySize ];
+				if ( newArraySize > stringSize )
+					{
+					for ( unsigned i = 0;  i != stringSize;  ++i )
+						{
+						newArray[ i ] = array[ i ];
+						}
+					}
+				else
+					{
+					for ( unsigned i = 0;  i != newArraySize;  ++i )
+						{
+						newArray[ i ] = array[ i ];
+						}
+					stringSize = newArraySize;
+					}
+				delete [ ] array;
+				array = newArray;
+				arraySize = newArraySize;
 
-			bool empty( ) const;
+				}
 
-			void shrink_to_fit( );
+			void clear( )
+				{
+				stringSize = 0;
+				}
+
+			bool empty( ) const
+				{
+				return stringSize == 0;
+				}
+
+			// We can alter the behavior of this function. If we want a string buffer we'll have to change this.
+			void shrink_to_fit( )
+				{
+				reserve( stringSize );
+				}
 
 			// Iterators
 			class iterator
@@ -104,7 +200,6 @@ namespace dex
 			constIterator cbegin( ) const;
 			constIterator cend( ) const;
 
-
 			class reverseIterator
 				{
 				};
@@ -118,8 +213,14 @@ namespace dex
 			constReverseIterator crend( ) const;
 
 			// Element Access
-			const charT &operator[ ]( unsigned ) const;
-			charT &operator[ ]( unsigned );
+			const charT &operator[ ]( unsigned position ) const
+				{
+				return array[ position ];
+				}
+			charT &operator[ ]( unsigned position )
+				{
+				return array[ position ];
+				}
 
 			const charT &at( unsigned ) const;
 			charT &at( unsigned );
@@ -226,3 +327,5 @@ namespace dex
 			int compare( unsigned position, unsigned length, const charT *other, unsigned n ) const;
 		};
 	}
+
+// TODO: Non-member function interface
