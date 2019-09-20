@@ -2,16 +2,6 @@
 #include "catch.hpp"
 #include "../utils/algorithm.hpp"
 
-class MyClass
-	{
-	private:
-		int a;
-		int identity;
-	
-	public:
-		bool operator<()
-	}
-
 TEST_CASE( "test min and max" )
 	{
 	REQUIRE( dex::min(10, 15) == 10 );
