@@ -5,7 +5,8 @@
 // 2019/09/17 - Tejas Jha - created constructors and destructor
 //                        - Added comment descriptions for private variables
 //                        - modified ints to unsigned int
-// 2019/09/14 - Tejas Jha - created basic skeleton with private members
+// 2019/09/17 - Jonas Hirshland implemented insert, clear, grow, size
+// 2019/09/14 - Tejas Jha created basic skeleton with private members
 
 namespace dex
    {
@@ -98,3 +99,5 @@ namespace dex
       delete[] arr_old;
       }
    }
+
+
