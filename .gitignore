@@ -1,0 +1,12 @@
+.vscode
+.DS_Store
+build
+*.o
+*.i
+*.so
+*.exe
+.SpotLight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+

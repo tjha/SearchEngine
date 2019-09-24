@@ -5,6 +5,7 @@
 // History:
 //    - 12 September 2019: Tejas Jha implemented "Hello World"
 #include<iostream>
+#include"../utils/vector.hpp"
 
 
 int main()
