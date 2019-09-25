@@ -9,9 +9,12 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
-// 2019-09-19: Formatting fixes: combsc, jasina
+// 2019-09-25: Define operator=: jasina, lougheem
+// 2019-09-19: Formatting fixes; define constructors, capacity fuctions, and operator[]: combsc, jasina
 // 2019-09-16: Defined Interface: combsc, jasina, lougheem
 // 2019-09-14: File created: combsc, jasina, lougheem
+
+#include "algorithm.hpp"
 
 namespace dex
 	{
@@ -106,10 +109,27 @@ namespace dex
 					}
 				}
 
-			basicString < charT > &operator=( basicString < charT > other );
-			basicString < charT > &operator=( const charT* other );
-			basicString < charT > &operator=( charT c );
-			basicString < charT > &operator=( basicString < charT > &&other );
+			basicString < charT > &operator=( const basicString < charT > &other )
+				{
+				basicString temporaryString( other );
+				swap( temporaryString );
+				return *this;
+				}
+			basicString < charT > &operator=( const charT *other )
+				{
+				basicString temporaryString( other );
+				swap( temporaryString );
+				return *this;
+				}
+			basicString < charT > &operator=( charT c )
+				{
+				stringSize = 1;
+				array[ 1 ] = c;
+				}
+			basicString < charT > &operator=( basicString < charT > &&other )
+				{
+				swap( other );
+				}
 
 			// Capacity
 			unsigned size( ) const
@@ -275,7 +295,12 @@ namespace dex
 			basicString < charT > &replace( constIterator first, constIterator Last, unsigned n, charT c );
 			template < class InputIterator > basicString < charT > &replace( constIterator first, constIterator Last, InputIterator inputFirst, InputIterator inputLast );
 
-			void swap( basicString &other );
+			void swap( basicString &other )
+				{
+				dex::swap( array, other.array );
+				dex::swap( arraySize, other.arraySize );
+				dex::swap( stringSize, other.stringSize );
+				}
 
 			void popBack( );
 
