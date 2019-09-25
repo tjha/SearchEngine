@@ -11,24 +11,17 @@ namespace dex
 	// so far, write a new implementation yourself.
 	class exception
 		{
-		public:	
-			exception( ){ }
-			exception( const exception &other ){ }
-			virtual ~exception(){ }
-			exception &operator=( const exception &other )
-				{
-				return *this;
-				}
+		public:
 			virtual const char *what( )
 				{
-				return "Exception Occurred";
+				return "Exception";
 				}
 		};
+	
 
 	class outOfRangeException : public exception
 		{
 		public:
-			virtual ~outOfRangeException( ){ };
 			virtual const char *what( )
 				{
 				return "Out of Range Exception";
@@ -38,7 +31,6 @@ namespace dex
 	class invalidArgumentException : public exception
 		{
 		public:
-			virtual ~invalidArgumentException( ){ };
 			virtual const char *what( )
 				{
 				return "Invalid Argument Exception";
