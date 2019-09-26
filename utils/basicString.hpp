@@ -9,12 +9,13 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
-// 2019-09-25: Define operator=: jasina, lougheem
+// 2019-09-25: Define operator=, swap, iterator, constIterator, append, insert, at, and back: combsc, jasina, lougheem
 // 2019-09-19: Formatting fixes; define constructors, capacity fuctions, and operator[]: combsc, jasina
 // 2019-09-16: Defined Interface: combsc, jasina, lougheem
 // 2019-09-14: File created: combsc, jasina, lougheem
 
 #include "algorithm.hpp"
+#include "exception.hpp"
 
 namespace dex
 	{
@@ -37,8 +38,12 @@ namespace dex
 				}
 			basicString( const basicString < charT > &other, unsigned position = 0, unsigned length = npos )
 				{
+				if( position > other.size( ) )
+					{
+					throw outOfRangeException();
+					}
 				// Make the final length be length, unless the string is too short. In that case, make it be to the end of the string.
-				unsigned finalLength = length > other.size() - position ? other.size() - position : length;
+				unsigned finalLength = min(length, other.size() - position );
 
 				arraySize = other.capacity();
 				array = new charT[ arraySize ];
@@ -49,9 +54,10 @@ namespace dex
 					array[ i ] = other[ i + position ];
 					}
 				}
-			basicString( const charT* other, unsigned n = npos )
+			basicString( const charT* other, unsigned length = npos )
 				{
-				for ( stringSize = 0;  other[ stringSize ] != charT ( { } ) && stringSize != n;  ++stringSize );
+				// Setting stringSize to the minimum of n and the size of other.
+				for ( stringSize = 0;  other[ stringSize ] != charT ( { } ) && stringSize != length;  ++stringSize );
 				// We are making here the assumption that the number of appendations
 				//    string will not be significant. Therefore, we will do no 
 				//    optimizations for allocating arraySize, allocating lazily.
@@ -62,15 +68,15 @@ namespace dex
 					array[ i ] = other[ i ];
 					}
 				}
-			basicString( unsigned n, charT c )
+			basicString( unsigned length, charT character )
 				{
-				arraySize = n;
+				arraySize = length;
 				array = new charT[ arraySize ];
 				stringSize = arraySize;
 
 				for ( unsigned i = 0; i != arraySize; ++i )
 					{
-					array[ i ] = c;
+					array[ i ] = character;
 					}
 				}
 			template < class InputIterator > basicString( InputIterator first, InputIterator last )
@@ -111,9 +117,7 @@ namespace dex
 
 			basicString < charT > &operator=( const basicString < charT > &other )
 				{
-				basicString temporaryString( other );
-				swap( temporaryString );
-				return *this;
+				assign( other );
 				}
 			basicString < charT > &operator=( const charT *other )
 				{
@@ -210,15 +214,293 @@ namespace dex
 			// Iterators
 			class iterator
 				{
+				private:
+					unsigned position;
+					basicString *string;
+					iterator( basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
+				public:
+					bool operator==( const iterator &other) const
+						{
+						// Only makes sense to compare iterators pointing to the same string
+						if ( string != other.string )
+							throw invalidArgumentException( );
+						return position == other.position;
+						}
+					bool operator!=( const iterator &other) const
+						{
+						if ( string != other.string )
+							throw invalidArgumentException( );
+						return position != other.position;
+						}
+
+					charT &operator*( ) const
+						{
+						return ( *string )[ position ];
+						}
+					charT *operator->( ) const
+						{
+						return &( ( *string )[ position ] );
+						}
+
+					iterator &operator++( )
+						{
+						if ( position < string->size( ) )
+							++position;
+						else
+							throw outOfRangeException( );
+						return *this;
+						}
+					iterator &operator++( int )
+						{
+						iterator toReturn( *this );
+						if ( position < string->size( ) )
+							++position;
+						else
+							throw outOfRangeException( );
+						return toReturn;
+						}
+
+					iterator &operator--( )
+						{
+						if ( position > 0 )
+							--position;
+						else
+							throw outOfRangeException( );
+						return *this;
+						}
+					iterator &operator--( int )
+						{
+						if ( position > 0 )
+							--position;
+						else
+							throw outOfRangeException( );
+						return *this;
+						}
+
+					friend iterator &operator+( const iterator &, int );
+					iterator &operator-( int n ) const
+						{
+						if ( position - n >= string->size( ) || position - n < 0 )
+							throw outOfRangeException( );
+						return iterator( string, position - n );
+						}
+					int operator-( const iterator &other ) const
+						{
+						if ( string == other.string )
+							throw invalidArgumentException( );
+						return int( position - other.position );
+						}
+
+					bool operator<( const iterator &other) const
+						{
+						if ( string != other.string )
+							throw invalidArgumentException();
+						return position < other.position;
+						}
+					bool operator>( const iterator &other) const
+						{
+						if ( string != other.string )
+							throw invalidArgumentException();
+						return position > other.position;
+						}
+					bool operator<=( const iterator &other) const
+						{
+						if ( string != other.string )
+							throw invalidArgumentException();
+						return position <= other.position;
+						}
+					bool operator>=( const iterator &other) const
+						{
+						if ( string != other.string )
+							throw invalidArgumentException();
+						return position >= other.position;
+						}
+
+					iterator &operator+=( int n )
+						{
+						if ( position + n >= string->size( ) || position + n < 0 )
+							throw outOfRangeException( );
+						position += n;
+						return *this;
+						}
+					iterator &operator-=( int n )
+						{
+						if ( position - n >= string->size( ) || position - n < 0 )
+							throw outOfRangeException( );
+						position -= n;
+						return *this;
+						}
+
+					charT &operator[ ]( const unsigned index ) const
+						{
+						return ( *string )[ index ];
+						}
+
+					friend class basicString < charT >;
 				};
-			iterator begin( );
-			iterator end( );
+			friend iterator &operator+( const iterator &it, int n )
+				{
+				if ( it.position + n >= it.string->size( ) || it.position + n < 0 )
+					throw outOfRangeException( );
+				return iterator( it.string, it.position + n );
+				}
+			void swap( iterator &a, iterator &b )
+				{
+				dex::swap( a, b );
+				}
+			iterator begin( ) 
+				{
+				return iterator( this, 0 );
+				}
+			iterator end( ) 
+				{
+				return iterator( this, size( ) ); 
+				}
 
 			class constIterator
 				{
+				private:
+					unsigned position;
+					const basicString *string;
+					constIterator( const basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
+				public:
+					bool operator==( const constIterator &other) const
+						{
+						// Only makes sense to compare iterators pointing to the same string
+						if ( string != other.string )
+							throw invalidArgumentException( );
+						return position == other.position;
+						}
+					bool operator!=( const constIterator &other) const
+						{
+						if ( string != other.string )
+							throw invalidArgumentException( );
+						return position != other.position;
+						}
+
+					const charT &operator*( ) const
+						{
+						return ( *string )[ position ];
+						}
+					const charT *operator->( ) const
+						{
+						return &( ( *string )[ position ] );
+						}
+
+					constIterator &operator++( )
+						{
+						if ( position < string->size( ) )
+							++position;
+						else
+							throw outOfRangeException( );
+						return *this;
+						}
+					constIterator &operator++( int )
+						{
+						constIterator toReturn( *this );
+						if ( position < string->size( ) )
+							++position;
+						else
+							throw outOfRangeException( );
+						return toReturn;
+						}
+
+					constIterator &operator--( )
+						{
+						if ( position > 0 )
+							--position;
+						else
+							throw outOfRangeException( );
+						return *this;
+						}
+					constIterator &operator--( int )
+						{
+						if ( position > 0 )
+							--position;
+						else
+							throw outOfRangeException( );
+						return *this;
+						}
+
+					friend iterator &operator+( const constIterator &, int );
+					constIterator &operator-( int n ) const
+						{
+						if ( position - n >= string->size( ) || position - n < 0 )
+							throw outOfRangeException( );
+						return constIterator( string, position - n );
+						}
+					int operator-( const constIterator &other ) const
+						{
+						if ( string == other.string )
+							throw invalidArgumentException( );
+						return int( position - other.position );
+						}
+
+					bool operator<( const constIterator &other) const
+						{
+						if ( string != other.string )
+							throw invalidArgumentException();
+						return position < other.position;
+						}
+					bool operator>( const constIterator &other) const
+						{
+						if ( string != other.string )
+							throw invalidArgumentException();
+						return position > other.position;
+						}
+					bool operator<=( const constIterator &other) const
+						{
+						if ( string != other.string )
+							throw invalidArgumentException();
+						return position <= other.position;
+						}
+					bool operator>=( const constIterator &other) const
+						{
+						if ( string != other.string )
+							throw invalidArgumentException();
+						return position >= other.position;
+						}
+
+					constIterator &operator+=( int n )
+						{
+						if ( position + n >= string->size( ) || position + n < 0 )
+							throw outOfRangeException( );
+						position += n;
+						return *this;
+						}
+					constIterator &operator-=( int n )
+						{
+						if ( position - n >= string->size( ) || position - n < 0 )
+							throw outOfRangeException( );
+						position -= n;
+						return *this;
+						}
+
+					const charT &operator[ ]( const unsigned index ) const
+						{
+						return ( *string )[ index ];
+						}
+
+					friend class basicString < charT >;
 				};
-			constIterator cbegin( ) const;
-			constIterator cend( ) const;
+			friend iterator &operator+( const constIterator &it, int n )
+				{
+				if ( it.position + n >= it.string->size( ) || it.position + n < 0 )
+					throw outOfRangeException( );
+				return constIterator( it.string, it.position + n );
+				}
+			void swap( constIterator &a, constIterator &b )
+				{
+				dex::swap( a, b );
+				}
+			constIterator cbegin( ) const
+				{
+				return constIterator( this, 0 );
+				}
+			constIterator cend( ) const
+				{
+				return constIterator( this, size( ) );
+				}
 
 			class reverseIterator
 				{
@@ -242,43 +524,186 @@ namespace dex
 				return array[ position ];
 				}
 
-			const charT &at( unsigned ) const;
-			charT &at( unsigned );
+			const charT &at( unsigned position) const
+				{
+				if( position < 0 || position >= stringSize )
+					{
+					throw outOfRangeException();
+					}
+				return array[ position ];
+				}
+			charT &at( unsigned position )
+				{
+				if( position < 0 || position >= stringSize )
+					{
+					throw outOfRangeException();
+					}
+				return array[ position ];
+				}
 
-			const charT &back( ) const;
-			charT &back();
+			const charT &back( ) const
+				{
+				if( stringSize == 0 )
+					{
+					throw outOfRangeException();
+					}
+				return array[ stringSize - 1 ];
+				}
+			charT &back()
+				{
+				if( stringSize == 0 )
+					{
+					throw outOfRangeException();
+					}
+				return array[ stringSize - 1 ];
+				}
 
 			// Modifiers
-			basicString < charT > &operator+=( const basicString &other );
-			basicString < charT > &operator+=( const charT *other );
-			basicString < charT > &operator+=( charT character );
+			basicString < charT > &operator+=( const basicString &other )
+				{
+				append( other );
+				}
+			basicString < charT > &operator+=( const charT *other )
+				{
+				append( other );
+				}
+			basicString < charT > &operator+=( charT character )
+				{
+				append( other );
+				}
 
-			basicString < charT > &append( const basicString < charT > &other );
-			basicString < charT > &append( const basicString < charT > &other, unsigned position, unsigned length );
-			basicString < charT > &append( const charT *other );
-			basicString < charT > &append( const charT *other, unsigned length );
-			basicString < charT > &append( unsigned number, charT character );
-			basicString < charT > &append( iterator first, iterator last );
+			basicString < charT > &append( const basicString < charT > &other )
+				{
+				append( other.begin( ), other.end( ) );
+				}
+			basicString < charT > &append( const basicString < charT > &other, unsigned position, unsigned length )
+				{
+				append( other.begin( ) + position, other.begin( ) + position + length );
+				}
+			basicString < charT > &append( const charT *other )
+				{
+				const charT *otherEnd;
+				// Technically less efficient, but is more clear and avoids code duplication.
+				for ( otherEnd = other;  otherEnd != '\0';  ++otherEnd );
+				append( other, otherEnd );
+				}
+			basicString < charT > &append( const charT *other, unsigned length )
+				{
+				append( other, other + length );
+				}
+			basicString < charT > &append( unsigned number, charT character )
+				{
+				resize( stringSize + number, character );
+				}
+			template < class InputIterator > basicString < charT > &append( InputIterator first, InputIterator last )
+				{
+				if ( first >= last )
+					throw outOfRangeException( );
 
-			void pushBack( charT character );
+				resize( unsigned( stringSize + ( last - first ) ) );
 
-			basicString < charT > &assign( const basicString < charT > &other );
-			basicString < charT > &assign( const basicString < charT > &other, unsigned position, unsigned length );
-			basicString < charT > &assign( const charT *other );
-			basicString < charT > &assign( const charT *other, unsigned length ); 
-			basicString < charT > &assign( unsigned length, charT character ); 
-			basicString < charT > &assign( iterator first, iterator last );
+				for ( insertionLocation = end( );  first != last;  *( insertionLocation++ ) = *( first++ ) );
+				}
+
+			void pushBack( charT character )
+				{
+				resize( stringSize + 1, character );
+				}
+
+			basicString < charT > &assign( const basicString < charT > &other )
+				{
+				basicString temporaryString( other );
+				swap( temporaryString );
+				return *this;
+				}
+			basicString < charT > &assign( const basicString < charT > &other, unsigned position, unsigned length )
+				{
+				basicString temporaryString = other.substr( position, length );
+				swap( temporaryString );
+				return *this;
+				}
+			basicString < charT > &assign( const charT *other )
+				{
+				basicString temporaryString( other );
+				swap( temporaryString );
+				return *this;
+				}
+			basicString < charT > &assign( const charT *other, unsigned length )
+				{
+				basicString temporaryString( other, length );
+				swap( temporaryString );
+				return *this;
+				}
+			basicString < charT > &assign( unsigned length, charT character )
+				{
+				basicString temporaryString( length, character );
+				swap( temporaryString );
+				return *this;
+				}
+			basicString < charT > &assign( iterator first, iterator last )
+				{
+				basicString temporaryString( first, last );
+				swap( temporaryString );
+				return *this;
+				}
 			
-			basicString < charT > &insert( unsigned position, const basicString < charT > &other );
-			basicString < charT > &insert( unsigned position, const basicString < charT > &other, unsigned subposition, unsigned sublength );
-			basicString < charT > &insert( unsigned position, const charT *other );
-			basicString < charT > &insert( unsigned position, const charT *other, unsigned length );
-			basicString < charT > &insert( unsigned position, unsigned length, charT character );
+			basicString < charT > &insert( unsigned position, const basicString < charT > &other )
+				{
+				insert( iterator( this, position ), other.begin( ), other.end( ) );
+				return *this;
+				}
+			basicString < charT > &insert( unsigned position, const basicString < charT > &other, unsigned subposition, unsigned sublength )
+				{
+				insert( iterator( this, position ), other.begin( ) + subposition, other.begin() + subposition + sublength );
+				return *this;
+				}
+			basicString < charT > &insert( unsigned position, const charT *other )
+				{
+				// Technically less efficient, but is more clear and avoids code duplication.
+				for ( otherEnd = other;  otherEnd != '\0';  ++otherEnd );
+				insert( iterator( this, position ), other, otherEnd );
+				return *this;
+				}
+			basicString < charT > &insert( unsigned position, const charT *other, unsigned length )
+				{
+				// Caution: we do not check if other is of length at least length
+				insert( iterator( this, position ), other, other + length );
+				return *this;
+				}
+			basicString < charT > &insert( unsigned position, unsigned length, charT character )
+				{
+				insert( iterator( *this, position ), length, character );
+				return *this;
+				}
 
-			iterator insert( constIterator first, unsigned length, charT character );
-			iterator insert( constIterator first, charT character );
+			iterator insert( constIterator first, unsigned length, charT character )
+				{
+				resize( stringSize + length );
+				// Shift right part of the string
+				for ( iterator segmentEnd = first + length;  segmentEnd != first;  --segmentEnd )
+					*( segmentEnd + (length - 1) ) = *( segmentEnd - 1 );
+				// Fill in characters
+				for ( iterator segmentEnd = first;  segmentEnd != first + length;  array[ segmentEnd++ ] = character );
+				return iterator( first );
+				}
+			iterator insert( constIterator first, charT character )
+				{
+				return insert( first, 1, character );
+				}
 			template < class InputIterator >
-					iterator insert( iterator insertionPoint, InputIterator first, InputIterator last );
+					iterator insert( iterator insertionPoint, InputIterator first, InputIterator last )
+				{
+				unsigned length = 0;
+				for ( InputIterator counter = first;  counter != last;  ++counter )
+					++length;
+				resize( stringSize + last - first );
+				// Shift right part of the string
+				for ( iterator segmentEnd = ( insertionPoint + length );  segmentEnd != first;  --segmentEnd )
+					*( segmentEnd + ( length - 1 ) ) = * ( segmentEnd - 1 );
+				// Fill in characters
+				for ( ;  first != last;  *( insertionPoint++ ) = *( first++ ) );
+				return insertionPoint;
+				}
 			
 			basicString < charT > &erase( unsigned position = 0, unsigned length = npos );
 			iterator erase ( constIterator first );
@@ -342,7 +767,10 @@ namespace dex
 			unsigned findLastNotOf( const charT *other, unsigned position, unsigned n ) const;
 			unsigned findLastNotOf( charT c, unsigned position = 0 ) const;
 
-			basicString < charT > substr( unsigned position = 0, unsigned length = npos );
+			basicString < charT > substr( unsigned position = 0, unsigned length = npos )
+				{
+				return basicString( *this, position, length );
+				}
 
 			int compare( const basicString &other ) const;
 			int compare( unsigned position, unsigned length, const basicString &other ) const;
