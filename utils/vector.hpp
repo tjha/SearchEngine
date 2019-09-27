@@ -9,11 +9,14 @@ namespace dex
    template <class T>
    class vector
       {
-      private:
-      T *arr;
-      int capacity;
-      int size;
       public:
+      vector( );
+      vector( unsigned int num );
+      vector ( unsigned int num, const T& val );
+      ~vector( );
+      void insert( size_t index, T obj);
+      void grow( );
+      void clear( );
       void remove(int index);
       void push_back(T insertThis);
       void pop_back();
@@ -21,12 +24,82 @@ namespace dex
       void pop_front();
       void shrinkToFit();
       void swap(vector v);
+      T operator [](int index);
+      T operator=(vector v);
       T at(int index);
       T front();
       T back();
       T swap(vector x);
+          
+      private:
+      T *arr;                  // dynamic array
+      unsigned int capacity;   // amount of available space
+      unsigned int size;       // number of elemets added to array
       };
-      
+   
+      template < class T >
+      // constructor for vector of num elements
+      vector< T >::vector( unsigned int num )
+         {
+         arr = new T[ num + 1 ]( );
+         capacity = num + 1;
+         size = num;
+         }
+
+      template < class T >
+      // constructor for vector of num elements each initialized to val
+      vector< T >::vector( unsigned int num, const T& val )
+         {
+         arr = new T[ num + 1 ] { val };
+         capacity = num + 1;
+         size = num;
+         }
+
+      template < class T >
+      // destructor
+      vector< T >::~vector( )
+         {
+         delete[ ] arr;
+         }
+
+      template < class T >
+      void vector< T >::insert( size_t index, T obj )
+         {
+         // if adding one means its at least half full, then grow by 2x
+         if ( size == capacity )
+            {
+            grow(); // you might not want to do a simple grow when inserting
+            }
+         
+         T old;
+         for ( size_t i = index;  i <= size;  ++i )
+            {
+               old = arr[ index ];
+               arr[ index ] = obj;
+               obj = old;
+            }
+         }
+
+      template < class T >
+      void vector< T >::clear()
+         {
+         size = 0;
+         }
+
+      template < class T >
+      void vector< T >::grow()
+         {
+         capacity *= 2;
+         T *arr_old = &arr;
+         arr = new T[ capacity ];
+         for ( size_t i = 0;  i < size;  ++i )
+            {
+            arr[ i ] = arr_old[ i ];
+            }
+         delete[] arr_old;
+         }
+      }
+
       template < class T >
        void vector<T>::remove(int index){
            for (int i = index; i < size; i++)
@@ -109,4 +182,17 @@ namespace dex
            }
            size--;
        }
+   
+        void vector< T >::operator=(vector v){
+            size = v.size;
+            capacity = v.capacity;
+            for(int i = 0; i < size; i++){
+                *arr[i] = *v.arr[i];
+            }
+        }
+   
+       T vector< T >::operator [](int index){
+           return *arr[index];
+       }
+   
    }
