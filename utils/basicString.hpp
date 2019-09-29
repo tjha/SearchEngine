@@ -9,6 +9,7 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
+// 2019-09-27: Define insert, replace, popBack, find, rfind: combsc, lougheem
 // 2019-09-25: Define operator=, swap, iterator, constIterator, append, insert, at, and back: combsc, jasina, lougheem
 // 2019-09-19: Formatting fixes; define constructors, capacity fuctions, and operator[]: combsc, jasina
 // 2019-09-16: Defined Interface: combsc, jasina, lougheem
@@ -81,6 +82,14 @@ namespace dex
 				}
 			template < class InputIterator > basicString( InputIterator first, InputIterator last )
 				{
+				if ( first.string != last.string )
+					{
+					throw invalidArgumentException( );
+					}
+				if ( first > last )
+					{
+					throw outOfRangeException( );
+					}
 				// TODO: This is an uber-naive way to allocate memory. Maybe we should change this later.
 				arraySize = 1;
 				array = new charT[ arraySize ];
@@ -584,7 +593,7 @@ namespace dex
 				{
 				const charT *otherEnd;
 				// Technically less efficient, but is more clear and avoids code duplication.
-				for ( otherEnd = other;  otherEnd != '\0';  ++otherEnd );
+				for ( otherEnd = other;  *otherEnd != '\0';  ++otherEnd );
 				append( other, otherEnd );
 				}
 			basicString < charT > &append( const charT *other, unsigned length )
@@ -597,8 +606,14 @@ namespace dex
 				}
 			template < class InputIterator > basicString < charT > &append( InputIterator first, InputIterator last )
 				{
+				if ( first.string != last.string )
+					{
+					throw invalidArgumentException( );
+					}
 				if ( first >= last )
+					{
 					throw outOfRangeException( );
+					}
 
 				resize( unsigned( stringSize + ( last - first ) ) );
 
@@ -693,6 +708,14 @@ namespace dex
 			template < class InputIterator >
 					iterator insert( iterator insertionPoint, InputIterator first, InputIterator last )
 				{
+				if ( first.string != last.string )
+					{
+					throw invalidArgumentException( );
+					}
+				if ( first > last )
+					{
+					throw outOfRangeException( );
+					}
 				unsigned length = 0;
 				for ( InputIterator counter = first;  counter != last;  ++counter )
 					++length;
@@ -702,23 +725,87 @@ namespace dex
 					*( segmentEnd + ( length - 1 ) ) = * ( segmentEnd - 1 );
 				// Fill in characters
 				for ( ;  first != last;  *( insertionPoint++ ) = *( first++ ) );
-				return insertionPoint;
+				return insertionPoint - length;
 				}
 			
-			basicString < charT > &erase( unsigned position = 0, unsigned length = npos );
-			iterator erase ( constIterator first );
-			iterator erase ( constIterator first, constIterator last );
+			basicString < charT > &erase( unsigned position = 0, unsigned length = npos )
+				{
+				erase( cbegin( ) + position, cbegin( ) + position + length );
+				return *this;
+				}
+			iterator erase ( constIterator first )
+				{
+				return erase(first, cend( ) );
+				}
+			iterator erase ( constIterator first, constIterator last )
+				{
+				// Throw an error if the iterators passed are to different strings.
+				if( first.string != this || last.string != this )
+					{
+					throw invalidArgumentException( );
+					}
+				if( first > last )
+					{
+					throw outOfRangeException( );
+					}
+				
+				constIterator lastIncrementer = last;
+				for( iterator copier = first; copier != last && lastIncremeneter != cend( ); *( copier++ ) = *( lastIncrementer++ ) );
+				// Decrease string size
+				resize( stringSize - ( last - first ) );
+				return first;
+				}
 
-			basicString < charT > &replace( unsigned position, unsigned length, const basicString < charT > &other );
-			basicString < charT > &replace( constIterator first, constIterator last, const basicString < charT > &other );
-			basicString < charT > &replace( unsigned position, unsigned length, const basicString < charT > &other, unsigned subposition, unsigned sublength );
-			basicString < charT > &replace( unsigned position, unsigned length, const charT *other );
-			basicString < charT > &replace( constIterator first, constIterator Last, const charT *other );
-			basicString < charT > &replace( unsigned position, unsigned length, const charT *other, unsigned n );
-			basicString < charT > &replace( constIterator first, constIterator Last, const charT *other, unsigned n );
-			basicString < charT > &replace( unsigned position, unsigned length, unsigned n, charT c );
-			basicString < charT > &replace( constIterator first, constIterator Last, unsigned n, charT c );
-			template < class InputIterator > basicString < charT > &replace( constIterator first, constIterator Last, InputIterator inputFirst, InputIterator inputLast );
+			basicString < charT > &replace( unsigned position, unsigned length, const basicString < charT > &other )
+				{
+				return replace( cbegin( ) + position, cbegin( ) + position + length, other );
+				}
+			basicString < charT > &replace( constIterator first, constIterator last, const basicString < charT > &other )
+				{
+				return replace( first, last, other.cbegin( ), other.cend( ) );
+				}
+			basicString < charT > &replace( unsigned position, unsigned length, const basicString < charT > &other, unsigned subposition, unsigned sublength )
+				{
+				return replace( cbegin( ) + position, cbegin( ) + position + length, other.cbegin( ) + subposition, other.cbegin( ) + subposition + sublength );
+				}
+			basicString < charT > &replace( unsigned position, unsigned length, const charT *other )
+				{
+				return replace( cbegin( ) + position, cbegin( ) + position + length, other );
+				}
+			basicString < charT > &replace( constIterator first, constIterator Last, const charT *other )
+				{
+				int stringSize;
+				for ( stringSize = 0;  other[ stringSize ] != charT ( { } ) && stringSize != length;  ++stringSize );
+				return replace( first, last, other, stringSize );
+				}
+			basicString < charT > &replace( unsigned position, unsigned length, const charT *other, unsigned n )
+				{
+				first = erase( cbegin( ) + position, cbegin( ) + position + length );
+				insert( first, other, n );
+				return *this;
+				}
+			basicString < charT > &replace( constIterator first, constIterator Last, const charT *other, unsigned n )
+				{
+				first = erase( first, last );
+				insert( first, other, n );
+				return *this;
+				}
+			basicString < charT > &replace( unsigned position, unsigned length, unsigned n, charT c )
+				{
+				return replace( cbegin( ) + position, cbegin( ) + position + length, n, c );
+				}
+			basicString < charT > &replace( constIterator first, constIterator Last, unsigned n, charT c )
+				{
+				first = erase( first, last )
+				insert( first, n, c );
+				return *this;
+				}
+			template < class InputIterator > basicString < charT > &replace( constIterator first, constIterator Last, InputIterator inputFirst, InputIterator inputLast )
+				{
+				first = erase( first, last );
+				insert( first, inputFirst, inputLast );
+				return *this;
+				}
 
 			void swap( basicString &other )
 				{
@@ -727,25 +814,115 @@ namespace dex
 				dex::swap( stringSize, other.stringSize );
 				}
 
-			void popBack( );
+			void popBack( )
+				{
+				stringSize--;
+				array[ stringSize ] = '\0';
+				}
 
 			// String Operations
 
-			const charT* cStr( ) const;
+			const charT* cStr( ) const
+				{
+				return array;
+				}
 
-			const charT* data( ) const;
+			const charT* data( ) const
+				{
+				return cStr( );
+				}
 
-			unsigned copy( charT *characterArray, unsigned length, unsigned position = 0 ) const;
+			unsigned copy( charT *characterArray, unsigned length, unsigned position = 0 ) const
+				{
+				int index;
+				for ( index = 0; index < length && position + index < stringSize; ++index )
+					{
+					characterArray[ index ] = array[ index + position ]
+					}
+				}
+				return index;
 
-			unsigned find( const basicString &other, unsigned position = 0 ) const;
-			unsigned find( const charT *other, unsigned position = 0 ) const;
-			unsigned find( const charT *other, unsigned position, unsigned n ) const;
-			unsigned find( charT c, unsigned position = 0 ) const;
+			unsigned find( const basicString &other, unsigned position = 0 ) const
+				{
+				return find( other.cStr( ), position );
+				}
+			unsigned find( const charT *other, unsigned position = 0 ) const
+				{
+				int stringSize;
+				for ( stringSize = 0;  other[ stringSize ] != charT ( { } ) && stringSize != length;  ++stringSize );
+				return find( other, position, stringSize );
+				}
+			unsigned find( const charT *other, unsigned position, unsigned n ) const
+				{
+				for ( unsigned leftSearchPosition = position; leftSearchPosition < stringSize - n; ++leftSearchPosition )
+					{
+					unsigned searchWindowLength;
+					for ( searchWindowLength = 0; searchWindowLength < n; ++searchWindowLength )
+						{
+						if ( array[ leftSearchPosition + searchWindowLength ] != other[ searchWindowLength ] )
+							{
+							break;
+							}
+						}
+					if ( searchWindowLength == n )
+						{
+						return leftSearchPosition;
+						}
+					}
+				return npos;
+				}
+			unsigned find( charT c, unsigned position = 0 ) const
+				{
+				for ( unsigned leftSearchPosition = position; leftSearchPosition < stringSize; ++leftSearchPosition )
+					{
+					if ( array[ leftSearchPosition ] == c ) 
+						{
+						return leftSearchPosition;
+						}
+					}
+				return npos;
+				}
 
-			unsigned rfind( const basicString &other, unsigned position = 0 ) const;
-			unsigned rfind( const charT *other, unsigned position = 0 ) const;
-			unsigned rfind( const charT *other, unsigned position, unsigned n ) const;
-			unsigned rfind( charT c, unsigned position = 0 ) const;
+			unsigned rfind( const basicString &other, unsigned position = 0 ) const
+				{
+				return rfind( other.cStr( ), position );
+				}
+			unsigned rfind( const charT *other, unsigned position = 0 ) const
+				{
+				int stringSize;
+				for ( stringSize = 0;  other[ stringSize ] != charT ( { } ) && stringSize != length;  ++stringSize );
+				return rfind( other, position, stringSize );
+				}
+			unsigned rfind( const charT *other, unsigned position, unsigned n ) const
+				{
+				for ( unsigned leftSearchPosition = position - n; leftSearchPosition >= 0; leftSearchPosition--)
+					{
+					unsigned searchWindowLength;
+					for ( searchWindowLength = 0; searchWindowLength < n; ++searchWindowLength )
+						{
+						if ( array[ leftSearchPosition + searchWindowLength ] != other[ searchWindowLength ] )
+							{
+							break;
+							}
+						}
+					if ( searchWindowLength == n )
+						{
+						return leftSearchPosition;
+						}
+					}
+				return npos;
+				}
+			unsigned rfind( charT c, unsigned position = 0 ) const
+				{
+				for ( unsigned rightSearchPosition = stringSize - 1; rightSearchPosition >= position; -- rightSearchPosition )
+					{
+					if ( array[ rightSearchPosition ] == c )
+						{
+						return rightSearchPosition;
+						}
+					}
+				return npos;
+				}
 
 			unsigned findFirstOf( const basicString &other, unsigned position = 0 ) const;
 			unsigned findFirstOf( const charT *other, unsigned position = 0 ) const;
