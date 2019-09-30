@@ -124,7 +124,7 @@ namespace dex
             }
          for ( int i = index;  i < size;  i++ )
             {
-            *arr[i] = *arr[i+1];
+            arr[i] = arr[i+1];
             }
          size--;
          }
@@ -136,7 +136,7 @@ namespace dex
             {
             grow( );
             }
-         *arr[ size ] = obj;
+         arr[ size ] = obj;
          size++;
          }
        
@@ -159,7 +159,7 @@ namespace dex
             std::cerr << "OUT OF BOUNDS \n";
             exit( 1 );
             }
-         return *arr[ index ];
+         return arr[ index ];
          }
        
       template < class T >
@@ -170,7 +170,7 @@ namespace dex
             std::cerr << "VECTOR OF SIZE 0 HAS NO FRONT\n";
             exit( 1 );
             }
-         return *arr[ 0 ];
+         return arr[ 0 ];
          }
        
       template < class T >
@@ -181,7 +181,7 @@ namespace dex
             std::cerr << "VECTOR OF SIZE 0 HAS NO BACK\n";
             exit( 1 );
             }
-         return *arr[ size - 1 ];
+         return arr[ size - 1 ];
          }
        
       template < class T >
@@ -208,7 +208,7 @@ namespace dex
          arr = new T[ size ];
          for( int i = 0;  i < size;  i++ )
          {
-            *arr[ i ] = *old[ i ];
+            arr[ i ] = old[ i ];
          }
          delete[ ] old;
          capacity = size;
@@ -235,7 +235,7 @@ namespace dex
          capacity = v.capacity;
          for( size_t i = 0;  i < size;  i++ )
             {
-            *arr[ i ] = *v.arr[ i ];
+            arr[ i ] = v.arr[ i ];
             }
          }
    
