@@ -17,19 +17,19 @@ namespace dex
       void insert( size_t index, T obj);
       void grow( );
       void clear( );
-      void remove(int index);
-      void push_back(T insertThis);
+      void remove( int index );
+      void push_back( T insertThis );
       void pop_back();
-      void push_front(T insertThis);
+      void push_front( T insertThis );
       void pop_front();
-      void shrinkToFit();
+      void shrink_to_fit();
       void swap(vector v);
-      T operator [](int index);
-      T operator=(vector v);
-      T at(int index);
+      T operator []( int index );
+      T operator=( vector v );
+      T at( int index );
       T front();
       T back();
-      T swap(vector x);
+      T swap( vector x );
           
       private:
       T *arr;                  // dynamic array
@@ -78,6 +78,7 @@ namespace dex
                arr[ index ] = obj;
                obj = old;
             }
+             size++;
          }
 
       template < class T >
@@ -126,6 +127,10 @@ namespace dex
        
        template < class T >
        T vector<T>::at(int index){
+           if(index >= size || index < 0){
+               std::cerr <<"OUT OF BOUNDS \n";
+               return;
+           }
            return *arr[index];
        }
        
@@ -141,29 +146,16 @@ namespace dex
        
        template < class T >
        void vector<T>::push_front(T insertThis){
-           if (size == capacity)
-           {
-               grow();
-           }
-           for (int i = size; i > 0; i--)
-           {
-               *arr[i] = *arr[i-1];
-           }
-           *arr[0] = insertThis;
-           size++;
+           insert(0, insertThis);
        }
        
        template < class T >
        void vector< T >::pop_front(){
-           for(int i = 0; i < size; i++)
-           {
-               *arr[i] = *arr[i+1];
-           }
-           size--;
+           remove(0);
        }
        
        template < class T >
-       void vector< T >::shrinkToFit(){
+       void vector< T >::shrink_to_fit(){
            T* old = arr;
            arr = new T[size];
            for(int i = 0; i < size; i++)
@@ -176,11 +168,16 @@ namespace dex
        
        template < class T >
        void vector< T >::swap(vector v){
-           for(int i = 0; i < size; i++)
-           {
-               *arr[i] = *arr[i+1];
-           }
-           size--;
+           T* temp;
+           temp = v.arr;
+           v.arr = arr;
+           arr = v.arr;
+           unsigned int num = v.size;
+           v.size = size;
+           size = num;
+           num = v.capacity;
+           v.capacity = capacity;
+           capacity = num;
        }
    
         void vector< T >::operator=(vector v){
@@ -192,7 +189,7 @@ namespace dex
         }
    
        T vector< T >::operator [](int index){
-           return *arr[index];
+           return at( index );
        }
    
    }
