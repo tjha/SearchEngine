@@ -9,6 +9,7 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
+//	2019-10-1:	Fix syntax errors: lougheem
 // 2019-09-27: Define insert, replace, popBack, find, rfind: combsc, lougheem
 // 2019-09-25: Define operator=, swap, iterator, constIterator, append, insert, at, and back: combsc, jasina, lougheem
 // 2019-09-19: Formatting fixes; define constructors, capacity fuctions, and operator[]: combsc, jasina
@@ -578,7 +579,7 @@ namespace dex
 				}
 			basicString < charT > &operator+=( charT character )
 				{
-				append( other );
+				append( character );
 				}
 
 			basicString < charT > &append( const basicString < charT > &other )
@@ -617,7 +618,7 @@ namespace dex
 
 				resize( unsigned( stringSize + ( last - first ) ) );
 
-				for ( insertionLocation = end( );  first != last;  *( insertionLocation++ ) = *( first++ ) );
+				for ( iterator insertionLocation = end( );  first != last;  *( insertionLocation++ ) = *( first++ ) );
 				}
 
 			void pushBack( charT character )
@@ -675,6 +676,7 @@ namespace dex
 			basicString < charT > &insert( unsigned position, const charT *other )
 				{
 				// Technically less efficient, but is more clear and avoids code duplication.
+				iterator otherEnd;
 				for ( otherEnd = other;  otherEnd != '\0';  ++otherEnd );
 				insert( iterator( this, position ), other, otherEnd );
 				return *this;
@@ -750,7 +752,7 @@ namespace dex
 					}
 				
 				constIterator lastIncrementer = last;
-				for( iterator copier = first; copier != last && lastIncremeneter != cend( ); *( copier++ ) = *( lastIncrementer++ ) );
+				for( iterator copier = first; copier != last && lastIncrementer != cend( ); *( copier++ ) = *( lastIncrementer++ ) );
 				// Decrease string size
 				resize( stringSize - ( last - first ) );
 				return first;
@@ -772,7 +774,7 @@ namespace dex
 				{
 				return replace( cbegin( ) + position, cbegin( ) + position + length, other );
 				}
-			basicString < charT > &replace( constIterator first, constIterator Last, const charT *other )
+			basicString < charT > &replace( constIterator first, constIterator last, const charT *other )
 				{
 				int stringSize;
 				for ( stringSize = 0;  other[ stringSize ] != charT ( { } ) && stringSize != length;  ++stringSize );
@@ -780,11 +782,11 @@ namespace dex
 				}
 			basicString < charT > &replace( unsigned position, unsigned length, const charT *other, unsigned n )
 				{
-				first = erase( cbegin( ) + position, cbegin( ) + position + length );
+				iterator first = erase( cbegin( ) + position, cbegin( ) + position + length );
 				insert( first, other, n );
 				return *this;
 				}
-			basicString < charT > &replace( constIterator first, constIterator Last, const charT *other, unsigned n )
+			basicString < charT > &replace( constIterator first, constIterator last, const charT *other, unsigned n )
 				{
 				first = erase( first, last );
 				insert( first, other, n );
@@ -794,13 +796,13 @@ namespace dex
 				{
 				return replace( cbegin( ) + position, cbegin( ) + position + length, n, c );
 				}
-			basicString < charT > &replace( constIterator first, constIterator Last, unsigned n, charT c )
+			basicString < charT > &replace( constIterator first, constIterator last, unsigned n, charT c )
 				{
-				first = erase( first, last )
+				first = erase( first, last );
 				insert( first, n, c );
 				return *this;
 				}
-			template < class InputIterator > basicString < charT > &replace( constIterator first, constIterator Last, InputIterator inputFirst, InputIterator inputLast )
+			template < class InputIterator > basicString < charT > &replace( constIterator first, constIterator last, InputIterator inputFirst, InputIterator inputLast )
 				{
 				first = erase( first, last );
 				insert( first, inputFirst, inputLast );
@@ -837,10 +839,10 @@ namespace dex
 				int index;
 				for ( index = 0; index < length && position + index < stringSize; ++index )
 					{
-					characterArray[ index ] = array[ index + position ]
+					characterArray[ index ] = array[ index + position ];
 					}
-				}
 				return index;
+				}
 
 			unsigned find( const basicString &other, unsigned position = 0 ) const
 				{
