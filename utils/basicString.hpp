@@ -9,6 +9,7 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
+// 2019-10-2:	Define findFirstOf, findFirstNotOf, compare: combsc, lougheem
 //	2019-10-1:	Fix syntax errors: lougheem
 // 2019-09-27: Define insert, replace, popBack, find, rfind: combsc, lougheem
 // 2019-09-25: Define operator=, swap, iterator, constIterator, append, insert, at, and back: combsc, jasina, lougheem
@@ -287,6 +288,7 @@ namespace dex
 						return *this;
 						}
 
+					template < class iterator >
 					friend iterator &operator+( const iterator &, int );
 					iterator &operator-( int n ) const
 						{
@@ -432,6 +434,7 @@ namespace dex
 						return *this;
 						}
 
+					template < class iterator >
 					friend iterator &operator+( const constIterator &, int );
 					constIterator &operator-( int n ) const
 						{
@@ -926,20 +929,75 @@ namespace dex
 				return npos;
 				}
 
-			unsigned findFirstOf( const basicString &other, unsigned position = 0 ) const;
-			unsigned findFirstOf( const charT *other, unsigned position = 0 ) const;
-			unsigned findFirstOf( const charT *other, unsigned position, unsigned n ) const;
-			unsigned findFirstOf( charT c, unsigned position = 0 ) const;
+			unsigned findFirstOf( const basicString &other, unsigned position = 0 ) const
+				{
+				return findFirstOf( other.cStr( ), position, other.size( ) );
+				}
+			unsigned findFirstOf( const charT *other, unsigned position = 0 ) const
+				{
+				unsigned stringSize;
+				for ( stringSize = 0;  other[ stringSize ] != charT ( { } ) && stringSize != length;  ++stringSize );
+				return findFirstOf( other, position, stringSize );
+				}
+			// This seems like an inefficient implementation... if we had an unordered map we would
+			// speed this up a lot
+			unsigned findFirstOf( const charT *other, unsigned position, unsigned n ) const
+				{
+				for ( constIterator it = cbegin( ) + position; it != cend( ); ++it )
+					{
+					for ( unsigned i = 0; i < n; ++i )
+						{
+						if ( *it == other[ i ] )
+							{
+							return it - cbegin( );
+							}
+						}
+					}
+				return npos;
+				}
+			unsigned findFirstOf( charT c, unsigned position = 0 ) const
+				{
+				return find( c, position );
+				}
 
 			unsigned findLastOf( const basicString &other, unsigned position = 0 ) const;
 			unsigned findLastOf( const charT *other, unsigned position = 0 ) const;
 			unsigned findLastOf( const charT *other, unsigned position, unsigned n ) const;
 			unsigned findLastOf( charT c, unsigned position = 0 ) const;
 
-			unsigned findFirstNotOf( const basicString &other, unsigned position = 0 ) const;
-			unsigned findFirstNotOf( const charT *other, unsigned position = 0 ) const;
-			unsigned findFirstNotOf( const charT *other, unsigned position, unsigned n ) const;
-			unsigned findFirstNotOf( charT c, unsigned position = 0 ) const;
+			unsigned findFirstNotOf( const basicString &other, unsigned position = 0 ) const
+				{
+				return findFirstNotOf( other.cStr( ), position, other.size( ) );
+				}
+			unsigned findFirstNotOf( const charT *other, unsigned position = 0 ) const
+				{
+				unsigned stringSize;
+				for ( stringSize = 0;  other[ stringSize ] != charT ( { } ) && stringSize != length;  ++stringSize );
+				return findFirstNotOf( other, position, stringSize );
+				}
+			unsigned findFirstNotOf( const charT *other, unsigned position, unsigned n ) const
+				{
+				for ( constIterator it = cbegin( ) + position; it != cend( ); ++it )
+					{
+					bool isInOther = false;
+					for ( unsigned i = 0; i < n; ++i )
+						{
+						if ( *it == other[ i ] )
+							{
+							isInOther = true;
+							}
+						}
+					if ( !isInOther )
+						{
+						return it - cbegin( );
+						}
+					}
+				return npos;
+				}
+			unsigned findFirstNotOf( charT c, unsigned position = 0 ) const
+				{
+				return findFirstNotOf( &c, position, 1 );
+				}
 
 			unsigned findLastNotOf( const basicString &other, unsigned position = 0 ) const;
 			unsigned findLastNotOf( const charT *other, unsigned position = 0 ) const;
@@ -951,12 +1009,59 @@ namespace dex
 				return basicString( *this, position, length );
 				}
 
-			int compare( const basicString &other ) const;
-			int compare( unsigned position, unsigned length, const basicString &other ) const;
-			int compare( unsigned position, unsigned length, const basicString &other, unsigned subposition, unsigned sublength ) const;
-			int compare( const charT *other ) const;
-			int compare( unsigned position, unsigned length, const charT *other ) const;
-			int compare( unsigned position, unsigned length, const charT *other, unsigned n ) const;
+			int compare( const basicString &other ) const
+				{
+				return compare( 0, size( ), other, 0, other.size( ) );
+				}
+			int compare( unsigned position, unsigned length, const basicString &other ) const
+				{
+				return compare( position, length, other, 0, other.size( ) );
+				}
+			int compare( unsigned position, unsigned length, const basicString &other, unsigned subposition, unsigned sublength ) const
+				{
+				constIterator first = cbegin( ) + position;
+				constIterator otherFirst = other.cbegin( ) + subposition;
+
+				constIterator last = cbegin( ) + position + length;
+				constIterator otherLast = other.cbegin( ) + subposition + sublength;
+				while ( first != last && otherFirst != otherLast )
+					{
+					if ( *first < *last )
+						{
+						return -1;
+						}
+					if ( *first > *last )
+						{
+						return 1;
+						}
+					++first;
+					++otherFirst;
+					}
+				if ( otherFirst != otherLast )
+					{
+					return 1;
+					}
+				if ( first != last )
+					{
+					return -1;
+					}
+				return 0;
+				}
+			int compare( const charT *other ) const
+				{
+				basicString otherBasicString = basicString( other );
+				return compare( 0, size( ), otherBasicString, 0, otherBasicString.size( ) );
+				}
+			int compare( unsigned position, unsigned length, const charT *other ) const
+				{
+				basicString otherBasicString = basicString( other );
+				return compare( position, length, other, 0, other.size( ) );
+				}
+			int compare( unsigned position, unsigned length, const charT *other, unsigned n ) const
+				{
+				basicString otherBasicString = basicString( other );
+				return compare( position, length, other, 0, n );
+				}
 		};
 	}
 
