@@ -125,6 +125,10 @@ namespace dex
 					delete [ ] array;
 					}
 				}
+			basicString < charT > &operator==( const charT* other )
+				{
+				return compare( other );
+				}
 
 			basicString < charT > &operator=( const basicString < charT > &other )
 				{
