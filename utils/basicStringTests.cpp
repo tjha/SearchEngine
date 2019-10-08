@@ -1,5 +1,6 @@
 // basicStringTests.cpp
 // Test the dex::basicString library
+// 2019-10-8: Tested Assign, 
 // 2019-10-7: Tested Constructor, Element Access, Assignment, Capacity, Compare: combsc, jasina
 
 #include "basicString.hpp"
@@ -14,6 +15,7 @@ void testConstructorElementAccess( );
 void testAssignment( );
 void testCapacity( );
 void testCompare( );
+void testAppend( );
 
 int main( )
 	{
@@ -22,6 +24,7 @@ int main( )
 	testAssignment( );
 	testCapacity( );
 	testCompare( );
+	testAppend( );
 
 	return 0;
 	}
@@ -87,6 +90,27 @@ void testAssignment( )
 
 	assert(affection == "Substance" );
 	assert(substance == "True Substance" );
+
+	string t( "a" );
+	t = 'c';
+	assert( t == "c");
+	assert( t.size( ) == 1 );
+	}
+
+void testAppend( )
+	{
+	string c( "con" );
+	assert( c == "con" );
+	c += "cat";
+	assert( c == "concat" );
+	string other( "en" );
+	c += other;
+	assert( c == "concaten" );
+	c += 'a';
+	assert( c == "concatena" );
+	string other2( "Propitiation" );
+	c.append(other2, 8, 4);
+	assert( c == "concatenation" );
 	}
 
 void testCapacity( )

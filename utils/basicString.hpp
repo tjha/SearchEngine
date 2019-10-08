@@ -9,6 +9,7 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
+// 2019-10-08: Fix assign bugs, found append bugs
 // 2019-10-07: Fix iterator bugs; implement comparison operators: combsc, jasina
 // 2019-10-02: Define findFirstOf, findFirstNotOf, compare: combsc, lougheem
 // 2019-10-01: Fix syntax errors: lougheem
@@ -141,7 +142,7 @@ namespace dex
 			basicString < charT > &operator=( charT c )
 				{
 				stringSize = 1;
-				array[ 1 ] = c;
+				array[ 0 ] = c;
 				return *this;
 				}
 			basicString < charT > &operator=( basicString < charT > &&other )
@@ -229,8 +230,8 @@ namespace dex
 			class iterator
 				{
 				private:
+					basicString <charT > *string;
 					unsigned position;
-					basicString *string;
 					iterator( basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
 				public:
 					bool operator==( const iterator &other) const
@@ -849,39 +850,40 @@ namespace dex
 			// Modifiers
 			basicString < charT > &operator+=( const basicString &other )
 				{
-				append( other );
+				return append( other );
 				}
 			basicString < charT > &operator+=( const charT *other )
 				{
-				append( other );
+				return append( other );
 				}
 			basicString < charT > &operator+=( charT character )
 				{
-				append( character );
+				return append( 1, character );
 				}
 
 			basicString < charT > &append( const basicString < charT > &other )
 				{
-				append( other.begin( ), other.end( ) );
+				return append( other.cbegin( ), other.cend( ) );
 				}
 			basicString < charT > &append( const basicString < charT > &other, unsigned position, unsigned length )
 				{
-				append( other.begin( ) + position, other.begin( ) + position + length );
+				return append( other.cbegin( ) + position, other.cbegin( ) + position + length );
 				}
 			basicString < charT > &append( const charT *other )
 				{
 				const charT *otherEnd;
 				// Technically less efficient, but is more clear and avoids code duplication.
 				for ( otherEnd = other;  *otherEnd != '\0';  ++otherEnd );
-				append( other, otherEnd );
+				return append( other, otherEnd );
 				}
 			basicString < charT > &append( const charT *other, unsigned length )
 				{
-				append( other, other + length );
+				return append( other, other + length );
 				}
 			basicString < charT > &append( unsigned number, charT character )
 				{
 				resize( stringSize + number, character );
+				return *this;
 				}
 			template < class InputIterator > basicString < charT > &append( InputIterator first, InputIterator last )
 				{
@@ -897,6 +899,7 @@ namespace dex
 				resize( unsigned( stringSize + ( last - first ) ) );
 
 				for ( iterator insertionLocation = end( );  first != last;  *( insertionLocation++ ) = *( first++ ) );
+				return *this;
 				}
 
 			void pushBack( charT character )
