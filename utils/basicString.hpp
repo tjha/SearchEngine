@@ -9,8 +9,8 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
-// 2019-10-08: Fix assign bugs, found append bugs
-// 2019-10-07: Fix iterator bugs; implement comparison operators: combsc, jasina
+// 2019-10-08: Fix assign, fix append, fix iterator operator-: combsc, jasina
+// 2019-10-07: Fix iterator; implement comparison operators: combsc, jasina
 // 2019-10-02: Define findFirstOf, findFirstNotOf, compare: combsc, lougheem
 // 2019-10-01: Fix syntax errors: lougheem
 // 2019-09-27: Define insert, replace, popBack, find, rfind: combsc, lougheem
@@ -306,7 +306,7 @@ namespace dex
 						}
 					int operator-( const iterator &other ) const
 						{
-						if ( string == other.string )
+						if ( string != other.string )
 							throw invalidArgumentException( );
 						return int( position - other.position );
 						}
@@ -445,7 +445,7 @@ namespace dex
 						}
 					int operator-( const constIterator &other ) const
 						{
-						if ( string == other.string )
+						if ( string != other.string )
 							throw invalidArgumentException( );
 						return int( position - other.position );
 						}
@@ -594,9 +594,9 @@ namespace dex
 						}
 					int operator-( const reverseIterator &other ) const
 						{
-						if ( string == other.string )
+						if ( string != other.string )
 							throw invalidArgumentException( );
-						return int( position - other.position );
+						return int( other.position - position );
 						}
 
 					bool operator<( const reverseIterator &other) const
@@ -738,9 +738,9 @@ namespace dex
 						}
 					int operator-( const constReverseIterator &other ) const
 						{
-						if ( string == other.string )
+						if ( string != other.string )
 							throw invalidArgumentException( );
-						return int( position - other.position );
+						return int( other.position - position );
 						}
 
 					bool operator<( const constReverseIterator &other) const
@@ -887,18 +887,15 @@ namespace dex
 				}
 			template < class InputIterator > basicString < charT > &append( InputIterator first, InputIterator last )
 				{
-				if ( first.string != last.string )
-					{
-					throw invalidArgumentException( );
-					}
 				if ( first >= last )
 					{
 					throw outOfRangeException( );
 					}
 
-				resize( unsigned( stringSize + ( last - first ) ) );
+				unsigned originalLength = size();
+				resize( stringSize + ( last - first ) );
 
-				for ( iterator insertionLocation = end( );  first != last;  *( insertionLocation++ ) = *( first++ ) );
+				for ( iterator insertionLocation = iterator( *this, originalLength );  first != last;  *( insertionLocation++ ) = *( first++ ) );
 				return *this;
 				}
 
