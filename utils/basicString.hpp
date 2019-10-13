@@ -9,7 +9,7 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
-// 2019-10-13: Let iterators be cast to const, fix insert: jasina
+// 2019-10-13: Let iterators be cast to const, clean up reverse iterators, fix insert: jasina
 // 2019-10-08: Fix assign, fix append, fix iterator operator-: combsc, jasina
 // 2019-10-07: Fix iterator; implement comparison operators: combsc, jasina
 // 2019-10-02: Define findFirstOf, findFirstNotOf, compare: combsc, lougheem
@@ -301,7 +301,7 @@ namespace dex
 
 					friend iterator operator-( const iterator &it, int n )
 						{
-						if ( it.position >= n + it.string->size( ) || ( n > 0 && it.position < unsigned( n ) ) )
+						if ( it.position > n + it.string->size( ) || ( n > 0 && it.position < unsigned( n ) ) )
 							throw outOfRangeException( );
 						return iterator( *it.string, it.position - n );
 						}
@@ -313,7 +313,7 @@ namespace dex
 						}
 					friend iterator operator+( const iterator &it, int n )
 						{
-						if ( it.position > -n + it.string->size( ) || ( n < 0 && it.position < unsigned( -n ) ) )
+						if ( it.position + n > it.string->size( ) || ( n < 0 && it.position < unsigned( -n ) ) )
 							throw outOfRangeException( );
 						return iterator( *it.string, it.position + n );
 						}
@@ -442,7 +442,7 @@ namespace dex
 
 					friend constIterator operator-( const constIterator &it, int n )
 						{
-						if ( it.position >= n + it.string->size( ) || ( n > 0 && it.position < unsigned( n ) ) )
+						if ( it.position > n + it.string->size( ) || ( n > 0 && it.position < unsigned( n ) ) )
 							throw outOfRangeException( );
 						return constIterator( *it.string, it.position - n );
 						}
@@ -454,7 +454,7 @@ namespace dex
 						}
 					friend constIterator operator+( const constIterator &it, int n )
 						{
-						if ( it.position > -n + it.string->size( ) || ( n < 0 && it.position < unsigned( -n ) ) )
+						if ( it.position + n > it.string->size( ) || ( n < 0 && it.position < unsigned( -n ) ) )
 							throw outOfRangeException( );
 						return constIterator( *it.string, it.position + n );
 						}
@@ -519,7 +519,7 @@ namespace dex
 					friend class constReverseIterator;
 					unsigned position;
 					basicString *string;
-					reverseIterator( basicString < charT > &string, unsigned position ) : string( &string ), position( position + 1 ) { }
+					reverseIterator( basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
 				public:
 					friend bool operator==( const reverseIterator &a, const reverseIterator &b )
 						{
@@ -537,14 +537,32 @@ namespace dex
 
 					charT &operator*( ) const
 						{
-						return ( *string )[ position - 1 ];
+						return ( *string )[ string->size() - position - 1 ];
 						}
 					charT *operator->( ) const
 						{
-						return &( ( *string )[ position - 1 ] );
+						return &( ( *string )[ string->size() - position - 1 ] );
 						}
 
 					reverseIterator &operator++( )
+						{
+						if ( position < string->size() )
+							++position;
+						else
+							throw outOfRangeException( );
+						return *this;
+						}
+					reverseIterator operator++( int )
+						{
+						reverseIterator toReturn( *this );
+						if ( position < string->size() )
+							++position;
+						else
+							throw outOfRangeException( );
+						return toReturn;
+						}
+
+					reverseIterator &operator--( )
 						{
 						if ( position > 0 )
 							--position;
@@ -552,7 +570,7 @@ namespace dex
 							throw outOfRangeException( );
 						return *this;
 						}
-					reverseIterator operator++( int )
+					reverseIterator operator--( int )
 						{
 						reverseIterator toReturn( *this );
 						if ( position > 0 )
@@ -562,65 +580,48 @@ namespace dex
 						return toReturn;
 						}
 
-					reverseIterator &operator--( )
-						{
-						if ( position <= string->size( ) )
-							++position;
-						else
-							throw outOfRangeException( );
-						return *this;
-						}
-					reverseIterator operator--( int )
-						{
-						if ( position <= string->size( ) )
-							++position;
-						else
-							throw outOfRangeException( );
-						return *this;
-						}
-
 					friend reverseIterator operator-( const reverseIterator &it, int n )
 						{
-						if ( it.position >= -n + 1 + it.string->size( ) || ( n < 0 && it.position < -n + 1 ) )
+						if ( it.position > n + it.string->size( ) || ( n > 0 && it.position < unsigned( n ) ) )
 							throw outOfRangeException( );
-						return reverseIterator( *it.string, it.position + n - 1 );
+						return reverseIterator( *it.string, it.position - n );
 						}
 					friend int operator-( const reverseIterator &a, const reverseIterator &b )
 						{
 						if ( a.string != b.string )
 							throw invalidArgumentException( );
-						return int( b.position - a.position );
+						return int( a.position - b.position );
 						}
 					friend reverseIterator operator+( const reverseIterator &it, int n )
 						{
-						if ( it.position >= n + 1 + it.string->size( ) || ( n > 0 && it.position < n + 1 ) )
+						if ( it.position + n > it.string->size( ) || ( n < 0 && it.position < unsigned( -n ) ) )
 							throw outOfRangeException( );
-						return reverseIterator( *it.string, it.position - n - 1 );
+						return reverseIterator( *it.string, it.position + n );
 						}
 
 					friend bool operator<( const reverseIterator &a, const reverseIterator &b )
 						{
 						if ( a.string != b.string )
 							throw invalidArgumentException( );
-						return a.position > b.position;
+						return a.position < b.position;
 						}
 					friend bool operator>( const reverseIterator &a, const reverseIterator &b )
 						{
 						if ( a.string != b.string )
 							throw invalidArgumentException( );
-						return a.position < b.position;
+						return a.position > b.position;
 						}
 					friend bool operator<=( const reverseIterator &a, const reverseIterator &b )
 						{
 						if ( a.string != b.string )
 							throw invalidArgumentException( );
-						return a.position >= b.position;
+						return a.position <= b.position;
 						}
 					friend bool operator>=( const reverseIterator &a, const reverseIterator &b )
 						{
 						if ( a.string != b.string )
 							throw invalidArgumentException( );
-						return a.position <= b.position;
+						return a.position >= b.position;
 						}
 
 					reverseIterator &operator+=( int n )
@@ -643,11 +644,11 @@ namespace dex
 				}
 			reverseIterator rbegin( ) 
 				{
-				return reverseIterator( *this, size( ) - 1 );
+				return reverseIterator( *this, 0 );
 				}
 			reverseIterator rend( ) 
 				{
-				return reverseIterator( *this, -1 );
+				return reverseIterator( *this, size() );
 				}
 
 			class constReverseIterator
@@ -657,7 +658,7 @@ namespace dex
 					friend class basicString;
 					unsigned position;
 					basicString *string;
-					constReverseIterator( basicString < charT > &string, unsigned position ) : string( &string ), position( position + 1 ) { }
+					constReverseIterator( basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
 				public:
 					constReverseIterator( const reverseIterator &it ) : string( it.string ), position( it.position ) { }
 					friend bool operator==( const constReverseIterator &a, const constReverseIterator &b )
@@ -676,14 +677,32 @@ namespace dex
 
 					const charT &operator*( ) const
 						{
-						return ( *string )[ position - 1 ];
+						return ( *string )[ string->size() - position - 1 ];
 						}
 					const charT *operator->( ) const
 						{
-						return &( ( *string )[ position - 1 ] );
+						return &( ( *string )[ string->size() - position - 1 ] );
 						}
 
 					constReverseIterator &operator++( )
+						{
+						if ( position < string->size() )
+							++position;
+						else
+							throw outOfRangeException( );
+						return *this;
+						}
+					constReverseIterator operator++( int )
+						{
+						constReverseIterator toReturn( *this );
+						if ( position < string->size() )
+							++position;
+						else
+							throw outOfRangeException( );
+						return toReturn;
+						}
+
+					constReverseIterator &operator--( )
 						{
 						if ( position > 0 )
 							--position;
@@ -691,7 +710,7 @@ namespace dex
 							throw outOfRangeException( );
 						return *this;
 						}
-					constReverseIterator operator++( int )
+					constReverseIterator operator--( int )
 						{
 						constReverseIterator toReturn( *this );
 						if ( position > 0 )
@@ -701,88 +720,63 @@ namespace dex
 						return toReturn;
 						}
 
-					constReverseIterator &operator--( )
-						{
-						if ( position <= string->size( ) )
-							++position;
-						else
-							throw outOfRangeException( );
-						return *this;
-						}
-					constReverseIterator operator--( int )
-						{
-						if ( position <= string->size( ) )
-							++position;
-						else
-							throw outOfRangeException( );
-						return *this;
-						}
-
 					friend constReverseIterator operator-( const constReverseIterator &it, int n )
 						{
-						if ( it.position >= -n + 1 + it.string->size( ) || ( n < 0 && it.position < -n + 1 ) )
+						if ( it.position > n + it.string->size( ) || ( n > 0 && it.position < unsigned( n ) ) )
 							throw outOfRangeException( );
-						return constReverseIterator( *it.string, it.position + n - 1 );
+						return constReverseIterator( *it.string, it.position - n );
 						}
 					friend int operator-( const constReverseIterator &a, const constReverseIterator &b )
 						{
 						if ( a.string != b.string )
 							throw invalidArgumentException( );
-						return int( b.position - a.position );
+						return int( a.position - b.position );
 						}
 					friend constReverseIterator operator+( const constReverseIterator &it, int n )
 						{
-						if ( it.position >= n + 1 + it.string->size( ) || ( n > 0 && it.position < n + 1 ) )
+						if ( it.position + n > it.string->size( ) || ( n < 0 && it.position < unsigned( -n ) ) )
 							throw outOfRangeException( );
-						return constReverseIterator( *it.string, it.position - n - 1 );
+						return constReverseIterator( *it.string, it.position + n );
 						}
 
 					friend bool operator<( const constReverseIterator &a, const constReverseIterator &b )
 						{
 						if ( a.string != b.string )
 							throw invalidArgumentException( );
-						return a.position > b.position;
+						return a.position < b.position;
 						}
 					friend bool operator>( const constReverseIterator &a, const constReverseIterator &b )
 						{
 						if ( a.string != b.string )
 							throw invalidArgumentException( );
-						return a.position < b.position;
+						return a.position > b.position;
 						}
 					friend bool operator<=( const constReverseIterator &a, const constReverseIterator &b )
 						{
 						if ( a.string != b.string )
 							throw invalidArgumentException( );
-						return a.position >= b.position;
+						return a.position <= b.position;
 						}
 					friend bool operator>=( const constReverseIterator &a, const constReverseIterator &b )
 						{
 						if ( a.string != b.string )
 							throw invalidArgumentException( );
-						return a.position <= b.position;
+						return a.position >= b.position;
 						}
 
 					constReverseIterator &operator+=( int n )
 						{
-						if ( position >= n + 1 + string->size( ) || ( n > 0 && position < n + 1 ) )
-							throw outOfRangeException( );
-						position += n;
-						return *this;
+						return *this = *this + n;
 						}
 					constReverseIterator &operator-=( int n )
 						{
-						if ( position >= -n + 1 + string->size( ) || ( n < 0 && position < -n + 1 ) )
-							throw outOfRangeException( );
-						position -= n;
-						return *this;
+						return *this = *this - n;
 						}
 
 					const charT &operator[ ]( const unsigned index ) const
 						{
 						return ( *string )[ index ];
 						}
-
-					friend class basicString < charT >;
 				};
 			void swap( constReverseIterator &a, constReverseIterator &b )
 				{
@@ -790,11 +784,11 @@ namespace dex
 				}
 			constReverseIterator crbegin( ) 
 				{
-				return constReverseIterator( *this, size( ) - 1 );
+				return constReverseIterator( *this, 0 );
 				}
 			constReverseIterator crend( ) 
 				{
-				return constReverseIterator( *this, -1 ); 
+				return constReverseIterator( *this, size() ); 
 				}
 
 			// Element Access
