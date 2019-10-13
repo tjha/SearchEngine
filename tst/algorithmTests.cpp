@@ -1,6 +1,39 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 #include "../utils/algorithm.hpp"
+#include <vector>
+
+TEST_CASE( "test copy" )
+	{
+	std::vector < int > a, b;
+	b.resize( 20 );
+	for ( int i = 0;  i != 10;  ++i )
+		a.push_back( i );
+	auto copyPoint = dex::copy( a.cbegin(), a.cend(), b.begin() );
+	for ( int i = 0;  i != 10;  ++i )
+		REQUIRE( b[i] == a[i] );
+	for ( int i = 10;  i != 20;  ++i )
+		REQUIRE( b[i] == 0 );
+	REQUIRE( copyPoint == b.begin() + 10 );
+
+	copyPoint = dex::copy_backward( b.cbegin( ) + 10, b.cbegin( ), b.end( ) );
+	for ( int i = 0;  i != 10;  ++i )
+		{
+		REQUIRE( b[i] == b[i] );
+		REQUIRE( b[i + 10] == b[i] );
+		}
+	REQUIRE( copyPoint == b.begin() + 10 );
+	}
+
+TEST_CASE( "test fill" )
+	{
+	std::vector < int > a;
+	for ( int i = 0;  i != 10;  ++i )
+		a.push_back( i );
+	dex::fill( a.begin( ), a.end( ), 489 );
+	for ( int i = 0;  i != 10;  ++i )
+		REQUIRE( a[i] == 489 );
+	}
 
 TEST_CASE( "test min and max" )
 	{
