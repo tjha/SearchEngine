@@ -658,8 +658,8 @@ namespace dex
 					unsigned position;
 					basicString *string;
 					constReverseIterator( basicString < charT > &string, unsigned position ) : string( &string ), position( position + 1 ) { }
-					constReverseIterator( const reverseIterator &it ) : string( it.string ), position( it.position ) { }
 				public:
+					constReverseIterator( const reverseIterator &it ) : string( it.string ), position( it.position ) { }
 					friend bool operator==( const constReverseIterator &a, const constReverseIterator &b )
 						{
 						// Only makes sense to compare iterators pointing to the same string
