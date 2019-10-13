@@ -1,5 +1,6 @@
 // algorithm.hpp
 // Artisan crafted version of <algorithm> that keeps all of the interfaces.
+// 2019-10-13: Implement copy, copy_backward, and fill: jasina
 // 2019-09-19: Implemented Min, Max, Swap: Jasina, Combsc
 
 namespace dex
