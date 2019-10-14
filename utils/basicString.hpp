@@ -10,7 +10,8 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 // 2019-10-13: Let iterators be cast to const, clean up reverse iterators, fix insert, use copy/fill from algorithm,
-//             fix styling errors, use find/search/find_end from algorithm: jasina
+//             fix styling errors, use find/search/find_end from algorithm, implement findLastOf and findLastNotOf:
+//             jasina
 // 2019-10-08: Fix assign, fix append, fix iterator operator-: combsc, jasina
 // 2019-10-07: Fix iterator; implement comparison operators: combsc, jasina
 // 2019-10-02: Define findFirstOf, findFirstNotOf, compare: combsc, lougheem
@@ -1132,15 +1133,9 @@ namespace dex
 			unsigned findFirstOf( const charT *other, unsigned position, unsigned n ) const
 				{
 				for ( constIterator it = cbegin( ) + position; it != cend( ); ++it )
-					{
-					for ( unsigned i = 0; i < n; ++i )
-						{
+					for ( unsigned i = 0; i != n; ++i )
 						if ( *it == other[ i ] )
-							{
 							return it - cbegin( );
-							}
-						}
-					}
 				return npos;
 				}
 			unsigned findFirstOf( charT c, unsigned position = 0 ) const
@@ -1148,10 +1143,28 @@ namespace dex
 				return find( c, position );
 				}
 
-			unsigned findLastOf( const basicString &other, unsigned position = 0 ) const;
-			unsigned findLastOf( const charT *other, unsigned position = 0 ) const;
-			unsigned findLastOf( const charT *other, unsigned position, unsigned n ) const;
-			unsigned findLastOf( charT c, unsigned position = 0 ) const;
+			unsigned findLastOf( const basicString &other, unsigned position = 0 ) const
+				{
+				return findLastOf( other.cStr( ), position, other.size( ) );
+				}
+			unsigned findLastOf( const charT *other, unsigned position = 0 ) const
+				{
+				unsigned stringSize;
+				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
+				return findLastOf( other, position, stringSize );
+				}
+			unsigned findLastOf( const charT *other, unsigned position, unsigned n ) const
+				{
+				for ( constReverseIterator it = crbegin( ) + position; it != crend( ); ++it )
+					for ( unsigned i = 0; i != n; ++i )
+						if ( *it == other[ i ] )
+							return stringSize - 1 - ( it - crbegin( ) );
+				return npos;
+				}
+			unsigned findLastOf( charT c, unsigned position = 0 ) const
+				{
+				return rfind( c, position );
+				}
 
 			unsigned findFirstNotOf( const basicString &other, unsigned position = 0 ) const
 				{
@@ -1169,16 +1182,13 @@ namespace dex
 					{
 					bool isInOther = false;
 					for ( unsigned i = 0; i < n; ++i )
-						{
 						if ( *it == other[ i ] )
 							{
 							isInOther = true;
+							break;
 							}
-						}
 					if ( !isInOther )
-						{
 						return it - cbegin( );
-						}
 					}
 				return npos;
 				}
@@ -1187,10 +1197,36 @@ namespace dex
 				return findFirstNotOf( &c, position, 1 );
 				}
 
-			unsigned findLastNotOf( const basicString &other, unsigned position = 0 ) const;
-			unsigned findLastNotOf( const charT *other, unsigned position = 0 ) const;
-			unsigned findLastNotOf( const charT *other, unsigned position, unsigned n ) const;
-			unsigned findLastNotOf( charT c, unsigned position = 0 ) const;
+			unsigned findLastNotOf( const basicString &other, unsigned position = 0 ) const
+				{
+				return findLastNotOf( other.cStr( ), position, other.size( ) );
+				}
+			unsigned findLastNotOf( const charT *other, unsigned position = 0 ) const
+				{
+				unsigned stringSize;
+				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
+				return findLastNotOf( other, position, stringSize );
+				}
+			unsigned findLastNotOf( const charT *other, unsigned position, unsigned n ) const
+				{
+				for ( constReverseIterator it = crbegin( ) + position; it != crend( ); ++it )
+					{
+					bool isInOther = false;
+					for ( unsigned i = 0; i < n; ++i )
+						if ( *it == other[ i ] )
+							{
+							isInOther = true;
+							break;
+							}
+					if ( !isInOther )
+						return stringSize - 1 - ( it - crbegin( ) );
+					}
+				return npos;
+				}
+			unsigned findLastNotOf( charT c, unsigned position = 0 ) const
+				{
+				return findLastNotOf( &c, position, 1 );
+				}
 
 			basicString < charT > substr( unsigned position = 0, unsigned length = npos )
 				{
@@ -1217,24 +1253,16 @@ namespace dex
 				while ( first != last && otherFirst != otherLast )
 					{
 					if ( *first < *otherFirst )
-						{
 						return -1;
-						}
 					if ( *first > *otherFirst )
-						{
 						return 1;
-						}
 					++first;
 					++otherFirst;
 					}
 				if ( otherFirst != otherLast )
-					{
 					return -1;
-					}
 				if ( first != last )
-					{
 					return 1;
-					}
 				return 0;
 				}
 			int compare( const charT *other ) const
@@ -1258,9 +1286,7 @@ namespace dex
 		std::ostream &operator<<( std::ostream &os, const basicString < charT > &str )
 			{
 			for ( typename basicString < charT >::constIterator it = str.cbegin( );  it != str.cend( );  ++it )
-				{
 				os << *it;
-				}
 			return os;
 			}
 
