@@ -9,7 +9,7 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
-// 2019-10-13: Let iterators be cast to const, clean up reverse iterators, fix insert, use copy/fill from algorithm, fix styling errors: jasina
+// 2019-10-13: Let iterators be cast to const, clean up reverse iterators, fix insert, use copy/fill from algorithm, fix styling errors, use find/search/find_end from algorithm: jasina
 // 2019-10-08: Fix assign, fix append, fix iterator operator-: combsc, jasina
 // 2019-10-07: Fix iterator; implement comparison operators: combsc, jasina
 // 2019-10-02: Define findFirstOf, findFirstNotOf, compare: combsc, lougheem
@@ -338,11 +338,11 @@ namespace dex
 				{
 				dex::swap( a, b );
 				}
-			iterator begin( ) 
+			iterator begin( )
 				{
 				return iterator( *this, 0 );
 				}
-			iterator end( ) 
+			iterator end( )
 				{
 				return iterator( *this, size( ) ); 
 				}
@@ -617,11 +617,11 @@ namespace dex
 				{
 				dex::swap( a, b );
 				}
-			reverseIterator rbegin( ) 
+			reverseIterator rbegin( )
 				{
 				return reverseIterator( *this, 0 );
 				}
-			reverseIterator rend( ) 
+			reverseIterator rend( )
 				{
 				return reverseIterator( *this, size( ) );
 				}
@@ -632,8 +632,8 @@ namespace dex
 					template < typename T >
 					friend class basicString;
 					unsigned position;
-					basicString *string;
-					constReverseIterator( basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
+					const basicString *string;
+					constReverseIterator( const basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
 				public:
 					constReverseIterator( const reverseIterator &it ) : string( it.string ), position( it.position ) { }
 					friend bool operator==( const constReverseIterator &a, const constReverseIterator &b )
@@ -757,11 +757,11 @@ namespace dex
 				{
 				dex::swap( a, b );
 				}
-			constReverseIterator crbegin( ) 
+			constReverseIterator crbegin( ) const
 				{
 				return constReverseIterator( *this, 0 );
 				}
-			constReverseIterator crend( ) 
+			constReverseIterator crend( ) const
 				{
 				return constReverseIterator( *this, size( ) ); 
 				}
@@ -990,7 +990,7 @@ namespace dex
 			basicString < charT > &replace( constIterator first, constIterator last, const charT *other )
 				{
 				unsigned stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { } && stringSize != length;  ++stringSize );
+				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
 				return replace( first, last, other, stringSize );
 				}
 			basicString < charT > &replace( unsigned position, unsigned length, const charT *other, unsigned n )
@@ -1050,90 +1050,59 @@ namespace dex
 			unsigned copy( charT *characterArray, unsigned count, unsigned position = 0 ) const
 				{
 				count = count == npos ? stringSize - count : min( stringSize, position + count );
-				dex::copy( begin( ) + position, begin( ) + position + length, characterArray );
+				dex::copy( begin( ) + position, begin( ) + position + count, characterArray );
 				return count;
 				}
 
 			unsigned find( const basicString &other, unsigned position = 0 ) const
 				{
-				return find( other.cStr( ), position, stringSize );
+				return find( other.cStr( ), position, other.stringSize );
 				}
 			unsigned find( const charT *other, unsigned position = 0 ) const
 				{
+				// Inefficient, but easy to understand
 				int stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { } && stringSize != length;  ++stringSize );
+				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
 				return find( other, position, stringSize );
 				}
 			unsigned find( const charT *other, unsigned position, unsigned n ) const
 				{
-				for ( unsigned leftSearchPosition = position; leftSearchPosition < stringSize - n; ++leftSearchPosition )
-					{
-					unsigned searchWindowLength;
-					for ( searchWindowLength = 0; searchWindowLength < n; ++searchWindowLength )
-						{
-						if ( array[ leftSearchPosition + searchWindowLength ] != other[ searchWindowLength ] )
-							{
-							break;
-							}
-						}
-					if ( searchWindowLength == n )
-						{
-						return leftSearchPosition;
-						}
-					}
-				return npos;
+				constIterator location = dex::search( cbegin( ) + position, cend( ), other, other + n );
+				if ( location == cend( ) )
+					return npos;
+				return location - cbegin( );
 				}
 			unsigned find( charT c, unsigned position = 0 ) const
 				{
-				for ( unsigned leftSearchPosition = position; leftSearchPosition < stringSize; ++leftSearchPosition )
-					{
-					if ( array[ leftSearchPosition ] == c ) 
-						{
-						return leftSearchPosition;
-						}
-					}
-				return npos;
+				constIterator location = dex::find( cbegin( ) + position, cend( ), c );
+				if ( location == cend( ) )
+					return npos;
+				return location - cbegin( );
 				}
 
 			unsigned rfind( const basicString &other, unsigned position = 0 ) const
 				{
-				return rfind( other.cStr( ), position );
+				return rfind( other.cStr( ), position, other.stringSize );
 				}
 			unsigned rfind( const charT *other, unsigned position = 0 ) const
 				{
 				int stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { } && stringSize != length;  ++stringSize );
+				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
 				return rfind( other, position, stringSize );
 				}
 			unsigned rfind( const charT *other, unsigned position, unsigned n ) const
 				{
-				for ( unsigned leftSearchPosition = position - n; leftSearchPosition >= 0; leftSearchPosition--)
-					{
-					unsigned searchWindowLength;
-					for ( searchWindowLength = 0; searchWindowLength < n; ++searchWindowLength )
-						{
-						if ( array[ leftSearchPosition + searchWindowLength ] != other[ searchWindowLength ] )
-							{
-							break;
-							}
-						}
-					if ( searchWindowLength == n )
-						{
-						return leftSearchPosition;
-						}
-					}
-				return npos;
+				constIterator location = dex::find_end( cbegin( ) + position, cend( ), other, other + n );
+				if ( location == cend( ) )
+					return npos;
+				return location - cbegin( );
 				}
 			unsigned rfind( charT c, unsigned position = 0 ) const
 				{
-				for ( unsigned rightSearchPosition = stringSize - 1; rightSearchPosition >= position; -- rightSearchPosition )
-					{
-					if ( array[ rightSearchPosition ] == c )
-						{
-						return rightSearchPosition;
-						}
-					}
-				return npos;
+				constReverseIterator location = dex::find( crbegin( ) + position, crend( ), c );
+				if ( location == crend( ) )
+					return npos;
+				return stringSize - 1 - (location - crbegin( ));
 				}
 
 			unsigned findFirstOf( const basicString &other, unsigned position = 0 ) const
@@ -1143,7 +1112,7 @@ namespace dex
 			unsigned findFirstOf( const charT *other, unsigned position = 0 ) const
 				{
 				unsigned stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { } && stringSize != length;  ++stringSize );
+				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
 				return findFirstOf( other, position, stringSize );
 				}
 			// This seems like an inefficient implementation... if we had an unordered map we would
@@ -1179,7 +1148,7 @@ namespace dex
 			unsigned findFirstNotOf( const charT *other, unsigned position = 0 ) const
 				{
 				unsigned stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { } && stringSize != length;  ++stringSize );
+				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
 				return findFirstNotOf( other, position, stringSize );
 				}
 			unsigned findFirstNotOf( const charT *other, unsigned position, unsigned n ) const
