@@ -3,6 +3,71 @@
 #include "../utils/algorithm.hpp"
 #include <vector>
 
+TEST_CASE( "test find" )
+	{
+	std::vector < int > a;
+	for ( int i = 0;  i != 10;  ++i )
+		a.push_back( i );
+	REQUIRE( dex::find( a.begin( ), a.end( ), 0) == a.begin( ) );
+	REQUIRE( dex::find( a.begin( ), a.end( ), 4) == a.begin( ) + 4 );
+	REQUIRE( dex::find( a.begin( ), a.end( ), 9) == a.begin( ) + 9 );
+	REQUIRE( dex::find( a.begin( ), a.end( ), 20) == a.end( ) );
+	}
+
+TEST_CASE( "test search" )
+	{
+	std::vector < int > a, b;
+	for ( int i = 0;  i != 10;  ++i )
+		a.push_back( i % 5 );
+
+	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) );
+
+	b.push_back(0);
+	b.push_back(1);
+	b.push_back(2);
+	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) );
+
+	b.push_back(4);
+	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
+
+	b.clear( );
+	b.push_back(1);
+	b.push_back(2);
+	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) + 1 );
+
+	b.clear( );
+	for ( int i = 0;  i != 11;  ++i )
+		b.push_back( i );
+	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
+	}
+
+TEST_CASE( "test find_end" )
+	{
+	std::vector < int > a, b;
+	for ( int i = 0;  i != 10;  ++i )
+		a.push_back( i % 5 );
+
+	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
+
+	b.push_back(0);
+	b.push_back(1);
+	b.push_back(2);
+	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) + 5 );
+
+	b.push_back(4);
+	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
+
+	b.clear( );
+	b.push_back(1);
+	b.push_back(2);
+	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) + 6 );
+
+	b.clear( );
+	for ( int i = 0;  i != 11;  ++i )
+		b.push_back( i );
+	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
+	}
+
 TEST_CASE( "test copy" )
 	{
 	std::vector < int > a, b;
