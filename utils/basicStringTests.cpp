@@ -1,5 +1,6 @@
 // basicStringTests.cpp
 // Test the dex::basicString library
+// 2019-10-14: Test replace, swap, popback: combsc, lougheem
 // 2019-10-13: Test insert, erase, replace, find: jasina, lougheem
 // 2019-10-8: Tested Assign, 
 // 2019-10-7: Tested Constructor, Element Access, Assignment, Capacity, Compare: combsc, jasina
@@ -21,6 +22,8 @@ void testInsert( );
 void testErase( );
 void testReplace( );
 void testFind( );
+void testSwap( );
+void testPopback( );
 
 int main( )
 	{
@@ -33,6 +36,8 @@ int main( )
 	testErase( );
 	testReplace( );
 	testFind( );
+	testSwap( );
+	testPopback( );
 
 	return 0;
 	}
@@ -112,7 +117,6 @@ void testAssignment( )
 void testAppend( )
 	{
 	string c( "con" );
-	assert( c == "con" );
 	c += "cat";
 	assert( c == "concat" );
 	string other( "en" );
@@ -341,6 +345,21 @@ void testReplace( )
 	digits.replace( 1, 3, "abc" );
 	assert( digits == "0abc456789" );
 
+	digits = "0123456789";
+	digits.replace( digits.cbegin( ) + 1, digits.cbegin( ) + 4, "abc");
+	assert( digits == "0abc456789" );
+
+	digits = "0123456789";
+	digits.replace( 1, 3, "abc", 2 );
+	assert( digits == "0ab456789" );
+
+	digits = "0123456789";
+	digits.replace( 1, 3, 5, 'x' );
+	assert( digits == "0xxxxx456789" );
+
+	digits = "0123456789";
+	digits.replace( digits.cbegin( ) + 1, digits.cbegin( ) + 4, 5, 'x' );
+	assert( digits == "0xxxxx456789" );
 
 	cout << "Passed replace" << endl;	
 	}
@@ -515,4 +534,34 @@ void testFind( )
 	assert( abracadabra.findLastNotOf( 'v', 5 ) == 5 );
 
 	cout << "Passed find" << endl;
+	}
+
+void testSwap( )
+	{
+	string a( "google" );
+	string b( "microsoft" );
+
+	a.swap( b );
+
+	assert( a == "microsoft" );
+	assert( a.size( ) == 9 );
+	assert( b == "google" );
+	assert( b.size( ) == 6 );
+
+	cout << "Passed swap" << endl;
+	}
+
+void testPopback( )
+	{
+	string a( "popback" );
+	a.popBack( );
+	assert( a == "popbac" );
+	assert( a.size( ) == 6 );
+
+	string b( "b" );
+	b.popBack( );
+	assert( b == "" );
+	assert( b.size( ) == 0 );
+
+	cout << "Passed popback" << endl;
 	}

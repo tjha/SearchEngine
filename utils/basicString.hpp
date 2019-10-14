@@ -645,8 +645,8 @@ namespace dex
 				private:
 					template < typename T >
 					friend class basicString;
-					unsigned position;
 					const basicString *string;
+					unsigned position;
 					constReverseIterator( const basicString < charT > &string, unsigned position ) :
 							string( &string ), position( position ) { }
 				public:
@@ -915,7 +915,6 @@ namespace dex
 			basicString < charT > &insert( unsigned position, const charT *other )
 				{
 				// Technically less efficient, but is more clear and avoids code duplication.
-				const charT *otherEnd;
 				unsigned length = cStringLength( other );
 				insert( cbegin( ) + position, other, other + length );
 				return *this;
@@ -1014,7 +1013,7 @@ namespace dex
 			basicString < charT > &replace( unsigned position, unsigned length, const charT *other, unsigned n )
 				{
 				iterator first = erase( cbegin( ) + position, cbegin( ) + position + length );
-				insert( first, other, n );
+				insert( first - begin( ) , other, n );
 				return *this;
 				}
 			basicString < charT > &replace( constIterator first, constIterator last, const charT *other, unsigned n )
@@ -1068,7 +1067,12 @@ namespace dex
 
 			unsigned copy( charT *characterArray, unsigned count, unsigned position = 0 ) const
 				{
-				count = count == npos ? stringSize - count : min( stringSize, position + count );
+				// count = count == npos ? stringSize - count : min( stringSize, position + count );
+				if ( count == npos )
+					count = stringSize - count;
+				else
+					count = min( stringSize, position + count );
+				
 				dex::copy( begin( ) + position, begin( ) + position + count, characterArray );
 				return count;
 				}
