@@ -1,6 +1,6 @@
 // algorithm.hpp
 // Artisan crafted version of <algorithm> that keeps all of the interfaces.
-// 2019-10-13: Implement find, search, find_end, copy, copy_backward, and fill: jasina
+// 2019-10-13: Implement find, search, findEnd, copy, copyBackward, and fill: jasina
 // 2019-09-19: Implemented Min, Max, Swap: Jasina, Combsc
 
 namespace dex
@@ -33,7 +33,7 @@ namespace dex
 		}
 
 	template< class ForwardIt1, class ForwardIt2 >
-	ForwardIt1 find_end( ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first, ForwardIt2 s_last )
+	ForwardIt1 findEnd( ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first, ForwardIt2 s_last )
 		{
 		ForwardIt1 location = last;
 		while ( true )
@@ -55,7 +55,7 @@ namespace dex
 		}
 
 	template < class BidirIt1, class BidirIt2 >
-	BidirIt2 copy_backward( BidirIt1 first, BidirIt1 last, BidirIt2 dLast )
+	BidirIt2 copyBackward( BidirIt1 first, BidirIt1 last, BidirIt2 dLast )
 		{
 		for ( ;  last != first;  *( --dLast ) = *( --last ));
 		return dLast;

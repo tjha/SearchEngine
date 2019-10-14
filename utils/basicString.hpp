@@ -152,7 +152,7 @@ namespace dex
 				return stringSize;
 				}
 
-			unsigned max_size( ) const
+			unsigned maxSize( ) const
 				{
 				return npos;
 				}
@@ -929,7 +929,7 @@ namespace dex
 				{
 				resize( stringSize + length );
 				// Shift right part of the string
-				dex::copy_backward( first, cend( ) - length, end( ) );
+				dex::copyBackward( first, cend( ) - length, end( ) );
 				// Fill in characters
 				dex::fill( first, first + length, character );
 				return begin( ) + ( first - cbegin( ) );
@@ -947,7 +947,7 @@ namespace dex
 				unsigned length = last - first;
 				resize( stringSize + length, 'u' );
 				// Shift right part of the string
-				dex::copy_backward( insertionPoint, cend( ) - length, end( ) );
+				dex::copyBackward( insertionPoint, cend( ) - length, end( ) );
 				// Fill in characters
 				dex::copy( first, last, fore );
 				return fore + length;
@@ -1105,7 +1105,7 @@ namespace dex
 				}
 			unsigned rfind( const charT *other, unsigned position, unsigned n ) const
 				{
-				constIterator location = dex::find_end( cbegin( ) + position, cend( ), other, other + n );
+				constIterator location = dex::findEnd( cbegin( ) + position, cend( ), other, other + n );
 				if ( location == cend( ) )
 					return npos;
 				return location - cbegin( );

@@ -41,31 +41,31 @@ TEST_CASE( "test search" )
 	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
 	}
 
-TEST_CASE( "test find_end" )
+TEST_CASE( "test findEnd" )
 	{
 	std::vector < int > a, b;
 	for ( int i = 0;  i != 10;  ++i )
 		a.push_back( i % 5 );
 
-	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
+	REQUIRE( dex::findEnd( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
 
 	b.push_back(0);
 	b.push_back(1);
 	b.push_back(2);
-	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) + 5 );
+	REQUIRE( dex::findEnd( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) + 5 );
 
 	b.push_back(4);
-	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
+	REQUIRE( dex::findEnd( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
 
 	b.clear( );
 	b.push_back(1);
 	b.push_back(2);
-	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) + 6 );
+	REQUIRE( dex::findEnd( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) + 6 );
 
 	b.clear( );
 	for ( int i = 0;  i != 11;  ++i )
 		b.push_back( i );
-	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
+	REQUIRE( dex::findEnd( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
 	}
 
 TEST_CASE( "test copy" )
@@ -81,7 +81,7 @@ TEST_CASE( "test copy" )
 		REQUIRE( b[i] == 0 );
 	REQUIRE( copyPoint == b.begin() + 10 );
 
-	copyPoint = dex::copy_backward( b.cbegin( ) + 10, b.cbegin( ), b.end( ) );
+	copyPoint = dex::copyBackward( b.cbegin( ) + 10, b.cbegin( ), b.end( ) );
 	for ( int i = 0;  i != 10;  ++i )
 		{
 		REQUIRE( b[i] == b[i] );
