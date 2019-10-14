@@ -9,7 +9,8 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
-// 2019-10-13: Let iterators be cast to const, clean up reverse iterators, fix insert, use copy/fill from algorithm, fix styling errors, use find/search/find_end from algorithm: jasina
+// 2019-10-13: Let iterators be cast to const, clean up reverse iterators, fix insert, use copy/fill from algorithm,
+//             fix styling errors, use find/search/find_end from algorithm: jasina
 // 2019-10-08: Fix assign, fix append, fix iterator operator-: combsc, jasina
 // 2019-10-07: Fix iterator; implement comparison operators: combsc, jasina
 // 2019-10-02: Define findFirstOf, findFirstNotOf, compare: combsc, lougheem
@@ -47,7 +48,8 @@ namespace dex
 				{
 				if( position > other.size( ) )
 					throw outOfRangeException( );
-				// Make the final length be length, unless the string is too short. In that case, make it be to the end of the string.
+				// Make the final length be length, unless the string is too short. In that case, make it be to the end
+				// of the string.
 				unsigned finalLength = min(length, other.size( ) - position );
 
 				arraySize = other.capacity( );
@@ -214,7 +216,8 @@ namespace dex
 					friend class constIterator;
 					basicString <charT > *string;
 					unsigned position;
-					iterator( basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
+					iterator( basicString < charT > &string, unsigned position ) :
+							string( &string ), position( position ) { }
 				public:
 					friend bool operator==( const iterator &a, const iterator &b )
 						{
@@ -354,7 +357,8 @@ namespace dex
 					friend class basicString;
 					const basicString < charT > *string;
 					unsigned position;
-					constIterator( const basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
+					constIterator( const basicString < charT > &string, unsigned position ) :
+							string( &string ), position( position ) { }
 				public:
 					constIterator( const iterator &it ) : string( it.string ), position( it.position ) { }
 					friend bool operator==( const constIterator &a, const constIterator &b )
@@ -494,7 +498,8 @@ namespace dex
 					friend class constReverseIterator;
 					unsigned position;
 					basicString *string;
-					reverseIterator( basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
+					reverseIterator( basicString < charT > &string, unsigned position ) :
+							string( &string ), position( position ) { }
 				public:
 					friend bool operator==( const reverseIterator &a, const reverseIterator &b )
 						{
@@ -633,7 +638,8 @@ namespace dex
 					friend class basicString;
 					unsigned position;
 					const basicString *string;
-					constReverseIterator( const basicString < charT > &string, unsigned position ) : string( &string ), position( position ) { }
+					constReverseIterator( const basicString < charT > &string, unsigned position ) :
+							string( &string ), position( position ) { }
 				public:
 					constReverseIterator( const reverseIterator &it ) : string( it.string ), position( it.position ) { }
 					friend bool operator==( const constReverseIterator &a, const constReverseIterator &b )
@@ -892,9 +898,11 @@ namespace dex
 				insert( cbegin( ) + position, other.cbegin( ), other.cend( ) );
 				return *this;
 				}
-			basicString < charT > &insert( unsigned position, const basicString < charT > &other, unsigned subposition, unsigned sublength )
+			basicString < charT > &insert( unsigned position, const basicString < charT > &other,
+					unsigned subposition, unsigned sublength )
 				{
-				insert( cbegin( ) + position, other.cbegin( ) + subposition, other.cbegin( ) + subposition + sublength );
+				insert( cbegin( ) + position, other.cbegin( ) + subposition,
+						other.cbegin( ) + subposition + sublength );
 				return *this;
 				}
 			basicString < charT > &insert( unsigned position, const charT *other )
@@ -975,13 +983,16 @@ namespace dex
 				{
 				return replace( cbegin( ) + position, cbegin( ) + position + length, other );
 				}
-			basicString < charT > &replace( constIterator first, constIterator last, const basicString < charT > &other )
+			basicString < charT > &replace( constIterator first, constIterator last,
+					const basicString < charT > &other )
 				{
 				return replace( first, last, other.cbegin( ), other.cend( ) );
 				}
-			basicString < charT > &replace( unsigned position, unsigned length, const basicString < charT > &other, unsigned subposition, unsigned sublength )
+			basicString < charT > &replace( unsigned position, unsigned length,
+					const basicString < charT > &other, unsigned subposition, unsigned sublength )
 				{
-				return replace( cbegin( ) + position, cbegin( ) + position + length, other.cbegin( ) + subposition, other.cbegin( ) + subposition + sublength );
+				return replace( cbegin( ) + position, cbegin( ) + position + length,
+						other.cbegin( ) + subposition, other.cbegin( ) + subposition + sublength );
 				}
 			basicString < charT > &replace( unsigned position, unsigned length, const charT *other )
 				{
@@ -1015,7 +1026,8 @@ namespace dex
 				insert( first, n, c );
 				return *this;
 				}
-			template < class InputIterator > basicString < charT > &replace( constIterator first, constIterator last, InputIterator inputFirst, InputIterator inputLast )
+			template < class InputIterator > basicString < charT > &replace( constIterator first, constIterator last,
+					InputIterator inputFirst, InputIterator inputLast )
 				{
 				first = erase( first, last );
 				insert( first, inputFirst, inputLast );
@@ -1193,7 +1205,8 @@ namespace dex
 				{
 				return compare( position, length, other, 0, other.size( ) );
 				}
-			int compare( unsigned position, unsigned length, const basicString &other, unsigned subposition, unsigned sublength ) const
+			int compare( unsigned position, unsigned length,
+					const basicString &other, unsigned subposition, unsigned sublength ) const
 				{
 				constIterator first = cbegin( ) + position;
 				constIterator otherFirst = other.cbegin( ) + subposition;
