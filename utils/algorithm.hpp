@@ -1,5 +1,6 @@
 // algorithm.hpp
 // Artisan crafted version of <algorithm> that keeps all of the interfaces.
+// 2019-10-14: Fix findEnd: jasina
 // 2019-10-13: Implement find, search, findEnd, copy, copyBackward, and fill: jasina
 // 2019-09-19: Implemented Min, Max, Swap: Jasina, Combsc
 
@@ -35,6 +36,8 @@ namespace dex
 	template< class ForwardIt1, class ForwardIt2 >
 	ForwardIt1 findEnd( ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first, ForwardIt2 s_last )
 		{
+		if ( s_first == s_last )
+			return last;
 		ForwardIt1 location = last;
 		while ( true )
 			{

@@ -9,6 +9,7 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
+// 2019-10-14: Fix insert, erase, replace, find: jasina, lougheem
 // 2019-10-13: Let iterators be cast to const, clean up reverse iterators, fix insert, use copy/fill from algorithm,
 //             fix styling errors, use find/search/find_end from algorithm, implement findLastOf and findLastNotOf:
 //             jasina
@@ -35,6 +36,13 @@ namespace dex
 			charT *array;
 			unsigned arraySize;
 			unsigned stringSize;
+
+			static unsigned cStringLength( const charT *cstr )
+				{
+				const charT *end;
+				for ( end = cstr;  *end != charT { };  ++end );
+				return end - cstr;
+				}
 
 		public:
 			static const unsigned npos = unsigned ( -1 );
@@ -348,7 +356,7 @@ namespace dex
 				}
 			iterator end( )
 				{
-				return iterator( *this, size( ) ); 
+				return iterator( *this, size( ) );
 				}
 
 			class constIterator
@@ -770,7 +778,7 @@ namespace dex
 				}
 			constReverseIterator crend( ) const
 				{
-				return constReverseIterator( *this, size( ) ); 
+				return constReverseIterator( *this, size( ) );
 				}
 
 			// Element Access
@@ -831,10 +839,8 @@ namespace dex
 				}
 			basicString < charT > &append( const charT *other )
 				{
-				const charT *otherEnd;
 				// Technically less efficient, but is more clear and avoids code duplication.
-				for ( otherEnd = other;  *otherEnd != '\0';  ++otherEnd );
-				return append( other, otherEnd );
+				return append( other, other + cStringLength( other ) );
 				}
 			basicString < charT > &append( const charT *other, unsigned length )
 				{
@@ -909,9 +915,9 @@ namespace dex
 			basicString < charT > &insert( unsigned position, const charT *other )
 				{
 				// Technically less efficient, but is more clear and avoids code duplication.
-				iterator otherEnd;
-				for ( otherEnd = other;  otherEnd != '\0';  ++otherEnd );
-				insert( cbegin( ) + position, other, otherEnd );
+				const charT *otherEnd;
+				unsigned length = cStringLength( other );
+				insert( cbegin( ) + position, other, other + length );
 				return *this;
 				}
 			basicString < charT > &insert( unsigned position, const charT *other, unsigned length )
@@ -927,12 +933,13 @@ namespace dex
 				}
 			iterator insert( constIterator first, unsigned length, charT character )
 				{
+				iterator writableFirst = begin( ) + ( first - cbegin( ) );
 				resize( stringSize + length );
 				// Shift right part of the string
 				dex::copyBackward( first, cend( ) - length, end( ) );
 				// Fill in characters
-				dex::fill( first, first + length, character );
-				return begin( ) + ( first - cbegin( ) );
+				dex::fill( writableFirst, writableFirst + length, character );
+				return writableFirst;
 				}
 			iterator insert( constIterator first, charT character )
 				{
@@ -964,6 +971,7 @@ namespace dex
 				}
 			iterator erase ( constIterator first, constIterator last )
 				{
+				iterator writableFirst = begin( ) + ( first - cbegin( ) );
 				// Throw an error if the iterators passed are to different strings.
 				if( first.string != this || last.string != this )
 					{
@@ -974,10 +982,10 @@ namespace dex
 					throw outOfRangeException( );
 					}
 
-				dex::copy( last( ), end( ), first( ) );
+				dex::copy( last, cend( ), writableFirst );
 				// Decrease string size
 				resize( stringSize - ( last - first ) );
-				return first;
+				return writableFirst;
 				}
 
 			basicString < charT > &replace( unsigned position, unsigned length, const basicString < charT > &other )
@@ -1001,9 +1009,7 @@ namespace dex
 				}
 			basicString < charT > &replace( constIterator first, constIterator last, const charT *other )
 				{
-				unsigned stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
-				return replace( first, last, other, stringSize );
+				return replace( first, last, other, cStringLength( other ) );
 				}
 			basicString < charT > &replace( unsigned position, unsigned length, const charT *other, unsigned n )
 				{
@@ -1014,7 +1020,7 @@ namespace dex
 			basicString < charT > &replace( constIterator first, constIterator last, const charT *other, unsigned n )
 				{
 				first = erase( first, last );
-				insert( first, other, n );
+				insert( first - cbegin( ), other, n );
 				return *this;
 				}
 			basicString < charT > &replace( unsigned position, unsigned length, unsigned n, charT c )
@@ -1074,9 +1080,7 @@ namespace dex
 			unsigned find( const charT *other, unsigned position = 0 ) const
 				{
 				// Inefficient, but easy to understand
-				int stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
-				return find( other, position, stringSize );
+				return find( other, position, cStringLength( other ) );
 				}
 			unsigned find( const charT *other, unsigned position, unsigned n ) const
 				{
@@ -1093,26 +1097,29 @@ namespace dex
 				return location - cbegin( );
 				}
 
-			unsigned rfind( const basicString &other, unsigned position = 0 ) const
+			unsigned rfind( const basicString &other, unsigned position = npos ) const
 				{
 				return rfind( other.cStr( ), position, other.stringSize );
 				}
-			unsigned rfind( const charT *other, unsigned position = 0 ) const
+			unsigned rfind( const charT *other, unsigned position = npos ) const
 				{
-				int stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
-				return rfind( other, position, stringSize );
+				return rfind( other, position, cStringLength( other ) );
 				}
 			unsigned rfind( const charT *other, unsigned position, unsigned n ) const
 				{
-				constIterator location = dex::findEnd( cbegin( ) + position, cend( ), other, other + n );
-				if ( location == cend( ) )
+				if ( n == 0 )
+					return min( position, stringSize );
+				constIterator searchEnd = cbegin( ) + min( min( position, stringSize ) + n, stringSize );
+				constIterator location = dex::findEnd( cbegin( ), searchEnd,
+						other, other + n );
+				if ( location == searchEnd )
 					return npos;
 				return location - cbegin( );
 				}
-			unsigned rfind( charT c, unsigned position = 0 ) const
+			unsigned rfind( charT c, unsigned position = npos ) const
 				{
-				constReverseIterator location = dex::find( crbegin( ) + position, crend( ), c );
+				constReverseIterator searchStart = crend( ) - ( min( position, stringSize - 1 ) + 1 );
+				constReverseIterator location = dex::find( searchStart, crend( ), c );
 				if ( location == crend( ) )
 					return npos;
 				return stringSize - 1 - (location - crbegin( ));
@@ -1124,16 +1131,14 @@ namespace dex
 				}
 			unsigned findFirstOf( const charT *other, unsigned position = 0 ) const
 				{
-				unsigned stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
-				return findFirstOf( other, position, stringSize );
+				return findFirstOf( other, position, cStringLength( other ) );
 				}
 			// This seems like an inefficient implementation... if we had an unordered map we would
 			// speed this up a lot
 			unsigned findFirstOf( const charT *other, unsigned position, unsigned n ) const
 				{
-				for ( constIterator it = cbegin( ) + position; it != cend( ); ++it )
-					for ( unsigned i = 0; i != n; ++i )
+				for ( constIterator it = cbegin( ) + position;  it != cend( );  ++it )
+					for ( unsigned i = 0;  i != n;  ++i )
 						if ( *it == other[ i ] )
 							return it - cbegin( );
 				return npos;
@@ -1143,25 +1148,24 @@ namespace dex
 				return find( c, position );
 				}
 
-			unsigned findLastOf( const basicString &other, unsigned position = 0 ) const
+			unsigned findLastOf( const basicString &other, unsigned position = npos ) const
 				{
 				return findLastOf( other.cStr( ), position, other.size( ) );
 				}
-			unsigned findLastOf( const charT *other, unsigned position = 0 ) const
+			unsigned findLastOf( const charT *other, unsigned position = npos ) const
 				{
-				unsigned stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
-				return findLastOf( other, position, stringSize );
+				return findLastOf( other, position, cStringLength( other ) );
 				}
 			unsigned findLastOf( const charT *other, unsigned position, unsigned n ) const
 				{
-				for ( constReverseIterator it = crbegin( ) + position; it != crend( ); ++it )
-					for ( unsigned i = 0; i != n; ++i )
+				constReverseIterator searchStart = crend( ) - ( min( position, stringSize - 1 ) + 1 );
+				for ( constReverseIterator it = searchStart;  it != crend( );  ++it )
+					for ( unsigned i = 0;  i != n;  ++i )
 						if ( *it == other[ i ] )
 							return stringSize - 1 - ( it - crbegin( ) );
 				return npos;
 				}
-			unsigned findLastOf( charT c, unsigned position = 0 ) const
+			unsigned findLastOf( charT c, unsigned position = npos ) const
 				{
 				return rfind( c, position );
 				}
@@ -1172,16 +1176,14 @@ namespace dex
 				}
 			unsigned findFirstNotOf( const charT *other, unsigned position = 0 ) const
 				{
-				unsigned stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
-				return findFirstNotOf( other, position, stringSize );
+				return findFirstNotOf( other, position, cStringLength( other ) );
 				}
 			unsigned findFirstNotOf( const charT *other, unsigned position, unsigned n ) const
 				{
-				for ( constIterator it = cbegin( ) + position; it != cend( ); ++it )
+				for ( constIterator it = cbegin( ) + position;  it != cend( );  ++it )
 					{
 					bool isInOther = false;
-					for ( unsigned i = 0; i < n; ++i )
+					for ( unsigned i = 0;  i != n;  ++i )
 						if ( *it == other[ i ] )
 							{
 							isInOther = true;
@@ -1197,22 +1199,21 @@ namespace dex
 				return findFirstNotOf( &c, position, 1 );
 				}
 
-			unsigned findLastNotOf( const basicString &other, unsigned position = 0 ) const
+			unsigned findLastNotOf( const basicString &other, unsigned position = npos ) const
 				{
 				return findLastNotOf( other.cStr( ), position, other.size( ) );
 				}
-			unsigned findLastNotOf( const charT *other, unsigned position = 0 ) const
+			unsigned findLastNotOf( const charT *other, unsigned position = npos ) const
 				{
-				unsigned stringSize;
-				for ( stringSize = 0;  other[ stringSize ] != charT { };  ++stringSize );
-				return findLastNotOf( other, position, stringSize );
+				return findLastNotOf( other, position, cStringLength( other ) );
 				}
 			unsigned findLastNotOf( const charT *other, unsigned position, unsigned n ) const
 				{
-				for ( constReverseIterator it = crbegin( ) + position; it != crend( ); ++it )
+				constReverseIterator searchStart = crend( ) - ( min( position, stringSize - 1 ) + 1 );
+				for ( constReverseIterator it = searchStart;  it != crend( );  ++it )
 					{
 					bool isInOther = false;
-					for ( unsigned i = 0; i < n; ++i )
+					for ( unsigned i = 0;  i != n;  ++i )
 						if ( *it == other[ i ] )
 							{
 							isInOther = true;
@@ -1223,7 +1224,7 @@ namespace dex
 					}
 				return npos;
 				}
-			unsigned findLastNotOf( charT c, unsigned position = 0 ) const
+			unsigned findLastNotOf( charT c, unsigned position = npos ) const
 				{
 				return findLastNotOf( &c, position, 1 );
 				}
