@@ -1,4 +1,10 @@
-#define CATCH_CONFIG_MAIN
+// algorithmTests.cpp
+// Testing for the algorithm library
+//
+// 2019-10-17: Get tests to all compile and pass: jasina
+// 2019-10-13: Write copy, fill, find, search, and findEnd tests: jasina
+// 2019-9-19: Write min and max tests: combsc
+
 #include "catch.hpp"
 #include "../utils/algorithm.hpp"
 #include <vector>
@@ -81,7 +87,7 @@ TEST_CASE( "test copy" )
 		REQUIRE( b[i] == 0 );
 	REQUIRE( copyPoint == b.begin() + 10 );
 
-	copyPoint = dex::copyBackward( b.cbegin( ) + 10, b.cbegin( ), b.end( ) );
+	copyPoint = dex::copyBackward( b.cbegin( ), b.cbegin( ) + 10, b.end( ) );
 	for ( int i = 0;  i != 10;  ++i )
 		{
 		REQUIRE( b[i] == b[i] );
