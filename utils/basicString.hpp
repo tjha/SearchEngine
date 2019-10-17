@@ -9,6 +9,7 @@
 //    std::basic_string::insert( const_iterator, initializer_list < charT > );
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
+// 2019-10-17: Add include guard: jasina
 // 2019-10-14: Fix insert, erase, replace, find: jasina, lougheem
 // 2019-10-13: Let iterators be cast to const, clean up reverse iterators, fix insert, use copy/fill from algorithm,
 //             fix styling errors, use find/search/find_end from algorithm, implement findLastOf and findLastNotOf:
@@ -22,6 +23,9 @@
 // 2019-09-19: Formatting fixes; define constructors, capacity fuctions, and operator[]: combsc, jasina
 // 2019-09-16: Defined Interface: combsc, jasina, lougheem
 // 2019-09-14: File created: combsc, jasina, lougheem
+
+#ifndef DEX_BASIC_STRING
+#define DEX_BASIC_STRING
 
 #include <iostream>
 #include "algorithm.hpp"
@@ -1388,3 +1392,5 @@ namespace dex
 	
 	typedef dex::basicString < char > string;
 	}
+
+#endif

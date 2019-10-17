@@ -1,8 +1,12 @@
 // algorithm.hpp
 // Artisan crafted version of <algorithm> that keeps all of the interfaces.
+// 2019-10-17: Disambiguate call to search, add include guard: jasina
 // 2019-10-14: Fix findEnd: jasina
 // 2019-10-13: Implement find, search, findEnd, copy, copyBackward, and fill: jasina
 // 2019-09-19: Implemented Min, Max, Swap: Jasina, Combsc
+
+#ifndef DEX_ALGORITHM
+#define DEX_ALGORITHM
 
 namespace dex
 	{
@@ -41,7 +45,7 @@ namespace dex
 		ForwardIt1 location = last;
 		while ( true )
 			{
-			ForwardIt1 newLocation = search( first, last, s_first, s_last );
+			ForwardIt1 newLocation = dex::search( first, last, s_first, s_last );
 			if ( newLocation == last )
 				return location;
 			location = newLocation;
@@ -92,3 +96,5 @@ namespace dex
 		second = other;
 		}
 	}
+
+#endif
