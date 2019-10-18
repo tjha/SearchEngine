@@ -12,7 +12,8 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
-// 2019-10-17: Add include guard: jasina
+// 2019-10-17: Add include guard, lots of minor bug fixes, hash function, make array always be a C-string:
+//             jasina, lougheem
 // 2019-10-14: Fix insert, erase, replace, find: jasina, lougheem
 // 2019-10-13: Let iterators be cast to const, clean up reverse iterators, fix insert, use copy/fill from algorithm,
 //             fix styling errors, use find/search/find_end from algorithm, implement findLastOf and findLastNotOf:
@@ -40,11 +41,13 @@ namespace dex
 	class basicString
 		{
 		private:
+			// A null-terminated C-string
 			charT *array;
+			// In order to maintain our array invariant, we must have arraySize >= stringSize + 1
 			unsigned arraySize;
 			unsigned stringSize;
 
-			// Find the length of a null-terminated C-string
+			// Find the length of a null-terminated C-string (not including the null-terminator)
 			static unsigned cStringLength( const charT *cstr )
 				{
 				const charT *end;
@@ -61,58 +64,61 @@ namespace dex
 				{
 				arraySize = 1;
 				stringSize = 0;
-				array = new charT[ arraySize ];
+				array = new charT[ arraySize ]( );
 				}
 			basicString( const basicString < charT > &other, unsigned position = 0, unsigned length = npos )
 				{
-				if( position > other.size( ) )
+				if ( position > other.size( ) )
 					throw outOfRangeException( );
 
 				// Make the final length be length, unless the string is too short. In that case, make it be to the end
 				// of the string.
 				unsigned finalLength = min(length, other.size( ) - position );
 
-				arraySize = other.capacity( );
+				arraySize = finalLength + 1;
 				array = new charT[ arraySize ];
 				stringSize = finalLength;
 
 				dex::copy( other.cbegin( ) + position, other.cbegin( ) + position + finalLength, array );
+				array[ finalLength ] = charT { };
 				}
 			basicString( const charT* other, unsigned length = npos )
 				{
 				// We are making here the assumption that the number of appendations
-				//    string will not be significant. Therefore, we will do no 
+				//    string will not be significant. Therefore, we will do no
 				//    optimizations for allocating arraySize, allocating lazily.
 				stringSize = min( cStringLength( other ), length );
-				arraySize = stringSize;
+				arraySize = stringSize + 1;
 				array = new charT[ arraySize ];
-				
+
 				dex::copy( other, other + stringSize, array );
+				array[ stringSize ] = charT { };
 				}
 			basicString( unsigned length, charT character )
 				{
-				arraySize = length;
+				arraySize = length + 1;
 				array = new charT[ arraySize ];
-				stringSize = arraySize;
+				stringSize = length;
 
 				dex::fill( array, array + stringSize, character );
+				array[ stringSize ] = charT { };
 				}
 			template < class InputIterator > basicString( InputIterator first, InputIterator last )
 				{
-				// TODO: This is an uber-naive way to allocate memory. Maybe we should change this later.
+				// This is an uber-naive way to allocate memory. Maybe we should change this later.
 				arraySize = 1;
 				array = new charT[ arraySize ];
 				stringSize = 0;
 
 				while ( first != last )
 					{
-					if ( ++stringSize > arraySize )
-						{
-						reserve( arraySize <<= 1 );
-						}
+					if ( stringSize + 2 > arraySize )
+						reserve( arraySize << 1 );
 
-					array[stringSize - 1] = *(first++);
+					array[ stringSize++ ] = *( first++ );
 					}
+
+				array[ stringSize ] = charT { };
 				}
 			basicString( basicString < charT > &&other )
 				{
@@ -129,9 +135,7 @@ namespace dex
 			~basicString( )
 				{
 				if ( array )
-					{
 					delete [ ] array;
-					}
 				}
 
 			// CTRLF Assignment
@@ -147,7 +151,7 @@ namespace dex
 				}
 			basicString < charT > &operator=( charT c )
 				{
-				stringSize = 1;
+				resize( 1 );
 				array[ 0 ] = c;
 				return *this;
 				}
@@ -175,49 +179,54 @@ namespace dex
 
 			void resize( unsigned newStringSize, charT character = { } )
 				{
-				reserve(newStringSize);
-				if ( newStringSize > stringSize )
-					dex::fill( array + stringSize, array + newStringSize, character );
+				if ( newStringSize > capacity( ) )
+					reserve( newStringSize );
+
+				if ( newStringSize > size( ) )
+					dex::fill( array + size( ), array + newStringSize, character );
 				stringSize = newStringSize;
+				array[ size( ) ] = charT { };
 				}
 
 			unsigned capacity( ) const
 				{
-				return arraySize;
+				return arraySize - 1;
 				}
 
 			void reserve( unsigned newArraySize )
 				{
-				if (newArraySize == arraySize )
+				if ( newArraySize == capacity( ) )
 					return;
 
-				charT *newArray = new charT[ newArraySize ];
-				if ( newArraySize > stringSize )
-					dex::copy( array, array + stringSize, newArray );
+				charT *newArray = new charT[ newArraySize + 1 ];
+				if ( newArraySize > size( ) )
+					dex::copy( array, array + size( ) + 1, newArray );
 				else
 					{
+					// This block is actually a non-binding request, so we could delete it if need be.
 					dex::copy( array, array + newArraySize, newArray );
 					stringSize = newArraySize;
+					array[ size( ) ] = charT { };
 					}
 				delete [ ] array;
 				array = newArray;
-				arraySize = newArraySize;
+				arraySize = newArraySize + 1;
 				}
 
 			void clear( )
 				{
-				stringSize = 0;
+				resize( 0 );
 				}
 
 			bool empty( ) const
 				{
-				return stringSize == 0;
+				return size( ) == 0;
 				}
 
 			// We can alter the behavior of this function. If we want a string buffer we'll have to change this.
 			void shrinkToFit( )
 				{
-				reserve( stringSize );
+				reserve( size( ) );
 				}
 
 			// CTRLF Iterators
@@ -363,7 +372,7 @@ namespace dex
 				}
 			iterator end( )
 				{
-				return iterator( *this, stringSize );
+				return iterator( *this, size( ) );
 				}
 
 			class constIterator
@@ -503,7 +512,7 @@ namespace dex
 				}
 			constIterator cend( ) const
 				{
-				return constIterator( *this, stringSize );
+				return constIterator( *this, size( ) );
 				}
 
 			class reverseIterator
@@ -644,7 +653,7 @@ namespace dex
 				}
 			reverseIterator rend( )
 				{
-				return reverseIterator( *this, stringSize );
+				return reverseIterator( *this, size( ) );
 				}
 
 			class constReverseIterator
@@ -785,7 +794,7 @@ namespace dex
 				}
 			constReverseIterator crend( ) const
 				{
-				return constReverseIterator( *this, stringSize );
+				return constReverseIterator( *this, size( ) );
 				}
 
 			// CTRLF Element Access
@@ -800,41 +809,33 @@ namespace dex
 
 			const charT &at( unsigned position) const
 				{
-				if( position < 0 || position >= stringSize )
+				if( position < 0 || position >= size( ) )
 					throw outOfRangeException( );
 				return array[ position ];
 				}
 			charT &at( unsigned position )
 				{
-				if( position < 0 || position >= stringSize )
+				if( position < 0 || position >= size( ) )
 					throw outOfRangeException( );
 				return array[ position ];
 				}
 
 			const charT &front( ) const
 				{
-				if( stringSize == 0 )
-					throw outOfRangeException( );
 				return array[ 0 ];
 				}
 			charT &front( )
 				{
-				if( stringSize == 0 )
-					throw outOfRangeException( );
 				return array[ 0 ];
 				}
 
 			const charT &back( ) const
 				{
-				if( stringSize == 0 )
-					throw outOfRangeException( );
-				return array[ stringSize - 1 ];
+				return array[ size( ) - 1 ];
 				}
 			charT &back( )
 				{
-				if( stringSize == 0 )
-					throw outOfRangeException( );
-				return array[ stringSize - 1 ];
+				return array[ size( ) - 1 ];
 				}
 
 			const charT* cStr( ) const
@@ -844,7 +845,7 @@ namespace dex
 
 			const charT* data( ) const
 				{
-				return cStr( );
+				return array;
 				}
 
 			// CTRLF Modifiers
@@ -880,7 +881,7 @@ namespace dex
 				}
 			basicString < charT > &append( unsigned number, charT character )
 				{
-				resize( stringSize + number, character );
+				resize( size( ) + number, character );
 				return *this;
 				}
 			template < class InputIterator >
@@ -892,7 +893,7 @@ namespace dex
 
 			void pushBack( charT character )
 				{
-				resize( stringSize + 1, character );
+				resize( size( ) + 1, character );
 				}
 
 			basicString < charT > &assign( const basicString < charT > &other )
@@ -932,21 +933,30 @@ namespace dex
 				swap( temporaryString );
 				return *this;
 				}
-			
+
 			basicString < charT > &insert( unsigned position, const basicString < charT > &other )
 				{
+				if ( position > size( ) )
+					throw dex::outOfRangeException( );
+
 				insert( cbegin( ) + position, other.cbegin( ), other.cend( ) );
 				return *this;
 				}
 			basicString < charT > &insert( unsigned position, const basicString < charT > &other,
 					unsigned subposition, unsigned sublength )
 				{
+				if ( position > size( ) || subposition > other.size( ) )
+					throw dex::outOfRangeException( );
+
 				insert( cbegin( ) + position, other.cbegin( ) + subposition,
 						other.cbegin( ) + subposition + sublength );
 				return *this;
 				}
 			basicString < charT > &insert( unsigned position, const charT *other )
 				{
+				if ( position > size( ) )
+					throw dex::outOfRangeException( );
+
 				// Technically less efficient, but is more clear and avoids code duplication.
 				unsigned length = cStringLength( other );
 				insert( cbegin( ) + position, other, other + length );
@@ -954,19 +964,30 @@ namespace dex
 				}
 			basicString < charT > &insert( unsigned position, const charT *other, unsigned length )
 				{
+				if ( position > size( ) )
+					throw dex::outOfRangeException( );
+
 				// Caution: we do not check if other is of length at least length
 				insert( cbegin( ) + position, other, other + length );
 				return *this;
 				}
 			basicString < charT > &insert( unsigned position, unsigned length, charT character )
 				{
+				if ( position > size( ) )
+					throw dex::outOfRangeException( );
+
 				insert( cbegin( ) + position, length, character );
 				return *this;
 				}
 			iterator insert( constIterator first, unsigned length, charT character )
 				{
 				iterator writableFirst = begin( ) + ( first - cbegin( ) );
-				resize( stringSize + length );
+
+				// Get as much space as we need
+				if ( size( ) + length > capacity( ) )
+					reserve( size( ) + length );
+				stringSize = size( ) + length;
+				array[ size( ) ] = charT { };
 
 				// Shift right part of the string
 				dex::copyBackward( first, cend( ) - length, end( ) );
@@ -982,25 +1003,29 @@ namespace dex
 			template < class InputIterator >
 			iterator insert( constIterator insertionPoint, InputIterator first, InputIterator last )
 				{
-				iterator fore = begin( ) + (insertionPoint - cbegin( ));
-				if ( first > last )
-					throw outOfRangeException( );
+				iterator writableFirst = begin( ) + ( insertionPoint - cbegin( ) );
+
+				// Get as much space as we need
 				unsigned length = last - first;
-				resize( stringSize + length );
+				if ( size( ) + length > capacity( ) )
+					reserve( size( ) + length );
+				stringSize = size( ) + length;
+				array[ size( ) ] = charT { };
 
 				// Shift right part of the string
 				dex::copyBackward( insertionPoint, cend( ) - length, end( ) );
 
 				// Fill in characters
-				dex::copy( first, last, fore );
-				return fore + length;
+				dex::copy( first, last, writableFirst );
+				return writableFirst + length;
 				}
-			
+
 			basicString < charT > &erase( unsigned position = 0, unsigned length = npos )
 				{
-				if ( position > stringSize )
+				if ( position > size( ) )
 					throw dex::outOfRangeException( );
-				erase( cbegin( ) + position, cbegin( ) + position + dex::min( length, stringSize - position ) );
+
+				erase( cbegin( ) + position, cbegin( ) + position + dex::min( length, size( ) - position ) );
 				return *this;
 				}
 			iterator erase ( constIterator first )
@@ -1017,7 +1042,7 @@ namespace dex
 
 				dex::copy( last, cend( ), writableFirst );
 				// Decrease string size
-				resize( stringSize - ( last - first ) );
+				resize( size( ) - ( last - first ) );
 				return writableFirst;
 				}
 
@@ -1090,21 +1115,21 @@ namespace dex
 			// CTRLF String Operations
 			unsigned copy( charT *characterArray, unsigned count, unsigned position = 0 ) const
 				{
-				// count = count == npos ? stringSize - count : min( stringSize, position + count );
-				if ( position > stringSize )
+				if ( position > size( ) )
 					throw dex::outOfRangeException( );
+
 				if ( count == npos )
-					count = stringSize - count;
+					count = size( ) - count;
 				else
-					count = min( stringSize, position + count );
-				
+					count = min( size( ), position + count );
+
 				dex::copy( begin( ) + position, begin( ) + position + count, characterArray );
 				return count;
 				}
 
 			unsigned find( const basicString &other, unsigned position = 0 ) const
 				{
-				return find( other.cStr( ), position, other.stringSize );
+				return find( other.cStr( ), position, other.size( ) );
 				}
 			unsigned find( const charT *other, unsigned position = 0 ) const
 				{
@@ -1128,7 +1153,7 @@ namespace dex
 
 			unsigned rfind( const basicString &other, unsigned position = npos ) const
 				{
-				return rfind( other.cStr( ), position, other.stringSize );
+				return rfind( other.cStr( ), position, other.size( ) );
 				}
 			unsigned rfind( const charT *other, unsigned position = npos ) const
 				{
@@ -1137,8 +1162,8 @@ namespace dex
 			unsigned rfind( const charT *other, unsigned position, unsigned n ) const
 				{
 				if ( n == 0 )
-					return min( position, stringSize );
-				constIterator searchEnd = cbegin( ) + min( min( position, stringSize ) + n, stringSize );
+					return min( position, size( ) );
+				constIterator searchEnd = cbegin( ) + min( min( position, size( ) ) + n, size( ) );
 				constIterator location = dex::findEnd( cbegin( ), searchEnd,
 						other, other + n );
 				if ( location == searchEnd )
@@ -1147,11 +1172,11 @@ namespace dex
 				}
 			unsigned rfind( charT c, unsigned position = npos ) const
 				{
-				constReverseIterator searchStart = crend( ) - ( min( position, stringSize - 1 ) + 1 );
+				constReverseIterator searchStart = crend( ) - ( min( position, size( ) - 1 ) + 1 );
 				constReverseIterator location = dex::find( searchStart, crend( ), c );
 				if ( location == crend( ) )
 					return npos;
-				return stringSize - 1 - (location - crbegin( ));
+				return size( ) - 1 - (location - crbegin( ));
 				}
 
 			unsigned findFirstOf( const basicString &other, unsigned position = 0 ) const
@@ -1187,11 +1212,11 @@ namespace dex
 				}
 			unsigned findLastOf( const charT *other, unsigned position, unsigned n ) const
 				{
-				constReverseIterator searchStart = crend( ) - ( min( position, stringSize - 1 ) + 1 );
+				constReverseIterator searchStart = crend( ) - ( min( position, size( ) - 1 ) + 1 );
 				for ( constReverseIterator it = searchStart;  it != crend( );  ++it )
 					for ( unsigned i = 0;  i != n;  ++i )
 						if ( *it == other[ i ] )
-							return stringSize - 1 - ( it - crbegin( ) );
+							return size( ) - 1 - ( it - crbegin( ) );
 				return npos;
 				}
 			unsigned findLastOf( charT c, unsigned position = npos ) const
@@ -1238,7 +1263,7 @@ namespace dex
 				}
 			unsigned findLastNotOf( const charT *other, unsigned position, unsigned n ) const
 				{
-				constReverseIterator searchStart = crend( ) - ( min( position, stringSize - 1 ) + 1 );
+				constReverseIterator searchStart = crend( ) - ( min( position, size( ) - 1 ) + 1 );
 				for ( constReverseIterator it = searchStart;  it != crend( );  ++it )
 					{
 					bool isInOther = false;
@@ -1249,7 +1274,7 @@ namespace dex
 							break;
 							}
 					if ( !isInOther )
-						return stringSize - 1 - ( it - crbegin( ) );
+						return size( ) - 1 - ( it - crbegin( ) );
 					}
 				return npos;
 				}
@@ -1265,7 +1290,7 @@ namespace dex
 
 			int compare( const basicString &other ) const
 				{
-				return compare( 0, stringSize, other, 0, other.size( ) );
+				return compare( 0, size( ), other, 0, other.size( ) );
 				}
 			int compare( unsigned position, unsigned length, const basicString &other ) const
 				{
@@ -1298,7 +1323,7 @@ namespace dex
 			int compare( const charT *other ) const
 				{
 				basicString otherBasicString = basicString( other );
-				return compare( 0, stringSize, otherBasicString, 0, otherBasicString.size( ) );
+				return compare( 0, size( ), otherBasicString, 0, otherBasicString.size( ) );
 				}
 			int compare( unsigned position, unsigned length, const charT *other ) const
 				{
@@ -1411,7 +1436,7 @@ namespace dex
 			{
 			return lhs.compare( rhs ) <= 0;
 			}
-	
+
 	typedef dex::basicString < char > string;
 
 	template < class Key >
