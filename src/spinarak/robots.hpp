@@ -13,6 +13,7 @@
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
+#include <vector>
 #include <unordered_set>
 
 using namespace std;
@@ -37,8 +38,11 @@ namespace dex
          time_t lastTimeVisited;
          time_t allowedVisitTime;
 
-         // Paths that are allowed. If "/"" is in this set, all paths are allowed.
+         // Paths that are disallowed. If "/"" is in this set, all paths are disallowed.
+         unordered_set < string > disallowedPaths;
+         // Paths that are exceptions to disallowed paths above. 
          unordered_set < string > allowedPaths;
+         
 
       public:
          static const unsigned defaultDelay = 10;
@@ -53,12 +57,20 @@ namespace dex
          // Call each time you HTTP request a website
          void updateLastVisited( );
 
+         // Update the disallowed paths for the domain
+         void setPathsDisallowed( unordered_set < string > );
+         void addPathsDisallowed( unordered_set < string > );
+         void addPathsDisallowed( vector < string > );
+         void addPathsDisallowed( string );
+
          // Update the allowed paths for the domain
-         void updatePathsAllowed( unordered_set < string > );
-         void updatePathsAllowed( string );
+         void setPathsAllowed( unordered_set < string > );
+         void addPathsAllowed( unordered_set < string > );
+         void addPathsAllowed( vector < string > );
+         void addPathsAllowed( string );
 
          // Checks for if you can perform HTTP request
-         bool canVisitDomain( string path );
+         bool canVisitPath( string path );
 
          // working on / test functions
          bool yes();
@@ -72,9 +84,7 @@ namespace dex
       {
       domain = dom;
       crawlDelay = del;
-      // QUESTION: Should we default allow all paths? Or no? Honestly probably not. Default should be
-      // no paths allowed IMO, we should have to set the paths that ARE allowed.
-      // allowedPaths.insert("/");
+      // QUESTION: Should we default allow all paths? That seems to be the assumption.
       updateLastVisited( );
       }
 
@@ -83,24 +93,69 @@ namespace dex
       lastTimeVisited = time( 0 );
       allowedVisitTime = lastTimeVisited + crawlDelay;
       }
-      
-   void RobotTxt::updatePathsAllowed( unordered_set < string > allowed )
+
+   void RobotTxt::setPathsDisallowed( unordered_set < string > disallowed )
+      {
+      disallowedPaths = disallowed;
+      }
+   
+   void RobotTxt::addPathsDisallowed( unordered_set < string > disallowed )
+      {
+      for ( auto it = disallowed.begin( );  it != disallowed.end( );  ++it )
+         {
+         disallowedPaths.insert( *it );
+         }
+      }
+
+   void RobotTxt::addPathsDisallowed( vector < string > disallowed )
+      {
+      for ( int i = 0;  i < disallowed.size( );  ++i )
+         {
+         disallowedPaths.insert( disallowed[ i ] );
+         }
+      }
+   
+    void RobotTxt::addPathsDisallowed( string path )
+      {
+      disallowedPaths.insert( path );
+      }
+
+   void RobotTxt::setPathsAllowed( unordered_set < string > allowed )
       {
       allowedPaths = allowed;
       }
+
+   void RobotTxt::addPathsAllowed( unordered_set < string > allowed )
+      {
+      for ( auto it = allowed.begin( );  it != allowed.end( );  ++it )
+         {
+         allowedPaths.insert( *it );
+         }
+      }
+
+   void RobotTxt::addPathsAllowed( vector < string > allowed)
+      {
+      for ( int i = 0;  i < allowed.size( );  i++ )
+         {
+         allowedPaths.insert( allowed[ i ] );
+         }
+      }
    
-    void RobotTxt::updatePathsAllowed( string path )
+    void RobotTxt::addPathsAllowed( string path )
       {
       allowedPaths.insert( path );
       }
    
-   bool RobotTxt::canVisitDomain ( string path = "/" )
+   bool RobotTxt::canVisitPath ( string path = "/" )
       {
       
-      if ( allowedPaths.find( path ) == allowedPaths.end( ) && allowedPaths.find( "/" ) == allowedPaths.end( ) )
+      if ( ( disallowedPaths.find( path ) != disallowedPaths.end( ) || 
+            disallowedPaths.find( "/" ) != disallowedPaths.end( ) )
+            && allowedPaths.find( path ) == allowedPaths.end( ) )
          {
          return false;
          }
+      
       return time( 0 ) > allowedVisitTime; 
       }
 
@@ -110,21 +165,6 @@ namespace dex
                  << "Crawl-Delay:\t\t" << obj.crawlDelay << "\n" 
                  << "Allowed-Visit-Time:\t" << obj.allowedVisitTime << "\n"
                  << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << "\r\n";
-      }
-
-   char* RobotTxt::substringMe( char* ptr )
-      {
-      char * end = strstr( ptr, "\n" );
-      int length = end - ptr; 
-
-      char * dest = new char[ length ];
-      int index = 0;
-      while ( ptr != end ) 
-         {
-         dest[ index ] = *ptr;
-         ++ptr;
-         }
-      return dest;
       }
 
    istream & operator >>( istream &in, RobotTxt &obj )
@@ -144,7 +184,23 @@ namespace dex
 
       return in;
       }
+   
+   char* RobotTxt::substringMe( char* ptr )
+      {
+      char * end = strstr( ptr, "\n" );
+      int length = end - ptr; 
 
+      char * dest = new char[ length ];
+      int index = 0;
+      while ( ptr != end ) 
+         {
+         dest[ index ] = *ptr;
+         ++ptr;
+         }
+      return dest;
+      }
    };
+
+   
 
 #endif

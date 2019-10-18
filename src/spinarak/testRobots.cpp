@@ -25,18 +25,24 @@ void testCanVisitDomain( )
 	{
 	std::string url = "https://domain.com";
    dex::RobotTxt hello = dex::RobotTxt( url, 1 );
-	hello.updatePathsAllowed( "/" );
-	assert( !hello.canVisitDomain( ) );
+	assert( !hello.canVisitPath( ) );
    sleep(2);
-	assert( hello.canVisitDomain( ) );
+	assert( hello.canVisitPath( ) );
 
 	dex::RobotTxt henlo = dex::RobotTxt( url, 1 );
-	assert( !henlo.canVisitDomain( ) );
+	henlo.addPathsDisallowed( "/" );
+	assert( !henlo.canVisitPath( ) );
    sleep(2);
-	assert( !henlo.canVisitDomain( ) );
+	assert( !henlo.canVisitPath( ) );
 	}
 
 void testUpdate( )
 	{
-	
+	std::string url = "https://domain.com";
+   dex::RobotTxt hello = dex::RobotTxt( url, 1 );
+	hello.addPathsDisallowed( "/" );
+	hello.addPathsAllowed( "/secret/path/" );
+	assert( !hello.canVisitPath( "/some/other/path" ) );
+	assert( !hello.canVisitPath( "/" ) );
+	assert( hello.canVisitPath( "/secret/path/" ) );
 	}
