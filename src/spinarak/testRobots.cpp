@@ -17,7 +17,8 @@ void testCanVisitDomain( );
 void testUpdate( );
 
 int main () {
-	testCanVisitDomain( );
+	//testCanVisitDomain( );
+	testUpdate( );
    
 }
 
@@ -39,10 +40,12 @@ void testCanVisitDomain( )
 void testUpdate( )
 	{
 	std::string url = "https://domain.com";
-   dex::RobotTxt hello = dex::RobotTxt( url, 1 );
+   dex::RobotTxt hello = dex::RobotTxt( url, 0 );
+	sleep(1);
 	hello.addPathsDisallowed( "/" );
 	hello.addPathsAllowed( "/secret/path/" );
-	assert( !hello.canVisitPath( "/some/other/path" ) );
+	assert( !hello.canVisitPath( "/some/other/path/" ) );
 	assert( !hello.canVisitPath( "/" ) );
 	assert( hello.canVisitPath( "/secret/path/" ) );
+	assert( hello.canVisitPath( "/secret/path/somefile/" ) );
 	}

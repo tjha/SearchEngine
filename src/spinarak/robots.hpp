@@ -35,10 +35,14 @@ namespace dex
          time_t lastTimeVisited;
          time_t allowedVisitTime;
 
-         // Paths that are disallowed. If "/"" is in this set, all paths are disallowed.
+         // Paths that are disallowed. All extensions on the paths within this set are
+         // also disallowed, unless explicitly allowed in allowedPaths.
          unordered_set < string > disallowedPaths;
-         // Paths that are exceptions to disallowed paths above. 
+         // Paths that are exceptions to disallowed paths above. All extensions on the paths
+         // within this set are also allowed.
          unordered_set < string > allowedPaths;
+
+         bool pathIsAllowed( string );
          
 
       public:
@@ -76,6 +80,47 @@ namespace dex
       
 
       };
+
+   bool RobotTxt::pathIsAllowed( string path )
+      {
+      // Naive implementation
+      //return ( disallowedPaths.find( path ) == disallowedPaths.end( ) || allowedPaths.find( path ) != allowedPaths.end( ) );
+
+      // Good unfinished implementation
+
+      // If no path was passed in, assume they mean root
+      
+      
+      // if the path passed in is explicitly in disallowed paths, return false
+      if ( disallowedPaths.find( path ) != disallowedPaths.end( ) )
+         return false;
+         
+      // if the path passed in is explicitly in allowed paths, return true
+      if ( allowedPaths.find( path ) != allowedPaths.end( ) )
+         return true;
+
+      // Parse the path to see if it is part of a disallowed path or allowed path
+      size_t nextSlashLocation = path.find( "/" );
+      bool ret = true;
+      while ( nextSlashLocation != string::npos )
+         {
+         string toCheck = path.substr(0, nextSlashLocation + 1 );
+
+         // If at any point our path is in disallowed paths, we know that if it's not explicitly
+         // allowed we need to return false
+         if ( disallowedPaths.find( toCheck ) != disallowedPaths.end( ) )
+            ret = false;
+
+         // If at any point our path is in allowed paths, we know that it's allowed and we can return true
+         if ( allowedPaths.find( toCheck ) != allowedPaths.end( ) )
+            return true;
+
+         nextSlashLocation = path.find( "/", nextSlashLocation + 1 );
+         }
+
+
+      return ret;
+      }
 
    RobotTxt::RobotTxt ( string dom, unsigned del = defaultDelay)
       {
@@ -146,12 +191,8 @@ namespace dex
    bool RobotTxt::canVisitPath ( string path = "/" )
       {
       
-      if ( ( disallowedPaths.find( path ) != disallowedPaths.end( ) || 
-            disallowedPaths.find( "/" ) != disallowedPaths.end( ) )
-            && allowedPaths.find( path ) == allowedPaths.end( ) )
-         {
+      if ( !pathIsAllowed( path ) )
          return false;
-         }
       
       return time( 0 ) > allowedVisitTime; 
       }
