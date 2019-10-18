@@ -1413,6 +1413,32 @@ namespace dex
 			}
 	
 	typedef dex::basicString < char > string;
+
+	template < class Key >
+	struct hash;
+
+	template < > struct hash < dex::string >
+		{
+		private:
+			static const unsigned long prime = 16777619;
+			static const unsigned long offsetBasis = 2166136261;
+		public:
+			unsigned long operator( )( dex::string str )
+				{
+				// Compute hash using FNV-1a algorithm
+				unsigned long hash = offsetBasis;
+				for ( unsigned index = 0;  index != str.length( );  ++index )
+					{
+					hash ^= str[ index ];
+					hash *= prime;
+					}
+
+				// Constrain our hash to 32 bits
+				hash &= 0xFFFFFFFF;
+
+				return hash;
+				}
+		};
 	}
 
 #endif
