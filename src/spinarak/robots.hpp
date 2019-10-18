@@ -3,9 +3,6 @@
 
 // 2019-10-17: File created: Jonas, Chris
 
-// commit : changed char*s to strings, added allowed paths, changed name of interact to be
-// more clear, moved default values to static variables in public.
-
 #ifndef ROBOTS_HPP
 #define ROBOTS_HPP
 
