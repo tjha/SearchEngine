@@ -28,27 +28,27 @@ TEST_CASE( "constructors and element access work", "[string]" )
 	other[2] = 'c';
 	other[3] = '\0';
 	string str1( other );
-	
+
 	REQUIRE( str1[0] == 'a' );
 	REQUIRE( str1[1] == 'b' );
 	REQUIRE( str1[2] == 'c' );
 	REQUIRE( str1.at( 0 ) == 'a' );
-	
+
 	REQUIRE_THROWS_AS( str1.at( 4 ), dex::outOfRangeException );
 	REQUIRE_THROWS_AS( str1.at( -1 ), dex::outOfRangeException );
-	
+
 	string str2(other, 2);
 	REQUIRE( str2 == "ab" );
 	string str3( str1 );
 	REQUIRE( str3 == "abc" );
-	
+
 	string str4( str1, 1, 3 );
 	REQUIRE( str4 == "bc" );
 
-	
+
 	string str5( 5, 'a' );
 	REQUIRE( str5 == "aaaaa" );
-	
+
 	string str6( str3.cbegin( ), str3.cend( ) );
 	REQUIRE( str6 == "abc" );
 	string str7( str3.cbegin( ) + 1, str3.cend( ) - 1 );
@@ -93,7 +93,7 @@ TEST_CASE( "capacity works", "[string]" )
 	REQUIRE( thicc.size( ) == 5 );
 	REQUIRE( thicc.length( ) == 5 );
 	REQUIRE( thicc.maxSize( ) == npos );
-	
+
 	thicc.reserve( 100 );
 	REQUIRE( thicc.capacity( ) == 100 );
 	thicc.shrinkToFit( );
@@ -116,7 +116,7 @@ TEST_CASE( "comparisons work", "[string]" )
 	REQUIRE( !( cat > cat ) );
 	REQUIRE( cat <= cat );
 	REQUIRE( cat >= cat );
-	
+
 	REQUIRE( !( cat == hat ) );
 	REQUIRE( cat != hat );
 	REQUIRE( cat < hat );
@@ -248,7 +248,7 @@ TEST_CASE( "erase works", "[string]" )
 	digits = "0123456789";
 	digits.erase( digits.cbegin( ) );
 	REQUIRE( digits == "" );
-	
+
 	digits = "0123456789";
 	digits.erase( digits.cbegin( ) + 1);
 	REQUIRE( digits == "0" );
@@ -281,7 +281,7 @@ TEST_CASE( "replace works", "[string]" )
 	digits = "0123456789";
 	digits.replace( 0, 1, emptyString );
 	REQUIRE( digits == "123456789" );
-	
+
 	emptyString.replace( emptyString.cbegin( ), emptyString.cend( ), digits );
 	REQUIRE( emptyString == digits );
 

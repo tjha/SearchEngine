@@ -73,7 +73,7 @@ namespace dex
 		{
 		for ( ;  first != last;  *( first++ ) = value );
 		}
-	
+
 	template < typename T >
 	T min( const T &first, const T &second )
 		{
@@ -89,7 +89,7 @@ namespace dex
 	template < typename T >
 	void swap( T &first, T &second )
 		{
-		// Naive implementation. We think rvalue references can make this more 
+		// Naive implementation. We think rvalue references can make this more
 		// efficient but we're scared to implement it.
 		T other = first;
 		first = second;

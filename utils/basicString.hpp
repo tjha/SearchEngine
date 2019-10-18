@@ -12,8 +12,8 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
-// 2019-10-17: Add include guard, lots of minor bug fixes, hash function, make array always be a C-string:
-//             jasina, lougheem
+// 2019-10-17: Add include guard, lots of minor bug fixes, hash function, make array always be a C-string, improve the
+//             efficiency of replace, rewrite erase and insert to use replace: jasina, lougheem
 // 2019-10-14: Fix insert, erase, replace, find: jasina, lougheem
 // 2019-10-13: Let iterators be cast to const, clean up reverse iterators, fix insert, use copy/fill from algorithm,
 //             fix styling errors, use find/search/find_end from algorithm, implement findLastOf and findLastNotOf:
@@ -981,20 +981,9 @@ namespace dex
 				}
 			iterator insert( constIterator first, unsigned length, charT character )
 				{
-				iterator writableFirst = begin( ) + ( first - cbegin( ) );
-
-				// Get as much space as we need
-				if ( size( ) + length > capacity( ) )
-					reserve( size( ) + length );
-				stringSize = size( ) + length;
-				array[ size( ) ] = charT { };
-
-				// Shift right part of the string
-				dex::copyBackward( first, cend( ) - length, end( ) );
-
-				// Fill in characters
-				dex::fill( writableFirst, writableFirst + length, character );
-				return writableFirst;
+				unsigned originalSize = size( );
+				replace( first, first, length, character );
+				return begin( ) + ( ( first - cbegin( ) ) + size( ) - originalSize );
 				}
 			iterator insert( constIterator first, charT character )
 				{
@@ -1003,21 +992,9 @@ namespace dex
 			template < class InputIterator >
 			iterator insert( constIterator insertionPoint, InputIterator first, InputIterator last )
 				{
-				iterator writableFirst = begin( ) + ( insertionPoint - cbegin( ) );
-
-				// Get as much space as we need
-				unsigned length = last - first;
-				if ( size( ) + length > capacity( ) )
-					reserve( size( ) + length );
-				stringSize = size( ) + length;
-				array[ size( ) ] = charT { };
-
-				// Shift right part of the string
-				dex::copyBackward( insertionPoint, cend( ) - length, end( ) );
-
-				// Fill in characters
-				dex::copy( first, last, writableFirst );
-				return writableFirst + length;
+				unsigned originalSize = size( );
+				replace( insertionPoint, insertionPoint, first, last );
+				return begin( ) + ( ( insertionPoint - cbegin( ) ) + size( ) - originalSize );
 				}
 
 			basicString < charT > &erase( unsigned position = 0, unsigned length = npos )
@@ -1038,12 +1015,8 @@ namespace dex
 				if( first.string != this || last.string != this || first > last )
 					return end( );
 
-				iterator writableFirst = begin( ) + ( first - cbegin( ) );
-
-				dex::copy( last, cend( ), writableFirst );
-				// Decrease string size
-				resize( size( ) - ( last - first ) );
-				return writableFirst;
+				replace( first, last, 0, charT { } );
+				return begin( ) + ( first - cbegin( ) );
 				}
 
 			basicString < charT > &replace( unsigned position, unsigned length, const basicString < charT > &other )
@@ -1066,36 +1039,63 @@ namespace dex
 				}
 			basicString < charT > &replace( constIterator first, constIterator last, const charT *other )
 				{
-				return replace( first, last, other, cStringLength( other ) );
+				return replace( first, last, other, other + cStringLength( other ) );
 				}
-			// TODO: Make this more efficient
 			basicString < charT > &replace( unsigned position, unsigned length, const charT *other, unsigned n )
 				{
-				iterator first = erase( cbegin( ) + position, cbegin( ) + position + length );
-				insert( first - begin( ) , other, n );
+				replace( cbegin( ) + position, cbegin( ) + ( position + length ), other, other + n );
 				return *this;
 				}
 			basicString < charT > &replace( constIterator first, constIterator last, const charT *other, unsigned n )
 				{
-				first = erase( first, last );
-				insert( first - cbegin( ), other, n );
+				replace( first, last, other, n );
 				return *this;
 				}
 			basicString < charT > &replace( unsigned position, unsigned length, unsigned n, charT c )
 				{
 				return replace( cbegin( ) + position, cbegin( ) + position + length, n, c );
 				}
+		private:
+			void shiftAtPoint( unsigned insertionLength, constIterator first, constIterator last )
+				{
+				unsigned removalLength = last - first;
+				unsigned newStringLength = size( ) + insertionLength - removalLength;
+				iterator writableFirst = begin( ) + ( first - cbegin( ) );
+
+				if ( removalLength < insertionLength )
+					{
+					constIterator oldCend = cend( );
+					if ( newStringLength > capacity( ) )
+						reserve( newStringLength );
+					stringSize = newStringLength;
+					array[ size( ) ] = charT { };
+					dex::copyBackward( last, oldCend, end( ) );
+					}
+				if ( removalLength > insertionLength )
+					{
+					dex::copy( last, cend( ), writableFirst + insertionLength );
+					stringSize = newStringLength;
+					array[ size( ) ] = charT { };
+					}
+				}
+		public:
 			basicString < charT > &replace( constIterator first, constIterator last, unsigned n, charT c )
 				{
-				first = erase( first, last );
-				insert( first, n, c );
+				shiftAtPoint( n, first, last );
+
+				iterator writableFirst = begin( ) + ( first - cbegin( ) );
+				dex::fill( writableFirst, writableFirst + n, c );
+
 				return *this;
 				}
 			template < class InputIterator > basicString < charT > &replace( constIterator first, constIterator last,
 					InputIterator inputFirst, InputIterator inputLast )
 				{
-				first = erase( first, last );
-				insert( first, inputFirst, inputLast );
+				unsigned insertionLength = 0;
+				for ( InputIterator it = inputFirst;  it != inputLast;  ++insertionLength, ++it );
+				shiftAtPoint( insertionLength, first, last );
+
+				dex::copy( inputFirst, inputLast, begin( ) + ( first - cbegin( ) ) );
 				return *this;
 				}
 
@@ -1453,10 +1453,7 @@ namespace dex
 				// Compute hash using FNV-1a algorithm
 				unsigned long hash = offsetBasis;
 				for ( unsigned index = 0;  index != str.length( );  ++index )
-					{
-					hash ^= str[ index ];
-					hash *= prime;
-					}
+					hash = ( hash ^ str[ index ] ) * prime;
 
 				// Constrain our hash to 32 bits
 				hash &= 0xFFFFFFFF;
