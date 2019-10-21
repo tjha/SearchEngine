@@ -2,6 +2,7 @@
 // 
 // Vector class
 //
+// 2019/10/20 - Jonas Hirshland merged AG submission and this file
 // 2019/09/29 - Jonas Hirshland renamed and did some error bounds
 // 2019/09/17 - Tejas Jha - created constructors and destructor
 //                        - Added comment descriptions for private variables
@@ -16,57 +17,116 @@ namespace dex
       {
       public:
       vector( );
-      vector( size_t num );
-      vector ( size_t num, const T& val );
+      vector( size_t num_elements );
+      vector( size_t num_elements, const T& val );
+      vector< T > operator=( const vector<T>& v );
+      vector( const vector<T>& other );
+      vector< T > operator=( vector<T>&& v );
+      vector( vector<T>&& other );
       ~vector( );
       void insert( size_t index, T obj);
       void grow( );
       void clear( );
       void remove( size_t index );
-      void push_back( T obj );
+      void push_back( const T& obj );
       void pop_back( );
-      void push_front( T obj );
+      void push_front( const T& obj );
       void pop_front( );
       void shrink_to_fit( );
       void swap( vector v );
-      T operator []( size_t index );
-      T operator=( vector v );
+      T& operator []( size_t index );
+      const T& operator[ ] ( size_t i ) const;
       T at( size_t index );
-      T front( );
-      T back( );
-      T swap( vector x );
+      T* begin( );
+      T* end( );
+      const T* begin( ) const;
+      const T* end( ) const;
           
       private:
       T *arr;                  // dynamic array
-      size_t capacity;   // amount of available space
-      size_t size;       // number of elemets added to array
+      size_t cap;   // amount of available space
+      size_t sz;       // number of elemets added to array
       };
 
       template < class T >
       // default constructor
       vector< T >::vector( )
          {
-         arr = new T[ 1 ];
-         capacity = 1;
-         size = 0;
+         arr = new T[ 0 ];
+         cap = 0;
+         sz = 0;
          }
    
       template < class T >
       // constructor for vector of num elements
-      vector< T >::vector( size_t num )
+      vector< T >::vector( size_t num_elements )
          {
-         arr = new T[ num ]( );
-         capacity = num ;
-         size = num;
+         arr = new T[ num_elements ]( );
+         cap = num_elements;
+         sz = num_elements;
          }
 
       template < class T >
       // constructor for vector of num elements each initialized to val
-      vector< T >::vector( size_t num, const T& val )
+      vector< T >::vector( size_t num_elements, const T& val )
          {
-         arr = new T[ num ] { val };
-         capacity = num ;
-         size = num;
+         arr = new T[ num_elements ];
+         cap = num_elements;
+         sz = num_elements;
+         for ( size_t i = 0; i < sz; ++i )
+            {
+            arr[ i ] = val;
+            }
+         }
+
+      // Copy Contructor
+      template < class T >
+      vector< T >::vector( const vector<T>& other )
+         {
+         arr = new T[ other.cap ];
+         cap = other.cap;
+         sz = other.sz;
+         for ( size_t i = 0;  i < other.sz;  ++i )
+            {
+            arr[ i ] = other[ i ];
+            }
+         }
+      
+      // Assignment Operator
+      template < class T >
+      vector< T > vector< T >::operator=( const vector<T>& other )
+         {
+         delete[ ] arr;
+         cap = other.cap;
+         sz = other.sz;
+         arr = new T[ cap ];
+         for ( size_t i = 0;  i < sz;  ++i )
+            {
+            arr[ i ] = other.arr[ i ];
+            }
+         return *this;
+         }
+
+      // Move Constructor
+      template < class T >
+      vector< T >::vector( vector<T>&& other )
+         {
+         cap = other.cap;
+         sz = other.sz;
+         arr = other.arr;
+         other.sz = 0;
+         other.cap = 0;
+         other.arr = nullptr;
+         }
+
+      // Move Assignment Operator
+      template < class T >
+      vector< T > vector< T >::operator=( vector<T>&& other )
+         {
+         sz = other.sz;
+         cap = other.cap;
+         arr = other.arr;
+         return *this;
          }
 
       template < class T >
@@ -80,38 +140,42 @@ namespace dex
       void vector< T >::insert( size_t index, T obj )
          {
          // if adding one means its at least half full, then grow by 2x
-         if ( size == capacity )
+         if ( sz == cap )
             {
             grow(); // you might not want to do a simple grow when inserting
             }
          
          T old;
-         for ( size_t i = index;  i <= size;  ++i )
+         for ( size_t i = index;  i <= sz;  ++i )
             {
                old = arr[ index ];
                arr[ index ] = obj;
                obj = old;
             }
-             size++;
+            sz++;
          }
 
       template < class T >
       void vector< T >::clear( )
          {
-         size = 0;
+         sz = 0;
          }
 
       template < class T >
       void vector< T >::grow( )
          {
-         capacity *= 2;
-         if ( capacity == 0 )
+         if ( cap == 0 )
             {
-            capacity = 1;
+            cap = 1;
             }
-         T *arr_old = &arr;
-         arr = new T[ capacity ];
-         for ( size_t i = 0;  i < size;  ++i )
+         else 
+            {
+            cap *= 2;
+            }
+
+         T *arr_old = arr;
+         arr = new T[ cap ];
+         for ( size_t i = 0;  i < sz;  ++i )
             {
             arr[ i ] = arr_old[ i ];
             }
@@ -121,44 +185,68 @@ namespace dex
       template < class T >
       void vector<T>::remove( size_t index )
          {
-         if ( size == 0 ) 
+         if ( sz == 0 ) 
             {
             std::cerr << "CANNOT REMOVE ON VECTOR OF SIZE 0";
             exit( 1 );
             }
-         for ( int i = index;  i < size;  i++ )
+         for ( int i = index;  i < sz;  i++ )
             {
             arr[i] = arr[i+1];
             }
-         size--;
+         sz--;
          }
       
       template < class T >
-      void vector<T>::push_back( T obj )
+      void vector<T>::push_back( const T& obj )
          {
-         if ( size == capacity )
+         if ( sz == cap )
             {
             grow( );
             }
-         arr[ size ] = obj;
-         size++;
+         arr[ sz ] = obj;
+         sz++;
          }
        
       template < class T >
       void vector<T>::pop_back( )
          {
-         if ( size == 0 ) 
+         if ( sz == 0 ) 
             {
-            std::cerr < "CAN'T CALL POP BACK ON VECTOR OF SIZE 0\n";
+            std::cerr << "CAN'T CALL POP BACK ON VECTOR OF SIZE 0\n";
             exit(1);
             }
-         size--;
+         sz--;
+         }
+
+      template < class T > 
+      T* vector<T>::begin( )
+         {
+         return arr;
+         }
+
+      template < class T >
+      T* vector<T>::end( )
+         {
+         return arr + sz;
+         }
+
+      template < class T >
+      const T* vector<T>::begin( ) const
+         {
+         return arr;
+         }
+
+      template < class T > 
+      const T* vector<T>::end( ) const
+         {
+         return arr + sz;
          }
        
       template < class T >
       T vector<T>::at( size_t index )
          {
-         if( index >= size || index < 0 )
+         if( index >= sz || index < 0 )
             {
             std::cerr << "OUT OF BOUNDS \n";
             exit( 1 );
@@ -167,29 +255,7 @@ namespace dex
          }
        
       template < class T >
-      T vector<T>::front( )
-         {
-         if ( size == 0 ) 
-            {
-            std::cerr << "VECTOR OF SIZE 0 HAS NO FRONT\n";
-            exit( 1 );
-            }
-         return arr[ 0 ];
-         }
-       
-      template < class T >
-      T vector<T>::back( )
-         {
-         if ( size == 0 ) 
-            {
-            std::cerr << "VECTOR OF SIZE 0 HAS NO BACK\n";
-            exit( 1 );
-            }
-         return arr[ size - 1 ];
-         }
-       
-      template < class T >
-      void vector<T>::push_front( T obj )
+      void vector<T>::push_front( const T& obj )
          {
          insert( 0, obj );
          }
@@ -197,9 +263,9 @@ namespace dex
       template < class T >
       void vector< T >::pop_front( )
          {
-         if ( size == 0 ) 
+         if ( sz == 0 ) 
             {
-            std::cerr < "CAN'T CALL POP BACK ON VECTOR OF SIZE 0\n";
+            std::cerr << "CAN'T CALL POP BACK ON VECTOR OF SIZE 0\n";
             exit( 1 );
             }
          remove( 0 );
@@ -209,13 +275,13 @@ namespace dex
       void vector< T >::shrink_to_fit( )
          {
          T* old = arr;
-         arr = new T[ size ];
-         for( int i = 0;  i < size;  i++ )
+         arr = new T[ sz ];
+         for( int i = 0;  i < sz;  i++ )
          {
             arr[ i ] = old[ i ];
          }
          delete[ ] old;
-         capacity = size;
+         cap = sz;
          }
        
       template < class T >
@@ -225,109 +291,34 @@ namespace dex
          temp = v.arr;
          v.arr = arr;
          arr = v.arr;
-         unsigned int num = v.size;
-         v.size = size;
-         size = num;
-         num = v.capacity;
-         v.capacity = capacity;
-         capacity = num;
+         unsigned int num = v.sz;
+         v.sz = sz;
+         sz = num;
+         num = v.cap;
+         v.cap = cap;
+         cap = num;
          }
    
-      void vector< T >::operator=( vector v )
-         {
-         size = v.size;
-         capacity = v.capacity;
-         for( size_t i = 0;  i < size;  i++ )
-            {
-            arr[ i ] = v.arr[ i ];
-            }
-         }
    
-      T vector< T >::operator []( size_t index )
+      template < class T >
+      T& vector< T >::operator [ ]( size_t index )
          {
-         if ( index > capacity )
+         if ( index >= sz || index < 0 )
             {
-            std::cerr < "INDEX OUT OF BOUNDS\n";
+            std::cerr << "INDEX OUT OF BOUNDS\n";
             exit( 1 );
             }
-         return at( index );
+         return arr[ index ];
          }
-   }
 
-      private:
-      T *arr;                  // dynamic array 
-      unsigned int capacity;   // amount of available space
-      unsigned int size;       // number of elemets added to array 
-      };
-
-   template < class T >
-   // default constructor
-   vector< T >::vector( )
-      {
-      arr = new T[ 1 ];
-      capacity = 1;
-      size = 0;
-      }
-
-   template < class T >
-   // constructor for vector of num elements
-   vector< T >::vector( unsigned int num )
-      {
-      arr = new T[ num + 1 ]( );
-      capacity = num + 1;
-      size = num;
-      }
-
-   template < class T >
-   // constructor for vector of num elements each initialized to val
-   vector< T >::vector( unsigned int num, const T& val )
-      {
-      arr = new T[ num + 1 ] { val };
-      capacity = num + 1;
-      size = num;
-      }
-
-   template < class T >
-   // destructor
-   vector< T >::~vector( )
-      {
-      delete[ ] arr;
-      }
-
-   template < class T >
-   void vector< T >::insert( size_t index, T obj )
-      {
-      // if adding one means its at least half full, then grow by 2x
-      if ( size == capacity ) 
+      template < class T >
+      const T& vector< T >::operator [ ]( size_t index ) const
          {
-         grow(); // you might not want to do a simple grow when inserting
+         if ( index >= sz || index < 0 )
+            {
+            std::cerr << "INDEX OUT OF BOUNDS\n";
+            exit( 1 );
+            }
+         return arr[ index ];
          }
-      
-      T old;
-      for ( size_t i = index;  i <= size;  ++i )
-         {
-            old = arr[ index ];
-            arr[ index ] = obj;
-            obj = old;
-         }
-      }
-
-   template < class T >
-   void vector< T >::clear()
-      {
-      size = 0;
-      }
-
-   template < class T >
-   void vector< T >::grow()
-      {
-      capacity *= 2;
-      T *arr_old = &arr;
-      arr = new T[ capacity ];
-      for ( size_t i = 0;  i < size;  ++i )
-         {
-         arr[ i ] = arr_old[ i ];
-         }
-      delete[] arr_old;
-      }
    }
