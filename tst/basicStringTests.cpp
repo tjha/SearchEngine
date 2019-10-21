@@ -1,6 +1,8 @@
 // basicStringTests.cpp
 // Testing for the basicString class
 //
+// 2019-10-20: Revamp assignment, write substring tests, combine (append, insert, erase, replace) into one, write hash
+//             tests: combsc, jasina, lougheem
 // 2019-10-17: Update file to contain full test suite. Dates of tests are noted below: combsc, jasina, lougheem
 //   2019-10-14: Test replace, swap, popback: combsc, lougheem
 //   2019-10-13: Test insert, erase, replace, find: jasina, lougheem
@@ -22,6 +24,8 @@ TEST_CASE( "constructors and element access work", "[string]" )
 	{
 	string str0;
 
+	REQUIRE( str0 == "" );
+
 	char other [4];
 	other[0] = 'a';
 	other[1] = 'b';
@@ -42,7 +46,7 @@ TEST_CASE( "constructors and element access work", "[string]" )
 	string str3( str1 );
 	REQUIRE( str3 == "abc" );
 
-	string str4( str1, 1, 3 );
+	string str4( str1, 1, 2 );
 	REQUIRE( str4 == "bc" );
 
 
@@ -58,33 +62,55 @@ TEST_CASE( "constructors and element access work", "[string]" )
 
 TEST_CASE( "assignment works", "[string]" )
 	{
-	string substance( "Substance" );
-	string affection( "Affection" );
-	affection = substance;
-	substance = "True Substance";
+	SECTION( "operator= works" )
+		{
+		string substance( "Substance" );
+		string affection( "Affection" );
+		affection = substance;
+		substance = "True Substance";
 
-	REQUIRE(affection == "Substance" );
-	REQUIRE(substance == "True Substance" );
+		REQUIRE( affection == "Substance" );
+		REQUIRE( substance == "True Substance" );
 
-	string t( "a" );
-	t = 'c';
-	REQUIRE( t == "c");
-	REQUIRE( t.size( ) == 1 );
+		string t( "a" );
+		t = 'c';
+		REQUIRE( t == "c");
+		REQUIRE( t.size( ) == 1 );
+		}
+
+	SECTION( "assign works" )
+		{
+		string substance( "Substance" );
+		string affection( "Affection" );
+		affection.assign( substance );
+		substance.assign( "True Substance" );
+
+		REQUIRE( affection == "Substance" );
+		REQUIRE( substance == "True Substance" );
+
+		affection.assign(substance, 1, 4);
+		REQUIRE( affection == "rue " );
+		substance.assign( "True Substance stuff", 14);
+		REQUIRE( substance == "True Substance" );
+
+		affection.assign( substance.cbegin( ) + 1, substance.cend( ) - 1 );
+		REQUIRE( affection == "rue Substanc" );
+
+		affection.assign( 10, 'a' );
+		REQUIRE( affection == "aaaaaaaaaa" );
+		}
 	}
 
-TEST_CASE( "append works" , "[string]" )
+TEST_CASE( "substring works", "[string]" )
 	{
-	string c( "con" );
-	c += "cat";
-	REQUIRE( c == "concat" );
-	string other( "en" );
-	c += other;
-	REQUIRE( c == "concaten" );
-	c += 'a';
-	REQUIRE( c == "concatena" );
-	string other2( "Propitiation" );
-	c.append(other2, 8, 4);
-	REQUIRE( c == "concatenation" );
+	string potato( "potato" );
+	assert( potato.substr(0, 6) == potato );
+	assert( potato.substr(0, 3) == "pot" );
+	assert( potato.substr(4, 2) == "to" );
+	assert( potato.substr(2, 3) == "tat" );
+	assert( potato.substr(0, 0) == "" );
+	assert( potato.substr(3, 0) == "" );
+	assert( potato.substr(5, 0) == "" );
 	}
 
 TEST_CASE( "capacity works", "[string]" )
@@ -107,207 +133,171 @@ TEST_CASE( "capacity works", "[string]" )
 	REQUIRE( thicc.empty( ) );
 	}
 
-TEST_CASE( "comparisons work", "[string]" )
+TEST_CASE( "modifiers works", "[string]" )
 	{
-	string cat( "cat" ), hat( "hat" ), cot( "cot" ), cab( "cab" ), cats( "cats" ), scat( "scat" ), scats( "scats" );
-	REQUIRE( cat == cat );
-	REQUIRE( !( cat != cat ) );
-	REQUIRE( !( cat < cat ) );
-	REQUIRE( !( cat > cat ) );
-	REQUIRE( cat <= cat );
-	REQUIRE( cat >= cat );
+	SECTION( "append works" )
+		{
+		string a( "To Be " );
+		string b( "Or Not To Be" );
 
-	REQUIRE( !( cat == hat ) );
-	REQUIRE( cat != hat );
-	REQUIRE( cat < hat );
-	REQUIRE( !( cat > hat ) );
-	REQUIRE( cat <= hat );
-	REQUIRE( !( cat >= hat ) );
-	REQUIRE( !( hat == cat ) );
-	REQUIRE( hat != cat );
-	REQUIRE( ! ( hat < cat ) );
-	REQUIRE( hat > cat );
-	REQUIRE( ! ( hat <= cat ) );
-	REQUIRE( hat >= cat );
+		a.append( b );
+		REQUIRE( a == "To Be Or Not To Be" );
 
-	REQUIRE( !( cat == cot ) );
-	REQUIRE( cat != cot );
-	REQUIRE( cat < cot );
-	REQUIRE( !( cat > cot ) );
-	REQUIRE( cat <= cot );
-	REQUIRE( !( cat >= cot ) );
-	REQUIRE( !( cot == cat ) );
-	REQUIRE( cot != cat );
-	REQUIRE( ! ( cot < cat ) );
-	REQUIRE( cot > cat );
-	REQUIRE( ! ( cot <= cat ) );
-	REQUIRE( cot >= cat );
+		a = "To Be";
+		b = "";
+		a.append( b );
+		REQUIRE( a == "To Be" );
 
-	REQUIRE( !( cab == cat ) );
-	REQUIRE( cab != cat );
-	REQUIRE( cab < cat );
-	REQUIRE( !( cab > cat ) );
-	REQUIRE( cab <= cat );
-	REQUIRE( !( cab >= cat ) );
-	REQUIRE( !( cat == cab ) );
-	REQUIRE( cat != cab );
-	REQUIRE( ! ( cat < cab ) );
-	REQUIRE( cat > cab );
-	REQUIRE( ! ( cat <= cab ) );
-	REQUIRE( cat >= cab );
+		a = "abcde";
+		b = "fghi";
+		a.append( b, 1, 2);
+		REQUIRE( a == "abcdegh" );
 
-	REQUIRE( !( cat == cats ) );
-	REQUIRE( cat != cats );
-	REQUIRE( cat < cats );
-	REQUIRE( !( cat > cats ) );
-	REQUIRE( cat <= cats );
-	REQUIRE( !( cat >= cats ) );
-	REQUIRE( !( cats == cat ) );
-	REQUIRE( cats != cat );
-	REQUIRE( ! ( cats < cat ) );
-	REQUIRE( cats > cat );
-	REQUIRE( ! ( cats <= cat ) );
-	REQUIRE( cats >= cat );
+		a = "abc";
+		a.append( "de" );
+		REQUIRE( a == "abcde" );
+		a.append( "fghi" , 2 );
+		REQUIRE( a == "abcdefg" );
+		a.append( 5, 'z' );
+		REQUIRE( a == "abcdefgzzzzz" );
 
-	REQUIRE( !( cat == scat ) );
-	REQUIRE( cat != scat );
-	REQUIRE( cat < scat );
-	REQUIRE( !( cat > scat ) );
-	REQUIRE( cat <= scat );
-	REQUIRE( !( cat >= scat ) );
-	REQUIRE( !( scat == cat ) );
-	REQUIRE( scat != cat );
-	REQUIRE( ! ( scat < cat ) );
-	REQUIRE( scat > cat );
-	REQUIRE( ! ( scat <= cat ) );
-	REQUIRE( scat >= cat );
+		a = "cat";
+		b = "potato";
+		a.append( b.cbegin( ), b.cend( ) );
+		REQUIRE( a == "catpotato" );
+		}
 
-	REQUIRE( !( cat == scats ) );
-	REQUIRE( cat != scats );
-	REQUIRE( cat < scats );
-	REQUIRE( !( cat > scats ) );
-	REQUIRE( cat <= scats );
-	REQUIRE( !( cat >= scats ) );
-	REQUIRE( !( scats == cat ) );
-	REQUIRE( scats != cat );
-	REQUIRE( ! ( scats < cat ) );
-	REQUIRE( scats > cat );
-	REQUIRE( ! ( scats <= cat ) );
-	REQUIRE( scats >= cat );
+	SECTION( "operator+= works" )
+		{
+		string c( "con" );
+		c += "cat";
+		REQUIRE( c == "concat" );
+		string other( "en" );
+		c += other;
+		REQUIRE( c == "concaten" );
+		c += 'a';
+		REQUIRE( c == "concatena" );
+		string other2( "Propitiation" );
+		c.append(other2, 8, 4);
+		REQUIRE( c == "concatenation" );
+		}
 
-	REQUIRE( string( ) == string( ) );
-	REQUIRE( string( ) < cat );
-	REQUIRE( cat > string( ) );
+	SECTION( "insertion works" )
+		{
+		string az = "az";
+		string to = " to ";
+		az.insert( az.begin() + 1, to.begin(), to.end() );
+		REQUIRE( az == "a to z" );
 
-	string cat2( cat );
-	cat2.reserve( 100 );
-	REQUIRE( cat == cat2 );
+		string digits = "0123456789";
+		string chars = az;
+		chars.insert( 0, digits );
+		REQUIRE( chars == "0123456789a to z" );
 
-	REQUIRE( cat == "cat" );
-	}
+		chars = az;
+		chars.insert( 2, digits, 2, 3 );
+		REQUIRE( chars == "a 234to z" );
 
-TEST_CASE( "insertion works", "[string]" )
-	{
-	string az = "az";
-	string to = " to ";
-	az.insert(az.begin() + 1, to.begin(), to.end());
-	REQUIRE( az == "a to z" );
+		chars = az;
+		chars.insert( 5, "stuff to ");
+		REQUIRE( chars == "a to stuff to z");
 
-	string digits = "0123456789";
-	string chars = az;
-	chars.insert( 0, digits );
-	REQUIRE( chars == "0123456789a to z" );
+		chars = az;
+		chars.insert( 5, "stuff to ", 9 );
+		REQUIRE( chars == "a to stuff to z");
 
-	chars = az;
-	chars.insert( 2, digits, 2, 3 );
-	REQUIRE( chars == "a 234to z" );
+		chars = az;
+		chars.insert( 6, 11, 'z' );
+		REQUIRE( chars == "a to zzzzzzzzzzzz" );
 
-	chars = az;
-	chars.insert( 5, "stuff to ");
-	REQUIRE( chars == "a to stuff to z");
+		chars = az;
+		chars.insert( chars.cend( ), 'w' );
+		REQUIRE( chars == "a to zw" );
+		}
 
-	chars = az;
-	chars.insert( 5, "stuff to ", 9 );
-	REQUIRE( chars == "a to stuff to z");
+	SECTION( "erase works" )
+		{
+		string digits = "0123456789";
+		digits.erase( 7, 1 );
+		REQUIRE( digits == "012345689" );
 
-	chars = az;
-	chars.insert( 6, 11, 'z' );
-	REQUIRE( chars == "a to zzzzzzzzzzzz" );
+		digits = "0123456789";
+		digits.erase( digits.cbegin( ) );
+		REQUIRE( digits == "" );
 
-	chars = az;
-	chars.insert( chars.cend( ), 'w' );
-	REQUIRE( chars == "a to zw" );
-	}
+		digits = "0123456789";
+		digits.erase( digits.cbegin( ) + 1);
+		REQUIRE( digits == "0" );
 
-TEST_CASE( "erase works", "[string]" )
-	{
-	string digits = "0123456789";
-	digits.erase( 7, 1 );
-	REQUIRE( digits == "012345689" );
+		digits = "0123456789";
+		digits.erase( digits.cbegin( ), digits.cbegin( ) + 3 );
+		REQUIRE( digits == "3456789" );
 
-	digits = "0123456789";
-	digits.erase( digits.cbegin( ) );
-	REQUIRE( digits == "" );
+		digits.erase( digits.cbegin( ), digits.cend( ) );
+		REQUIRE( digits == "" );
+		}
 
-	digits = "0123456789";
-	digits.erase( digits.cbegin( ) + 1);
-	REQUIRE( digits == "0" );
+	SECTION( "replace works" )
+		{
+		string digits = "0123456789";
 
-	digits = "0123456789";
-	digits.erase( digits.cbegin( ), digits.cbegin( ) + 3 );
-	REQUIRE( digits == "3456789" );
+		string emptyString = "";
+		emptyString.replace( 0, 0, digits );
+		REQUIRE( emptyString == digits );
 
-	digits.erase( digits.cbegin( ), digits.cend( ) );
-	REQUIRE( digits == "" );
-	}
+		string letters = "abc";
+		digits.replace( 1, 3, letters );
+		REQUIRE( digits == "0abc456789" );
 
-TEST_CASE( "replace works", "[string]" )
-	{
-	string digits = "0123456789";
+		digits = "0123456789";
+		digits.replace( digits.cbegin( ) + 1, digits.cbegin( ) + 4, letters );
+		REQUIRE( digits == "0abc456789");
 
-	string emptyString = "";
-	emptyString.replace( 0, 0, digits );
-	REQUIRE( emptyString == digits );
+		emptyString = "";
+		digits = "0123456789";
+		digits.replace( 0, 1, emptyString );
+		REQUIRE( digits == "123456789" );
 
-	string letters = "abc";
-	digits.replace( 1, 3, letters );
-	REQUIRE( digits == "0abc456789" );
+		emptyString.replace( emptyString.cbegin( ), emptyString.cend( ), digits );
+		REQUIRE( emptyString == digits );
 
-	digits = "0123456789";
-	digits.replace( digits.cbegin( ) + 1, digits.cbegin( ) + 4, letters );
-	REQUIRE( digits == "0abc456789");
+		digits = "0123456789";
+		digits.replace( 1, 3, letters, 1, 2 );
+		REQUIRE( digits == "0bc456789" );
 
-	emptyString = "";
-	digits = "0123456789";
-	digits.replace( 0, 1, emptyString );
-	REQUIRE( digits == "123456789" );
+		digits = "0123456789";
+		digits.replace( 1, 3, "abc" );
+		REQUIRE( digits == "0abc456789" );
 
-	emptyString.replace( emptyString.cbegin( ), emptyString.cend( ), digits );
-	REQUIRE( emptyString == digits );
+		digits = "0123456789";
+		digits.replace( digits.cbegin( ) + 1, digits.cbegin( ) + 4, "abc");
+		REQUIRE( digits == "0abc456789" );
 
-	digits = "0123456789";
-	digits.replace( 1, 3, letters, 1, 2 );
-	REQUIRE( digits == "0bc456789" );
+		digits = "0123456789";
+		digits.replace( 1, 3, "abc", 2 );
+		REQUIRE( digits == "0ab456789" );
 
-	digits = "0123456789";
-	digits.replace( 1, 3, "abc" );
-	REQUIRE( digits == "0abc456789" );
+		digits = "0123456789";
+		digits.replace( 1, 3, 5, 'x' );
+		REQUIRE( digits == "0xxxxx456789" );
 
-	digits = "0123456789";
-	digits.replace( digits.cbegin( ) + 1, digits.cbegin( ) + 4, "abc");
-	REQUIRE( digits == "0abc456789" );
+		digits = "0123456789";
+		digits.replace( digits.cbegin( ) + 1, digits.cbegin( ) + 4, 5, 'x' );
+		REQUIRE( digits == "0xxxxx456789" );
+		}
 
-	digits = "0123456789";
-	digits.replace( 1, 3, "abc", 2 );
-	REQUIRE( digits == "0ab456789" );
+	SECTION( "popback works" )
+		{
+		string a( "popback" );
+		a.popBack( );
+		REQUIRE( a == "popbac" );
+		REQUIRE( a.size( ) == 6 );
 
-	digits = "0123456789";
-	digits.replace( 1, 3, 5, 'x' );
-	REQUIRE( digits == "0xxxxx456789" );
-
-	digits = "0123456789";
-	digits.replace( digits.cbegin( ) + 1, digits.cbegin( ) + 4, 5, 'x' );
-	REQUIRE( digits == "0xxxxx456789" );
+		string b( "b" );
+		b.popBack( );
+		REQUIRE( b == "" );
+		REQUIRE( b.size( ) == 0 );
+		}
 	}
 
 TEST_CASE( "find works", "[string]" )
@@ -480,6 +470,106 @@ TEST_CASE( "find works", "[string]" )
 	REQUIRE( abracadabra.findLastNotOf( 'v', 5 ) == 5 );
 	}
 
+
+TEST_CASE( "comparisons work", "[string]" )
+	{
+	string cat( "cat" ), hat( "hat" ), cot( "cot" ), cab( "cab" ), cats( "cats" ), scat( "scat" ), scats( "scats" );
+	REQUIRE( cat == cat );
+	REQUIRE( !( cat != cat ) );
+	REQUIRE( !( cat < cat ) );
+	REQUIRE( !( cat > cat ) );
+	REQUIRE( cat <= cat );
+	REQUIRE( cat >= cat );
+
+	REQUIRE( !( cat == hat ) );
+	REQUIRE( cat != hat );
+	REQUIRE( cat < hat );
+	REQUIRE( !( cat > hat ) );
+	REQUIRE( cat <= hat );
+	REQUIRE( !( cat >= hat ) );
+	REQUIRE( !( hat == cat ) );
+	REQUIRE( hat != cat );
+	REQUIRE( ! ( hat < cat ) );
+	REQUIRE( hat > cat );
+	REQUIRE( ! ( hat <= cat ) );
+	REQUIRE( hat >= cat );
+
+	REQUIRE( !( cat == cot ) );
+	REQUIRE( cat != cot );
+	REQUIRE( cat < cot );
+	REQUIRE( !( cat > cot ) );
+	REQUIRE( cat <= cot );
+	REQUIRE( !( cat >= cot ) );
+	REQUIRE( !( cot == cat ) );
+	REQUIRE( cot != cat );
+	REQUIRE( ! ( cot < cat ) );
+	REQUIRE( cot > cat );
+	REQUIRE( ! ( cot <= cat ) );
+	REQUIRE( cot >= cat );
+
+	REQUIRE( !( cab == cat ) );
+	REQUIRE( cab != cat );
+	REQUIRE( cab < cat );
+	REQUIRE( !( cab > cat ) );
+	REQUIRE( cab <= cat );
+	REQUIRE( !( cab >= cat ) );
+	REQUIRE( !( cat == cab ) );
+	REQUIRE( cat != cab );
+	REQUIRE( ! ( cat < cab ) );
+	REQUIRE( cat > cab );
+	REQUIRE( ! ( cat <= cab ) );
+	REQUIRE( cat >= cab );
+
+	REQUIRE( !( cat == cats ) );
+	REQUIRE( cat != cats );
+	REQUIRE( cat < cats );
+	REQUIRE( !( cat > cats ) );
+	REQUIRE( cat <= cats );
+	REQUIRE( !( cat >= cats ) );
+	REQUIRE( !( cats == cat ) );
+	REQUIRE( cats != cat );
+	REQUIRE( ! ( cats < cat ) );
+	REQUIRE( cats > cat );
+	REQUIRE( ! ( cats <= cat ) );
+	REQUIRE( cats >= cat );
+
+	REQUIRE( !( cat == scat ) );
+	REQUIRE( cat != scat );
+	REQUIRE( cat < scat );
+	REQUIRE( !( cat > scat ) );
+	REQUIRE( cat <= scat );
+	REQUIRE( !( cat >= scat ) );
+	REQUIRE( !( scat == cat ) );
+	REQUIRE( scat != cat );
+	REQUIRE( ! ( scat < cat ) );
+	REQUIRE( scat > cat );
+	REQUIRE( ! ( scat <= cat ) );
+	REQUIRE( scat >= cat );
+
+	REQUIRE( !( cat == scats ) );
+	REQUIRE( cat != scats );
+	REQUIRE( cat < scats );
+	REQUIRE( !( cat > scats ) );
+	REQUIRE( cat <= scats );
+	REQUIRE( !( cat >= scats ) );
+	REQUIRE( !( scats == cat ) );
+	REQUIRE( scats != cat );
+	REQUIRE( ! ( scats < cat ) );
+	REQUIRE( scats > cat );
+	REQUIRE( ! ( scats <= cat ) );
+	REQUIRE( scats >= cat );
+
+	REQUIRE( string( ) == string( ) );
+	REQUIRE( string( ) < cat );
+	REQUIRE( cat > string( ) );
+
+	string cat2( cat );
+	cat2.reserve( 100 );
+	REQUIRE( cat == cat2 );
+
+	REQUIRE( cat == "cat" );
+	}
+
 TEST_CASE( "swap works", "[string]" )
 	{
 	string a( "google" );
@@ -493,15 +583,29 @@ TEST_CASE( "swap works", "[string]" )
 	REQUIRE( b.size( ) == 6 );
 	}
 
-TEST_CASE( "popback works", "[string]" )
+TEST_CASE( "hashing works", "[string]" )
 	{
-	string a( "popback" );
-	a.popBack( );
-	REQUIRE( a == "popbac" );
-	REQUIRE( a.size( ) == 6 );
+	// These are known to be collisions with the algorithm that we're using.
+	string a = "costarring";
+	string b = "liquid";
+	dex::hash < string > hasher;
+	REQUIRE( hasher( a ) == hasher( b ) );
 
-	string b( "b" );
-	b.popBack( );
-	REQUIRE( b == "" );
-	REQUIRE( b.size( ) == 0 );
+	a = "declinate";
+	b = "macallums";
+	REQUIRE( hasher( a ) == hasher( b ) );
+
+	// These should not be collisions.
+	a = "potato";
+	b = "tomato";
+	REQUIRE( hasher( a ) != hasher( b ) );
+
+	
+	a = "dog";
+	b = "dogs";
+	REQUIRE( hasher( a ) != hasher( b ) );
+
+	a = "";
+	b = "Pokedex";
+	REQUIRE( hasher( a ) != hasher( b ) );
 	}
