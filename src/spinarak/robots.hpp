@@ -1,10 +1,11 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-10-21: Improved definition of path: Chris
 // 2019-10-17: File created: Jonas, Chris
 
-#ifndef ROBOTS_HPP
-#define ROBOTS_HPP
+#ifndef DEX_ROBOTS_HPP
+#define DEX_ROBOTS_HPP
 
 #include <iostream>
 #include <time.h>
@@ -25,7 +26,7 @@ namespace dex
          string domain;
          // Time we have to wait to hit domain again in seconds
          int crawlDelay;
-         // To be used if there is a specified time when crawling is disallowed
+         // TODO: To be used if there is a specified time when crawling is disallowed
          int visitTimeHourStart;
          int visitTimeMinuteStart;
          int visitTimeHourEnd;
@@ -43,6 +44,7 @@ namespace dex
          unordered_set < string > allowedPaths;
 
          bool pathIsAllowed( string );
+         string fixPath( const string &);
          
 
       public:
@@ -58,39 +60,38 @@ namespace dex
          // Call each time you HTTP request a website
          void updateLastVisited( );
 
-         // Update the disallowed paths for the domain
+         // Set the disallowed paths for the domain
          void setPathsDisallowed( unordered_set < string > );
+
+         // Add paths to the disallowed paths for the domain
          void addPathsDisallowed( unordered_set < string > );
          void addPathsDisallowed( vector < string > );
          void addPathsDisallowed( string );
 
-         // Update the allowed paths for the domain
+         // Set the allowed paths for the domain
          void setPathsAllowed( unordered_set < string > );
+
+         // Add paths to the allowed paths for the domain
          void addPathsAllowed( unordered_set < string > );
          void addPathsAllowed( vector < string > );
          void addPathsAllowed( string );
 
          // Checks for if you can perform HTTP request
          bool canVisitPath( string path );
-
-         // working on / test functions
-         bool yes();
-         char * substringMe( char* ptr );
-
-      
-
       };
-
+   // A valid path has a '/' at the beginning and end.
+   string RobotTxt::fixPath( const string &path )
+      {
+      string ret = path;
+      if ( ret[ 0 ] != '/' )
+         ret.insert( 0, "/" );
+      if ( ret[ ret.size( ) - 1 ] != '/' )
+         ret += "/";
+      return ret;
+      }
    bool RobotTxt::pathIsAllowed( string path )
       {
-      // Naive implementation
-      //return ( disallowedPaths.find( path ) == disallowedPaths.end( ) || allowedPaths.find( path ) != allowedPaths.end( ) );
-
-      // Good unfinished implementation
-
-      // If no path was passed in, assume they mean root
-      
-      
+      path = fixPath( path );
       // if the path passed in is explicitly in disallowed paths, return false
       if ( disallowedPaths.find( path ) != disallowedPaths.end( ) )
          return false;
@@ -126,7 +127,6 @@ namespace dex
       {
       domain = dom;
       crawlDelay = del;
-      // QUESTION: Should we default allow all paths? That seems to be the assumption.
       updateLastVisited( );
       }
 
@@ -138,59 +138,55 @@ namespace dex
 
    void RobotTxt::setPathsDisallowed( unordered_set < string > disallowed )
       {
-      disallowedPaths = disallowed;
+      disallowedPaths.clear( );
+      for ( auto it = disallowed.cbegin( );  it != disallowed.cend( );  ++it )
+         disallowedPaths.insert( fixPath( *it ) );
       }
    
    void RobotTxt::addPathsDisallowed( unordered_set < string > disallowed )
       {
-      for ( auto it = disallowed.begin( );  it != disallowed.end( );  ++it )
-         {
-         disallowedPaths.insert( *it );
-         }
+      for ( auto it = disallowed.cbegin( );  it != disallowed.cend( );  ++it )
+         disallowedPaths.insert( fixPath( *it ) );
       }
 
    void RobotTxt::addPathsDisallowed( vector < string > disallowed )
       {
-      for ( int i = 0;  i < disallowed.size( );  ++i )
-         {
-         disallowedPaths.insert( disallowed[ i ] );
-         }
+      for ( auto it = disallowed.cbegin( );  it != disallowed.cend( );  ++it )
+         disallowedPaths.insert( fixPath( *it ) );
       }
    
     void RobotTxt::addPathsDisallowed( string path )
       {
-      disallowedPaths.insert( path );
+      disallowedPaths.insert( fixPath( path ) );
       }
 
    void RobotTxt::setPathsAllowed( unordered_set < string > allowed )
       {
-      allowedPaths = allowed;
+      allowedPaths.clear( );
+      for ( auto it = allowed.cbegin( );  it != allowed.cend( );  ++it )
+         allowedPaths.insert( fixPath( *it ) );
       }
 
    void RobotTxt::addPathsAllowed( unordered_set < string > allowed )
       {
-      for ( auto it = allowed.begin( );  it != allowed.end( );  ++it )
-         {
-         allowedPaths.insert( *it );
-         }
+      for ( auto it = allowed.cbegin( );  it != allowed.cend( );  ++it )
+         allowedPaths.insert( fixPath( *it ) );
       }
 
    void RobotTxt::addPathsAllowed( vector < string > allowed)
       {
-      for ( int i = 0;  i < allowed.size( );  i++ )
-         {
-         allowedPaths.insert( allowed[ i ] );
-         }
+      for ( auto it = allowed.cbegin( );  it != allowed.cend( );  ++it )
+         allowedPaths.insert( fixPath( *it ) );
       }
    
     void RobotTxt::addPathsAllowed( string path )
       {
-      allowedPaths.insert( path );
+      allowedPaths.insert( fixPath( path ) );
       }
    
-   bool RobotTxt::canVisitPath ( string path = "/" )
+   bool RobotTxt::canVisitPath ( string path )
       {
-      
+      path = fixPath( path );
       if ( !pathIsAllowed( path ) )
          return false;
       
@@ -221,24 +217,7 @@ namespace dex
       obj.lastTimeVisited = time( 0 );
 
       return in;
-      }
-   
-   char* RobotTxt::substringMe( char* ptr )
-      {
-      char * end = strstr( ptr, "\n" );
-      int length = end - ptr; 
-
-      char * dest = new char[ length ];
-      int index = 0;
-      while ( ptr != end ) 
-         {
-         dest[ index ] = *ptr;
-         ++ptr;
-         }
-      return dest;
-      }
-   };
-
-   
+      }   
+   }
 
 #endif
