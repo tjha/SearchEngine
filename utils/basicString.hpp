@@ -12,6 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-10-20: Add lexicographicalCompare, improved compare: combsc, jasina
 // 2019-10-17: Add include guard, lots of minor bug fixes, hash function, make array always be a C-string, improve the
 //             efficiency of replace, rewrite erase and insert to use replace: jasina, lougheem
 // 2019-10-14: Fix insert, erase, replace, find: jasina, lougheem
@@ -1288,52 +1289,58 @@ namespace dex
 				return basicString( *this, position, length );
 				}
 
+		private:
+			template < class InputIt1, class InputIt2 >
+			int lexicographicalCompare( InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2 ) const
+				{
+				for ( ;  first1 != last1 && first2 != last2;  ++first1, ++first2 )
+					{
+					if ( *first1 < *first2 )
+						return -1;
+					if ( *first1 > *first2 )
+						return 1;
+					}
+				return ( *first2 == *last2 ) - ( *first1 == *last1 );
+				}
+			template < class InputIt1 >
+			int lexicographicalCompare( InputIt1 first1, InputIt1 last1, const charT *first2 ) const
+				{
+				for ( ;  first1 != last1 && *first2 != charT { };  ++first1, ++first2 )
+					{
+					if ( *first1 < *first2 )
+						return -1;
+					if ( *first1 > *first2 )
+						return 1;
+					}
+				return ( *first2 == charT { } ) - ( *first1 == *last1 );
+				}
+		public:
 			int compare( const basicString &other ) const
 				{
-				return compare( 0, size( ), other, 0, other.size( ) );
+				return lexicographicalCompare( cbegin( ), cend( ), other.cbegin( ), other.cend( ) );
 				}
 			int compare( unsigned position, unsigned length, const basicString &other ) const
 				{
-				return compare( position, length, other, 0, other.size( ) );
+				return lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length,
+						other.cbegin( ), other.cend( ) );
 				}
 			int compare( unsigned position, unsigned length,
 					const basicString &other, unsigned subposition, unsigned sublength ) const
 				{
-				constIterator first = cbegin( ) + position;
-				constIterator otherFirst = other.cbegin( ) + subposition;
-
-				constIterator last = cbegin( ) + position + length;
-				constIterator otherLast = other.cbegin( ) + subposition + sublength;
-
-				while ( first != last && otherFirst != otherLast )
-					{
-					if ( *first < *otherFirst )
-						return -1;
-					if ( *first > *otherFirst )
-						return 1;
-					++first;
-					++otherFirst;
-					}
-				if ( otherFirst != otherLast )
-					return -1;
-				if ( first != last )
-					return 1;
-				return 0;
+				return lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length,
+						other.cbegin( ) + subposition, other.cbegin( ) + subposition + sublength);
 				}
 			int compare( const charT *other ) const
 				{
-				basicString otherBasicString = basicString( other );
-				return compare( 0, size( ), otherBasicString, 0, otherBasicString.size( ) );
+				return lexicographicalCompare( cbegin( ), cend( ), other );
 				}
 			int compare( unsigned position, unsigned length, const charT *other ) const
 				{
-				basicString otherBasicString = basicString( other );
-				return compare( position, length, other, 0, other.size( ) );
+				return lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length, other );
 				}
 			int compare( unsigned position, unsigned length, const charT *other, unsigned n ) const
 				{
-				basicString otherBasicString = basicString( other );
-				return compare( position, length, other, 0, n );
+				return lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length, other, other + n );
 				}
 		};
 
