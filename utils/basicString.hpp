@@ -12,6 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-10-21: Added cstddef: combsc
 // 2019-10-20: Add lexicographicalCompare, improved compare, change unsigned to size_t: combsc, jasina
 // 2019-10-17: Add include guard, lots of minor bug fixes, hash function, make array always be a C-string, improve the
 //             efficiency of replace, rewrite erase and insert to use replace: jasina, lougheem
@@ -33,6 +34,7 @@
 #define DEX_BASIC_STRING
 
 #include <iostream>
+#include <cstddef>
 #include "algorithm.hpp"
 #include "exception.hpp"
 
