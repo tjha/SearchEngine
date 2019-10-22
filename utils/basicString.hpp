@@ -12,6 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-10-22: Fix iterator-based constructor: jasina
 // 2019-10-21: Added cstddef, fix iterator templating: combsc, jasina
 // 2019-10-20: Add lexicographicalCompare, improved compare, change unsigned to size_t: combsc, jasina
 // 2019-10-17: Add include guard, lots of minor bug fixes, hash function, make array always be a C-string, improve the
@@ -33,8 +34,9 @@
 #ifndef DEX_BASIC_STRING
 #define DEX_BASIC_STRING
 
-#include <iostream>
 #include <cstddef>
+#include <iostream>
+#include <type_traits>
 #include "algorithm.hpp"
 #include "exception.hpp"
 
@@ -106,7 +108,9 @@ namespace dex
 				dex::fill( array, array + stringSize, character );
 				array[ stringSize ] = charT { };
 				}
-			template < class InputIterator > basicString( InputIterator first, InputIterator last )
+			template < class InputIterator,
+					typename = typename std::enable_if < !std::is_integral< InputIterator >::value >::type >
+			basicString( InputIterator first, InputIterator last )
 				{
 				// This is an uber-naive way to allocate memory. Maybe we should change this later.
 				arraySize = 1;
