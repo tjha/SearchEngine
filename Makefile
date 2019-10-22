@@ -13,10 +13,10 @@ build_sources: src/*
 
 build_tests: tst/*
 	@mkdir -p $(BUILD_PATH)/
-	$(CXX) $(CXXFLAGS) $(INCLUDE) tst/vector_tests.cpp -o build/vector_tests
+	$(CXX) $(CXXFLAGS) $(INCLUDE) tst/main.cpp tst/vectorTests.cpp -o build/vectorTests
 
 run_unit_tests:
-	./$(BUILD_PATH)/vector_tests
+	./$(BUILD_PATH)/vectorTests
 
 # TODO: run_integration_tests #
 
