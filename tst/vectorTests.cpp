@@ -2,7 +2,7 @@
 //
 // Perform tests on vector implementation
 //
-// 2019-10-21 combsc - Implemented test cases for push_back, size manipulation, element access
+// 2019-10-21 combsc - Implemented test cases for pushBack, size manipulation, element access
 //                   - insert, improved constructor test cases
 // 2019-09-17 Tejas Jha - Implemented basic constructor test cases
 
@@ -33,7 +33,7 @@ TEST_CASE( "test constructors", "[vector]")
 		vector < int > v5( v4 );     // constructor where you pass in other vector
 		REQUIRE( v5.size( ) == 5 );
 		REQUIRE( v5.at( 0 ) == 2 );
-		v4.pop_back( );
+		v4.popBack( );
 		v4[ 0 ] = 1;
 
 		REQUIRE( v5.size( ) == 5 );
@@ -46,7 +46,7 @@ TEST_CASE( "test constructors", "[vector]")
 		v5 = v4;                     // assignment operator
 		REQUIRE( v5.size( ) == 5 );
 		REQUIRE( v5.at( 0 ) == 2 );
-		v4.pop_back( );
+		v4.popBack( );
 		v4[ 0 ] = 1;
 
 		REQUIRE( v5.size( ) == 5 );
@@ -58,17 +58,17 @@ TEST_CASE( "test pushBack, popBack", "[vector]" )
 	{
 	vector < int > v1;
 	for ( int i = 0;  i < 5;  ++i )
-		v1.push_back( i );
+		v1.pushBack( i );
 
 	REQUIRE( v1[ 4 ] == 4 );
 	int a = 5;
-	v1.push_back( a );
+	v1.pushBack( a );
 	REQUIRE( v1[ 5 ] == 5 );
 	a = 10;
 	REQUIRE( v1[ 5 ] == 5 );
 	REQUIRE( v1.size( ) == 6 );
 
-	v1.pop_back( );
+	v1.popBack( );
 	REQUIRE( v1[ 4 ] == 4 );
 	REQUIRE( v1.size( ) == 5 );
 	}
@@ -79,7 +79,7 @@ TEST_CASE( "test size manipulation" , "[vector]" )
 		{
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
-			v1.push_back( i );
+			v1.pushBack( i );
 
 		v1.clear( );
 		REQUIRE( v1.size( ) == 0 );
@@ -93,7 +93,7 @@ TEST_CASE( "test size manipulation" , "[vector]" )
 		{
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
-			v1.push_back( i );
+			v1.pushBack( i );
 		
 		v1.resize( 100 );
 		REQUIRE( v1.size( ) == 100 );
@@ -103,7 +103,7 @@ TEST_CASE( "test size manipulation" , "[vector]" )
 		
 		vector < int > v2;
 		for ( int i = 0;  i < 5;  ++i )
-			v2.push_back( i );
+			v2.pushBack( i );
 		
 		v2.resize( 100, 5 );
 		REQUIRE( v2.size( ) == 100 );
@@ -120,7 +120,7 @@ TEST_CASE( "test size manipulation" , "[vector]" )
 		// Assumes shrink to fit is binding.
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
-			v1.push_back( i );
+			v1.pushBack( i );
 
 		bool itWorks = true;
 		while ( v1.capacity( ) == v1.size( ) )
@@ -130,12 +130,12 @@ TEST_CASE( "test size manipulation" , "[vector]" )
 				itWorks = false;
 				break;
 				}
-			v1.push_back( 1 );
+			v1.pushBack( 1 );
 			}
 
 		if ( itWorks )
 			{
-			v1.shrink_to_fit( );
+			v1.shrinkToFit( );
 			REQUIRE( v1.size( ) == v1.capacity( ) );
 			}
 		
@@ -148,7 +148,7 @@ TEST_CASE( "test element access", "[vector]" )
 		// test []
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
-			v1.push_back( i );
+			v1.pushBack( i );
 		for ( int i = 0;  i < 5;  ++i )
 			REQUIRE( v1[ i ] == i );
 		}
@@ -156,7 +156,7 @@ TEST_CASE( "test element access", "[vector]" )
 		// test front, back
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
-			v1.push_back( i );
+			v1.pushBack( i );
 		REQUIRE( v1.front( ) == 0 );
 		REQUIRE( v1.back( ) == 4 );
 		}
@@ -164,7 +164,7 @@ TEST_CASE( "test element access", "[vector]" )
 		// test at
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
-			v1.push_back( i );
+			v1.pushBack( i );
 		for ( int i = 0;  i < 5;  ++i )
 			REQUIRE( v1.at( i ) == i );
 		REQUIRE_THROWS_AS( v1.at( 10 ), dex::outOfRangeException );
@@ -173,7 +173,7 @@ TEST_CASE( "test element access", "[vector]" )
 		// test data
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
-			v1.push_back( i );
+			v1.pushBack( i );
 		for ( int i = 0;  i < 5;  ++i )
 			REQUIRE( v1.data( )[ i ] == i );
 		}
@@ -183,7 +183,7 @@ TEST_CASE( "test insert", "[vector]" )
 	{
 	vector < int > v1;
 	for( int i = 0;  i < 5;  ++i )
-		v1.push_back( i );
+		v1.pushBack( i );
 
 	v1.insert( v1.begin( ), 10 );
 	REQUIRE( v1.size( ) == 6 );
@@ -196,8 +196,8 @@ TEST_CASE( "test insert", "[vector]" )
 	REQUIRE( v1[ 5 ] == 4 );
 
 	vector < int > v2;
-	v2.push_back( 1 );
-	v2.push_back( 1 );
+	v2.pushBack( 1 );
+	v2.pushBack( 1 );
 
 	/*
 	v2.insert( v2.begin( ) + 1, 5, 0 );
@@ -208,11 +208,11 @@ TEST_CASE( "test insert", "[vector]" )
 
 	vector < int > v3;
 	for( int i = 0;  i < 5;  ++i )
-		v3.push_back( i );
+		v3.pushBack( i );
 	
 	vector < int > v4;
-	v4.push_back( -1 );
-	v4.push_back( 5 );
+	v4.pushBack( -1 );
+	v4.pushBack( 5 );
 	v4.insert( v4.begin( ) + 1, v3.begin( ), v3.end( ) );
 	REQUIRE( v4.size( ) == 7 );
 	REQUIRE( v4.front( ) == -1 );

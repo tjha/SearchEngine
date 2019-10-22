@@ -24,11 +24,10 @@ namespace dex
 	template < class T >
 	class vector
 		{
-		// TODO: Change snake_case to camelCase
 		public:
 			vector( );
-			vector( size_t num_elements );
-			vector( size_t num_elements, const T &val );
+			vector( size_t numElements );
+			vector( size_t numElements, const T &val );
 			vector( const vector < T > &other );
 			vector( vector < T > &&other );
 			~vector( );
@@ -57,13 +56,13 @@ namespace dex
 
 			// Capacity
 			size_t size( ) const;
-			size_t max_size( ) const;
+			size_t maxSize( ) const;
 			void resize( size_t newVectorSize );
 			void resize( size_t newVectorSize, const T &value );
 			size_t capacity( ) const;
 			bool empty( ) const;
-			void reserve( size_t new_cap );
-			void shrink_to_fit( );
+			void reserve( size_t newCapacity );
+			void shrinkToFit( );
 
 			// Element access
 			T& operator []( size_t index );
@@ -79,8 +78,8 @@ namespace dex
 			template < class InputIterator >
 			void assign( InputIterator first, InputIterator last );
 			void assign( size_t newVectorSize, const T &value );
-			void push_back( const T &obj );
-			void pop_back( );
+			void pushBack( const T &obj );
+			void popBack( );
 			void insert( iterator index, T obj);
 			void remove( size_t index );
 			void erase( iterator index );
@@ -88,19 +87,19 @@ namespace dex
 			void clear( );
 
 			// Home grown
-			void push_front( const T &obj );
-			void pop_front( );
+			void pushFront( const T &obj );
+			void popFront( );
 
 		private:
 			// TODO: rename private variables
 			// dynamic array
-			T *arr;
+			T *array;
 
 			// amount of available space
-			size_t cap;
+			size_t arraySize;
 
 			// number of elemets added to array
-			size_t sz;
+			size_t vectorSize;
 
 			void grow( );
 		};
@@ -109,27 +108,27 @@ namespace dex
 		// default constructor
 		vector < T >::vector( )
 			{
-			arr = new T[ 1 ]( );
-			cap = 1;
-			sz = 0;
+			array = new T[ 1 ]( );
+			arraySize = 1;
+			vectorSize = 0;
 			}
 
 	template < class T >
 	// constructor for vector of num elements
-	vector< T >::vector( size_t num_elements )
+	vector< T >::vector( size_t numElements )
 		{
-		arr = new T[ num_elements ]( );
-		cap = num_elements;
-		sz = num_elements;
+		array = new T[ numElements ]( );
+		arraySize = numElements;
+		vectorSize = numElements;
 		}
 
 	template < class T >
 	// constructor for vector of num elements each initialized to val
-	vector < T >::vector( size_t num_elements, const T &val )
+	vector < T >::vector( size_t numElements, const T &val )
 		{
-		arr = new T[ num_elements ];
-		cap = num_elements;
-		sz = num_elements;
+		array = new T[ numElements ];
+		arraySize = numElements;
+		vectorSize = numElements;
 		dex::fill( begin( ), end( ), val );
 		}
 
@@ -137,9 +136,9 @@ namespace dex
 	template < class T >
 	vector< T >::vector( const vector < T > &other )
 		{
-		arr = new T[ other.cap ];
-		cap = other.cap;
-		sz = other.sz;
+		array = new T[ other.arraySize ];
+		arraySize = other.arraySize;
+		vectorSize = other.vectorSize;
 		dex::copy( other.cbegin( ), other.cend( ), begin( ) );
 		}
 
@@ -147,12 +146,12 @@ namespace dex
 	template < class T >
 	vector< T >::vector( vector < T > &&other )
 		{
-		cap = other.cap;
-		sz = other.sz;
-		arr = other.arr;
-		other.sz = 0;
-		other.cap = 0;
-		other.arr = nullptr;
+		arraySize = other.arraySize;
+		vectorSize = other.vectorSize;
+		array = other.array;
+		other.vectorSize = 0;
+		other.arraySize = 0;
+		other.array = nullptr;
 		}
 
 	// Assignment Operator
@@ -176,8 +175,8 @@ namespace dex
 	// destructor
 	vector < T >::~vector( )
 		{
-		if ( arr )
-			delete[ ] arr;
+		if ( array )
+			delete[ ] array;
 		}
 
 	template < class T >
@@ -191,7 +190,7 @@ namespace dex
 			index = begin( ) + location;
 			}
 
-		++sz;
+		++vectorSize;
 		dex::copyBackward( index, end( ) - 1, end( ) );
 		*index = obj;
 		}
@@ -204,44 +203,44 @@ namespace dex
 		}
 
 	template < class T >
-	void vector< T >::reserve( size_t newCap )
+	void vector< T >::reserve( size_t newCapacity )
 		{
-		if ( capacity( ) >= newCap )
+		if ( capacity( ) >= newCapacity )
 			return;
 
-		T *newArray = new T[ newCap ];
+		T *newArray = new T[ newCapacity ];
 		dex::copy( begin( ), end( ), newArray );
 
-		cap = newCap;
-		delete arr;
-		arr = newArray;
+		arraySize = newCapacity;
+		delete array;
+		array = newArray;
 		}
 
 
 	template < class T >
 	void vector < T >::clear( )
 		{
-		sz = 0;
+		vectorSize = 0;
 		}
 
 	template < class T >
 	void vector < T >::grow( )
 		{
-		reserve( dex::max( size_t( 1 ), cap << 1 ) );
+		reserve( dex::max( size_t( 1 ), arraySize << 1 ) );
 		}
 
 	template < class T >
 	void vector < T >::remove( size_t index )
 		{
 		dex::copy( cbegin( ) + index + 1, cend( ), begin( ) + index );
-		--sz;
+		--vectorSize;
 		}
 
 	template < class T >
 	void vector < T >::erase( vector< T >::iterator index )
 		{
 			dex::copy( index + 1, end( ), index );
-			--sz;
+			--vectorSize;
 		}
 
 	template < class T >
@@ -259,17 +258,17 @@ namespace dex
 		}
 
 	template < class T >
-	void vector < T >::push_back( const T &obj )
+	void vector < T >::pushBack( const T &obj )
 		{
 		if ( size( ) == capacity( ) )
 			grow( );
-		arr[ sz++ ] = obj;
+		array[ vectorSize++ ] = obj;
 		}
 
 	template < class T >
-	void vector<T>::pop_back( )
+	void vector<T>::popBack( )
 		{
-		--sz;
+		--vectorSize;
 		}
 
 	template < class T >
@@ -347,17 +346,17 @@ namespace dex
 	template < class T >
 	size_t vector < T >::capacity( ) const
 		{
-		return cap;
+		return arraySize;
 		}
 
 	template < class T >
 	size_t vector < T >::size( ) const
 		{
-		return sz;
+		return vectorSize;
 		}
 
 	template < class T >
-	size_t vector < T >::max_size( ) const
+	size_t vector < T >::maxSize( ) const
 		{
 		return size_t( -1 );
 		}
@@ -374,94 +373,94 @@ namespace dex
 			reserve( newVectorSize );
 
 		if ( newVectorSize > size( ) )
-			dex::fill( arr + size( ), arr + newVectorSize, val );
-		sz = newVectorSize;
+			dex::fill( array + size( ), array + newVectorSize, val );
+		vectorSize = newVectorSize;
 		}
 
 	template < class T >
 	T vector < T >::at( size_t index )
 		{
-		if( index >= sz )
+		if( index >= vectorSize )
 			throw dex::outOfRangeException( );
-		return arr[ index ];
+		return array[ index ];
 		}
 
 	template < class T >
 	const T vector < T >::at( size_t index ) const
 		{
-		if( index >= sz )
+		if( index >= vectorSize )
 			throw dex::outOfRangeException( );
-		return arr[ index ];
+		return array[ index ];
 		}
 
 	template < class T >
-	void vector<T>::push_front( const T& obj )
+	void vector<T>::pushFront( const T& obj )
 		{
 		insert( 0, obj );
 		}
 
 	template < class T >
-	void vector< T >::pop_front( )
+	void vector< T >::popFront( )
 		{
 		remove( 0 );
 		}
 
 	template < class T >
-	void vector< T >::shrink_to_fit( )
+	void vector< T >::shrinkToFit( )
 		{
 		if ( size( ) == capacity( ) )
 			return;
 
-		T *old = arr;
-		arr = new T[ size( ) ];
-		dex::copy( old, old + size( ), arr );
+		T *old = array;
+		array = new T[ size( ) ];
+		dex::copy( old, old + size( ), array );
 		delete[ ] old;
-		cap = sz;
+		arraySize = vectorSize;
 		}
 
 
 	template < class T >
 	void vector< T >::swap( vector other )
 		{
-		dex::swap( arr, other.arr );
-		dex::swap( sz, other.sz );
-		dex::swap( cap, other.cap );
+		dex::swap( array, other.array );
+		dex::swap( vectorSize, other.vectorSize );
+		dex::swap( arraySize, other.arraySize );
 		}
 
 	template < class T >
 	T &vector < T >::operator [ ]( size_t index )
 		{
-		return arr[ index ];
+		return array[ index ];
 		}
 
 	template < class T >
 	T vector < T >::front( )
 		{
-		return arr[ 0 ];
+		return array[ 0 ];
 		}
 
 	template < class T >
 	T vector < T >::back( )
 		{
-		return arr[ size( ) - 1 ];
+		return array[ size( ) - 1 ];
 		}
 
 	template < class T >
 	T *vector < T >::data( )
 		{
-		return arr;
+		return array;
 		}
 
 	template < class T >
 	const T *vector< T >::data( ) const
 		{
-		return arr;
+		return array;
 		}
 
 	template < class T >
 	const T &vector < T >::operator [ ]( size_t index ) const
 		{
-		return arr[ index ];
+		return array[ index ];
 		}
 
 	template < class T >
