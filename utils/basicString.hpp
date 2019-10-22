@@ -12,7 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
-// 2019-10-21: Added cstddef: combsc
+// 2019-10-21: Added cstddef, fix iterator templating: combsc, jasina
 // 2019-10-20: Add lexicographicalCompare, improved compare, change unsigned to size_t: combsc, jasina
 // 2019-10-17: Add include guard, lots of minor bug fixes, hash function, make array always be a C-string, improve the
 //             efficiency of replace, rewrite erase and insert to use replace: jasina, lougheem
@@ -239,10 +239,9 @@ namespace dex
 			class iterator
 				{
 				private:
-					template < typename T >
-					friend class basicString;
+					friend class basicString < charT >;
 					friend class constIterator;
-					basicString <charT > *string;
+					basicString < charT > *string;
 					size_t position;
 					iterator( basicString < charT > &string, size_t position ) :
 							string( &string ), position( position ) { }
@@ -362,8 +361,6 @@ namespace dex
 						{
 						return ( *string )[ index ];
 						}
-
-					friend class basicString < charT >;
 				};
 			void swap( iterator &a, iterator &b )
 				{
@@ -381,8 +378,7 @@ namespace dex
 			class constIterator
 				{
 				private:
-					template < typename T >
-					friend class basicString;
+					friend class basicString < charT >;
 					const basicString < charT > *string;
 					size_t position;
 					constIterator( const basicString < charT > &string, size_t position ) :
@@ -521,8 +517,7 @@ namespace dex
 			class reverseIterator
 				{
 				private:
-					template < typename T >
-					friend class basicString;
+					friend class basicString < charT >;
 					friend class constReverseIterator;
 					size_t position;
 					basicString *string;
@@ -662,8 +657,7 @@ namespace dex
 			class constReverseIterator
 				{
 				private:
-					template < typename T >
-					friend class basicString;
+					friend class basicString < charT >;
 					const basicString *string;
 					size_t position;
 					constReverseIterator( const basicString < charT > &string, size_t position ) :
