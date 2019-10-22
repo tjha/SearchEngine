@@ -82,7 +82,7 @@ namespace dex
 			void push_back( const T &obj );
 			void pop_back( );
 			void insert( iterator index, T obj);
-			void remove( size_t index ); 
+			void remove( size_t index );
 			void erase( iterator index );
 			void swap( vector v );
 			void clear( );
@@ -130,39 +130,22 @@ namespace dex
 		arr = new T[ num_elements ];
 		cap = num_elements;
 		sz = num_elements;
-		for ( size_t i = 0;  i < sz;  ++i )
-			arr[ i ] = val;
+		dex::fill( begin( ), end( ), val );
 		}
 
 	// Copy Contructor
 	template < class T >
-	vector< T >::vector( const vector<T>& other )
+	vector< T >::vector( const vector < T > &other )
 		{
 		arr = new T[ other.cap ];
 		cap = other.cap;
 		sz = other.sz;
-		for ( size_t i = 0;  i < other.sz;  ++i )
-			arr[ i ] = other[ i ];
-		}
-
-	// Assignment Operator
-	template < class T >
-	vector< T > vector< T >::operator=( const vector<T>& other )
-		{
-		delete[ ] arr;
-		cap = other.cap;
-		sz = other.sz;
-		arr = new T[ cap ];
-		for ( size_t i = 0;  i < sz;  ++i )
-			{
-			arr[ i ] = other.arr[ i ];
-			}
-		return *this;
+		dex::copy( other.cbegin( ), other.cend( ), begin( ) );
 		}
 
 	// Move Constructor
 	template < class T >
-	vector< T >::vector( vector<T>&& other )
+	vector< T >::vector( vector < T > &&other )
 		{
 		cap = other.cap;
 		sz = other.sz;
@@ -172,13 +155,20 @@ namespace dex
 		other.arr = nullptr;
 		}
 
+	// Assignment Operator
+	template < class T >
+	vector< T > vector< T >::operator=( const vector < T > &other )
+		{
+		vector < T > otherCopy( other );
+		swap( otherCopy );
+		return *this;
+		}
+
 	// Move Assignment Operator
 	template < class T >
 	vector < T > vector < T >::operator=( vector < T > &&other )
 		{
-		sz = other.sz;
-		cap = other.cap;
-		arr = other.arr;
+		swap( other );
 		return *this;
 		}
 
@@ -186,20 +176,23 @@ namespace dex
 	// destructor
 	vector < T >::~vector( )
 		{
-		delete[ ] arr;
+		if ( arr )
+			delete[ ] arr;
 		}
 
 	template < class T >
 	void vector < T >::insert( vector < T >::iterator index, T obj )
 		{
-		if ( sz == cap )
-			grow( ); // you might not want to do a simple grow when inserting
 
-		sz++;
-		vector < T >::iterator it = index;
-		vector < T >::iterator end_it = end( );
-		vector < T >::iterator end_it_two = end_it++;
-		dex::copyBackward( it, end_it, end_it_two );
+		if ( size( ) == capacity( ) )
+			{
+			int location = index - begin( );
+			grow( );
+			index = begin( ) + location;
+			}
+
+		++sz;
+		dex::copyBackward( index, end( ) - 1, end( ) );
 		*index = obj;
 		}
 
@@ -207,13 +200,21 @@ namespace dex
 	template < class T >
 	bool vector< T >::empty() const
 		{
-		return sz == 0;	
+		return size( ) == 0;
 		}
 
 	template < class T >
-	void vector< T >::reserve(size_t new_cap)
+	void vector< T >::reserve( size_t newCap )
 		{
-		cap = new_cap;
+		if ( capacity( ) >= newCap )
+			return;
+
+		T *newArray = new T[ newCap ];
+		dex::copy( begin( ), end( ), newArray );
+
+		cap = newCap;
+		delete arr;
+		arr = newArray;
 		}
 
 
@@ -226,36 +227,21 @@ namespace dex
 	template < class T >
 	void vector < T >::grow( )
 		{
-		cap = dex::max( size_t( 1 ), cap << 1 );
-
-		T *arr_old = arr;
-		arr = new T[ cap ];
-		for ( size_t i = 0;  i < sz;  ++i )
-			arr[ i ] = arr_old[ i ];
-		delete[ ] arr_old;
+		reserve( dex::max( size_t( 1 ), cap << 1 ) );
 		}
 
 	template < class T >
 	void vector < T >::remove( size_t index )
 		{
-		if ( sz == 0 )
-			{
-			std::cerr << "CANNOT REMOVE ON VECTOR OF SIZE 0";
-			exit( 1 );
-			}
-		for ( int i = index;  i < sz;  i++ )
-			arr[ i ] = arr[ i + 1 ];
-		sz--;
+		dex::copy( cbegin( ) + index + 1, cend( ), begin( ) + index );
+		--sz;
 		}
 
 	template < class T >
 	void vector < T >::erase( vector< T >::iterator index )
 		{
-			vector < T >::iterator first = begin( );
-			vector < T >::iterator last = end( );
-			vector < T >::iterator dfirst = first++;
-			dex::copy( first, last, dfirst );
-			sz--;
+			dex::copy( index + 1, end( ), index );
+			--sz;
 		}
 
 	template < class T >
@@ -275,21 +261,15 @@ namespace dex
 	template < class T >
 	void vector < T >::push_back( const T &obj )
 		{
-		if ( sz == cap )
+		if ( size( ) == capacity( ) )
 			grow( );
-		arr[ sz ] = obj;
-		sz++;
+		arr[ sz++ ] = obj;
 		}
 
 	template < class T >
 	void vector<T>::pop_back( )
 		{
-		if ( sz == 0 )
-			{
-			std::cerr << "CAN'T CALL POP BACK ON VECTOR OF SIZE 0\n";
-			exit( 1 );
-			}
-		sz--;
+		--sz;
 		}
 
 	template < class T >
@@ -394,9 +374,7 @@ namespace dex
 			reserve( newVectorSize );
 
 		if ( newVectorSize > size( ) )
-			// TODO: use iterators instead
 			dex::fill( arr + size( ), arr + newVectorSize, val );
-
 		sz = newVectorSize;
 		}
 
@@ -431,72 +409,58 @@ namespace dex
 	template < class T >
 	void vector< T >::shrink_to_fit( )
 		{
-		if( cap == sz )
-			{
+		if ( size( ) == capacity( ) )
 			return;
-			}
+
 		T *old = arr;
-		arr = new T[ sz ];
-		for( int i = 0;  i < sz;  i++ )
-		{
-			arr[ i ] = old[ i ];
-		}
+		arr = new T[ size( ) ];
+		dex::copy( old, old + size( ), arr );
 		delete[ ] old;
 		cap = sz;
 		}
 
 
 	template < class T >
-	void vector< T >::swap( vector v )
+	void vector< T >::swap( vector other )
 		{
-		dex::swap( v.arr, arr );
-		dex::swap( sz, v.sz );
-		dex::swap( cap, v.cap );
+		dex::swap( arr, other.arr );
+		dex::swap( sz, other.sz );
+		dex::swap( cap, other.cap );
 		}
 
 	template < class T >
-	T& vector< T >::operator [ ]( size_t index )
+	T &vector < T >::operator [ ]( size_t index )
 		{
-		if ( index >= sz || index < 0 )
-			{
-			std::cerr << "INDEX OUT OF BOUNDS\n";
-			exit( 1 );
-			}
 		return arr[ index ];
 		}
 
 	template < class T >
-	T vector< T >::front()
+	T vector < T >::front( )
 		{
-		return arr[0];
+		return arr[ 0 ];
 		}
 
 	template < class T >
-	T vector< T >::back()
+	T vector < T >::back( )
 		{
-		return arr[sz-1];
+		return arr[ size( ) - 1 ];
 		}
 
 	template < class T >
-	T *vector< T >::data()
+	T *vector < T >::data( )
 		{
 		return arr;
 		}
 
 	template < class T >
-	const T *vector< T >::data() const
+	const T *vector< T >::data( ) const
 		{
 		return arr;
 		}
 
 	template < class T >
-	const T& vector< T >::operator [ ]( size_t index ) const
+	const T &vector < T >::operator [ ]( size_t index ) const
 		{
-		if ( index >= sz || index < 0 )
-			{
-			std::cerr << "INDEX OUT OF BOUNDS\n";
-			exit( 1 );
-			}
 		return arr[ index ];
 		}
 
@@ -633,7 +597,7 @@ namespace dex
 		{
 		private:
 			friend class vector < T >;
-			vector < T > *vec;
+			const vector < T > *vec;
 			size_t position;
 			constIterator( const vector < T > &vec, size_t position ) :
 					vec( &vec ), position( position ) { }

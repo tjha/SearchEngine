@@ -6,6 +6,7 @@
 //                   - insert, improved constructor test cases
 // 2019-09-17 Tejas Jha - Implemented basic constructor test cases
 
+#include <iostream> // TODO: remove this later
 #include "catch.hpp"
 #include "../utils/vector.hpp"
 
@@ -13,12 +14,17 @@ using dex::vector;
 
 TEST_CASE( "test constructors", "[vector]")
 	{
-	vector < int > v1;           // default constructor
-	REQUIRE( v1.size( ) == 0 );
-	vector < int > v2( 5 );      // constructor with specified size
-	REQUIRE( v2.size( ) == 5 );
-	vector < int > v3( 0 );      // constructor with size specified to 0
-	REQUIRE( v3.size( ) == 0 );
+	SECTION( "basic constructors" )
+		{
+		vector < int > v1;           // default constructor
+		REQUIRE( v1.size( ) == 0 );
+		vector < int > v2( 5 );      // constructor with specified size
+		REQUIRE( v2.size( ) == 5 );
+		vector < int > v3( 0 );      // constructor with size specified to 0
+		REQUIRE( v3.size( ) == 0 );
+		}
+
+	SECTION( "copy" )
 		{
 		vector < int > v4( 5, 2 );   // constructor of specified size and default val
 		REQUIRE( v4.size( ) == 5 );
@@ -33,9 +39,11 @@ TEST_CASE( "test constructors", "[vector]")
 		REQUIRE( v5.size( ) == 5 );
 		REQUIRE( v5.at( 0 ) == 2 );
 		}
+	SECTION( "assignment operator" )
 		{
 		vector < int > v4( 5, 2 );
-		vector < int > v5 = v4;     // assignment operator
+		vector < int > v5;
+		v5 = v4;                     // assignment operator
 		REQUIRE( v5.size( ) == 5 );
 		REQUIRE( v5.at( 0 ) == 2 );
 		v4.pop_back( );
@@ -46,7 +54,7 @@ TEST_CASE( "test constructors", "[vector]")
 		}
 	}
 
-TEST_CASE( "test push_back, pop_back", "[vector]" )
+TEST_CASE( "test pushBack, popBack", "[vector]" )
 	{
 	vector < int > v1;
 	for ( int i = 0;  i < 5;  ++i )
@@ -58,7 +66,7 @@ TEST_CASE( "test push_back, pop_back", "[vector]" )
 	REQUIRE( v1[ 5 ] == 5 );
 	a = 10;
 	REQUIRE( v1[ 5 ] == 5 );
-	REQUIRE( v1.size( )  == 6 );
+	REQUIRE( v1.size( ) == 6 );
 
 	v1.pop_back( );
 	REQUIRE( v1[ 4 ] == 4 );
@@ -67,8 +75,8 @@ TEST_CASE( "test push_back, pop_back", "[vector]" )
 
 TEST_CASE( "test size manipulation" , "[vector]" )
 	{
+	SECTION( "clear works" )
 		{
-		// test that clear clears a vector properly
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
 			v1.push_back( i );
@@ -81,8 +89,8 @@ TEST_CASE( "test size manipulation" , "[vector]" )
 		REQUIRE( v2.size( ) == 0 );
 		}
 
+	SECTION( "resize works" )
 		{
-		// Test resize
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
 			v1.push_back( i );
@@ -106,6 +114,7 @@ TEST_CASE( "test size manipulation" , "[vector]" )
 		REQUIRE_THROWS_AS( v1.at( 5 ), dex::outOfRangeException );
 		}
 
+	SECTION( "shrinkToFit works" )
 		{
 		// Test shrink to fit
 		// Assumes shrink to fit is binding.
@@ -184,7 +193,7 @@ TEST_CASE( "test insert", "[vector]" )
 	v1.insert( v1.end( ), 10 );
 	REQUIRE( v1.size( ) == 7 );
 	REQUIRE( v1[ 6 ] == 10 );
-	REQUIRE( v1[ 5 ] == 5 );
+	REQUIRE( v1[ 5 ] == 4 );
 
 	vector < int > v2;
 	v2.push_back( 1 );
