@@ -6,7 +6,6 @@
 //                   - insert, improved constructor test cases
 // 2019-09-17 Tejas Jha - Implemented basic constructor test cases
 
-#include <iostream> // TODO: remove this later
 #include "catch.hpp"
 #include "../utils/vector.hpp"
 

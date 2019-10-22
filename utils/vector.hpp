@@ -1,6 +1,7 @@
 // vector.hpp
 // Vector class. We don't implement emplace.
 //
+// 2019-10-22 - Fix styling issues, add iterator-based constructor, and fix at, front, and back: jasina
 // 2019-10-21 - Implement iterators, clean up style, size, empty, reserve, capacity, at, front, back, erase, insert,
 //              swap, maxSize, grow, pushBack, assign, data, and resize: combsc, jasina, lougheem, medhak
 // 2019-10-20 - Jonas Hirshland merged AG submission and this file
@@ -15,7 +16,7 @@
 #define DEX_VECTOR
 
 #include <cstddef>
-#include <iostream>
+#include <type_traits>
 #include "algorithm.hpp"
 #include "exception.hpp"
 
@@ -28,11 +29,25 @@ namespace dex
 			vector( );
 			vector( size_t numElements );
 			vector( size_t numElements, const T &val );
+			// Only use the next constructor if InputIt isn't integral type
+			template < class InputIt, typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+			vector( InputIt first, InputIt last )
+				{
+				array = new T[ 1 ];
+				arraySize = 1;
+				vectorSize = 0;
+				for ( ;  first != last;  ++first )
+					{
+					if ( size( ) == capacity( ) )
+						grow( );
+					array[ vectorSize++ ] = *first;
+					}
+				}
 			vector( const vector < T > &other );
 			vector( vector < T > &&other );
 			~vector( );
-			vector< T > operator=( const vector < T > &v );
-			vector< T > operator=( vector < T > &&v );
+			vector < T > operator=( const vector < T > &v );
+			vector < T > operator=( vector < T > &&v );
 
 			// Iterators
 			class iterator;
@@ -65,14 +80,16 @@ namespace dex
 			void shrinkToFit( );
 
 			// Element access
-			T& operator []( size_t index );
-			const T& operator[ ] ( size_t i ) const;
-			T at( size_t index );
-			const T at( size_t index ) const;
-			T front( );
-			T back( );
-			T* data( );
-			const T* data( ) const;
+			T &operator []( size_t index );
+			const T &operator[ ] ( size_t i ) const;
+			T &at( size_t index );
+			const T &at( size_t index ) const;
+			T &front( );
+			const T &front( ) const;
+			T &back( );
+			const T &back( ) const;
+			T *data( );
+			const T *data( ) const;
 
 			// Modifiers
 			template < class InputIterator >
@@ -104,18 +121,18 @@ namespace dex
 			void grow( );
 		};
 
-		template < class T >
-		// default constructor
-		vector < T >::vector( )
-			{
-			array = new T[ 1 ]( );
-			arraySize = 1;
-			vectorSize = 0;
-			}
+	template < class T >
+	// default constructor
+	vector < T >::vector( )
+		{
+		array = new T[ 1 ]( );
+		arraySize = 1;
+		vectorSize = 0;
+		}
 
 	template < class T >
 	// constructor for vector of num elements
-	vector< T >::vector( size_t numElements )
+	vector < T >::vector( size_t numElements )
 		{
 		array = new T[ numElements ]( );
 		arraySize = numElements;
@@ -134,7 +151,7 @@ namespace dex
 
 	// Copy Contructor
 	template < class T >
-	vector< T >::vector( const vector < T > &other )
+	vector < T >::vector( const vector < T > &other )
 		{
 		array = new T[ other.arraySize ];
 		arraySize = other.arraySize;
@@ -144,7 +161,7 @@ namespace dex
 
 	// Move Constructor
 	template < class T >
-	vector< T >::vector( vector < T > &&other )
+	vector < T >::vector( vector < T > &&other )
 		{
 		arraySize = other.arraySize;
 		vectorSize = other.vectorSize;
@@ -156,7 +173,7 @@ namespace dex
 
 	// Assignment Operator
 	template < class T >
-	vector< T > vector< T >::operator=( const vector < T > &other )
+	vector < T > vector < T >::operator=( const vector < T > &other )
 		{
 		vector < T > otherCopy( other );
 		swap( otherCopy );
@@ -197,13 +214,13 @@ namespace dex
 
 
 	template < class T >
-	bool vector< T >::empty() const
+	bool vector < T >::empty( ) const
 		{
 		return size( ) == 0;
 		}
 
 	template < class T >
-	void vector< T >::reserve( size_t newCapacity )
+	void vector < T >::reserve( size_t newCapacity )
 		{
 		if ( capacity( ) >= newCapacity )
 			return;
@@ -237,7 +254,7 @@ namespace dex
 		}
 
 	template < class T >
-	void vector < T >::erase( vector< T >::iterator index )
+	void vector < T >::erase( vector < T >::iterator index )
 		{
 			dex::copy( index + 1, end( ), index );
 			--vectorSize;
@@ -266,7 +283,7 @@ namespace dex
 		}
 
 	template < class T >
-	void vector<T>::popBack( )
+	void vector < T >::popBack( )
 		{
 		--vectorSize;
 		}
@@ -362,12 +379,12 @@ namespace dex
 		}
 
 	template < class T >
-	void vector< T >::resize( size_t newVectorSize )
+	void vector < T >::resize( size_t newVectorSize )
 		{
 		resize( newVectorSize, T( ) );
 		}
 	template < class T >
-	void vector< T >::resize( size_t newVectorSize, const T &val )
+	void vector < T >::resize( size_t newVectorSize, const T &val )
 		{
 		if ( newVectorSize > capacity( ) )
 			reserve( newVectorSize );
@@ -378,7 +395,7 @@ namespace dex
 		}
 
 	template < class T >
-	T vector < T >::at( size_t index )
+	T &vector < T >::at( size_t index )
 		{
 		if( index >= vectorSize )
 			throw dex::outOfRangeException( );
@@ -386,7 +403,7 @@ namespace dex
 		}
 
 	template < class T >
-	const T vector < T >::at( size_t index ) const
+	const T &vector < T >::at( size_t index ) const
 		{
 		if( index >= vectorSize )
 			throw dex::outOfRangeException( );
@@ -394,19 +411,19 @@ namespace dex
 		}
 
 	template < class T >
-	void vector<T>::pushFront( const T& obj )
+	void vector < T >::pushFront( const T &obj )
 		{
 		insert( 0, obj );
 		}
 
 	template < class T >
-	void vector< T >::popFront( )
+	void vector < T >::popFront( )
 		{
 		remove( 0 );
 		}
 
 	template < class T >
-	void vector< T >::shrinkToFit( )
+	void vector < T >::shrinkToFit( )
 		{
 		if ( size( ) == capacity( ) )
 			return;
@@ -420,7 +437,7 @@ namespace dex
 
 
 	template < class T >
-	void vector< T >::swap( vector other )
+	void vector < T >::swap( vector other )
 		{
 		dex::swap( array, other.array );
 		dex::swap( vectorSize, other.vectorSize );
@@ -434,13 +451,23 @@ namespace dex
 		}
 
 	template < class T >
-	T vector < T >::front( )
+	T &vector < T >::front( )
+		{
+		return array[ 0 ];
+		}
+	template < class T >
+	const T &vector < T >::front( ) const
 		{
 		return array[ 0 ];
 		}
 
 	template < class T >
-	T vector < T >::back( )
+	T &vector < T >::back( )
+		{
+		return array[ size( ) - 1 ];
+		}
+	template < class T >
+	const T &vector < T >::back( ) const
 		{
 		return array[ size( ) - 1 ];
 		}
@@ -452,7 +479,7 @@ namespace dex
 		}
 
 	template < class T >
-	const T *vector< T >::data( ) const
+	const T *vector < T >::data( ) const
 		{
 		return array;
 		}
