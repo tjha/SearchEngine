@@ -2,6 +2,7 @@
 //
 // Perform tests on vector implementation
 //
+// 2019-10-22 combsc - Improved insert test cases, added erase test cases
 // 2019-10-21 combsc - Implemented test cases for pushBack, size manipulation, element access
 //                   - insert, improved constructor test cases
 // 2019-09-17 Tejas Jha - Implemented basic constructor test cases
@@ -198,13 +199,14 @@ TEST_CASE( "test insert", "[vector]" )
 	v2.pushBack( 1 );
 	v2.pushBack( 1 );
 
-	/*
+	
 	v2.insert( v2.begin( ) + 1, 5, 0 );
+	REQUIRE( v2.size( ) == 7 );
 	REQUIRE( v2[ 0 ] == 1 );
 	REQUIRE( v2[ 3 ] == 0 );
 	REQUIRE( v2[ 6 ] == 1 );
-	REQUIRE( v2.size( ) == 7 );
 
+	
 	vector < int > v3;
 	for( int i = 0;  i < 5;  ++i )
 		v3.pushBack( i );
@@ -217,5 +219,31 @@ TEST_CASE( "test insert", "[vector]" )
 	REQUIRE( v4.front( ) == -1 );
 	REQUIRE( v4.back( ) == 5 );
 	REQUIRE( v4[ 1 ] == 0 );
-	*/
+	}
+
+TEST_CASE( "test erase", "[vector]" )
+	{
+	vector < int > v1;
+	for( int i = 0;  i < 5;  ++i )
+		v1.pushBack( i );
+	
+	v1.erase( v1.cbegin( ) + 2 );
+	REQUIRE( v1.size( ) == 4 );
+	REQUIRE( v1[ 1 ] == 1 );
+	REQUIRE( v1[ 2 ] == 3 );
+	v1.erase( v1.cbegin( ) + 2 );
+	REQUIRE( v1[ 2 ] == 4 );
+	REQUIRE( v1.size( ) == 3 );
+
+	vector < int > v2;
+	for( int i = 0;  i < 5;  ++i )
+		v2.pushBack( i );
+
+	v2.erase( v2.cbegin( ), v2.cbegin( ) + 2 );
+	REQUIRE( v2.size( ) == 3 );
+	REQUIRE( v2[ 0 ] == 2 );
+	REQUIRE( v2[ 1 ] == 3 );
+	REQUIRE( v2[ 2 ] == 4 );
+	v2.erase( v2.cbegin( ), v2.cend( ) );
+	REQUIRE( v2.size( ) == 0 );
 	}
