@@ -12,7 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
-// 2019-10-24: Call lexicographicalCompare from algorithm: jasina
+// 2019-10-24: Call lexicographicalCompare from algorithm, fix tempaltes with inputIterators: jasina
 // 2019-10-22: Fix iterator-based constructor: jasina
 // 2019-10-21: Added cstddef, fix iterator templating: combsc, jasina
 // 2019-10-20: Add lexicographicalCompare, improved compare, change unsigned to size_t: combsc, jasina
@@ -109,9 +109,9 @@ namespace dex
 				dex::fill( array, array + stringSize, character );
 				array[ stringSize ] = charT { };
 				}
-			template < class InputIterator,
-					typename = typename std::enable_if < !std::is_integral< InputIterator >::value >::type >
-			basicString( InputIterator first, InputIterator last )
+			template < class InputIt,
+					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+			basicString( InputIt first, InputIt last )
 				{
 				// This is an uber-naive way to allocate memory. Maybe we should change this later.
 				arraySize = 1;
@@ -886,8 +886,9 @@ namespace dex
 				resize( size( ) + number, character );
 				return *this;
 				}
-			template < class InputIterator >
-			basicString < charT > &append( InputIterator first, InputIterator last )
+			template < class InputIt,
+					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+			basicString < charT > &append( InputIt first, InputIt last )
 				{
 				insert( cend( ), first, last );
 				return *this;
@@ -928,7 +929,8 @@ namespace dex
 				swap( temporaryString );
 				return *this;
 				}
-			template< class InputIt >
+			template < class InputIt,
+					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
 			basicString < charT > &assign( InputIt first, InputIt last )
 				{
 				basicString temporaryString( first, last );
@@ -991,8 +993,9 @@ namespace dex
 				{
 				return insert( first, 1, character );
 				}
-			template < class InputIterator >
-			iterator insert( constIterator insertionPoint, InputIterator first, InputIterator last )
+			template < class InputIt,
+					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+			iterator insert( constIterator insertionPoint, InputIt first, InputIt last )
 				{
 				size_t originalSize = size( );
 				replace( insertionPoint, insertionPoint, first, last );
@@ -1090,11 +1093,13 @@ namespace dex
 
 				return *this;
 				}
-			template < class InputIterator > basicString < charT > &replace( constIterator first, constIterator last,
-					InputIterator inputFirst, InputIterator inputLast )
+			template < class InputIt,
+					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+			basicString < charT > &replace( constIterator first, constIterator last,
+					InputIt inputFirst, InputIt inputLast )
 				{
 				size_t insertionLength = 0;
-				for ( InputIterator it = inputFirst;  it != inputLast;  ++insertionLength, ++it );
+				for ( InputIt it = inputFirst;  it != inputLast;  ++insertionLength, ++it );
 				shiftAtPoint( insertionLength, first, last );
 
 				dex::copy( inputFirst, inputLast, begin( ) + ( first - cbegin( ) ) );
