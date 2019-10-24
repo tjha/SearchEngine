@@ -1,6 +1,7 @@
 // algorithmTests.cpp
 // Testing for the algorithm library
 //
+// 2019-10-24: Add lexicographicalCompare tests: jasina
 // 2019-10-17: Get tests to all compile and pass: jasina
 // 2019-10-13: Write copy, fill, find, search, and findEnd tests: jasina
 // 2019-9-19: Write min and max tests: combsc
@@ -124,4 +125,28 @@ TEST_CASE( "test swap" )
 	dex::swap(a, b);
 	REQUIRE( a == 11 );
 	REQUIRE( b == 10 );
+	}
+
+TEST_CASE( "test lexicographical compare" )
+	{
+	std::vector < int > a, b;
+	for ( int i = 0;  i != 10;  ++i )
+		a.push_back( i % 5 );
+	for ( int i = 0;  i != 10;  ++i )
+		b.push_back( i );
+
+	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.end( ), b.begin( ), b.end( ) ) < 0 );
+	REQUIRE( dex::lexicographicalCompare( b.begin( ), b.end( ), a.begin( ), a.end( ) ) > 0 );
+	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.begin( ) + 5, b.begin( ), b.begin( ) + 5 ) == 0 );
+	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.begin( ) + 4, b.begin( ), b.begin( ) + 5 ) < 0 );
+	REQUIRE( dex::lexicographicalCompare( b.begin( ), b.begin( ) + 5, a.begin( ), a.begin( ) + 4 ) > 0 );
+	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.begin( ) + 6, b.begin( ), b.begin( ) + 5 ) > 0 );
+	REQUIRE( dex::lexicographicalCompare( b.begin( ), b.begin( ) + 5, a.begin( ), a.begin( ) + 6 ) < 0 );
+	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.begin( ), b.begin( ), b.begin( ) + 5 ) < 0 );
+	REQUIRE( dex::lexicographicalCompare( b.begin( ), b.begin( ) + 5, a.begin( ), a.begin( ) ) > 0 );
+	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.begin( ), b.begin( ), b.begin( ) + 1 ) < 0 );
+	REQUIRE( dex::lexicographicalCompare( b.begin( ), b.begin( ) + 1, a.begin( ), a.begin( ) ) > 0 );
+	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.begin( ), b.begin( ), b.begin( ) ) == 0 );
+	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.end( ), a.begin( ), a.end( ) ) == 0 );
+	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.begin( ), a.end( ), a.end( ) ) == 0 );
 	}
