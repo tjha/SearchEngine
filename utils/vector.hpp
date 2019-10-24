@@ -103,22 +103,29 @@ namespace dex
 			template < class InputIterator, typename = typename std::enable_if < !std::is_integral< InputIterator >::value >::type >
 			void insert( constIterator index, InputIterator first, InputIterator last )
 				{
-				size_t count = last - first;
+            size_t count = 0;
+            InputIterator tmp = first;
+            while ( tmp != last ) 
+               {
+               ++tmp;
+               ++count;
+               }
+
 				if ( size( ) + count > capacity ( ) )
 					{
-					int location = index - begin( );
+					int location = index - cbegin( );
 					if ( size( ) + count > capacity( ) * 2 )
 						reserve( size ( ) + count );
 					else
 						grow( );
-					index = begin( ) + location;
+					index = cbegin( ) + location;
 					}
 
 				vectorSize += count;
 				int location = index - cbegin( );
-				iterator i = begin( ) + location;
-				dex::copyBackward( i, end( ) - count, end( ) );
-				dex::copy( first, last, i );
+				iterator writableLocation = begin( ) + location;
+				dex::copyBackward( writableLocation, end( ) - count, end( ) );
+				dex::copy( first, last, writableLocation );
 				}
 			void remove( size_t index );
 			void erase( constIterator index );
@@ -142,6 +149,134 @@ namespace dex
 			size_t vectorSize;
 
 			void grow( );
+		};
+
+	template < class T >
+	class vector < T >::constIterator
+		{
+		private:
+			friend class vector < T >;
+			const vector < T > *vec;
+			size_t position;
+			constIterator( const vector < T > &vec, size_t position ) :
+					vec( &vec ), position( position ) { }
+		public:
+			constIterator( const iterator &it ) : vec( it.vec ), position( it.position ) { }
+			friend bool operator==( const constIterator &a, const constIterator &b )
+				{
+				// Only makes sense to compare iterators pointing to the same vec
+				if ( a.vec != b.vec )
+					throw invalidArgumentException( );
+				return a.position == b.position;
+				}
+			friend bool operator!=( const constIterator &a, const constIterator &b )
+				{
+				if ( a.vec != b.vec )
+					throw invalidArgumentException( );
+				return a.position != b.position;
+				}
+
+			const T &operator*( ) const
+				{
+				return ( *vec )[ position ];
+				}
+			const T *operator->( ) const
+				{
+				return &( ( *vec )[ position ] );
+				}
+
+			constIterator &operator++( )
+				{
+				if ( position < vec->size( ) )
+					++position;
+				else
+					throw outOfRangeException( );
+				return *this;
+				}
+			constIterator operator++( int )
+				{
+				constIterator toReturn( *this );
+				if ( position < vec->size( ) )
+					++position;
+				else
+					throw outOfRangeException( );
+				return toReturn;
+				}
+
+			constIterator &operator--( )
+				{
+				if ( position > 0 )
+					--position;
+				else
+					throw outOfRangeException( );
+				return *this;
+				}
+			constIterator operator--( int )
+				{
+				if ( position > 0 )
+					--position;
+				else
+					throw outOfRangeException( );
+				return *this;
+				}
+
+			friend constIterator operator-( const constIterator &it, int n )
+				{
+				if ( it.position > n + it.vec->size( ) || ( n > 0 && it.position < size_t( n ) ) )
+					throw outOfRangeException( );
+				return constIterator( *it.vec, it.position - n );
+				}
+			friend int operator-( const constIterator &a, const constIterator &b )
+				{
+				if ( a.vec != b.vec )
+					throw invalidArgumentException( );
+				return int( a.position - b.position );
+				}
+			friend constIterator operator+( const constIterator &it, int n )
+				{
+				if ( it.position + n > it.vec->size( ) || ( n < 0 && it.position < size_t( -n ) ) )
+					throw outOfRangeException( );
+				return constIterator( *it.vec, it.position + n );
+				}
+
+			friend bool operator<( const constIterator &a, const constIterator &b )
+				{
+				if ( a.vec != b.vec )
+					throw invalidArgumentException( );
+				return a.position < b.position;
+				}
+			friend bool operator>( const constIterator &a, const constIterator &b )
+				{
+				if ( a.vec != b.vec )
+					throw invalidArgumentException( );
+				return a.position > b.position;
+				}
+			friend bool operator<=( const constIterator &a, const constIterator &b )
+				{
+				if ( a.vec != b.vec )
+					throw invalidArgumentException( );
+				return a.position <= b.position;
+				}
+			friend bool operator>=( const constIterator &a, const constIterator &b )
+				{
+				if ( a.vec != b.vec )
+					throw invalidArgumentException( );
+				return a.position >= b.position;
+				}
+
+			constIterator &operator+=( int n )
+				{
+				return *this = *this + n;
+				}
+			constIterator &operator-=( int n )
+				{
+				return *this = *this - n;
+				}
+
+			const T &operator[ ]( const size_t index ) const
+				{
+				return ( *vec )[ index ];
+				}
 		};
 
 	template < class T >
@@ -220,22 +355,22 @@ namespace dex
 		}
 
 	template < class T >
-	void vector < T >::insert( constIterator index, const T &obj )
+	void vector < T >::insert( vector< T >::constIterator index, const T &obj )
 		{
 		insert( index, 1, obj );
 		}
 
 	template < class T >
-	void vector < T >::insert( constIterator index, size_t count, const T &obj )
+	void vector < T >::insert( vector< T >::constIterator index, size_t count, const T &obj )
 		{
 		if ( size( ) + count > capacity ( ) )
 			{
-			int location = index - begin( );
+			int location = index - cbegin( );
 			if ( size( ) + count > capacity( ) * 2 )
 				reserve( size ( ) + count );
 			else
 				grow( );
-			index = begin( ) + location;
+			index = cbegin( ) + location;
 			}
 		
 		vectorSize += count;
@@ -660,133 +795,6 @@ namespace dex
 				}
 		};
 
-	template < class T >
-	class vector < T >::constIterator
-		{
-		private:
-			friend class vector < T >;
-			const vector < T > *vec;
-			size_t position;
-			constIterator( const vector < T > &vec, size_t position ) :
-					vec( &vec ), position( position ) { }
-		public:
-			constIterator( const iterator &it ) : vec( it.vec ), position( it.position ) { }
-			friend bool operator==( const constIterator &a, const constIterator &b )
-				{
-				// Only makes sense to compare iterators pointing to the same vec
-				if ( a.vec != b.vec )
-					throw invalidArgumentException( );
-				return a.position == b.position;
-				}
-			friend bool operator!=( const constIterator &a, const constIterator &b )
-				{
-				if ( a.vec != b.vec )
-					throw invalidArgumentException( );
-				return a.position != b.position;
-				}
-
-			const T &operator*( ) const
-				{
-				return ( *vec )[ position ];
-				}
-			const T *operator->( ) const
-				{
-				return &( ( *vec )[ position ] );
-				}
-
-			constIterator &operator++( )
-				{
-				if ( position < vec->size( ) )
-					++position;
-				else
-					throw outOfRangeException( );
-				return *this;
-				}
-			constIterator operator++( int )
-				{
-				constIterator toReturn( *this );
-				if ( position < vec->size( ) )
-					++position;
-				else
-					throw outOfRangeException( );
-				return toReturn;
-				}
-
-			constIterator &operator--( )
-				{
-				if ( position > 0 )
-					--position;
-				else
-					throw outOfRangeException( );
-				return *this;
-				}
-			constIterator operator--( int )
-				{
-				if ( position > 0 )
-					--position;
-				else
-					throw outOfRangeException( );
-				return *this;
-				}
-
-			friend constIterator operator-( const constIterator &it, int n )
-				{
-				if ( it.position > n + it.vec->size( ) || ( n > 0 && it.position < size_t( n ) ) )
-					throw outOfRangeException( );
-				return constIterator( *it.vec, it.position - n );
-				}
-			friend int operator-( const constIterator &a, const constIterator &b )
-				{
-				if ( a.vec != b.vec )
-					throw invalidArgumentException( );
-				return int( a.position - b.position );
-				}
-			friend constIterator operator+( const constIterator &it, int n )
-				{
-				if ( it.position + n > it.vec->size( ) || ( n < 0 && it.position < size_t( -n ) ) )
-					throw outOfRangeException( );
-				return constIterator( *it.vec, it.position + n );
-				}
-
-			friend bool operator<( const constIterator &a, const constIterator &b )
-				{
-				if ( a.vec != b.vec )
-					throw invalidArgumentException( );
-				return a.position < b.position;
-				}
-			friend bool operator>( const constIterator &a, const constIterator &b )
-				{
-				if ( a.vec != b.vec )
-					throw invalidArgumentException( );
-				return a.position > b.position;
-				}
-			friend bool operator<=( const constIterator &a, const constIterator &b )
-				{
-				if ( a.vec != b.vec )
-					throw invalidArgumentException( );
-				return a.position <= b.position;
-				}
-			friend bool operator>=( const constIterator &a, const constIterator &b )
-				{
-				if ( a.vec != b.vec )
-					throw invalidArgumentException( );
-				return a.position >= b.position;
-				}
-
-			constIterator &operator+=( int n )
-				{
-				return *this = *this + n;
-				}
-			constIterator &operator-=( int n )
-				{
-				return *this = *this - n;
-				}
-
-			const T &operator[ ]( const size_t index ) const
-				{
-				return ( *vec )[ index ];
-				}
-		};
 
 	template < class T >
 	class vector < T >::reverseIterator
