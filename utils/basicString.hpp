@@ -12,6 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-10-24: Call lexicographicalCompare from algorithm: jasina
 // 2019-10-22: Fix iterator-based constructor: jasina
 // 2019-10-21: Added cstddef, fix iterator templating: combsc, jasina
 // 2019-10-20: Add lexicographicalCompare, improved compare, change unsigned to size_t: combsc, jasina
@@ -1290,18 +1291,6 @@ namespace dex
 				}
 
 		private:
-			template < class InputIt1, class InputIt2 >
-			int lexicographicalCompare( InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2 ) const
-				{
-				for ( ;  first1 != last1 && first2 != last2;  ++first1, ++first2 )
-					{
-					if ( *first1 < *first2 )
-						return -1;
-					if ( *first1 > *first2 )
-						return 1;
-					}
-				return ( *first2 == *last2 ) - ( *first1 == *last1 );
-				}
 			template < class InputIt1 >
 			int lexicographicalCompare( InputIt1 first1, InputIt1 last1, const charT *first2 ) const
 				{
@@ -1317,17 +1306,17 @@ namespace dex
 		public:
 			int compare( const basicString &other ) const
 				{
-				return lexicographicalCompare( cbegin( ), cend( ), other.cbegin( ), other.cend( ) );
+				return dex::lexicographicalCompare( cbegin( ), cend( ), other.cbegin( ), other.cend( ) );
 				}
 			int compare( size_t position, size_t length, const basicString &other ) const
 				{
-				return lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length,
+				return dex::lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length,
 						other.cbegin( ), other.cend( ) );
 				}
 			int compare( size_t position, size_t length,
 					const basicString &other, size_t subposition, size_t sublength ) const
 				{
-				return lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length,
+				return dex::lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length,
 						other.cbegin( ) + subposition, other.cbegin( ) + subposition + sublength);
 				}
 			int compare( const charT *other ) const
@@ -1340,7 +1329,7 @@ namespace dex
 				}
 			int compare( size_t position, size_t length, const charT *other, size_t n ) const
 				{
-				return lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length, other, other + n );
+				return dex::lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length, other, other + n );
 				}
 		};
 
