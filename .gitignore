@@ -9,4 +9,4 @@ build
 .Trashes
 ehthumbs.db
 Thumbs.db
-
+*.gch
