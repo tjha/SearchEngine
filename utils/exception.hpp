@@ -1,8 +1,12 @@
 // exception.hpp
 // Classes for throwing exceptions
 //
+// 2019-10-17: Add include guard: jasina
 // 2019-09-23: File Created: Combsc
 // 2019-09-25: Continued working: Combsc
+
+#ifndef DEX_EXCEPTION
+#define DEX_EXCEPTION
 
 namespace dex
 	{
@@ -38,4 +42,4 @@ namespace dex
 		};
 	}
 
-	
+#endif
