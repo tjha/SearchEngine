@@ -1,7 +1,8 @@
 // vector.hpp
 // Vector class. We don't implement emplace.
 //
-// 2019-10-24 - Added operators <, <=, >, >=, !=, ==
+// 2019-10-24 - Added operators <, <=, >, >=, !=, == medha, jhirshey, loghead,
+// jasina
 // 2019-10-22 - Fix styling issues, add iterator-based constructor, and fix at, front, and back: jasina
 //            - overloaded insert and erase, added more options: combsc
 // 2019-10-21 - Implement iterators, clean up style, size, empty, reserve, capacity, at, front, back, erase, insert,
@@ -32,7 +33,8 @@ namespace dex
             vector( size_t numElements );
             vector( size_t numElements, const T &val );
             // Only use the next constructor if InputIterator isn't integral type
-            template < class InputIterator, typename = typename std::enable_if < !std::is_integral< InputIterator >::value >::type >
+            template < class InputIterator,
+                  typename = typename std::enable_if < !std::is_integral< InputIterator >::value >::type >
             vector( InputIterator first, InputIterator last )
                 {
                 array = new T[ 1 ];
@@ -230,10 +232,12 @@ namespace dex
             void assign( InputIterator first, InputIterator last );
             void assign( size_t newVectorSize, const T &value );
             void pushBack( const T &obj );
+            void pushBack( T &&obj );
             void popBack( );
             void insert( constIterator index, const T &obj );
             void insert( constIterator index, size_t count, const T &obj );
-            template < class InputIterator, typename = typename std::enable_if < !std::is_integral< InputIterator >::value >::type >
+            template < class InputIterator,
+                  typename = typename std::enable_if < !std::is_integral< InputIterator >::value >::type >
             void insert( constIterator index, InputIterator first, InputIterator last )
                 {
             size_t count = 0;
@@ -464,6 +468,14 @@ namespace dex
         }
 
     template < class T >
+    void vector < T >::pushBack( T &&obj )
+        {
+        if ( size( ) == capacity( ) )
+            grow( );
+        dex::swap( array[ vectorSize++ ], obj );
+        }
+
+    template < class T >
     void vector < T >::popBack( )
         {
         --vectorSize;
@@ -672,42 +684,42 @@ namespace dex
         }
     
     template < class T >
-    bool operator>( const vector < T > &v )
+    bool vector < T >::operator>( const vector < T > &v )
         {
         int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
         return val == 1 ? true : false;
         }
     
     template < class T >
-    bool operator>=( const vector < T > &v )
+    bool vector < T >::operator>=( const vector < T > &v )
         {
         int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
         return ( (val == 1)|( val == 0 ) ) ? true : false;
         }
     
     template < class T >
-    bool operator<( const vector < T > &v )
+    bool vector < T >::operator<( const vector < T > &v )
         {
         int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
         return val == -1 ? true : false;
         }
     
     template < class T >
-    bool operator<=( const vector < T > &v )
+    bool vector < T >::operator<=( const vector < T > &v )
         {
         int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
         return ( (val == -1)|( val == 0 ) ) ? true : false;
         }
     
     template < class T >
-    bool operator!=( const vector < T > &v )
+    bool vector < T >::operator!=( const vector < T > &v )
         {
         int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
         return val == 0 ? false : true;
         }
    
     template < class T >
-    bool operator==( const vector < T > &v )
+    bool vector < T >::operator==( const vector < T > &v )
         {
         int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
         return val == 0 ? true : false;
