@@ -448,13 +448,13 @@ namespace dex
 	void vector < T >::assign( InputIterator first, InputIterator last )
 		{
 		vector temporaryVector( first, last );
-		dex::swap( temporaryVector );
+		swap( temporaryVector );
 		}
 	template < class T >
 	void vector < T >::assign( size_t newVectorSize, const T &value )
 		{
 		vector temporaryVector( newVectorSize, value );
-		dex::swap( temporaryVector );
+		swap( temporaryVector );
 		}
 
 	template < class T >
@@ -604,13 +604,13 @@ namespace dex
 	template < class T >
 	void vector < T >::pushFront( const T &obj )
 		{
-		insert( 0, obj );
+		insert( cbegin( ), obj );
 		}
 
 	template < class T >
 	void vector < T >::popFront( )
 		{
-		remove( 0 );
+		erase( 0 );
 		}
 
 	template < class T >

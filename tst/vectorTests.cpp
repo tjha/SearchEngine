@@ -40,6 +40,14 @@ TEST_CASE( "test constructors", "[vector]")
 		REQUIRE( v5.at( 0 ) == 2 );
 		}
 
+   SECTION( "iterator constructor" )
+      {
+      vector < int > v1( 5, 1 );
+      vector < int > v2( v1.begin( ), v1.end( ) );
+      REQUIRE( v2.size() == 5 );
+      REQUIRE( v1 == v2 );
+      }
+
 	SECTION( "assignment operator" )
 		{
 		vector < int > v4( 5, 2 );
@@ -53,25 +61,58 @@ TEST_CASE( "test constructors", "[vector]")
 		REQUIRE( v5.size( ) == 5 );
 		REQUIRE( v5.at( 0 ) == 2 );
 		}
+
+   SECTION( "swap" )
+      {
+      vector < int > v1( 5, 1 );
+      v1[ 0 ] = -1;
+      dex::swap( v1.front( ), v1.back( ) );
+      REQUIRE( v1.front( ) == 1 );
+      REQUIRE( v1.back( ) == -1 );
+      dex::swap( v1.front( ), v1.front( ) );
+      REQUIRE( v1.front( ) == 1 );
+      }
 	}
+
+TEST_CASE( "assign" )
+   {
+   vector < char > v1;
+   char str[ 4 ] = "duo";
+   v1.assign( str, str + 3 );
+   REQUIRE( v1.size( ) == 3 );
+   REQUIRE( v1[ 0 ] == 'd' );
+   REQUIRE( v1[ 1 ] == 'u' );
+   REQUIRE( v1[ 2 ] == 'o' );
+   v1.assign( 2, 'm' );
+   REQUIRE( v1.size( ) == 2 );
+   REQUIRE( v1[ 0 ] == 'm' );
+   REQUIRE( v1[ 1 ] == 'm' );
+   }
 
 TEST_CASE( "test pushBack, popBack", "[vector]" )
 	{
-	vector < int > v1;
-	for ( int i = 0;  i < 5;  ++i )
-		v1.pushBack( i );
+   vector < int > v1;
+   for ( int i = 0;  i < 5;  ++i )
+      v1.pushBack( i );
 
-	REQUIRE( v1[ 4 ] == 4 );
-	int a = 5;
-	v1.pushBack( a );
-	REQUIRE( v1[ 5 ] == 5 );
-	a = 10;
-	REQUIRE( v1[ 5 ] == 5 );
-	REQUIRE( v1.size( ) == 6 );
+   REQUIRE( v1[ 4 ] == 4 );
+   int a = 5;
+   v1.pushBack( a );
+   REQUIRE( v1[ 5 ] == 5 );
+   a = 10;
+   REQUIRE( v1[ 5 ] == 5 );
+   REQUIRE( v1.size( ) == 6 );
 
-	v1.popBack( );
-	REQUIRE( v1[ 4 ] == 4 );
-	REQUIRE( v1.size( ) == 5 );
+   v1.popBack( );
+   REQUIRE( v1[ 4 ] == 4 );
+   REQUIRE( v1.size( ) == 5 );
+
+   v1.pushFront( 9 );
+   REQUIRE( v1.size( ) == 6 );
+   REQUIRE( v1[ 0 ] == 9 );
+   v1.popFront( );
+   REQUIRE( v1.size( ) == 5 );
+   REQUIRE( v1[ 0 ] == 0 );
 	}
 
 TEST_CASE( "test size manipulation" , "[vector]" )
