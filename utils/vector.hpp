@@ -1,7 +1,8 @@
 // vector.hpp
 // Vector class. We don't implement emplace.
 //
-// 2019-10-24 - Added operators <, <=, >, >=, !=, ==; fix swap: medhak, jhirshey, loghead, jasina
+// 2019-10-24 - Added operators <, <=, >, >=, !=, ==; fix swap, reduce code duplicataion:
+//              medhak, jhirshey, loghead, jasina
 // 2019-10-22 - Fix styling issues, add iterator-based constructor, and fix at, front, and back: jasina
 //            - overloaded insert and erase, added more options: combsc
 // 2019-10-21 - Implement iterators, clean up style, size, empty, reserve, capacity, at, front, back, erase, insert,
@@ -233,6 +234,23 @@ namespace dex
 			void popBack( );
 			void insert( constIterator index, const T &obj );
 			void insert( constIterator index, size_t count, const T &obj );
+		private:
+			void shiftRight( constIterator index, size_t count )
+				{
+				if ( size( ) + count > capacity ( ) )
+					{
+					size_t location = index - cbegin( );
+					if ( size( ) + count > capacity( ) * 2 )
+						reserve( size ( ) + count );
+					else
+						grow( );
+					index = cbegin( ) + location;
+					}
+
+				vectorSize += count;
+				dex::copyBackward( index, cend( ) - count, end( ) );
+				}
+		public:
 			template < class InputIterator,
 					typename = typename std::enable_if < !std::is_integral< InputIterator >::value >::type >
 			void insert( constIterator index, InputIterator first, InputIterator last )
@@ -245,21 +263,8 @@ namespace dex
 					++count;
 					}
 
-				if ( size( ) + count > capacity ( ) )
-					{
-					int location = index - cbegin( );
-					if ( size( ) + count > capacity( ) * 2 )
-						reserve( size ( ) + count );
-					else
-						grow( );
-					index = cbegin( ) + location;
-					}
-
-				vectorSize += count;
-				size_t location = index - cbegin( );
-				iterator writableLocation = begin( ) + location;
-				dex::copyBackward( writableLocation, end( ) - count, end( ) );
-				dex::copy( first, last, writableLocation );
+				shiftRight( index, count );
+				dex::copy( first, last, begin( ) + ( index - cbegin( ) ) );
 				}
 			void erase( size_t index );
 			void erase( constIterator index );
@@ -368,20 +373,8 @@ namespace dex
 	template < class T >
 	void vector < T >::insert( vector< T >::constIterator index, size_t count, const T &obj )
 		{
-		if ( size( ) + count > capacity ( ) )
-			{
-			int location = index - cbegin( );
-			if ( size( ) + count > capacity( ) * 2 )
-				reserve( size ( ) + count );
-			else
-				grow( );
-			index = cbegin( ) + location;
-			}
-
-		vectorSize += count;
-		int location = index - cbegin( );
-		iterator writeLocation = begin( ) + location;
-		dex::copyBackward( writeLocation, end( ) - count, end( ) );
+		shiftRight( index, count );
+		iterator writeLocation = begin( ) + ( index - cbegin( ) );
 		dex::fill( writeLocation, writeLocation + count, obj);
 		}
 
@@ -399,7 +392,7 @@ namespace dex
 			return;
 
 		T *newArray = new T[ newCapacity ];
-		dex::copy( begin( ), end( ), newArray );
+		dex::copy( cbegin( ), cend( ), newArray );
 
 		arraySize = newCapacity;
 		delete array;
@@ -435,11 +428,8 @@ namespace dex
 	template < class T >
 	void vector < T >::erase( vector < T >::constIterator first, vector < T > ::constIterator last )
 		{
-		size_t count = last - first;
-		size_t location = first - cbegin( );
-		iterator i = begin( ) + location;
-		dex::copy( i + count, end( ), i );
-		vectorSize -= count;
+		dex::copy( last, cend( ), begin( ) + ( first - cbegin( ) ) );
+		vectorSize -= last - first;
 		}
 
 	template < class T >
