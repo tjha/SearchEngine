@@ -2,6 +2,7 @@
 //
 // Perform tests on vector implementation
 //
+// 2019-10-24 jasina, jhirshey, lougheem, medhak - finish up remaining test cases
 // 2019-10-22 combsc - Improved insert test cases, added erase test cases
 // 2019-10-21 combsc - Implemented test cases for pushBack, size manipulation, element access
 //                   - insert, improved constructor test cases
@@ -40,13 +41,13 @@ TEST_CASE( "test constructors", "[vector]")
 		REQUIRE( v5.at( 0 ) == 2 );
 		}
 
-   SECTION( "iterator constructor" )
-      {
-      vector < int > v1( 5, 1 );
-      vector < int > v2( v1.begin( ), v1.end( ) );
-      REQUIRE( v2.size() == 5 );
-      REQUIRE( v1 == v2 );
-      }
+	SECTION( "iterator constructor" )
+		{
+		vector < int > v1( 5, 1 );
+		vector < int > v2( v1.begin( ), v1.end( ) );
+		REQUIRE( v2.size() == 5 );
+		REQUIRE( v1 == v2 );
+		}
 
 	SECTION( "assignment operator" )
 		{
@@ -62,61 +63,110 @@ TEST_CASE( "test constructors", "[vector]")
 		REQUIRE( v5.at( 0 ) == 2 );
 		}
 
-   SECTION( "swap" )
-      {
-      vector < int > v1( 5, 1 );
-      v1[ 0 ] = -1;
-      dex::swap( v1.front( ), v1.back( ) );
-      REQUIRE( v1.front( ) == 1 );
-      REQUIRE( v1.back( ) == -1 );
-      dex::swap( v1.front( ), v1.front( ) );
-      REQUIRE( v1.front( ) == 1 );
-      }
+	SECTION( "dex::swap" )
+		{
+		vector < int > v1( 5, 1 );
+		v1[ 0 ] = -1;
+		dex::swap( v1.front( ), v1.back( ) );
+		REQUIRE( v1.front( ) == 1 );
+		REQUIRE( v1.back( ) == -1 );
+		dex::swap( v1.front( ), v1.front( ) );
+		REQUIRE( v1.front( ) == 1 );
+		}
 	}
 
 TEST_CASE( "assign" )
-   {
-   vector < char > v1;
-   char str[ 4 ] = "duo";
-   v1.assign( str, str + 3 );
-   REQUIRE( v1.size( ) == 3 );
-   REQUIRE( v1[ 0 ] == 'd' );
-   REQUIRE( v1[ 1 ] == 'u' );
-   REQUIRE( v1[ 2 ] == 'o' );
-   v1.assign( 2, 'm' );
-   REQUIRE( v1.size( ) == 2 );
-   REQUIRE( v1[ 0 ] == 'm' );
-   REQUIRE( v1[ 1 ] == 'm' );
-   }
+	{
+	vector < char > v1;
+	char str[ 4 ] = "duo";
+	v1.assign( str, str + 3 );
+	REQUIRE( v1.size( ) == 3 );
+	REQUIRE( v1[ 0 ] == 'd' );
+	REQUIRE( v1[ 1 ] == 'u' );
+	REQUIRE( v1[ 2 ] == 'o' );
+	v1.assign( 2, 'm' );
+	REQUIRE( v1.size( ) == 2 );
+	REQUIRE( v1[ 0 ] == 'm' );
+	REQUIRE( v1[ 1 ] == 'm' );
+	}
 
 TEST_CASE( "test pushBack, popBack", "[vector]" )
 	{
-   vector < int > v1;
-   for ( int i = 0;  i < 5;  ++i )
-      v1.pushBack( i );
+	vector < int > v1;
+	for ( int i = 0;  i < 5;  ++i )
+		v1.pushBack( i );
 
-   REQUIRE( v1[ 4 ] == 4 );
-   int a = 5;
-   v1.pushBack( a );
-   REQUIRE( v1[ 5 ] == 5 );
-   a = 10;
-   REQUIRE( v1[ 5 ] == 5 );
-   REQUIRE( v1.size( ) == 6 );
+	REQUIRE( v1[ 4 ] == 4 );
+	int a = 5;
+	v1.pushBack( a );
+	REQUIRE( v1[ 5 ] == 5 );
+	a = 10;
+	REQUIRE( v1[ 5 ] == 5 );
+	REQUIRE( v1.size( ) == 6 );
 
-   v1.popBack( );
-   REQUIRE( v1[ 4 ] == 4 );
-   REQUIRE( v1.size( ) == 5 );
+	v1.popBack( );
+	REQUIRE( v1[ 4 ] == 4 );
+	REQUIRE( v1.size( ) == 5 );
 
-   v1.pushFront( 9 );
-   REQUIRE( v1.size( ) == 6 );
-   REQUIRE( v1[ 0 ] == 9 );
-   v1.popFront( );
-   REQUIRE( v1.size( ) == 5 );
-   REQUIRE( v1[ 0 ] == 0 );
+	v1.pushFront( 9 );
+	REQUIRE( v1.size( ) == 6 );
+	REQUIRE( v1[ 0 ] == 9 );
+	v1.popFront( );
+	REQUIRE( v1.size( ) == 5 );
+	REQUIRE( v1[ 0 ] == 0 );
 	}
 
 TEST_CASE( "test size manipulation" , "[vector]" )
 	{
+	SECTION( "test grow" )
+		{
+		vector < unsigned > v;
+		for ( unsigned i = 0;  i != 9001;  ++i)
+			{
+			v.pushBack( i );
+			REQUIRE( v.size( ) == i + 1 );
+			}
+		}
+
+	SECTION( "test reserve" )
+		{
+		vector < char > word;
+		word.reserve( 10 );
+		REQUIRE( word.empty( ) );
+		REQUIRE( word.capacity( ) == 10 );
+		for ( char c = 'a';  c != 'k';  ++c )
+			word.pushBack( c );
+		REQUIRE( word.capacity( ) == 10 );
+		REQUIRE( word.size( ) == 10);
+		word.reserve( 5 ); // This shouldn't do anything
+		REQUIRE( word.capacity( ) == 10 );
+		REQUIRE( word.size( ) == 10 );
+		}
+
+	SECTION( "empty" )
+		{
+		vector < bool > v1;
+		REQUIRE( v1.empty( ) );
+
+		v1.insert( v1.cbegin( ), false );
+		REQUIRE( !v1.empty( ) );
+
+		v1.erase( v1.cbegin( ) );
+		REQUIRE( v1.empty( ) );
+
+		for( int count = 0; count < 5; ++count )
+			{
+			v1.insert( v1.cbegin( ), true );
+			REQUIRE( !v1.empty( ) );
+			}
+
+		v1.erase( v1.cbegin( ), v1.cend( ) - 1 );
+		REQUIRE( !v1.empty( ) );
+		
+		v1.popBack( );
+		REQUIRE( v1.empty( ) );
+		}
+
 	SECTION( "clear works" )
 		{
 		vector < int > v1;
@@ -180,21 +230,20 @@ TEST_CASE( "test size manipulation" , "[vector]" )
 			v1.shrinkToFit( );
 			REQUIRE( v1.size( ) == v1.capacity( ) );
 			}
-		
 		}
 	}
 
 TEST_CASE( "test element access", "[vector]" )
 	{
-   SECTION( "test operator [ ]" ) 
-      {
+	SECTION( "test operator [ ]" ) 
+		{
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
 			v1.pushBack( i );
 		for ( int i = 0;  i < 5;  ++i )
 			REQUIRE( v1[ i ] == i );
 		}
-   SECTION( "test front, back" ) 
+	SECTION( "test front, back" ) 
 		{
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
@@ -202,7 +251,7 @@ TEST_CASE( "test element access", "[vector]" )
 		REQUIRE( v1.front( ) == 0 );
 		REQUIRE( v1.back( ) == 4 );
 		}
-   SECTION( "test at" ) 
+	SECTION( "test at" ) 
 		{
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
@@ -211,7 +260,7 @@ TEST_CASE( "test element access", "[vector]" )
 			REQUIRE( v1.at( i ) == i );
 		REQUIRE_THROWS_AS( v1.at( 10 ), dex::outOfRangeException );
 		}
-   SECTION( "test data" ) 
+	SECTION( "test data" ) 
 		{
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
@@ -290,21 +339,87 @@ TEST_CASE( "test erase", "[vector]" )
 	REQUIRE( v2.size( ) == 0 );
 	}
 
-TEST_CASE( "test comparators", "[vector]" )
-   {
-   SECTION( "less than and greater than operators" )
-      {
-      vector < int > v1;
-      vector < int > v2;
-      for ( int i = 0;  i < 5;  ++i )
-         {
-         v1.pushBack( i );
-         v2.pushBack( 2 * i );
-         }
+TEST_CASE( "test swap", "[vector]" )
+	{
+	vector < int > v1;
+	vector < int > v2;
+	for ( int i = 0;  i < 5;  ++i )
+		{
+		v1.pushBack( i );
+		v2.pushBack( 10 + i );
+		}
+	vector < int > v1Copy = v1;
+	vector < int > v2Copy = v2;
+	
+	v1Copy.swap( v2Copy );
+	REQUIRE( v1Copy == v2 );
+	REQUIRE( v2Copy == v1 );
 
-      REQUIRE ( v1 < v2 );
-      REQUIRE ( v1 <= v2 );
-      REQUIRE ( v2 > v1 );
-      REQUIRE ( v2 >= v1 );
-      }
-   }
+	v1Copy.popBack( );
+	REQUIRE( v1Copy != v2 );
+
+	vector < int > v3;
+	v3.swap( v1 );
+	REQUIRE( v3 == v2Copy );
+	REQUIRE( v1.empty( ) );
+	}
+TEST_CASE( "test comparators", "[vector]" )
+	{
+	vector < int > v1;
+	vector < int > v2;
+	for ( int i = 0;  i < 5;  ++i )
+		{
+		v1.pushBack( i );
+		v2.pushBack( 2 * i );
+		}
+
+	REQUIRE ( v1 < v2 );
+	REQUIRE ( v1 <= v2 );
+	REQUIRE ( v1 != v2 );
+	REQUIRE ( v2 > v1 );
+	REQUIRE ( v2 >= v1 );
+	REQUIRE ( v1 == v1 );
+	REQUIRE ( v1 <= v1 );
+	REQUIRE ( v1 >= v1 );
+
+	vector < char > v3;
+	v3.pushBack('a');
+	v3.pushBack('b');
+	v3.pushBack('c');
+	v3.pushFront('d');
+	
+	REQUIRE ( v3[0] == 'd' );
+	REQUIRE ( v3 == v3 );
+	REQUIRE ( v3 <= v3 );
+	REQUIRE ( v3 >= v3 );
+
+	vector < char > v4;
+	v4.pushBack('a');
+	v4.pushBack('b');
+	v4.pushBack('c');
+	v4.pushFront('d');
+
+	REQUIRE ( v3 == v4 );
+	REQUIRE ( v3 <= v4 );
+	REQUIRE ( v3 >= v4 );
+
+	v4[3] = 'f';
+	REQUIRE ( v3 != v4 );
+	
+	vector < char > v;
+	REQUIRE ( v == v );
+	REQUIRE ( v <= v );
+	REQUIRE ( v >= v );
+	REQUIRE ( v < v3 );
+	REQUIRE ( v != v3 );
+
+	v4.popBack();
+	REQUIRE ( v4 < v3 );
+	REQUIRE ( v4 <= v3 );
+	REQUIRE ( v3 != v4 );
+	v3.popFront();
+	REQUIRE ( v3 < v4 );
+	REQUIRE ( v3 <= v4 );
+	REQUIRE ( v3 != v4 );
+
+	}

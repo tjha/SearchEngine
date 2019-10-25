@@ -1,8 +1,7 @@
 // vector.hpp
 // Vector class. We don't implement emplace.
 //
-// 2019-10-24 - Added operators <, <=, >, >=, !=, == medha, jhirshey, loghead,
-// jasina
+// 2019-10-24 - Added operators <, <=, >, >=, !=, ==; fix swap: medhak, jhirshey, loghead, jasina
 // 2019-10-22 - Fix styling issues, add iterator-based constructor, and fix at, front, and back: jasina
 //            - overloaded insert and erase, added more options: combsc
 // 2019-10-21 - Implement iterators, clean up style, size, empty, reserve, capacity, at, front, back, erase, insert,
@@ -265,7 +264,7 @@ namespace dex
 			void erase( size_t index );
 			void erase( constIterator index );
 			void erase( constIterator first, constIterator last );
-			void swap( vector v );
+			void swap( vector &v );
 			void clear( );
 
 			// Home grown
@@ -628,7 +627,7 @@ namespace dex
 
 
 	template < class T >
-	void vector < T >::swap( vector other )
+	void vector < T >::swap( vector &other )
 		{
 		dex::swap( array, other.array );
 		dex::swap( vectorSize, other.vectorSize );
