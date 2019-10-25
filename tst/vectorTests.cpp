@@ -39,6 +39,7 @@ TEST_CASE( "test constructors", "[vector]")
 		REQUIRE( v5.size( ) == 5 );
 		REQUIRE( v5.at( 0 ) == 2 );
 		}
+
 	SECTION( "assignment operator" )
 		{
 		vector < int > v4( 5, 2 );
@@ -144,24 +145,24 @@ TEST_CASE( "test size manipulation" , "[vector]" )
 
 TEST_CASE( "test element access", "[vector]" )
 	{
-		{
-		// test []
+   SECTION( "test operator [ ]" ) 
+      {
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
 			v1.pushBack( i );
 		for ( int i = 0;  i < 5;  ++i )
 			REQUIRE( v1[ i ] == i );
 		}
+   SECTION( "test front, back" ) 
 		{
-		// test front, back
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
 			v1.pushBack( i );
 		REQUIRE( v1.front( ) == 0 );
 		REQUIRE( v1.back( ) == 4 );
 		}
+   SECTION( "test at" ) 
 		{
-		// test at
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
 			v1.pushBack( i );
@@ -169,8 +170,8 @@ TEST_CASE( "test element access", "[vector]" )
 			REQUIRE( v1.at( i ) == i );
 		REQUIRE_THROWS_AS( v1.at( 10 ), dex::outOfRangeException );
 		}
+   SECTION( "test data" ) 
 		{
-		// test data
 		vector < int > v1;
 		for ( int i = 0;  i < 5;  ++i )
 			v1.pushBack( i );
@@ -247,3 +248,22 @@ TEST_CASE( "test erase", "[vector]" )
 	v2.erase( v2.cbegin( ), v2.cend( ) );
 	REQUIRE( v2.size( ) == 0 );
 	}
+
+TEST_CASE( "test comparators", "[vector]" )
+   {
+   SECTION( "less than and greater than operators" )
+      {
+      vector < int > v1;
+      vector < int > v2;
+      for ( int i = 0;  i < 5;  ++i )
+         {
+         v1.pushBack( i );
+         v2.pushBack( 2 * i );
+         }
+
+      REQUIRE ( v1 < v2 );
+      REQUIRE ( v1 <= v2 );
+      REQUIRE ( v2 > v1 );
+      REQUIRE ( v2 >= v1 );
+      }
+   }

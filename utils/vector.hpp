@@ -52,13 +52,12 @@ namespace dex
 			~vector( );
 			vector < T > operator=( const vector < T > &v );
 			vector < T > operator=( vector < T > &&v );
-			bool operator>( const vector < T > &v );
-			bool operator>=( const vector < T > &v );
-			bool operator<( const vector < T > &v );
-			bool operator<=( const vector < T > &v );
-			bool operator!=( const vector < T > &v );
-			bool operator==( const vector < T > &v );
-
+			bool operator>( const vector < T > &v ) const;
+			bool operator>=( const vector < T > &v ) const;
+			bool operator<( const vector < T > &v ) const;
+			bool operator<=( const vector < T > &v ) const;
+			bool operator!=( const vector < T > &v ) const;
+			bool operator==( const vector < T > &v ) const;
 
 			// Iterators
 			class iterator;
@@ -683,45 +682,39 @@ namespace dex
 		}
 
 	template < class T >
-	bool vector < T >::operator>( const vector < T > &v )
+	bool vector < T >::operator>( const vector < T > &v ) const
 		{
-		int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
-		return val == 1 ? true : false;
+		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) > 0;
 		}
 
 	template < class T >
-	bool vector < T >::operator>=( const vector < T > &v )
+	bool vector < T >::operator>=( const vector < T > &v ) const
 		{
-		int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
-		return ( (val == 1)|( val == 0 ) ) ? true : false;
+		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) >= 0;
 		}
 
 	template < class T >
-	bool vector < T >::operator<( const vector < T > &v )
+	bool vector < T >::operator<( const vector < T > &v ) const
 		{
-		int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
-		return val == -1 ? true : false;
+		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) < 0;
 		}
 
 	template < class T >
-	bool vector < T >::operator<=( const vector < T > &v )
+	bool vector < T >::operator<=( const vector < T > &v ) const
 		{
-		int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
-		return ( (val == -1)|( val == 0 ) ) ? true : false;
+		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) <= 0;
 		}
 
 	template < class T >
-	bool vector < T >::operator!=( const vector < T > &v )
+	bool vector < T >::operator!=( const vector < T > &v ) const
 		{
-		int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
-		return val == 0 ? false : true;
+		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) != 0;
 		}
 
 	template < class T >
-	bool vector < T >::operator==( const vector < T > &v )
+	bool vector < T >::operator==( const vector < T > &v ) const
 		{
-		int val = dex::lexicographicalCompare( begin( ), end( ), v.begin( ), v.end( ) );
-		return val == 0 ? true : false;
+		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) == 0;
 		}
 
 	template < class T >
