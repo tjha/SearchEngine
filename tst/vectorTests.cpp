@@ -337,6 +337,18 @@ TEST_CASE( "test erase", "[vector]" )
 	REQUIRE( v2[ 2 ] == 4 );
 	v2.erase( v2.cbegin( ), v2.cend( ) );
 	REQUIRE( v2.size( ) == 0 );
+
+	v1.clear( );
+	v1.pushBack( 1 );
+	v1.erase( 0 );
+	REQUIRE( v1.empty( ) );
+	v1.pushBack( 1 );
+	v1.pushBack( 2 );
+	v1.erase( 0 );
+	REQUIRE( v1.size( ) == 1 );
+	v1.pushBack( 3 );
+	v1.erase( 1 );
+	REQUIRE( v1.size( ) == 1 );
 	}
 
 TEST_CASE( "test swap", "[vector]" )
