@@ -1,5 +1,7 @@
 // algorithm.hpp
 // Artisan crafted version of <algorithm> that keeps all of the interfaces.
+//
+// 2019-10-24: Add lexicographicalCompare: jasina
 // 2019-10-17: Disambiguate call to search, add include guard: jasina
 // 2019-10-14: Fix findEnd: jasina
 // 2019-10-13: Implement find, search, findEnd, copy, copyBackward, and fill: jasina
@@ -94,6 +96,19 @@ namespace dex
 		T other = first;
 		first = second;
 		second = other;
+		}
+
+	template < class InputIt1, class InputIt2 >
+	int lexicographicalCompare( InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2 )
+		{
+		for ( ;  first1 != last1 && first2 != last2;  ++first1, ++first2 )
+			{
+			if ( *first1 < *first2 )
+				return -1;
+			if ( *first1 > *first2 )
+				return 1;
+			}
+		return ( *first2 == *last2 ) - ( *first1 == *last1 );
 		}
 	}
 
