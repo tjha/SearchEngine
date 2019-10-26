@@ -385,7 +385,8 @@ namespace dex
 			template < bool isConst, bool isForward >
 			void swap( _iterator < isConst, isForward > &a, _iterator < isConst, isForward > &b )
 				{
-				dex::swap( a, b );
+				dex::swap( a.string, b.string );
+				dex::swap( a.position, b.position );
 				}
 		public:
 			typedef _iterator < false, true > iterator;
