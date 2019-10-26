@@ -62,7 +62,7 @@ namespace dex
 				numberElements = 0;
 				ghostCount = 0;
 
-				table = new wrappedPair[ this->tableSize ];
+				table = new wrappedPair[ this->tableSize ]( );
 				}
 			template< class InputIt >
 			unorderedMap( InputIt first, InputIt last, size_t tableSize = 10000, const Hash &hasher = Hash( ) )
@@ -71,13 +71,14 @@ namespace dex
 				numberElements = 0;
 				ghostCount = 0;
 
-				table = new wrappedPair[ this->tableSize ];
+				table = new wrappedPair[ this->tableSize ]( );
 
 				for ( ;  first != last;  ( *this )[ first->first ] = first->second, ++first );
 				}
 
 			unorderedMap( const unorderedMap < Key, Value, Hash > &other )
 				{
+				table = nullptr;
 				unorderedMap < Key, Value, Hash > temp( other.cbegin( ), other.cend( ),
 						other.bucketCount( ), other.hasher );
 				swap( temp );
@@ -85,7 +86,6 @@ namespace dex
 
 			unorderedMap &operator=( const unorderedMap < Key, Value, Hash > &other )
 				{
-				table = nullptr;
 				unorderedMap < Key, Value, Hash > temp( other );
 				swap( temp );
 				return *this;
@@ -111,10 +111,13 @@ namespace dex
 
 					mapType *map;
 					size_t position;
-					_iterator( mapType &map, size_t position ) : map( &map ), position( position )
+				private:
+					_iterator( mapType &map, size_t position ) : map( &map )
 						{
-						if ( position < map.size( ) && ( map.table[ position ].isEmpty || map.table[ position ].isGhost ) )
-							++*this;
+						for ( ;  position != map.bucketCount( ) &&
+								( map.table[ position ].isEmpty || map.table[ position ].isGhost );
+								++( position ) );
+						this->position = position;
 						}
 				public:
 					template < typename = typename std::enable_if < isConst > >
@@ -248,7 +251,7 @@ namespace dex
 				table[ position.position ].isGhost = true;
 				++ghostCount;
 				--numberElements;
-				return ++iterator( *this, position.position );
+				return iterator( *this, position.position );
 				}
 
 			iterator erase( constIterator first, constIterator last )
