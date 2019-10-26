@@ -85,6 +85,7 @@ namespace dex
 
 			unorderedMap &operator=( const unorderedMap < Key, Value, Hash > &other )
 				{
+				table = nullptr;
 				unorderedMap < Key, Value, Hash > temp( other );
 				swap( temp );
 				return *this;
@@ -246,13 +247,17 @@ namespace dex
 			iterator erase( constIterator position )
 				{
 				table[ position.position ].isGhost = true;
+				++ghostCount;
 				return ++iterator( *this, position );
 				}
 
 			iterator erase( constIterator first, constIterator last )
 				{
 				while ( first != last )
+					{
 					first = erase( first );
+					++ghostCount;
+					}
 				return iterator( *this, last.position );
 				}
 
@@ -262,6 +267,7 @@ namespace dex
 				if ( table[ location ].isEmpty )
 					return 0;
 				table[ location ].isGhost = true;
+				++ghostCount;
 				return 1;
 				}
 
