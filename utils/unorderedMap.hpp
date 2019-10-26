@@ -248,12 +248,18 @@ namespace dex
 
 			iterator find( const Key &key )
 				{
-				return iterator( *this, probe( key ) );
+				size_t location = probe( key );
+				if ( table[ location ].isEmpty )
+					return end( );
+				return iterator( *this, location );
 				}
 
 			constIterator find( const Key &key ) const
 				{
-				return constIterator( *this, probe( key ) );
+				size_t location = probe( key );
+				if ( table[ location ].isEmpty )
+					return cend( );
+				return constIterator( *this, location );
 				}
 
 			iterator erase( constIterator position )

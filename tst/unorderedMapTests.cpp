@@ -104,7 +104,7 @@ TEST_CASE( "constructors and assignment ", "[unorderedMap]" )
 
 TEST_CASE( "element access", "[unorderedMap]" )
 	{
-	SECTION( "operator [ ]")
+	SECTION( "operator [ ]" )
 		{
 		unorderedMap < string, unsigned > map( 1 );
 		REQUIRE( map.count( "beta" ) == 0 );
@@ -135,17 +135,13 @@ TEST_CASE( "element access", "[unorderedMap]" )
 		REQUIRE( map[ "epsilon" ] == 4 );
 		REQUIRE( map.size( ) == 5 );
 		}
-	SECTION( "at")
+	SECTION( "at" )
 		{
 		unorderedMap < string, unsigned > map( 1 );
 		map[ "beta" ] = 1;
-		REQUIRE( map.size( ) == 1 );
 		map[ "gamma" ] = 2;
-		REQUIRE( map.size( ) == 2 );
 		map[ "delta" ] = 3;
-		REQUIRE( map.size( ) == 3 );
 		map[ "epsilon" ] = 4;
-		REQUIRE( map.size( ) == 4 );
 
 		REQUIRE_THROWS_AS( map.at( "alpha" ), dex::outOfRangeException );
 		REQUIRE( map.size( ) == 4 );
@@ -157,6 +153,22 @@ TEST_CASE( "element access", "[unorderedMap]" )
 
 		map.at( "beta" ) = 37;
 		REQUIRE( map.at( "beta" ) == 37 );
+		}
+
+	SECTION( "find" )
+		{
+		unorderedMap < string, unsigned > map( 1 );
+		map[ "beta" ] = 1;
+		map[ "gamma" ] = 2;
+		map[ "delta" ] = 3;
+		map[ "epsilon" ] = 4;
+
+		REQUIRE( map.find( "bagel" ) == map.cend( ) );
+
+		REQUIRE( map.find( "beta" )->first == "beta" );
+		REQUIRE( map.find( "beta" )->second == 1 );
+		map.erase( map.find( "beta" ) );
+		REQUIRE( map.find( "beta" ) == map.cend( ) );
 		}
 	}
 
