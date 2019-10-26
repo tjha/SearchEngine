@@ -2,6 +2,7 @@
 //
 // Perform tests on vector implementation
 //
+// 2019-10-26 medhak, tjha - Added test to pushBack and popBack to vector <string>
 // 2019-10-24 jasina, jhirshey, lougheem, medhak - finish up remaining test cases
 // 2019-10-22 combsc - Improved insert test cases, added erase test cases
 // 2019-10-21 combsc - Implemented test cases for pushBack, size manipulation, element access
@@ -10,8 +11,10 @@
 
 #include "catch.hpp"
 #include "../utils/vector.hpp"
+#include "../utils/basicString.hpp"
 
 using dex::vector;
+using dex::string;
 
 TEST_CASE( "test constructors", "[vector]")
 	{
@@ -115,6 +118,23 @@ TEST_CASE( "test pushBack, popBack", "[vector]" )
 	REQUIRE( v1.size( ) == 5 );
 	REQUIRE( v1[ 0 ] == 0 );
 	}
+
+TEST_CASE( "test pushBack, popBack with string", "[vector]" )
+   {
+   vector < string > v;
+
+   for ( size_t i = 0; i < 5; ++i )
+      {
+      v.pushBack("example");
+      REQUIRE( v[ i ] == "example" );
+      }
+
+   for ( size_t i = 4; i != 0; --i )
+      {
+      v.popBack( );
+      REQUIRE( v.size() == i );
+      }
+   }
 
 TEST_CASE( "test size manipulation" , "[vector]" )
 	{
