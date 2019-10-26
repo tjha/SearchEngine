@@ -1,7 +1,13 @@
 // utility.hpp
 // Semi-complete replica of the STL's utility header
 //
+// 2019-10-16: Add include guard: jasina
 // 2019-10-20: File created, pair implemented: jasina, lougheem
+
+#ifndef DEX_UTILITY
+#define DEX_UTILITY
+
+#include "algorithm.hpp"
 
 namespace dex
 	{
@@ -51,3 +57,5 @@ namespace dex
 		dex::swap( x.second, y.second );
 		}
 	}
+
+#endif
