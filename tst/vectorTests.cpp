@@ -123,16 +123,16 @@ TEST_CASE( "test pushBack, popBack with string", "[vector]" )
    {
    vector < string > v;
 
-   for ( size_t i = 0; i < 5; ++i )
+   for ( size_t i = 0;  i < 5;  ++i )
       {
       v.pushBack("example");
       REQUIRE( v[ i ] == "example" );
       }
 
-   for ( size_t i = 4; i != 0; --i )
+   for ( size_t i = 5;  i != 0;  --i )
       {
       v.popBack( );
-      REQUIRE( v.size( ) == i );
+      REQUIRE( v.size( ) == i - 1 );
       }
    }
 
