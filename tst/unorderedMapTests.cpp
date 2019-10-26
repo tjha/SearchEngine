@@ -2,7 +2,7 @@
 //
 // Perform tests on unordered map implementation
 //
-// 2019-10-26: file created, constructors, assignment, element access: jasina
+// 2019-10-26: file created, constructors, assignment, element access, element removal: jasina
 
 #include "catch.hpp"
 #include "../utils/basicString.hpp"
@@ -22,7 +22,7 @@ TEST_CASE( "constructors and assignment ", "[unorderedMap]" )
 		}
 	SECTION ( "iterator constructor" )
 		{
-		unorderedMap < string, string > map1;
+		unorderedMap < string, string > map1( 1 );
 		map1[ "hello" ] = "world";
 		map1[ "hola" ] = "mundo";
 		map1[ "bonjour" ] = "monde";
@@ -45,7 +45,7 @@ TEST_CASE( "constructors and assignment ", "[unorderedMap]" )
 		}
 	SECTION ( "copy constructor" )
 		{
-		unorderedMap < string, string > map1;
+		unorderedMap < string, string > map1( 1 );
 		map1[ "hello" ] = "world";
 		map1[ "hola" ] = "mundo";
 		map1[ "bonjour" ] = "monde";
@@ -68,7 +68,7 @@ TEST_CASE( "constructors and assignment ", "[unorderedMap]" )
 		}
 	SECTION ( "operator=" )
 		{
-		unorderedMap < string, string > map1;
+		unorderedMap < string, string > map1( 1 );
 		map1[ "hello" ] = "world";
 		map1[ "hola" ] = "mundo";
 		map1[ "bonjour" ] = "monde";
@@ -106,7 +106,7 @@ TEST_CASE( "element access", "[unorderedMap]" )
 	{
 	SECTION( "operator [ ]")
 		{
-		unorderedMap < string, unsigned > map;
+		unorderedMap < string, unsigned > map( 1 );
 		REQUIRE( map.count( "beta" ) == 0 );
 		map[ "beta" ] = 1;
 		REQUIRE( map.count( "beta" ) == 1 );
@@ -137,7 +137,7 @@ TEST_CASE( "element access", "[unorderedMap]" )
 		}
 	SECTION( "at")
 		{
-		unorderedMap < string, unsigned > map;
+		unorderedMap < string, unsigned > map( 1 );
 		map[ "beta" ] = 1;
 		REQUIRE( map.size( ) == 1 );
 		map[ "gamma" ] = 2;
@@ -157,5 +157,88 @@ TEST_CASE( "element access", "[unorderedMap]" )
 
 		map.at( "beta" ) = 37;
 		REQUIRE( map.at( "beta" ) == 37 );
+		}
+	}
+
+TEST_CASE( "element removal", "[unorderedMap]" )
+	{
+	SECTION( "erase with one iterator" )
+		{
+		unorderedMap < string, char > map( 1 );
+		map[ "a" ] = 'a';
+		map[ "b" ] = 'b';
+		map[ "c" ] = 'c';
+		map[ "d" ] = 'd';
+
+		unorderedMap < string, char >::constIterator nextElement = map.find( ( ++map.cbegin( ) )->first );
+		REQUIRE( map.erase( map.cbegin( ) ) == nextElement++ );
+		REQUIRE( map.erase( map.cbegin( ) ) == nextElement++ );
+		REQUIRE( map.erase( map.cbegin( ) ) == nextElement++ );
+		REQUIRE( map.erase( map.cbegin( ) ) == nextElement );
+
+		map[ "a" ] = 'a';
+		map[ "b" ] = 'b';
+		map[ "c" ] = 'c';
+		map[ "d" ] = 'd';
+		nextElement = map.find( ( ++( ++map.cbegin( ) ) )->first );
+		REQUIRE( map.erase( ++map.cbegin( ) ) == nextElement );
+		}
+	SECTION( "erase with two iterators" )
+		{
+		unorderedMap < string, char > map( 1 );
+		map[ "a" ] = 'a';
+		map[ "b" ] = 'b';
+		map[ "c" ] = 'c';
+		map[ "d" ] = 'd';
+
+		REQUIRE( map.erase( map.cbegin( ), map.cend( ) ) == map.cend( ) );
+		REQUIRE( map.empty( ) );
+		REQUIRE( map.count( "a" ) == 0 );
+		REQUIRE( map.count( "b" ) == 0 );
+		REQUIRE( map.count( "c" ) == 0 );
+		REQUIRE( map.count( "d" ) == 0 );
+
+		map[ "a" ] = 'a';
+		map[ "b" ] = 'b';
+		map[ "c" ] = 'c';
+		map[ "d" ] = 'd';
+		REQUIRE( map.erase( ++map.cbegin( ), map.cend( ) ) == map.cend( ) );
+		REQUIRE( map.size( ) == 1 );
+		}
+	SECTION( "erase with one key" )
+		{
+		unorderedMap < string, char > map( 1 );
+		map[ "a" ] = 'a';
+		map[ "b" ] = 'b';
+		map[ "c" ] = 'c';
+		map[ "d" ] = 'd';
+
+		REQUIRE( map.erase( "a" ) == 1 );
+		REQUIRE( map.size( ) == 3 );
+		REQUIRE( map.erase( "a" ) == 0 );
+		REQUIRE( map.size( ) == 3 );
+		REQUIRE( map.erase( "e" ) == 0 );
+		REQUIRE( map.size( ) == 3 );
+		REQUIRE( map.erase( "d" ) == 1 );
+		REQUIRE( map.size( ) == 2 );
+		}
+	SECTION( "clear" )
+		{
+		unorderedMap < string, char > map( 1 );
+
+		map.clear( );
+		REQUIRE( map.empty( ) );
+
+		map[ "a" ] = 'a';
+		map[ "b" ] = 'b';
+		map[ "c" ] = 'c';
+		map[ "d" ] = 'd';
+
+		map.clear( );
+		REQUIRE( map.empty( ) );
+		REQUIRE( map.count( "a" ) == 0 );
+		REQUIRE( map.count( "b" ) == 0 );
+		REQUIRE( map.count( "c" ) == 0 );
+		REQUIRE( map.count( "d" ) == 0 );
 		}
 	}
