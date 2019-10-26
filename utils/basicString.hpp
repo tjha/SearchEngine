@@ -380,14 +380,14 @@ namespace dex
 						{
 						return ( *string )[ index ];
 						}
+
+					friend void dex::swap( _iterator < isConst, isForward > &a, _iterator < isConst, isForward > &b )
+						{
+						dex::swap( a.string, b.string );
+						dex::swap( a.position, b.position );
+						}
 				};
 
-			template < bool isConst, bool isForward >
-			void swap( _iterator < isConst, isForward > &a, _iterator < isConst, isForward > &b )
-				{
-				dex::swap( a.string, b.string );
-				dex::swap( a.position, b.position );
-				}
 		public:
 			typedef _iterator < false, true > iterator;
 			iterator begin( )
