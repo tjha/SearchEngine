@@ -98,7 +98,6 @@ namespace dex
 				}
 
 		private:
-			// CTRLF Iterators
 			template < bool isConst >
 			class _iterator
 				{
@@ -220,7 +219,7 @@ namespace dex
 					bucket->hash = hasher( key );
 					++numberElements;
 
-					if ( 2 * size( ) > bucketCount( ) )
+					if ( 2 * ( size( ) + ghostCount ) > bucketCount( ) )
 						{
 						rehash( 2 * bucketCount( ) );
 						bucket = &table[ probe( key ) ];
@@ -248,16 +247,14 @@ namespace dex
 				{
 				table[ position.position ].isGhost = true;
 				++ghostCount;
-				return ++iterator( *this, position );
+				--numberElements;
+				return ++iterator( *this, position.position );
 				}
 
 			iterator erase( constIterator first, constIterator last )
 				{
 				while ( first != last )
-					{
 					first = erase( first );
-					++ghostCount;
-					}
 				return iterator( *this, last.position );
 				}
 
@@ -268,6 +265,7 @@ namespace dex
 					return 0;
 				table[ location ].isGhost = true;
 				++ghostCount;
+				--numberElements;
 				return 1;
 				}
 

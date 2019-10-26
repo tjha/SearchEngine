@@ -6,6 +6,7 @@
 
 #include "catch.hpp"
 #include "../utils/basicString.hpp"
+#include "../utils/exception.hpp"
 #include "../utils/unorderedMap.hpp"
 
 using dex::string;
@@ -28,4 +29,21 @@ TEST_CASE( "test stuff", "[unorderedMap]")
 	REQUIRE( mappy[ "delta" ] == 4 );
 	REQUIRE( mappy.count( "alpha" ) == 1 );
 	REQUIRE( mappy.count( "epsilon" ) == 0 );
+
+	mappy.erase( "alpha" );
+	REQUIRE( mappy.size( ) == 3 );
+	REQUIRE( mappy.count( "alpha" ) == 0 );
+	REQUIRE_THROWS_AS( mappy.at( "alpha" ), dex::outOfRangeException );
+	mappy.erase( "beta" );
+	REQUIRE( mappy.size( ) == 2 );
+	REQUIRE( mappy.count( "alpha" ) == 0 );
+	REQUIRE_THROWS_AS( mappy.at( "alpha" ), dex::outOfRangeException );
+	REQUIRE( mappy.count( "beta" ) == 0 );
+	REQUIRE_THROWS_AS( mappy.at( "beta" ), dex::outOfRangeException );
+	mappy.erase( mappy.cbegin( ), mappy.cend( ) );
+	REQUIRE( mappy.empty( ) );
+	REQUIRE( mappy.count( "alpha" ) == 0 );
+	REQUIRE( mappy.count( "beta" ) == 0 );
+	REQUIRE( mappy.count( "gamma" ) == 0 );
+	REQUIRE( mappy.count( "delta" ) == 0 );
 	}
