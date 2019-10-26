@@ -4,7 +4,7 @@
 // We ignore the key_equal predicate and allocator
 //
 // 2019-10-26: Wrote count, rehash, constructors, operator[ ], operator=, at, empty, size, maxSize, bucketCount, clear,
-//             swap, erase, iterators, include guard: jasina, lougheem
+//             swap, erase, iterators, find, include guard: jasina, lougheem
 // 2019-10-20: File created: jasina, lougheem
 
 #ifndef DEX_UNORDERD_MAP
@@ -244,6 +244,16 @@ namespace dex
 				if ( table[ location ].isEmpty )
 					throw outOfRangeException( );
 				return table[ location ].pair.second;
+				}
+
+			iterator find( const Key &key )
+				{
+				return iterator( *this, probe( key ) );
+				}
+
+			constIterator find( const Key &key ) const
+				{
+				return constIterator( *this, probe( key ) );
 				}
 
 			iterator erase( constIterator position )
