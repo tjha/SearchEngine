@@ -123,6 +123,7 @@ TEST_CASE( "test pushBack, popBack with string", "[vector]" )
    {
    vector < string > v;
 
+<<<<<<< HEAD
    for ( size_t i = 0; i < 5; ++i )
       {
       v.pushBack("example");
@@ -133,6 +134,18 @@ TEST_CASE( "test pushBack, popBack with string", "[vector]" )
       {
       v.popBack( );
       REQUIRE( v.size() == i );
+=======
+   for (size_t i = 0; i < 5; ++i)
+      {
+      v.pushBack("example");
+      REQUIRE( v[i] == "example" );
+      }
+
+   for (size_t i = 0; i < 5; ++i)
+      {
+      v.popBack();
+      REQUIRE( v.size() == 5 - i -1 );
+>>>>>>> 2d1322747fcad4b9c423b0c7d41baa7d6f47a73e
       }
    }
 
