@@ -132,7 +132,7 @@ TEST_CASE( "test pushBack, popBack with string", "[vector]" )
    for ( size_t i = 4; i != 0; --i )
       {
       v.popBack( );
-      REQUIRE( v.size() == i );
+      REQUIRE( v.size( ) == i );
       }
    }
 
