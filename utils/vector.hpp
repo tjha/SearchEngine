@@ -1,7 +1,8 @@
 // vector.hpp
 // Vector class. We don't implement emplace.
 //
-// 2019-10-26 -  Rewrite iterators to not duplicate code: jasina
+// 2019-10-26 - Changed delete array to delete [] array in reserve: medhak, tjha
+//            - Rewrite iterators to not duplicate code: jasina
 // 2019-10-24 - Added operators <, <=, >, >=, !=, ==; fix swap, reduce code duplicataion:
 //              medhak, jhirshey, loghead, jasina
 // 2019-10-22 - Fix styling issues, add iterator-based constructor, and fix at, front, and back: jasina
@@ -271,7 +272,7 @@ namespace dex
 		dex::copy( cbegin( ), cend( ), newArray );
 
 		arraySize = newCapacity;
-		delete array;
+		delete [ ] array;
 		array = newArray;
 		}
 
