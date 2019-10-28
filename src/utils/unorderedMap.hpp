@@ -367,8 +367,8 @@ namespace dex
 				}
 		};
 
-		template < class Key, class Value >
-		void swap( unorderedMap < Key, Value > &a, unorderedMap < Key, Value > &b )
+		template < class Key, class Value, class Hash >
+		void swap( unorderedMap < Key, Value, Hash > &a, unorderedMap < Key, Value, Hash > &b )
 			{
 			a.swap( b );
 			}
