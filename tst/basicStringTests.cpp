@@ -11,8 +11,8 @@
 // 2019-09-25: Created File: combsc
 
 #include "catch.hpp"
-#include "../utils/basicString.hpp"
-#include "../utils/exception.hpp"
+#include "../src/utils/basicString.hpp"
+#include "../src/utils/exception.hpp"
 
 using dex::outOfRangeException;
 using dex::string;
