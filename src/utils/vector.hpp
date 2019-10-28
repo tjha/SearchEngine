@@ -1,6 +1,7 @@
 // vector.hpp
 // Vector class. We don't implement emplace.
 //
+// 2019-10-27 - Fix dex::swap: jasina
 // 2019-10-26 - Changed delete array to delete [] array in reserve: medhak, tjha
 //            - Rewrite iterators to not duplicate code: jasina
 // 2019-10-24 - Added operators <, <=, >, >=, !=, ==; fix swap, reduce code duplicataion:
@@ -694,13 +695,13 @@ namespace dex
 				{
 				return ( *vec )[ index ];
 				}
-
-			friend void dex::swap( _iterator < isConst, isForward > &a, _iterator < isConst, isForward > &b )
-				{
-				dex::swap( a.vec, b.vec );
-				dex::swap( a.position, b.position );
-				}
 		};
+
+	template < class T >
+	void dex::swap( vector < T > &a, vector < T > &b )
+		{
+		a.swap( b );
+		}
 	}
 
 #endif

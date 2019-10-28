@@ -12,6 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-10-27: Fix dex::swap and fix indentation
 // 2019-10-26: Rewrite iterators to not duplicate code: jasina
 // 2019-10-24: Call lexicographicalCompare from algorithm, fix tempaltes with inputIterators: jasina
 // 2019-10-22: Fix iterator-based constructor: jasina
@@ -379,12 +380,6 @@ namespace dex
 							std::conditional < isConst, const charT &, charT & >::type operator[ ]( const size_t index ) const
 						{
 						return ( *string )[ index ];
-						}
-
-					friend void dex::swap( _iterator < isConst, isForward > &a, _iterator < isConst, isForward > &b )
-						{
-						dex::swap( a.string, b.string );
-						dex::swap( a.position, b.position );
 						}
 				};
 
@@ -968,105 +963,111 @@ namespace dex
 				}
 		};
 
-		// CTRLF Non-member Functions
-		template < class charT >
-		std::ostream &operator<<( std::ostream &os, const basicString < charT > &str )
-			{
-			for ( typename basicString < charT >::constIterator it = str.cbegin( );  it != str.cend( );  ++it )
-				os << *it;
-			return os;
-			}
+	// CTRLF Non-member Functions
+	template < class charT >
+	void dex::swap( basicString < charT > &a, basicString < charT > &b )
+		{
+		a.swap( b );
+		}
 
-		template < class charT >
-		bool operator==( const basicString < charT > &lhs, const basicString < charT > &rhs )
-			{
-			return !lhs.compare( rhs );
-			}
-		template < class charT >
-		bool operator==( const charT *lhs, const basicString < charT > &rhs )
-			{
-			return !rhs.compare( lhs );
-			}
-		template < class charT >
-		bool operator==( const basicString < charT > &lhs, const charT *rhs )
-			{
-			return !lhs.compare( rhs );
-			}
-		template < class charT >
-		bool operator!=( const basicString < charT > &lhs, const basicString < charT > &rhs )
-			{
-			return lhs.compare( rhs );
-			}
-		template < class charT >
-		bool operator!=( const charT *lhs, const basicString < charT > &rhs )
-			{
-			return rhs.compare( lhs );
-			}
-		template < class charT >
-		bool operator!=( const basicString < charT > &lhs, const charT *rhs )
-			{
-			return lhs.compare( rhs );
-			}
-		template < class charT >
-		bool operator>( const basicString < charT > &lhs, const basicString < charT > &rhs )
-			{
-			return lhs.compare( rhs ) > 0;
-			}
-		template < class charT >
-		bool operator>( const charT *lhs, const basicString < charT > &rhs )
-			{
-			return rhs.compare( lhs ) < 0;
-			}
-		template < class charT >
-		bool operator>( const basicString < charT > &lhs, const charT *rhs )
-			{
-			return lhs.compare( rhs ) > 0;
-			}
-		template < class charT >
-		bool operator<( const basicString < charT > &lhs, const basicString < charT > &rhs )
-			{
-			return lhs.compare( rhs ) < 0;
-			}
-		template < class charT >
-		bool operator<( const charT *lhs, const basicString < charT > &rhs )
-			{
-			return rhs.compare( lhs ) > 0;
-			}
-		template < class charT >
-		bool operator<( const basicString < charT > &lhs, const charT *rhs )
-			{
-			return lhs.compare( rhs ) < 0;
-			}
-		template < class charT >
-		bool operator>=( const basicString < charT > &lhs, const basicString < charT > &rhs )
-			{
-			return lhs.compare( rhs ) >= 0;
-			}
-		template < class charT >
-		bool operator>=( const charT *lhs, const basicString < charT > &rhs )
-			{
-			return rhs.compare( lhs ) <= 0;
-			}
-		template < class charT >
-		bool operator>=( const basicString < charT > &lhs, const charT *rhs )
-			{
-			return lhs.compare( rhs ) >= 0;
-			}
-		template < class charT >
-		bool operator<=( const basicString < charT > &lhs, const basicString < charT > &rhs )
-			{
-			return lhs.compare( rhs ) <= 0;
-			}
-		template < class charT >
-		bool operator<=( const charT *lhs, const basicString < charT > &rhs )
-			{
-			return rhs.compare( lhs ) >= 0;
-			}
-		template < class charT >
-		bool operator<=( const basicString < charT > &lhs, const charT *rhs )
-			{
-			return lhs.compare( rhs ) <= 0;
-			}
+	template < class charT >
+	std::ostream &operator<<( std::ostream &os, const basicString < charT > &str )
+		{
+		for ( typename basicString < charT >::constIterator it = str.cbegin( );  it != str.cend( );  ++it )
+			os << *it;
+		return os;
+		}
+
+	template < class charT >
+	bool operator==( const basicString < charT > &lhs, const basicString < charT > &rhs )
+		{
+		return !lhs.compare( rhs );
+		}
+	template < class charT >
+	bool operator==( const charT *lhs, const basicString < charT > &rhs )
+		{
+		return !rhs.compare( lhs );
+		}
+	template < class charT >
+	bool operator==( const basicString < charT > &lhs, const charT *rhs )
+		{
+		return !lhs.compare( rhs );
+		}
+	template < class charT >
+	bool operator!=( const basicString < charT > &lhs, const basicString < charT > &rhs )
+		{
+		return lhs.compare( rhs );
+		}
+	template < class charT >
+	bool operator!=( const charT *lhs, const basicString < charT > &rhs )
+		{
+		return rhs.compare( lhs );
+		}
+	template < class charT >
+	bool operator!=( const basicString < charT > &lhs, const charT *rhs )
+		{
+		return lhs.compare( rhs );
+		}
+	template < class charT >
+	bool operator>( const basicString < charT > &lhs, const basicString < charT > &rhs )
+		{
+		return lhs.compare( rhs ) > 0;
+		}
+	template < class charT >
+	bool operator>( const charT *lhs, const basicString < charT > &rhs )
+		{
+		return rhs.compare( lhs ) < 0;
+		}
+	template < class charT >
+	bool operator>( const basicString < charT > &lhs, const charT *rhs )
+		{
+		return lhs.compare( rhs ) > 0;
+		}
+	template < class charT >
+	bool operator<( const basicString < charT > &lhs, const basicString < charT > &rhs )
+		{
+		return lhs.compare( rhs ) < 0;
+		}
+	template < class charT >
+	bool operator<( const charT *lhs, const basicString < charT > &rhs )
+		{
+		return rhs.compare( lhs ) > 0;
+		}
+	template < class charT >
+	bool operator<( const basicString < charT > &lhs, const charT *rhs )
+		{
+		return lhs.compare( rhs ) < 0;
+		}
+	template < class charT >
+	bool operator>=( const basicString < charT > &lhs, const basicString < charT > &rhs )
+		{
+		return lhs.compare( rhs ) >= 0;
+		}
+	template < class charT >
+	bool operator>=( const charT *lhs, const basicString < charT > &rhs )
+		{
+		return rhs.compare( lhs ) <= 0;
+		}
+	template < class charT >
+	bool operator>=( const basicString < charT > &lhs, const charT *rhs )
+		{
+		return lhs.compare( rhs ) >= 0;
+		}
+	template < class charT >
+	bool operator<=( const basicString < charT > &lhs, const basicString < charT > &rhs )
+		{
+		return lhs.compare( rhs ) <= 0;
+		}
+	template < class charT >
+	bool operator<=( const charT *lhs, const basicString < charT > &rhs )
+		{
+		return rhs.compare( lhs ) >= 0;
+		}
+	template < class charT >
+	bool operator<=( const basicString < charT > &lhs, const charT *rhs )
+		{
+		return lhs.compare( rhs ) <= 0;
+		}
 
 	typedef dex::basicString < char > string;
 

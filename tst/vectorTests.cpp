@@ -2,6 +2,7 @@
 //
 // Perform tests on vector implementation
 //
+// 2019-10-27 jasina - Revamp swap test
 // 2019-10-26 medhak, tjha - Added test to pushBack and popBack to vector <string>
 // 2019-10-24 jasina, jhirshey, lougheem, medhak - finish up remaining test cases
 // 2019-10-22 combsc - Improved insert test cases, added erase test cases
@@ -75,6 +76,11 @@ TEST_CASE( "test constructors", "[vector]")
 		REQUIRE( v1.back( ) == -1 );
 		dex::swap( v1.front( ), v1.front( ) );
 		REQUIRE( v1.front( ) == 1 );
+
+		vector < int > v2( 2 ), v3( 3 );
+		dex::swap( v2, v3 );
+		REQUIRE( v2.size( ) == 3 );
+		REQUIRE( v3.size( ) == 2 );
 		}
 	}
 
