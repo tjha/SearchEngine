@@ -1,6 +1,7 @@
 // basicStringTests.cpp
 // Testing for the basicString class
 //
+// 2019-10-27: Revamp swap tests: jasina
 // 2019-10-20: Revamp assignment, write substring tests, combine (append, insert, erase, replace) into one, write hash
 //             tests: combsc, jasina, lougheem
 // 2019-10-17: Update file to contain full test suite. Dates of tests are noted below: combsc, jasina, lougheem
@@ -581,6 +582,12 @@ TEST_CASE( "swap works", "[string]" )
 	REQUIRE( a.size( ) == 9 );
 	REQUIRE( b == "google" );
 	REQUIRE( b.size( ) == 6 );
+
+	dex::swap( a, b );
+	REQUIRE( a == "google" );
+	REQUIRE( a.size( ) == 6 );
+	REQUIRE( b == "microsoft" );
+	REQUIRE( b.size( ) == 9 );
 	}
 
 TEST_CASE( "hashing works", "[string]" )
