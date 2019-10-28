@@ -965,7 +965,7 @@ namespace dex
 
 	// CTRLF Non-member Functions
 	template < class charT >
-	void dex::swap( basicString < charT > &a, basicString < charT > &b )
+	void swap( basicString < charT > &a, basicString < charT > &b )
 		{
 		a.swap( b );
 		}

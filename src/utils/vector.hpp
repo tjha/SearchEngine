@@ -469,7 +469,6 @@ namespace dex
 		arraySize = vectorSize;
 		}
 
-
 	template < class T >
 	void vector < T >::swap( vector &other )
 		{
@@ -698,7 +697,7 @@ namespace dex
 		};
 
 	template < class T >
-	void dex::swap( vector < T > &a, vector < T > &b )
+	void swap( vector < T > &a, vector < T > &b )
 		{
 		a.swap( b );
 		}
