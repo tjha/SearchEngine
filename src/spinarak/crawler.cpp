@@ -6,10 +6,11 @@
 #include <tls.h>
 #include "robots.hpp"
 #include <iostream>
-#include <string.h>
 
-using std::cout;
-using std::endl;
+// 2019-10-28: Cleaned up file, got working with HTTP and HTTPS: combsc
+// 2019-10-20: Init Commit: Jonas
+
+using std::string;
 
 class ParsedUrl
    {
@@ -27,7 +28,7 @@ class ParsedUrl
          pathBuffer = new char[ strlen( url ) + 1 ];
          const char *f;
          char *t;
-         for ( t = pathBuffer, f = url; *t++ = *f++; )
+         for ( t = pathBuffer, f = url;  (*t++ = *f++); )
             ;
 
          Service = pathBuffer;
@@ -84,6 +85,191 @@ class ParsedUrl
       char *pathBuffer;
    };
 
+int receive( char *buffer, int bytes, bool &filteredHeader, string &res, int fileToWrite )
+   {
+   if ( filteredHeader )
+      {
+      write( fileToWrite , buffer, bytes );
+      }
+   else 
+      {
+      char *p = strstr(buffer, "HTTP/1.1 ");
+      if ( p )
+         {
+         char statusCode[4];
+         statusCode[ 0 ] = p[ 9 ];
+         statusCode[ 1 ] = p[ 10 ];
+         statusCode[ 2 ] = p[ 11 ];
+         statusCode[ 3 ] = '\0';
+         int status = ( statusCode[ 0 ] - '0' ) * 100 +
+               ( statusCode[ 1 ] - '0' ) * 10 +
+               ( statusCode[ 2 ] - '0' );
+         // If the status code starts with 2, it's a valid response
+         if ( statusCode[ 0 ] == '2' )
+            {
+            char *headerEnd = strstr( buffer, "\r\n\r\n" );
+            size_t restOfMessage = bytes - (headerEnd - buffer);
+            write( fileToWrite, headerEnd, restOfMessage );
+            filteredHeader = true;
+            }
+         // If the status code starts with a 3, it's a redirect
+         else if ( statusCode[ 0 ] == '3' )
+            {
+            // Copy the locaton into res and return the status code
+            char *location = strstr( buffer, "Location: " ) + 10;
+            char *endPath = location;
+            for ( int i = 0; *endPath != '\r' ;  ++i ){
+               endPath++;
+            }
+            endPath[1] = '\0';
+            res = location;
+            return status;
+            }
+         // Otherwise we don't get a good response and need to return an error
+         else
+            {
+            // Copy the HTTP response into res, then return the status code
+            char *headerEnd = strstr( buffer, "\r\n\r\n" );
+            headerEnd[0] = '\0';
+            res = p;
+            return status;
+            }
+         }
+      }
+   return 0;
+   }
+
+int httpConnect( char *in, string &res, int fileToWrite )
+   {
+   ParsedUrl url( in );
+   // Create a TCP/IP socket.
+
+   struct addrinfo *address, hints;
+   memset( &hints, 0, sizeof( hints ) );
+   hints.ai_family = AF_INET;
+   hints.ai_socktype = SOCK_STREAM;
+   hints.ai_protocol = IPPROTO_TCP;
+
+   int getaddrresult = getaddrinfo( url.Host, *url.Port ? url.Port : "80", &hints, &address );
+   if ( getaddrresult == 1 ) 
+      {
+      res = "Could not resolve DNS\n";
+      return -1;
+      }
+
+   int socketFD = socket( address->ai_family, address->ai_socktype, address->ai_protocol );
+
+   // Connect the socket to the host address.
+   int connectRes = connect( socketFD, address->ai_addr, address->ai_addrlen);
+   if ( connectRes == -1 )
+      {
+      res = "Could not connect to Host\n";
+      return -1;
+      }
+
+   string getMessage = "GET /" 
+      + (string)url.Path 
+      + " HTTP/1.1\r\nHost: "
+      + (string)url.Host
+      + "\r\nUser-Agent: LinuxGetUrl/2.0 jhirshey@umich.edu (Linux)\r\n"
+      + "Accept: */*\r\n"
+      + "Accept-Encoding: identity\r\n"
+      + "Connection: close\r\n\r\n";
+
+   int err = send( socketFD, getMessage.c_str( ), getMessage.length( ), 0 );
+   // Read from the socket until there's no more data, copying it to
+   // stdout.
+   if (err == -1)
+      {
+         res =  "Failure in sending\n";
+         return -1;
+      }
+
+   char buffer[ 10240 ];
+   int bytes;
+   bool filteredHeader = false;
+   while ( ( bytes = recv( socketFD, buffer, sizeof( buffer ), 0 ) ) > 0 )
+      {
+      int ret = receive( buffer, bytes, filteredHeader, res, fileToWrite );
+      if ( ret != 0 )
+         {
+         return ret;
+         }
+      }
+
+   if ( !filteredHeader && bytes == 0 )
+      {
+      res = "No response from TLS_READ of:\n" + getMessage;
+      return -1;
+      }
+
+   // Close the socket and free the address info structure.
+
+   close( socketFD );
+   freeaddrinfo( address );
+   
+   return 0;
+   }
+
+int httpsConnect( char *in, string &res, int fileToWrite )
+   {
+   res = "";
+   ParsedUrl url( in );
+   // setup libressl stuff
+   tls_init( );
+   tls_config * config = tls_config_new( );  
+   tls *ctx = tls_client( );
+   tls_configure( ctx, config );
+
+   // Connect to the host address
+   int connectRes = tls_connect( ctx, url.Host, *url.Port ? url.Port : "443" );
+   if ( connectRes == -1 )
+      {
+      res = "Could not connect to Host\n";
+      return -1;
+      }
+
+   string getMessage = "GET /" 
+      + (string)url.Path 
+      + " HTTP/1.1\r\nHost: "
+      + (string)url.Host
+      + "\r\nUser-Agent: LinuxGetUrl/2.0 jhirshey@umich.edu (Linux)\r\n"
+      + "Accept: */*\r\n"
+      + "Accept-Encoding: identity\r\n"
+      + "Connection: close\r\n\r\n";
+   
+   tls_write( ctx, getMessage.c_str( ), getMessage.length( ) );
+
+   int status;
+   char *newPath;
+   char buffer[ 10240 ];
+   int bytes;
+   bool filteredHeader = false;
+   int count = 0;
+   while ( ( bytes = tls_read( ctx, buffer, sizeof( buffer ) ) ) > 0 )
+      {
+      int ret = receive( buffer, bytes, filteredHeader, res, fileToWrite );
+      if ( ret != 0 )
+         {
+         return ret;
+         }
+      }
+
+   if ( !filteredHeader && bytes == 0 )
+      {
+      res = "No response from TLS_READ of:\n" + getMessage;
+      return -1;
+      }
+
+   tls_close( ctx );
+   tls_free( ctx );
+
+   return 0;
+   }
+
+
+
+
 int main ( int argc, char ** argv) {
    // check if there is a domain to get
    if ( argc != 2 ) {
@@ -91,121 +277,21 @@ int main ( int argc, char ** argv) {
       return 1;
    }
 
-   ParsedUrl url( argv[1] );
+   int fileToWrite = 1;
 
-   tls_init( );
-   tls_config * config = tls_config_new( );
-
-   // Get the host address.
-   /* struct addrinfo *address, hints;
-   memset( &hints, 0, sizeof( hints ) );
-   hints.ai_family = AF_INET;
-   hints.ai_socktype = SOCK_STREAM;
-   hints.ai_protocol = IPPROTO_TCP;
-
-   //int getaddrResult = getaddrinfo( url.Host, "443", 
-                                    &hints, &address );
-
-   if ( getaddrResult == 1 ) 
+   string res = "";
+   if ( strstr( argv[ 1 ], "https") )
       {
-      cerr << "Could not resolve DNS\n";
-      exit( 1 );
-      }*/
-
-   tls *ctx = tls_client( );
-   tls_configure( ctx, config );
-
-   cout << url.Host << "\n";
-   cout << url.Port << "\n";
-   int connectRes = tls_connect( ctx, url.Host, *url.Port ? url.Port : "443" );
-
-   if ( connectRes == -1 )
-      {
-      cerr << "Could not connect to Host\n";
-      exit( 1 );
+      int a = httpsConnect( argv[ 1 ], res, fileToWrite );
+      std::cout << a << std::endl;
+      std::cout << res << std::endl;
       }
-
-   std::string getMessage = "GET /" 
-      + (std::string)url.Path 
-      + " HTTP/1.1\r\nHost: "
-      + (std::string)url.Host
-      + "\r\nUser-Agent: LinuxGetUrl/2.0 jhirshey@umich.edu (Linux)\r\n"
-      + "Accept: */*\r\n"
-      + "Accept-Encoding: identity\r\n"
-      //+ "Content-Length: 0\r\n"
-      + "Connection: close\r\n\r\n";
+   else
+      {
+      int a = httpConnect( argv[ 1 ], res, fileToWrite );
+      std::cout << a << std::endl;
+      std::cout << res << std::endl;
+      }
    
-   tls_write( ctx, getMessage.c_str( ), getMessage.length( ) );
-
-   int status;
-   char *newPath;
-   char buffer[ 4096 ];
-   int bytes;
-   bool filteredHeader = false;
-   int count = 0;
-   //bytes = tls_read( ctx, buffer, sizeof( buffer ) );
-   while ( ( bytes = tls_read( ctx, buffer, sizeof( buffer ) ) ) > 0 )
-      {
-      if ( filteredHeader)          {
-         write( 1, buffer, bytes );
-         }
-      else 
-         {
-         if ( strstr( buffer, "\r\n\r\n" ) != nullptr )
-            {
-            // parse the http response code
-            char statusCode[3];
-            statusCode[0] = buffer[ 9 ];
-            statusCode[1] = buffer[ 10 ];
-            statusCode[2] = buffer[ 11 ];
-            status = atoi( statusCode );
-
-            // replace the url.Path if site moved permanently
-            if ( status == 301 )
-               {
-               char *location = strstr( buffer, "Location: " ) + 10;
-               char *endPath = location;
-               while ( *endPath != '\\' )
-                  {
-                  ++endPath;
-                  }
-               memcpy( newPath, location, 
-                       ( endPath - location ) * sizeof( char ) );
-
-               std::cout << "Rerouted, adding to frontier " << newPath << "\n";
-               return 0;
-               }
-            else 
-               {
-               std::cout << status << std::endl;
-               char *headerEnd = strstr( buffer, "\r\n\r\n" );
-               size_t restOfMessage = bytes - (headerEnd - buffer);
-               write( 1, headerEnd, restOfMessage );
-               filteredHeader = true;
-               }
-            }
-         }
-      }
-
-   if ( !filteredHeader && bytes == 0 )
-      {
-      cerr << "No response from TLS_READ of:\n" << getMessage;
-      exit(1);
-      }
-
-   tls_close( ctx );
-   tls_free( ctx );
    return 0;
 }
-
-//dex::RobotTxt hello = dex::RobotTxt( url, 3 );
-   /*
-   cout << hello;
-   cout << hello.canVisitDomain( ) << endl;
-   sleep(2);
-   cout << hello.canVisitDomain( ) << endl;
-   sleep(2);
-   cout << hello.canVisitDomain( ) << endl;
-   hello.updateLastVisited( );
-   cout << hello;
-   */
