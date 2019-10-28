@@ -1079,7 +1079,7 @@ namespace dex
 			static const unsigned long prime = 16777619;
 			static const unsigned long offsetBasis = 2166136261;
 		public:
-			unsigned long operator( )( dex::string str )
+			unsigned long operator( )( const dex::string &str ) const
 				{
 				// Compute hash using FNV-1a algorithm
 				unsigned long hash = offsetBasis;
