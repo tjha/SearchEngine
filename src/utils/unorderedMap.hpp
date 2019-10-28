@@ -3,6 +3,7 @@
 //
 // We ignore the key_equal predicate and allocator
 //
+// 2019-10-28: Implement insert: jasina
 // 2019-10-27: Address PR style comments: jasina
 // 2019-10-26: Wrote count, rehash, constructors, operator[ ], operator=, at, empty, size, maxSize, bucketCount, clear,
 //             swap, erase, iterators, find, include guard: jasina, lougheem
@@ -42,21 +43,38 @@ namespace dex
 				dex::pair < Key, Value > pair;
 				bool isEmpty;
 				bool isGhost;
-				size_t hash;
 
-				wrappedPair( ) : pair( Key{ }, Value{ } ), isEmpty( true ), isGhost( false ), hash( 0 ) { }
-				wrappedPair( Key key, Value value ) : pair( key, value ), isEmpty( false ), isGhost( false )
-					{
-					hash = hasher( key );
-					}
+				wrappedPair( ) : pair( Key{ }, Value{ } ), isEmpty( true ), isGhost( false ) { }
+				wrappedPair( Key key, Value value ) : pair( key, value ), isEmpty( false ), isGhost( false ) { }
 				};
 
 			size_t probe( const Key &key ) const
 				{
+				bool ghostFound = false;
+				size_t firstGhostLocation;
 				size_t location = hasher( key ) % tableSize;
-				for ( ;  table[ location ].isGhost || ( !table[ location ].isEmpty && table[ location ].pair.first != key );
-						location = ( location + 1 ) % tableSize );
-				return location;
+
+				while ( true )
+					{
+					if ( table[ location ].isEmpty )
+						{
+						if ( ghostFound )
+							return firstGhostLocation;
+						else
+							return location;
+						}
+
+					if ( !ghostFound && table[ location ].isGhost )
+						{
+						firstGhostLocation = location;
+						ghostFound = true;
+						}
+					else
+						if ( table[ location ].pair.first == key )
+							return location;
+
+					location = ( location + 1 ) % tableSize;
+					}
 				}
 		public:
 			unorderedMap( size_t tableSize = DEFAULT_TABLE_SIZE, const Hash &hasher = Hash( ) )
@@ -64,6 +82,7 @@ namespace dex
 				this->tableSize = dex::max( size_t( 1 ), tableSize );
 				numberElements = 0;
 				ghostCount = 0;
+				this->hasher = hasher;
 
 				table = new wrappedPair[ this->tableSize ]( );
 				}
@@ -74,10 +93,10 @@ namespace dex
 				this->tableSize = dex::max( size_t( 1 ), tableSize );
 				numberElements = 0;
 				ghostCount = 0;
+				this->hasher = hasher;
 
 				table = new wrappedPair[ this->tableSize ]( );
-
-				for ( ;  first != last;  ( *this )[ first->first ] = first->second, ++first );
+				insert( first, last );
 				}
 
 			unorderedMap( const unorderedMap < Key, Value, Hash > &other )
@@ -219,36 +238,20 @@ namespace dex
 
 			Value &operator[ ]( const Key &key )
 				{
-				wrappedPair *bucket = &table[ probe( key ) ];
-				if ( bucket->isEmpty )
-					{
-					bucket->pair = dex::pair < Key, Value >( key, Value { } );
-					bucket->isEmpty = false;
-					ghostCount -= bucket->isGhost;
-					bucket->isGhost = false;
-					bucket->hash = hasher( key );
-					++numberElements;
-
-					if ( 2 * ( size( ) + ghostCount ) > bucketCount( ) )
-						{
-						rehash( 2 * bucketCount( ) );
-						bucket = &table[ probe( key ) ];
-						}
-					}
-				return bucket->pair.second;
+				return insert( dex::pair < Key, Value >{ key, Value{ } } ).first->second;
 				}
 
 			const Value &at( const Key &key ) const
 				{
 				size_t location = probe( key );
-				if ( table[ location ].isEmpty )
+				if ( table[ location ].isEmpty || table[ location ].isGhost )
 					throw outOfRangeException( );
 				return table[ location ].pair.second;
 				}
 			Value &at( const Key &key )
 				{
 				size_t location = probe( key );
-				if ( table[ location ].isEmpty )
+				if ( table[ location ].isEmpty || table[ location ].isGhost )
 					throw outOfRangeException( );
 				return table[ location ].pair.second;
 				}
@@ -256,7 +259,7 @@ namespace dex
 			iterator find( const Key &key )
 				{
 				size_t location = probe( key );
-				if ( table[ location ].isEmpty )
+				if ( table[ location ].isEmpty || table[ location ].isGhost )
 					return end( );
 				return iterator( *this, location );
 				}
@@ -264,7 +267,7 @@ namespace dex
 			constIterator find( const Key &key ) const
 				{
 				size_t location = probe( key );
-				if ( table[ location ].isEmpty )
+				if ( table[ location ].isEmpty || table[ location ].isGhost )
 					return cend( );
 				return constIterator( *this, location );
 				}
@@ -287,7 +290,7 @@ namespace dex
 			size_t erase( const Key &key )
 				{
 				size_t location = probe( key );
-				if ( table[ location ].isEmpty )
+				if ( table[ location ].isEmpty || table[ location ].isGhost )
 					return 0;
 				table[ location ].isGhost = true;
 				++ghostCount;
@@ -300,16 +303,49 @@ namespace dex
 				erase( cbegin( ), cend( ) );
 				}
 
+			dex::pair < iterator, bool > insert( const dex::pair < Key, Value > &datum )
+				{
+				bool inserted = false;
+				const Key &key = datum.first;
+				size_t location = probe( key );
+				wrappedPair *bucket = &table[ location ];
+
+				if ( bucket->isEmpty || bucket->isGhost )
+					{
+					inserted = true;
+					bucket->pair = datum;
+					bucket->isEmpty = false;
+					ghostCount -= bucket->isGhost;
+					bucket->isGhost = false;
+					++numberElements;
+
+					if ( 2 * ( size( ) + ghostCount ) > bucketCount( ) )
+						{
+						rehash( 2 * bucketCount( ) );
+						location = probe( key );
+						}
+					}
+
+				return dex::pair < iterator, bool >{ iterator( *this, location ), inserted };
+				}
+
+			template < class InputIt >
+			void insert( InputIt first, InputIt last )
+				{
+				for ( ;  first != last;  insert( *( first++ ) ) );
+				}
+
 			size_t count( const Key &key )
 				{
 				size_t location = probe( key );
-				if ( table[ location ].isEmpty )
+				if ( table[ location ].isEmpty || table[ location ].isGhost )
 					return 0;
 				return 1;
 				}
 
 			void rehash( size_t newSize )
 				{
+				// TODO: Maybe reuse precalculated hashes
 				swap( unorderedMap < Key, Value, Hash > ( cbegin( ), cend( ),
 						dex::max( newSize, size( ) * 2 ) ) );
 				}
@@ -330,6 +366,12 @@ namespace dex
 				dex::swap( other.ghostCount, ghostCount );
 				}
 		};
+
+		template < class Key, class Value >
+		void swap( unorderedMap < Key, Value > &a, unorderedMap < Key, Value > &b )
+			{
+			a.swap( b );
+			}
 	}
 
 #endif
