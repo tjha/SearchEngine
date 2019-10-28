@@ -50,8 +50,10 @@ namespace dex
 				size_t firstGhostLocation;
 				size_t location = hasher( key ) % tableSize;
 
+				// This loop will run until either we find an empty bucket or until we find the key we want
 				while ( true )
 					{
+					// We're done if we enter this block
 					if ( table[ location ].isEmpty )
 						{
 						if ( ghostFound )
@@ -60,12 +62,17 @@ namespace dex
 							return location;
 						}
 
-					if ( !ghostFound && table[ location ].isGhost )
+					if ( table[ location ].isGhost )
 						{
-						firstGhostLocation = location;
-						ghostFound = true;
+						// Keep track of the first ghost we encounter. We will overwrite this bucket if we never find the key
+						if ( !ghostFound )
+							{
+							firstGhostLocation = location;
+							ghostFound = true;
+							}
 						}
 					else
+						// We're done if we find the key we want
 						if ( table[ location ].key == key )
 							return location;
 
