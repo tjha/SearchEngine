@@ -1,6 +1,7 @@
 // algorithm.hpp
 // Artisan crafted version of <algorithm> that keeps all of the interfaces.
 //
+// 2019-10-27: Fix lexicographicalCompare return statement: jasina
 // 2019-10-24: Add lexicographicalCompare: jasina
 // 2019-10-17: Disambiguate call to search, add include guard: jasina
 // 2019-10-14: Fix findEnd: jasina
@@ -108,7 +109,7 @@ namespace dex
 			if ( *first1 > *first2 )
 				return 1;
 			}
-		return ( *first2 == *last2 ) - ( *first1 == *last1 );
+		return ( first2 == last2 ) - ( first1 == last1 );
 		}
 	}
 
