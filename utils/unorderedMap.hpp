@@ -3,12 +3,13 @@
 //
 // We ignore the key_equal predicate and allocator
 //
+// 2019-10-27: Address PR style comments: jasina
 // 2019-10-26: Wrote count, rehash, constructors, operator[ ], operator=, at, empty, size, maxSize, bucketCount, clear,
 //             swap, erase, iterators, find, include guard: jasina, lougheem
 // 2019-10-20: File created: jasina, lougheem
 
-#ifndef DEX_UNORDERD_MAP
-#define DEX_UNORDERD_MAP
+#ifndef DEX_UNORDERED_MAP
+#define DEX_UNORDERED_MAP
 
 #include <cstddef>
 #include <type_traits>
@@ -31,6 +32,8 @@ namespace dex
 			size_t tableSize;
 			size_t numberElements;
 			size_t ghostCount;
+
+			static const size_t DEFAULT_TABLE_SIZE = 1 << 14;
 
 			Hash hasher;
 
@@ -56,7 +59,7 @@ namespace dex
 				return location;
 				}
 		public:
-			unorderedMap( size_t tableSize = 10000, const Hash &hasher = Hash( ) )
+			unorderedMap( size_t tableSize = DEFAULT_TABLE_SIZE, const Hash &hasher = Hash( ) )
 				{
 				this->tableSize = dex::max( size_t( 1 ), tableSize );
 				numberElements = 0;
@@ -65,7 +68,8 @@ namespace dex
 				table = new wrappedPair[ this->tableSize ]( );
 				}
 			template< class InputIt >
-			unorderedMap( InputIt first, InputIt last, size_t tableSize = 10000, const Hash &hasher = Hash( ) )
+			unorderedMap( InputIt first, InputIt last,
+					size_t tableSize = DEFAULT_TABLE_SIZE, const Hash &hasher = Hash( ) )
 				{
 				this->tableSize = dex::max( size_t( 1 ), tableSize );
 				numberElements = 0;
@@ -114,6 +118,7 @@ namespace dex
 				private:
 					_iterator( mapType &map, size_t position ) : map( &map )
 						{
+						// Find the first filled bucket at or after position
 						for ( ;  position != map.bucketCount( ) &&
 								( map.table[ position ].isEmpty || map.table[ position ].isGhost );
 								++( position ) );
@@ -151,6 +156,8 @@ namespace dex
 						{
 						if ( position >= map->bucketCount( ) )
 							throw outOfRangeException( );
+
+						// Find the next filled bucket
 						for ( ++position ;  position != map->bucketCount( ) &&
 								( map->table[ position ].isEmpty || map->table[ position ].isGhost );  ++position );
 						return *this;
