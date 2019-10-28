@@ -2,16 +2,17 @@ CXX = g++
 
 # path #
 SRC_PATH = src
+TEST_PATH = tst
 BUILD_PATH = build
-INCLUDE = -I./utils/
+INCLUDE = -I $(SRC_PATH)/utils/
 
 # flags #
 CXXFLAGS = -std=c++17 -Wall -Wextra -g
 
-build_sources: src/*
+build_sources: $(SRC_PATH)/*
 	@mkdir -p $(BUILD_PATH)/
 
-build_tests: tst/*
+build_tests: $(TEST_PATH)/*
 	@mkdir -p $(BUILD_PATH)/
 	$(CXX) $(CXXFLAGS) $(INCLUDE) tst/main.cpp tst/vectorTests.cpp -o build/vectorTests.exe
 
@@ -23,5 +24,5 @@ run_unit_tests:
 clean:
 	@rm -rf $(BUILD_PATH)/
 
-.PHONY: build_sources build_tests, run_unit_tests, clean
+.PHONY: build_sources build_tests run_unit_tests clean
 

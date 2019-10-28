@@ -7,7 +7,7 @@
 // 2019-9-19: Write min and max tests: combsc
 
 #include "catch.hpp"
-#include "../utils/algorithm.hpp"
+#include "../src/utils/algorithm.hpp"
 #include <vector>
 
 TEST_CASE( "test find" )
