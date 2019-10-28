@@ -563,21 +563,16 @@ namespace dex
 	class vector < T >::_iterator
 		{
 		private:
+			typedef typename std::conditional < isConst, const vector < T >, vector < T > >::type vectorType;
+			typedef typename std::conditional < isConst, const T, T >::type dataType;
+
 			friend class vector < T >;
-			typename
-					std::conditional < isConst, const vector < T > *, vector < T > * >::type
-					vec;
+			vectorType *vec;
 			size_t position;
-			_iterator(
-					typename
-							std::conditional < isConst, const vector < T > &, vector < T > & >::type
-							vec,
-					size_t position ) :
-					vec( &vec ), position( position ) { }
+			_iterator( vectorType &vec, size_t position ) : vec( &vec ), position( position ) { }
 		public:
 			template < typename = typename std::enable_if < isConst > >
-			_iterator( const _iterator < false, isForward > &other ) :
-					vec( other.vec ), position( other.position ) { }
+			_iterator( const _iterator < false, isForward > &other ) : vec( other.vec ), position( other.position ) { }
 
 			friend bool operator==( const _iterator &a, const _iterator &b )
 				{
@@ -593,13 +588,13 @@ namespace dex
 				return a.position != b.position;
 				}
 
-			typename std::conditional < isConst, const T &, T & >::type operator*( ) const
+			dataType &operator*( ) const
 				{
 				if ( isForward )
 					return ( *vec )[ position ];
 				return ( *vec )[ vec->size( ) - position - 1 ];
 				}
-			typename std::conditional < isConst, const T *, T * >::type operator->( ) const
+			dataType *operator->( ) const
 				{
 				if ( isForward )
 					return &( ( *vec )[ position ] );
@@ -694,7 +689,7 @@ namespace dex
 				return *this = *this - n;
 				}
 
-			typename std::conditional < isConst, const T &, T & >::type operator[ ]( const size_t index ) const
+			dataType &operator[ ]( const size_t index ) const
 				{
 				return ( *vec )[ index ];
 				}
