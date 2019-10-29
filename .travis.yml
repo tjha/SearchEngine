@@ -2,9 +2,7 @@ language: cpp
 compiler: gcc
 
 script:
- - make build_sources
- - make build_tests
- - make run_unit_tests
+ - make tests
  - make clean
 
 after_success:
