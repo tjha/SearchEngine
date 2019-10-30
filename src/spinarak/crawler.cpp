@@ -93,12 +93,12 @@ namespace dex
 		{
 		private:
 
-			string makeGetMessage( string path, string host )
+			string makeGetMessage( const string &path, const string &host )
 				{
 				return "GET /" 
-					+ url.path
+					+ path
 					+ " HTTP/1.1\r\nHost: "
-					+ url.host
+					+ host
 					+ "\r\nUser-Agent: LinuxGetUrl/2.0 jhirshey@umich.edu (Linux)\r\n"
 					+ "Accept: */*\r\n"
 					+ "Accept-Encoding: identity\r\n"
