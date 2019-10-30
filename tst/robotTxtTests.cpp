@@ -13,22 +13,22 @@ using dex::string;
 TEST_CASE( "timing for visiting sites", "[robotsTxt]" )
 	{
 	string url = "https://domain.com";
-   RobotTxt hello = RobotTxt( url, 1 );
+	RobotTxt hello = RobotTxt( url, 1 );
 	REQUIRE( !hello.canVisitPath( "/" ) );
-   sleep(2);
+	sleep(2);
 	REQUIRE( hello.canVisitPath( "/" ) );
 
 	RobotTxt henlo = RobotTxt( url, 1 );
 	henlo.addPathsDisallowed( "/" );
 	REQUIRE( !henlo.canVisitPath( "/" ) );
-   sleep(2);
+	sleep(2);
 	REQUIRE( !henlo.canVisitPath( "/" ) );
 	}
 
 TEST_CASE( "whitelist and blacklist rules", "[robotsTxt]" )
 	{
 	string url = "https://domain.com";
-   RobotTxt hello = RobotTxt( url, 0 );
+	RobotTxt hello = RobotTxt( url, 0 );
 	sleep(1);
 	hello.addPathsDisallowed( "/" );
 	hello.addPathsAllowed( "/secret/path/" );
