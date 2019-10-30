@@ -1,16 +1,12 @@
-// unorderedMap.hpp
-// Organically grown unordered map implementation that imitates the STL unordered_map. This uses linear probing.
+// unorderedSet.hpp
+// All natural (no preservative) unordered set implementation that imitates the STL unordered_set using linear probing.
 //
 // We ignore the key_equal predicate and allocator
 //
-// 2019-10-28: Implement insert: jasina
-// 2019-10-27: Address PR style comments: jasina
-// 2019-10-26: Wrote count, rehash, constructors, operator[ ], operator=, at, empty, size, maxSize, bucketCount, clear,
-//             swap, erase, iterators, find, include guard: jasina, lougheem
-// 2019-10-20: File created: jasina, lougheem
+// 2019-10-28: File created
 
-#ifndef DEX_UNORDERED_MAP
-#define DEX_UNORDERED_MAP
+#ifndef DEX_UNORDERED_SET
+#define DEX_UNORDERED_SET
 
 #include <cstddef>
 #include <type_traits>
@@ -23,13 +19,13 @@ namespace dex
 	template < class Key >
 	struct hash;
 
-	template < class Key, class Value, class Hash = dex::hash < Key > >
-	class unorderedMap
+	template < class Key, class Hash = dex::hash < Key > >
+	class unorderedSet
 		{
 		private:
-			struct wrappedPair;
+			struct wrappedDatum;
 
-			wrappedPair *table;
+			wrappedDatum *table;
 			size_t tableSize;
 			size_t numberElements;
 			size_t ghostCount;
@@ -38,14 +34,14 @@ namespace dex
 
 			Hash hasher;
 
-			struct wrappedPair
+			struct wrappedDatum
 				{
-				dex::pair < Key, Value > pair;
+				Key key;
 				bool isEmpty;
 				bool isGhost;
 
-				wrappedPair( ) : pair( Key{ }, Value{ } ), isEmpty( true ), isGhost( false ) { }
-				wrappedPair( Key key, Value value ) : pair( key, value ), isEmpty( false ), isGhost( false ) { }
+				wrappedDatum( ) : key( Key{ } ), isEmpty( true ), isGhost( false ) { }
+				wrappedDatum( Key key ) : key( key ), isEmpty( false ), isGhost( false ) { }
 				};
 
 			size_t probe( const Key &key ) const
@@ -77,24 +73,24 @@ namespace dex
 						}
 					else
 						// We're done if we find the key we want
-						if ( table[ location ].pair.first == key )
+						if ( table[ location ].key == key )
 							return location;
 
 					location = ( location + 1 ) % tableSize;
 					}
 				}
 		public:
-			unorderedMap( size_t tableSize = DEFAULT_TABLE_SIZE, const Hash &hasher = Hash( ) )
+			unorderedSet( size_t tableSize = DEFAULT_TABLE_SIZE, const Hash &hasher = Hash( ) )
 				{
 				this->tableSize = dex::max( size_t( 1 ), tableSize );
 				numberElements = 0;
 				ghostCount = 0;
 				this->hasher = hasher;
 
-				table = new wrappedPair[ this->tableSize ]( );
+				table = new wrappedDatum[ this->tableSize ]( );
 				}
 			template< class InputIt >
-			unorderedMap( InputIt first, InputIt last,
+			unorderedSet( InputIt first, InputIt last,
 					size_t tableSize = DEFAULT_TABLE_SIZE, const Hash &hasher = Hash( ) )
 				{
 				this->tableSize = dex::max( size_t( 1 ), tableSize );
@@ -102,26 +98,25 @@ namespace dex
 				ghostCount = 0;
 				this->hasher = hasher;
 
-				table = new wrappedPair[ this->tableSize ]( );
+				table = new wrappedDatum[ this->tableSize ]( );
 				insert( first, last );
 				}
 
-			unorderedMap( const unorderedMap < Key, Value, Hash > &other )
+			unorderedSet( const unorderedSet < Key, Hash > &other )
 				{
 				table = nullptr;
-				unorderedMap < Key, Value, Hash > temp( other.cbegin( ), other.cend( ),
-						other.bucketCount( ), other.hasher );
+				unorderedSet < Key, Hash > temp( other.cbegin( ), other.cend( ), other.bucketCount( ), other.hasher );
 				swap( temp );
 				}
 
-			unorderedMap &operator=( const unorderedMap < Key, Value, Hash > &other )
+			unorderedSet &operator=( const unorderedSet < Key, Hash > &other )
 				{
-				unorderedMap < Key, Value, Hash > temp( other );
+				unorderedSet < Key, Hash > temp( other );
 				swap( temp );
 				return *this;
 				}
 
-			~unorderedMap( )
+			~unorderedSet( )
 				{
 				if ( table )
 					delete [ ] table;
@@ -132,60 +127,59 @@ namespace dex
 			class _iterator
 				{
 				private:
-					friend class unorderedMap < Key, Value, Hash >;
+					friend class unorderedSet < Key, Hash >;
 
-					typedef typename std::conditional < isConst, const unorderedMap < Key, Value, Hash >,
-							unorderedMap < Key, Value, Hash > >::type mapType;
-					typedef typename std::conditional < isConst, const dex::pair < Key, Value >,
-							dex::pair < Key, Value > >::type pairType;
+					typedef typename std::conditional < isConst, const unorderedSet < Key, Hash >,
+							unorderedSet < Key, Hash > >::type setType;
+					typedef typename std::conditional < isConst, const Key, Key >::type datumType;
 
-					mapType *map;
+					setType *set;
 					size_t position;
 				private:
-					_iterator( mapType &map, size_t position ) : map( &map )
+					_iterator( setType &set, size_t position ) : set( &set )
 						{
 						// Find the first filled bucket at or after position
-						for ( ;  position != map.bucketCount( ) &&
-								( map.table[ position ].isEmpty || map.table[ position ].isGhost );
+						for ( ;  position != set.bucketCount( ) &&
+								( set.table[ position ].isEmpty || set.table[ position ].isGhost );
 								++( position ) );
 						this->position = position;
 						}
 				public:
 					template < typename = typename std::enable_if < isConst > >
 					_iterator( const _iterator < false > &other ) :
-							map( other.map ), position( other.position ) { }
+							set( other.set ), position( other.position ) { }
 
 					friend bool operator==( const _iterator &a, const _iterator &b )
 						{
-						// Only makes sense to compare iterators pointing to the same map
-						if ( a.map != b.map )
+						// Only makes sense to compare iterators pointing to the same set
+						if ( a.set != b.set )
 							throw invalidArgumentException( );
 						return a.position == b.position;
 						}
 					friend bool operator!=( const _iterator &a, const _iterator &b )
 						{
-						if ( a.map != b.map )
+						if ( a.set != b.set )
 							throw invalidArgumentException( );
 						return a.position != b.position;
 						}
 
-					pairType &operator*( ) const
+					datumType &operator*( ) const
 						{
-						return map->table[ position ].pair;
+						return set->table[ position ].key;
 						}
-					pairType *operator->( ) const
+					datumType *operator->( ) const
 						{
-						return &( map->table[ position ].pair );
+						return &( set->table[ position ].key );
 						}
 
 					_iterator &operator++( )
 						{
-						if ( position >= map->bucketCount( ) )
+						if ( position >= set->bucketCount( ) )
 							throw outOfRangeException( );
 
 						// Find the next filled bucket
-						for ( ++position ;  position != map->bucketCount( ) &&
-								( map->table[ position ].isEmpty || map->table[ position ].isGhost );  ++position );
+						for ( ++position ;  position != set->bucketCount( ) &&
+								( set->table[ position ].isEmpty || set->table[ position ].isGhost );  ++position );
 						return *this;
 						}
 					_iterator operator++( int )
@@ -199,7 +193,7 @@ namespace dex
 			template < bool isConst >
 			void swap( _iterator < isConst > &a, _iterator < isConst > &b )
 				{
-				dex::swap( a.map, b.map );
+				dex::swap( a.set, b.set );
 				dex::swap( a.position, b.position );
 				}
 		public:
@@ -241,26 +235,6 @@ namespace dex
 			size_t bucketCount( ) const
 				{
 				return tableSize;
-				}
-
-			Value &operator[ ]( const Key &key )
-				{
-				return insert( dex::pair < Key, Value >{ key, Value{ } } ).first->second;
-				}
-
-			const Value &at( const Key &key ) const
-				{
-				size_t location = probe( key );
-				if ( table[ location ].isEmpty || table[ location ].isGhost )
-					throw outOfRangeException( );
-				return table[ location ].pair.second;
-				}
-			Value &at( const Key &key )
-				{
-				size_t location = probe( key );
-				if ( table[ location ].isEmpty || table[ location ].isGhost )
-					throw outOfRangeException( );
-				return table[ location ].pair.second;
 				}
 
 			iterator find( const Key &key )
@@ -310,17 +284,16 @@ namespace dex
 				erase( cbegin( ), cend( ) );
 				}
 
-			dex::pair < iterator, bool > insert( const dex::pair < Key, Value > &datum )
+			dex::pair < iterator, bool > insert( const Key &key )
 				{
 				bool inserted = false;
-				const Key &key = datum.first;
 				size_t location = probe( key );
-				wrappedPair *bucket = &table[ location ];
+				wrappedDatum *bucket = &table[ location ];
 
 				if ( bucket->isEmpty || bucket->isGhost )
 					{
 					inserted = true;
-					bucket->pair = datum;
+					bucket->key = key;
 					bucket->isEmpty = false;
 					ghostCount -= bucket->isGhost;
 					bucket->isGhost = false;
@@ -353,11 +326,10 @@ namespace dex
 			void rehash( size_t newSize )
 				{
 				// TODO: Maybe reuse precalculated hashes
-				swap( unorderedMap < Key, Value, Hash > ( cbegin( ), cend( ),
-						dex::max( newSize, size( ) * 2 ) ) );
+				swap( unorderedSet < Key, Hash > ( cbegin( ), cend( ), dex::max( newSize, size( ) * 2 ) ) );
 				}
 
-			void swap( unorderedMap &other )
+			void swap( unorderedSet &other )
 				{
 				dex::swap( other.table, table );
 				dex::swap( other.tableSize, tableSize );
@@ -365,7 +337,7 @@ namespace dex
 				dex::swap( other.ghostCount, ghostCount );
 				}
 
-			void swap( unorderedMap &&other )
+			void swap( unorderedSet &&other )
 				{
 				dex::swap( other.table, table );
 				dex::swap( other.tableSize, tableSize );
@@ -374,8 +346,8 @@ namespace dex
 				}
 		};
 
-		template < class Key, class Value, class Hash >
-		void swap( unorderedMap < Key, Value, Hash > &a, unorderedMap < Key, Value, Hash > &b )
+		template < class Key, class Hash >
+		void swap( unorderedSet < Key, Hash > &a, unorderedSet < Key, Hash > &b )
 			{
 			a.swap( b );
 			}
