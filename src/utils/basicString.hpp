@@ -511,6 +511,10 @@ namespace dex
 				resize( size( ) + number, character );
 				return *this;
 				}
+			basicString < charT > &append( charT character )
+				{
+				return append( 1, character );
+				}
 			template < class InputIt,
 					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
 			basicString < charT > &append( InputIt first, InputIt last )
@@ -607,6 +611,10 @@ namespace dex
 
 				insert( cbegin( ) + position, length, character );
 				return *this;
+				}
+			basicString < charT > &insert( size_t position, charT character )
+				{
+				return insert( position, 1, character );
 				}
 			iterator insert( constIterator first, size_t length, charT character )
 				{
@@ -1067,6 +1075,41 @@ namespace dex
 	bool operator<=( const basicString < charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs ) <= 0;
+		}
+
+	template < class charT >
+	basicString < charT > operator+( const basicString < charT > &lhs, const charT *rhs )
+		{
+		basicString < charT > ret = lhs;
+		return ret.append( rhs );
+		}
+
+	template < class charT >
+	basicString < charT > operator+( const charT *lhs, const basicString < charT > &rhs )
+		{
+		basicString < charT > ret = rhs;
+		return ret.insert( 0, lhs );
+		}
+
+	template < class charT >
+	basicString < charT > operator+( const basicString < charT > &lhs, const basicString < charT > &rhs )
+		{
+		basicString < charT > ret = lhs;
+		return ret.append( rhs );
+		}
+
+	template < class charT >
+	basicString < charT > operator+( const basicString < charT > &lhs, const charT &rhs )
+		{
+		basicString < charT > ret = lhs;
+		return ret.append( rhs );
+		}
+
+	template < class charT >
+	basicString < charT > operator+( const charT &lhs, const basicString < charT > &rhs )
+		{
+		basicString < charT > ret = rhs;
+		return ret.insert( 0, lhs );
 		}
 
 	typedef dex::basicString < char > string;
