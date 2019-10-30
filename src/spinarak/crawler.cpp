@@ -1,12 +1,12 @@
-#include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <tls.h>
 #include "robots.hpp"
-#include <iostream>
 #include "../utils/exception.hpp"
+#include "../utils/basicString.hpp"
+#include <iostream>
 
 // 2019-10-30: Added everything into dex namespace and created a crawler object
 //             with a cleaner interface for using: combsc
@@ -14,7 +14,7 @@
 // 2019-10-28: Cleaned up file, got working with HTTP and HTTPS: combsc
 // 2019-10-20: Init Commit: Jonas
 
-using std::string;
+using dex::string;
 
 namespace dex
    {
@@ -40,7 +40,7 @@ namespace dex
             
             Service = CompleteUrl.substr( 0, endService );
             int beginHost = endService + 3;
-            int endHost = CompleteUrl.find_first_of( "/:", beginHost );
+            int endHost = CompleteUrl.findFirstOf( "/:", beginHost );
             // If there is no path or port, the end of the host is the end of the string.
             if ( endHost == -1 )
                endHost = CompleteUrl.size( );
@@ -76,6 +76,8 @@ namespace dex
    class crawler
       {
       private:
+
+
          int receive( char *buffer, int bytes, bool &filteredHeader, string &res, int fileToWrite )
             {
             if ( filteredHeader )
@@ -141,7 +143,7 @@ namespace dex
             hints.ai_socktype = SOCK_STREAM;
             hints.ai_protocol = IPPROTO_TCP;
 
-            int getaddrresult = getaddrinfo( url.Host.c_str( ), url.Port != "" ? url.Port.c_str( ) : "80", &hints, &address );
+            int getaddrresult = getaddrinfo( url.Host.cStr( ), url.Port != "" ? url.Port.cStr( ) : "80", &hints, &address );
             if ( getaddrresult == 1 ) 
                {
                res = "Could not resolve DNS\n";
@@ -159,15 +161,15 @@ namespace dex
                }
 
             string getMessage = "GET /" 
-               + (string)url.Path 
+               + url.Path
                + " HTTP/1.1\r\nHost: "
-               + (string)url.Host
+               + url.Host
                + "\r\nUser-Agent: LinuxGetUrl/2.0 jhirshey@umich.edu (Linux)\r\n"
                + "Accept: */*\r\n"
                + "Accept-Encoding: identity\r\n"
                + "Connection: close\r\n\r\n";
 
-            int err = send( socketFD, getMessage.c_str( ), getMessage.length( ), 0 );
+            int err = send( socketFD, getMessage.cStr( ), getMessage.length( ), 0 );
             // Read from the socket until there's no more data, copying it to
             // stdout.
             if (err == -1)
@@ -212,7 +214,7 @@ namespace dex
             tls_configure( ctx, config );
 
             // Connect to the host address
-            int connectRes = tls_connect( ctx, url.Host.c_str( ), url.Port != "" ? url.Port.c_str( ) : "443" );
+            int connectRes = tls_connect( ctx, url.Host.cStr( ), url.Port != "" ? url.Port.cStr( ) : "443" );
             if ( connectRes == -1 )
                {
                res = "Could not connect to Host\n";
@@ -220,15 +222,15 @@ namespace dex
                }
 
             string getMessage = "GET /" 
-               + (string)url.Path 
+               + url.Path
                + " HTTP/1.1\r\nHost: "
-               + (string)url.Host
+               + url.Host
                + "\r\nUser-Agent: LinuxGetUrl/2.0 jhirshey@umich.edu (Linux)\r\n"
                + "Accept: */*\r\n"
                + "Accept-Encoding: identity\r\n"
                + "Connection: close\r\n\r\n";
             
-            tls_write( ctx, getMessage.c_str( ), getMessage.length( ) );
+            tls_write( ctx, getMessage.cStr( ), getMessage.length( ) );
 
             int status;
             char *newPath;
@@ -257,10 +259,11 @@ namespace dex
             return 0;
             }
       public:
+
          crawler( ) { }
          int crawlUrl( Url url, int fileToWrite, string &res )
             {
-            if ( strstr( url.CompleteUrl.c_str( ), "https") )
+            if ( strstr( url.CompleteUrl.cStr( ), "https") )
                {
                int a = httpsConnect( url, res, fileToWrite );
                return a;
@@ -274,7 +277,7 @@ namespace dex
 
          int crawlUrl( string str, int fileToWrite, string &res )
             {
-            return crawlUrl( Url( str.c_str( ) ), fileToWrite, res );
+            return crawlUrl( Url( str.cStr( ) ), fileToWrite, res );
             }
       };
    }
@@ -288,7 +291,7 @@ int main ( int argc, char ** argv) {
 
    int fileToWrite = 1;
    dex::Url url( argv[ 1 ] );
-   string res = "";
+   dex::string res = "";
    dex::crawler spider;
    int err = spider.crawlUrl( url, fileToWrite, res);
    if ( err != 0 )

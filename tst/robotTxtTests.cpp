@@ -8,7 +8,7 @@
 #include "../src/spinarak/robots.hpp"
 
 using dex::RobotTxt;
-using std::string;
+using dex::string;
 
 TEST_CASE( "timing for visiting sites", "[robotsTxt]" )
 	{

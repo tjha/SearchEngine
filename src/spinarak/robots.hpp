@@ -9,12 +9,17 @@
 
 #include <iostream>
 #include <time.h>
-#include <string.h>
 #include <stdio.h>
-#include <vector>
-#include <unordered_set>
+#include "../utils/basicString.hpp"
+#include "../utils/vector.hpp"
+#include "../utils/unorderedSet.hpp"
 
-using namespace std;
+using std::cerr;
+using std::ostream;
+using dex::unorderedSet;
+using dex::vector;
+using dex::string;
+
 
 namespace dex
    {
@@ -27,10 +32,10 @@ namespace dex
          // Time we have to wait to hit domain again in seconds
          int crawlDelay;
          // TODO: To be used if there is a specified time when crawling is disallowed
-         int visitTimeHourStart;
-         int visitTimeMinuteStart;
-         int visitTimeHourEnd;
-         int visitTimeMinuteEnd;
+         //int visitTimeHourStart;
+         //int visitTimeMinuteStart;
+         //int visitTimeHourEnd;
+         //int visitTimeMinuteEnd;
 
          // Last time this domain was visited, time that we're allowed to visit again
          time_t lastTimeVisited;
@@ -38,10 +43,10 @@ namespace dex
 
          // Paths that are disallowed. All extensions on the paths within this set are
          // also disallowed, unless explicitly allowed in allowedPaths.
-         unordered_set < string > disallowedPaths;
+         unorderedSet < string > disallowedPaths;
          // Paths that are exceptions to disallowed paths above. All extensions on the paths
          // within this set are also allowed.
-         unordered_set < string > allowedPaths;
+         unorderedSet < string > allowedPaths;
 
          bool pathIsAllowed( string );
          string fixPath( const string &);
@@ -55,24 +60,24 @@ namespace dex
 
          // File stream input, output
          friend ostream &operator<<( ostream& out, RobotTxt &obj );
-         friend istream &operator>>( istream& in, RobotTxt &rhs );
+         //friend istream &operator>>( istream& in, RobotTxt &rhs );
 
          // Call each time you HTTP request a website
          void updateLastVisited( );
 
          // Set the disallowed paths for the domain
-         void setPathsDisallowed( unordered_set < string > );
+         void setPathsDisallowed( unorderedSet < string > );
 
          // Add paths to the disallowed paths for the domain
-         void addPathsDisallowed( unordered_set < string > );
+         void addPathsDisallowed( unorderedSet < string > );
          void addPathsDisallowed( vector < string > );
          void addPathsDisallowed( string );
 
          // Set the allowed paths for the domain
-         void setPathsAllowed( unordered_set < string > );
+         void setPathsAllowed( unorderedSet < string > );
 
          // Add paths to the allowed paths for the domain
-         void addPathsAllowed( unordered_set < string > );
+         void addPathsAllowed( unorderedSet < string > );
          void addPathsAllowed( vector < string > );
          void addPathsAllowed( string );
 
@@ -136,14 +141,14 @@ namespace dex
       allowedVisitTime = lastTimeVisited + crawlDelay;
       }
 
-   void RobotTxt::setPathsDisallowed( unordered_set < string > disallowed )
+   void RobotTxt::setPathsDisallowed( unorderedSet < string > disallowed )
       {
       disallowedPaths.clear( );
       for ( auto it = disallowed.cbegin( );  it != disallowed.cend( );  ++it )
          disallowedPaths.insert( fixPath( *it ) );
       }
    
-   void RobotTxt::addPathsDisallowed( unordered_set < string > disallowed )
+   void RobotTxt::addPathsDisallowed( unorderedSet < string > disallowed )
       {
       for ( auto it = disallowed.cbegin( );  it != disallowed.cend( );  ++it )
          disallowedPaths.insert( fixPath( *it ) );
@@ -160,14 +165,14 @@ namespace dex
       disallowedPaths.insert( fixPath( path ) );
       }
 
-   void RobotTxt::setPathsAllowed( unordered_set < string > allowed )
+   void RobotTxt::setPathsAllowed( unorderedSet < string > allowed )
       {
       allowedPaths.clear( );
       for ( auto it = allowed.cbegin( );  it != allowed.cend( );  ++it )
          allowedPaths.insert( fixPath( *it ) );
       }
 
-   void RobotTxt::addPathsAllowed( unordered_set < string > allowed )
+   void RobotTxt::addPathsAllowed( unorderedSet < string > allowed )
       {
       for ( auto it = allowed.cbegin( );  it != allowed.cend( );  ++it )
          allowedPaths.insert( fixPath( *it ) );
@@ -201,6 +206,7 @@ namespace dex
                  << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << "\r\n";
       }
 
+   /*
    istream & operator >>( istream &in, RobotTxt &obj )
       {
       string domain, delay, visitTime, lastVisit, end;
@@ -218,6 +224,7 @@ namespace dex
 
       return in;
       }   
+   */
    }
 
 #endif
