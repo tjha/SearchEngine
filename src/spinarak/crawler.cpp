@@ -6,83 +6,67 @@
 #include <tls.h>
 #include "robots.hpp"
 #include <iostream>
+#include "../utils/exception.hpp"
 
+// 2019-10-29: Turned ParsedUrl into Url, uses strings instead of char*: combsc
 // 2019-10-28: Cleaned up file, got working with HTTP and HTTPS: combsc
 // 2019-10-20: Init Commit: Jonas
 
 using std::string;
 
-class ParsedUrl
+class Url
    {
    public:
-      const char *CompleteUrl;
-      char *Service, *Host, *Port, *Path;
+      string CompleteUrl;
+      string Service, Host, Port, Path;
 
-      ParsedUrl( const char *url )
+      Url( const char *url )
          {
          // Assumes url points to static text but
          // does not check.
 
          CompleteUrl = url;
+         int endService = CompleteUrl.find( "://");
 
-         pathBuffer = new char[ strlen( url ) + 1 ];
-         const char *f;
-         char *t;
-         for ( t = pathBuffer, f = url;  (*t++ = *f++); )
-            ;
-
-         Service = pathBuffer;
-
-         const char Colon = ':', Slash = '/';
-         char *p;
-         for ( p = pathBuffer; *p && *p != Colon; p++ )
-            ;
-
-         if ( *p )
+         if ( endService == -1 )
             {
-            // Mark the end of the Service.
-            *p++ = 0;
+            std::cerr << "Couldn't find :// in " << CompleteUrl << std::endl;
+            throw dex::invalidArgumentException( );
+            }
+         
+         Service = CompleteUrl.substr( 0, endService );
+         int beginHost = endService + 3;
+         int endHost = CompleteUrl.find_first_of( "/:", beginHost );
+         // If there is no path or port, the end of the host is the end of the string.
+         if ( endHost == -1 )
+            endHost = CompleteUrl.size( );
+         Host = CompleteUrl.substr( beginHost, endHost - beginHost );
 
-            if ( *p == Slash )
-               p++;
-            if ( *p == Slash )
-               p++;
-
-            Host = p;
-
-            for ( ; *p && *p != Slash && *p != Colon; p++ )
-               ;
-
-            if ( *p == Colon )
-               {
-               // Port specified.  Skip over the colon and
-               // the port number.
-               *p++ = 0;
-               Port = +p;
-               for ( ; *p && *p != Slash; p++ )
-                  ;
-               }
-            else
-               Port = p;
-
-            if ( *p )
-               // Mark the end of the Host and Port.
-               *p++ = 0;
-
-            // Whatever remains is the Path.
-            Path = p;
+         // Now we check to see if the port is specified
+         int beginPort = endHost + 1;
+         int endPort = endHost;
+         if ( CompleteUrl[ endHost ] == ':' )
+            {
+            endPort = CompleteUrl.find( "/", beginPort );
+            // If there is no path, the end of the port is the end of the string.
+            if ( endPort == -1 )
+               endPort = CompleteUrl.size( );
+            Port = CompleteUrl.substr( beginPort, endPort - beginPort );
             }
          else
-            Host = Path = p;
+            {
+            Port = "";
+            }
+         int beginPath = endPort + 1;
+         if ( beginPath > CompleteUrl.size( ) )
+            {
+            Path = "";
+            }
+         else
+            {
+            Path = CompleteUrl.substr( beginPath, CompleteUrl.size( ) - beginPath );
+            }
          }
-
-      ~ParsedUrl( )
-         {
-         delete[ ] pathBuffer;
-         }
-
-   private:
-      char *pathBuffer;
    };
 
 int receive( char *buffer, int bytes, bool &filteredHeader, string &res, int fileToWrite )
@@ -141,7 +125,7 @@ int receive( char *buffer, int bytes, bool &filteredHeader, string &res, int fil
 
 int httpConnect( char *in, string &res, int fileToWrite )
    {
-   ParsedUrl url( in );
+   Url url( in );
    // Create a TCP/IP socket.
 
    struct addrinfo *address, hints;
@@ -150,7 +134,7 @@ int httpConnect( char *in, string &res, int fileToWrite )
    hints.ai_socktype = SOCK_STREAM;
    hints.ai_protocol = IPPROTO_TCP;
 
-   int getaddrresult = getaddrinfo( url.Host, *url.Port ? url.Port : "80", &hints, &address );
+   int getaddrresult = getaddrinfo( url.Host.c_str( ), url.Port != "" ? url.Port.c_str( ) : "80", &hints, &address );
    if ( getaddrresult == 1 ) 
       {
       res = "Could not resolve DNS\n";
@@ -214,7 +198,7 @@ int httpConnect( char *in, string &res, int fileToWrite )
 int httpsConnect( char *in, string &res, int fileToWrite )
    {
    res = "";
-   ParsedUrl url( in );
+   Url url( in );
    // setup libressl stuff
    tls_init( );
    tls_config * config = tls_config_new( );  
@@ -222,7 +206,7 @@ int httpsConnect( char *in, string &res, int fileToWrite )
    tls_configure( ctx, config );
 
    // Connect to the host address
-   int connectRes = tls_connect( ctx, url.Host, *url.Port ? url.Port : "443" );
+   int connectRes = tls_connect( ctx, url.Host.c_str( ), url.Port != "" ? url.Port.c_str( ) : "443" );
    if ( connectRes == -1 )
       {
       res = "Could not connect to Host\n";
@@ -267,9 +251,6 @@ int httpsConnect( char *in, string &res, int fileToWrite )
    return 0;
    }
 
-
-
-
 int main ( int argc, char ** argv) {
    // check if there is a domain to get
    if ( argc != 2 ) {
@@ -279,18 +260,31 @@ int main ( int argc, char ** argv) {
 
    int fileToWrite = 1;
 
+   Url url( argv[ 1 ] );
+   std::cout << url.Service << std::endl;
+   std::cout << url.Host << std::endl;
+   std::cout << url.Path << std::endl;
+   std::cout << url.Port << std::endl;
+
    string res = "";
    if ( strstr( argv[ 1 ], "https") )
       {
       int a = httpsConnect( argv[ 1 ], res, fileToWrite );
-      std::cout << a << std::endl;
-      std::cout << res << std::endl;
+      if ( a != 0 )
+         {
+         std::cout << a << std::endl;
+         std::cout << res << std::endl;
+         }
+      
       }
    else
       {
       int a = httpConnect( argv[ 1 ], res, fileToWrite );
-      std::cout << a << std::endl;
-      std::cout << res << std::endl;
+      if ( a != 0 )
+         {
+         std::cout << a << std::endl;
+         std::cout << res << std::endl;
+         }
       }
    
    return 0;
