@@ -55,7 +55,7 @@ namespace dex
       public:
          static const unsigned defaultDelay = 10;
 
-         RobotTxt( string domain, unsigned crawlDelay);
+         RobotTxt( const string &domain, unsigned crawlDelay);
          
 
          // File stream input, output
@@ -66,23 +66,23 @@ namespace dex
          void updateLastVisited( );
 
          // Set the disallowed paths for the domain
-         void setPathsDisallowed( unorderedSet < string > );
+         void setPathsDisallowed( const unorderedSet < string > & );
 
          // Add paths to the disallowed paths for the domain
-         void addPathsDisallowed( unorderedSet < string > );
-         void addPathsDisallowed( vector < string > );
-         void addPathsDisallowed( string );
+         void addPathsDisallowed( const unorderedSet < string > & );
+         void addPathsDisallowed( const vector < string > & );
+         void addPathsDisallowed( const string & );
 
          // Set the allowed paths for the domain
-         void setPathsAllowed( unorderedSet < string > );
+         void setPathsAllowed( const unorderedSet < string > & );
 
          // Add paths to the allowed paths for the domain
-         void addPathsAllowed( unorderedSet < string > );
-         void addPathsAllowed( vector < string > );
-         void addPathsAllowed( string );
+         void addPathsAllowed( const unorderedSet < string > & );
+         void addPathsAllowed( const vector < string > & );
+         void addPathsAllowed( const string & );
 
          // Checks for if you can perform HTTP request
-         bool canVisitPath( string path );
+         bool canVisitPath( const string & );
       };
    // A valid path has a '/' at the beginning and end.
    string RobotTxt::fixPath( const string &path )
@@ -90,7 +90,7 @@ namespace dex
       string ret = path;
       if ( ret[ 0 ] != '/' )
          ret.insert( 0, "/" );
-      if ( ret[ ret.size( ) - 1 ] != '/' )
+      if ( ret.back( ) != '/' )
          ret += "/";
       return ret;
       }
@@ -98,101 +98,95 @@ namespace dex
       {
       path = fixPath( path );
       // if the path passed in is explicitly in disallowed paths, return false
-      if ( disallowedPaths.find( path ) != disallowedPaths.end( ) )
+      if ( disallowedPaths.count( path ) > 0 )
          return false;
          
       // if the path passed in is explicitly in allowed paths, return true
-      if ( allowedPaths.find( path ) != allowedPaths.end( ) )
+      if ( allowedPaths.count( path ) > 0 )
          return true;
 
+      bool pathIsAllowed = true;
       // Parse the path to see if it is part of a disallowed path or allowed path
-      size_t nextSlashLocation = path.find( "/" );
-      bool ret = true;
-      while ( nextSlashLocation != string::npos )
+      for ( size_t nextSlashLocation = path.find( "/" );  nextSlashLocation != string::npos;
+            nextSlashLocation = path.find( "/", nextSlashLocation + 1 ) )
          {
          string toCheck = path.substr(0, nextSlashLocation + 1 );
 
          // If at any point our path is in disallowed paths, we know that if it's not explicitly
          // allowed we need to return false
-         if ( disallowedPaths.find( toCheck ) != disallowedPaths.end( ) )
-            ret = false;
+         if ( disallowedPaths.count( toCheck ) > 0 )
+            pathIsAllowed = false;
 
          // If at any point our path is in allowed paths, we know that it's allowed and we can return true
-         if ( allowedPaths.find( toCheck ) != allowedPaths.end( ) )
+         if ( allowedPaths.count( toCheck ) > 0 )
             return true;
-
-         nextSlashLocation = path.find( "/", nextSlashLocation + 1 );
          }
 
-
-      return ret;
+      return pathIsAllowed;
       }
 
-   RobotTxt::RobotTxt ( string dom, unsigned del = defaultDelay)
+   RobotTxt::RobotTxt ( const string &dom, unsigned del = defaultDelay)
+         : domain( dom ), crawlDelay( del )
       {
-      domain = dom;
-      crawlDelay = del;
       updateLastVisited( );
       }
 
    void RobotTxt::updateLastVisited( )
       {
-      lastTimeVisited = time( 0 );
+      lastTimeVisited = time( nullptr );
       allowedVisitTime = lastTimeVisited + crawlDelay;
       }
 
-   void RobotTxt::setPathsDisallowed( unorderedSet < string > disallowed )
+   void RobotTxt::setPathsDisallowed( const unorderedSet < string > &disallowed )
       {
       disallowedPaths.clear( );
-      for ( auto it = disallowed.cbegin( );  it != disallowed.cend( );  ++it )
-         disallowedPaths.insert( fixPath( *it ) );
+      addPathsDisallowed( disallowed );
       }
    
-   void RobotTxt::addPathsDisallowed( unorderedSet < string > disallowed )
+   void RobotTxt::addPathsDisallowed( const unorderedSet < string > &disallowed )
       {
       for ( auto it = disallowed.cbegin( );  it != disallowed.cend( );  ++it )
          disallowedPaths.insert( fixPath( *it ) );
       }
 
-   void RobotTxt::addPathsDisallowed( vector < string > disallowed )
+   void RobotTxt::addPathsDisallowed( const vector < string > &disallowed )
       {
       for ( auto it = disallowed.cbegin( );  it != disallowed.cend( );  ++it )
          disallowedPaths.insert( fixPath( *it ) );
       }
    
-    void RobotTxt::addPathsDisallowed( string path )
+    void RobotTxt::addPathsDisallowed( const string &path )
       {
       disallowedPaths.insert( fixPath( path ) );
       }
 
-   void RobotTxt::setPathsAllowed( unorderedSet < string > allowed )
+   void RobotTxt::setPathsAllowed( const unorderedSet < string > &allowed )
       {
       allowedPaths.clear( );
-      for ( auto it = allowed.cbegin( );  it != allowed.cend( );  ++it )
-         allowedPaths.insert( fixPath( *it ) );
+      addPathsAllowed( allowed );
       }
 
-   void RobotTxt::addPathsAllowed( unorderedSet < string > allowed )
+   void RobotTxt::addPathsAllowed( const unorderedSet < string > &allowed )
       {
       for ( auto it = allowed.cbegin( );  it != allowed.cend( );  ++it )
          allowedPaths.insert( fixPath( *it ) );
       }
 
-   void RobotTxt::addPathsAllowed( vector < string > allowed)
+   void RobotTxt::addPathsAllowed( const vector < string > &allowed)
       {
       for ( auto it = allowed.cbegin( );  it != allowed.cend( );  ++it )
          allowedPaths.insert( fixPath( *it ) );
       }
    
-    void RobotTxt::addPathsAllowed( string path )
+    void RobotTxt::addPathsAllowed( const string &path )
       {
       allowedPaths.insert( fixPath( path ) );
       }
    
-   bool RobotTxt::canVisitPath ( string path )
+   bool RobotTxt::canVisitPath ( const string &path )
       {
-      path = fixPath( path );
-      if ( !pathIsAllowed( path ) )
+      string fixedPath = fixPath( path );
+      if ( !pathIsAllowed( fixedPath ) )
          return false;
       
       return time( 0 ) > allowedVisitTime; 
@@ -205,26 +199,6 @@ namespace dex
                  << "Allowed-Visit-Time:\t" << obj.allowedVisitTime << "\n"
                  << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << "\r\n";
       }
-
-   /*
-   istream & operator >>( istream &in, RobotTxt &obj )
-      {
-      string domain, delay, visitTime, lastVisit, end;
-      in >> domain >> delay >> visitTime >> lastVisit >> end;
-
-      
-      // bool odd = yes(); // don't know why i'm getting undeclared identifier here or next line
-      // char * ess = substringMe( str ); //strstr( domain, "Domain\t\t" + 1 ) ); 
-      
-      
-      obj.domain = domain;
-      obj.crawlDelay = 0;
-      obj.allowedVisitTime = 0;
-      obj.lastTimeVisited = time( 0 );
-
-      return in;
-      }   
-   */
    }
 
 #endif
