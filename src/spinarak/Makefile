@@ -7,6 +7,9 @@ CPPFLAGS = -I/usr/local/opt/libressl/include
 crawler: crawler.cpp
 	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) $(CPPFLAGS) -ltls -o crawler.exe
 
+crawlerTests: crawlerTests.cpp
+	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) $(CPPFLAGS) -ltls -o crawlerTests.exe
+
 .PHONY: clean
 
 clean:
