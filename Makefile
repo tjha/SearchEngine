@@ -15,11 +15,12 @@ tests: $(TESTS)
 $(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
 	$(CXX) $(CXXFLAGS) $^ tst/main.cpp -o $@
 	./$@
+	@rm -rf $@
 
 $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
 	@mkdir -p $(BUILD_PATH)/tst
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
-
+	
 # TODO: run_integration_tests #
 
 clean:
