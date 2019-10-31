@@ -1,6 +1,7 @@
 
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
+// 2019-10-31: Copy constructor for robots: jhirsh
 // 2019-10-31: Init commit, added query and fragment: combsc
 
 namespace dex
@@ -95,5 +96,16 @@ namespace dex
 					fragment = completeUrl.substr( beginFragment, endFragment - beginFragment );
 					}
 				}
+
+			Url( const Url &other )
+            {
+            completeUrl = other.completeUrl;
+            service = other.service;
+            host = other.host;
+            port = other.port;
+            path = other.path;
+            query = other.query;
+            fragment = other.fragment;
+            }
 		};
 	}

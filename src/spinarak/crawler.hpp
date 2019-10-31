@@ -5,9 +5,13 @@
 #include <tls.h>
 #include "robots.hpp"
 #include "../utils/exception.hpp"
+#include "../utils/unorderedMap.hpp"
 #include "url.hpp"
 #include <iostream>
 
+
+// 2019-10-31: Crawler looks for robot objects in unorderedMap, asks server for
+//             one if it isn't found: jhirsh
 // 2019-10-31: Crawler now has all functions static since it's a stateless 
 //             object, added error enumerations: combsc
 // 2019-10-30: Added everything into dex namespace and created a crawler object
@@ -19,6 +23,7 @@
 // 2019-10-20: Init Commit: Jonas
 
 using dex::string;
+using dex::RobotTxt;
 
 namespace dex
 	{
@@ -226,9 +231,49 @@ namespace dex
 
 				return 0;
 				}
+
+		
 		public:
-			static int crawlUrl( Url url, int fileToWrite, string &res )
+			static int crawlUrl( Url url, int fileToWrite, string &res, dex::unorderedMap < string, RobotTxt > *robots )
 				{
+				RobotTxt robot;
+				if ( robots->find( url.host ) == robots->end() )
+					{
+					std::cout << "Creating new robot for domain:" << url.host << std::endl;
+					string robotFile;
+					Url robotUrl( url );
+					robotUrl.path = "robots.txt";
+
+					int a = -1000;
+					if ( robotUrl.service == "https" )
+						{
+						a = httpsConnect( robotUrl, robotFile, fileToWrite );
+						}
+					else
+						{
+						a = httpConnect( robotUrl, robotFile, fileToWrite );
+						}
+
+					std::cout << "robot connect result: " << a << std::endl;
+					std::cout << robotFile << std::endl;
+					if ( a != -1 )
+						{
+						//create new RobotsTxt
+						RobotTxt newRobot( url.host, robotFile );
+						dex::swap( robot, newRobot );
+						}
+					else
+						{
+						//create default
+						RobotTxt newRobot( url.host );
+						}
+					}
+				else
+					{
+					robot = robots->find( url.host )->second;
+					}
+
+				std::cout << "Should have a working robotsFile\n";
 				if ( url.service == "https" )
 					{
 					int a = httpsConnect( url, res, fileToWrite );
@@ -242,3 +287,4 @@ namespace dex
 				}
 		};
 	}
+
