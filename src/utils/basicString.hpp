@@ -12,6 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-10-31: Make +operator a friend function
 // 2019-10-30: Add +operator, improve insert and append for single characters: combsc
 // 2019-10-27: Fix dex::swap and fix indentation
 // 2019-10-26: Rewrite iterators to not duplicate code: jasina
@@ -56,10 +57,6 @@ namespace dex
 			size_t arraySize;
 			size_t stringSize;
 
-		public:
-			// Maximum possible size of our string
-			static const size_t npos = size_t ( -1 );
-
 			// Find the length of a null-terminated C-string (not including the null-terminator)
 			static size_t cStringLength( const charT *cstr )
 				{
@@ -67,6 +64,10 @@ namespace dex
 				for ( end = cstr;  *end != charT { };  ++end );
 				return end - cstr;
 				}
+
+		public:
+			// Maximum possible size of our string
+			static const size_t npos = size_t ( -1 );
 
 			// CTRLF Constructors
 			basicString( )
@@ -970,6 +971,37 @@ namespace dex
 				{
 				return dex::lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length, other, other + n );
 				}
+
+			friend basicString < charT > operator+( const basicString < charT > &lhs, const charT *rhs )
+				{
+				basicString < charT > ret;
+				ret.reserve( lhs.size( ) + basicString < charT >::cStringLength( rhs ) );
+				return ret.append( lhs ).append( rhs );
+				}
+			friend basicString < charT > operator+( const charT *lhs, const basicString < charT > &rhs )
+				{
+				basicString < charT > ret;
+				ret.reserve( basicString < charT >::cStringLength( lhs ) + rhs.size( ) );
+				return ret.append( lhs ).append( rhs );
+				}
+			friend basicString < charT > operator+( const basicString < charT > &lhs, const basicString < charT > &rhs )
+				{
+				basicString < charT > ret;
+				ret.reserve( lhs.size( ) + rhs.size( ) );
+				return ret.append( lhs ).append( rhs );
+				}
+			friend basicString < charT > operator+( const basicString < charT > &lhs, const charT &rhs )
+				{
+				basicString < charT > ret;
+				ret.reserve( lhs.size( ) + 1 );
+				return ret.append( lhs ).append( rhs );
+				}
+			friend basicString < charT > operator+( const charT &lhs, const basicString < charT > &rhs )
+				{
+				basicString < charT > ret;
+				ret.reserve( rhs.size( ) + 1 );
+				return ret.append( lhs ).append( rhs );
+				}
 		};
 
 	// CTRLF Non-member Functions
@@ -1078,45 +1110,7 @@ namespace dex
 		return lhs.compare( rhs ) <= 0;
 		}
 
-	template < class charT >
-	basicString < charT > operator+( const basicString < charT > &lhs, const charT *rhs )
-		{
-		basicString < charT > ret;
-		ret.reserve( lhs.size( ) + basicString < charT >::cStringLength( rhs ) );
-		return ret.append( lhs ).append( rhs );
-		}
-
-	template < class charT >
-	basicString < charT > operator+( const charT *lhs, const basicString < charT > &rhs )
-		{
-		basicString < charT > ret;
-		ret.reserve( basicString < charT >::cStringLength( lhs ) + rhs.size( ) );
-		return ret.append( lhs ).append( rhs );
-		}
-
-	template < class charT >
-	basicString < charT > operator+( const basicString < charT > &lhs, const basicString < charT > &rhs )
-		{
-		basicString < charT > ret;
-		ret.reserve( lhs.size( ) + rhs.size( ) );
-		return ret.append( lhs ).append( rhs );
-		}
-
-	template < class charT >
-	basicString < charT > operator+( const basicString < charT > &lhs, const charT &rhs )
-		{
-		basicString < charT > ret;
-		ret.reserve( lhs.size( ) + 1 );
-		return ret.append( lhs ).append( rhs );
-		}
-
-	template < class charT >
-	basicString < charT > operator+( const charT &lhs, const basicString < charT > &rhs )
-		{
-		basicString < charT > ret;
-		ret.reserve( rhs.size( ) + 1 );
-		return ret.append( lhs ).append( rhs );
-		}
+	
 
 	typedef dex::basicString < char > string;
 
