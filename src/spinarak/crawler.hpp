@@ -9,7 +9,7 @@
 #include <iostream>
 
 // 2019-10-31: Crawler now has all functions static since it's a stateless 
-//             object: combsc
+//             object, added error enumerations: combsc
 // 2019-10-30: Added everything into dex namespace and created a crawler object
 //             with a cleaner interface for using: combsc
 //             Made improvements suggested, removed uses of strstr, reduced code
@@ -22,6 +22,14 @@ using dex::string;
 
 namespace dex
 	{
+	enum crawlerError
+		{
+		resolveDnsError = -1,
+		connectionError = -2,
+		sendingError = -3,
+		noResponseError = -4
+		};
+	
 	class crawler
 		{
 		// This is a class that is stateless, so every function within is static.
@@ -120,7 +128,7 @@ namespace dex
 				if ( getaddrresult == 1 ) 
 					{
 					res = "Could not resolve DNS\n";
-					return -1;
+					return resolveDnsError;
 					}
 
 				int socketFD = socket( address->ai_family, address->ai_socktype, address->ai_protocol );
@@ -130,18 +138,18 @@ namespace dex
 				if ( connectRes == -1 )
 					{
 					res = "Could not connect to Host\n";
-					return -1;
+					return connectionError;
 					}
 
 				string getMessage = makeGetMessage( url.path, url.host );
 
-				int err = send( socketFD, getMessage.cStr( ), getMessage.length( ), 0 );
+				int error = send( socketFD, getMessage.cStr( ), getMessage.length( ), 0 );
 				// Read from the socket until there's no more data, copying it to
 				// stdout.
-				if (err == -1)
+				if (error == -1)
 					{
-						res =  "Failure in sending\n";
-						return -1;
+					res =  "Failure in sending\n";
+					return sendingError;
 					}
 
 				char buffer[ 10240 ];
@@ -159,7 +167,7 @@ namespace dex
 				if ( !filteredHeader && bytes == 0 )
 					{
 					res = "No response from TLS_READ of:\n" + getMessage;
-					return -1;
+					return noResponseError;
 					}
 
 				// Close the socket and free the address info structure.
@@ -183,13 +191,18 @@ namespace dex
 				if ( connectRes == -1 )
 					{
 					res = "Could not connect to Host\n";
-					return -1;
+					return connectionError;
 					}
 
 				string getMessage = makeGetMessage( url.path, url.host );
 				
-				tls_write( ctx, getMessage.cStr( ), getMessage.length( ) );
-
+				int error = tls_write( ctx, getMessage.cStr( ), getMessage.length( ) );
+				if ( error == -1 )
+					{
+					res =  "Failure in sending\n";
+					return sendingError;
+					}
+				
 				char buffer[ 10240 ];
 				int bytes;
 				bool filteredHeader = false;
@@ -205,7 +218,7 @@ namespace dex
 				if ( !filteredHeader && bytes == 0 )
 					{
 					res = "No response from TLS_READ of:\n" + getMessage;
-					return -1;
+					return noResponseError;
 					}
 
 				tls_close( ctx );
