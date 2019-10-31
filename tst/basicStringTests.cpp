@@ -616,3 +616,27 @@ TEST_CASE( "hashing works", "[string]" )
 	b = "Pokedex";
 	REQUIRE( hasher( a ) != hasher( b ) );
 	}
+
+TEST_CASE( "+ operator", "[string]" )
+	{
+	
+	string a = "concat";
+	string b = a + "enate";
+	REQUIRE( b == "concatenate");
+
+	string c = "enate";
+	string d = "concat" + c;
+	REQUIRE( d == "concatenate" );
+
+	string e = "concat";
+	string f = "enate";
+	string g = e + f;
+	REQUIRE( g == "concatenate" );
+	
+	string h = "coolUserName";
+	string i = h + 'X';
+	REQUIRE( i == "coolUserNameX" );
+
+	string j = 'X' + i;
+	REQUIRE( j == "XcoolUserNameX" );
+	}
