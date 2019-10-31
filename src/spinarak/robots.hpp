@@ -1,6 +1,8 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-10-31: Path sets defined size now, hash func, Copy constructors, 
+//             operator=: jhirsh
 // 2019-10-21: Improved definition of path: Chris
 // 2019-10-17: File created: Jonas, Chris
 
@@ -13,6 +15,7 @@
 #include "../utils/basicString.hpp"
 #include "../utils/vector.hpp"
 #include "../utils/unorderedSet.hpp"
+#include "../utils/algorithm.hpp"
 
 using std::cerr;
 using std::ostream;
@@ -23,6 +26,7 @@ using dex::string;
 
 namespace dex
    {
+
    // using this link to understand the protocol: 
    // https://www.promptcloud.com/blog/how-to-read-and-respect-robots-file/
    struct RobotTxt
@@ -43,10 +47,10 @@ namespace dex
 
          // Paths that are disallowed. All extensions on the paths within this set are
          // also disallowed, unless explicitly allowed in allowedPaths.
-         unorderedSet < string > disallowedPaths;
+         unorderedSet < string > disallowedPaths { 10 };
          // Paths that are exceptions to disallowed paths above. All extensions on the paths
          // within this set are also allowed.
-         unorderedSet < string > allowedPaths;
+         unorderedSet < string > allowedPaths { 10 };
 
          bool pathIsAllowed( string );
          string fixPath( const string &);
@@ -55,8 +59,13 @@ namespace dex
       public:
          static const unsigned defaultDelay = 10;
 
+         RobotTxt( );
+         RobotTxt( const RobotTxt &other );
          RobotTxt( const string &domain, unsigned crawlDelay);
+         RobotTxt( const string &domain, const string &robotTxtFile );
          
+         RobotTxt operator=( const RobotTxt &other );
+         RobotTxt operator=( RobotTxt &&other );
 
          // File stream input, output
          friend ostream &operator<<( ostream& out, RobotTxt &obj );
@@ -83,6 +92,9 @@ namespace dex
 
          // Checks for if you can perform HTTP request
          bool canVisitPath( const string & );
+
+         // need domain for hash func
+         const string getDomain( ) const;
       };
    // A valid path has a '/' at the beginning and end.
    string RobotTxt::fixPath( const string &path )
@@ -125,10 +137,54 @@ namespace dex
       return pathIsAllowed;
       }
 
+   RobotTxt::RobotTxt ( )
+      {
+      }
+
+   RobotTxt::RobotTxt ( const RobotTxt &other )
+      {
+      domain = other.domain;
+      crawlDelay = other.crawlDelay;
+      disallowedPaths = other.disallowedPaths;
+      allowedPaths = other.allowedPaths;
+      updateLastVisited( );
+      }
+
    RobotTxt::RobotTxt ( const string &dom, unsigned del = defaultDelay)
          : domain( dom ), crawlDelay( del )
       {
       updateLastVisited( );
+      }
+
+   RobotTxt::RobotTxt ( const string &dom, const string &robotTxtFile )
+      {
+      // here is where the parsing of the actual file will take place
+      std::cout << "Parsing Time" << std::endl;
+      std::cout << robotTxtFile << std::endl;
+      }
+
+   RobotTxt RobotTxt::operator=( const RobotTxt &other )
+      {
+      RobotTxt otherCopy ( other );
+      dex::swap( domain, otherCopy.domain );
+      dex::swap( crawlDelay, otherCopy.crawlDelay );
+      dex::swap( disallowedPaths, otherCopy.disallowedPaths );
+      dex::swap( allowedPaths, otherCopy.allowedPaths );
+      return *this;
+      }
+
+   RobotTxt RobotTxt::operator=( RobotTxt &&other )
+      {
+      dex::swap( domain, other.domain );
+      dex::swap( crawlDelay, other.crawlDelay );
+      dex::swap( disallowedPaths, other.disallowedPaths );
+      dex::swap( allowedPaths, other.allowedPaths );
+      return *this;
+      }
+
+   const string RobotTxt::getDomain ( ) const
+      {
+      return domain;
       }
 
    void RobotTxt::updateLastVisited( )
@@ -199,6 +255,18 @@ namespace dex
                  << "Allowed-Visit-Time:\t" << obj.allowedVisitTime << "\n"
                  << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << "\r\n";
       }
+
+   template < class Key >
+   struct hash;
+
+   template< >
+   struct hash< dex::RobotTxt >
+      {
+      unsigned long operator()( const dex::RobotTxt &robot ) const
+         {
+         return dex::hash< dex::string >{} ( robot.getDomain( ) );
+         }
+      };
    }
 
 #endif
