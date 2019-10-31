@@ -1,18 +1,14 @@
 CXX = g++
-CXXFLAGS = -std=c++11
+CXXFLAGS = -std=c++11 -Wall -Wextra
 
-LDFLAGS = -L/usr/local/opt/libressl/lib
-CPPFLAGS = -I/usr/local/opt/libressl/include
-
-crawler: crawler.cpp
-	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) $(CPPFLAGS) -ltls -o crawler.exe
+LDFLAGS := -L/usr/local/opt/libressl/lib
+CPPFLAGS := -I/usr/local/opt/libressl/include
+INCLUDE := -I$(SRC_PATH)/utils/
 
 crawlerTests: crawlerTests.cpp
-	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) $(CPPFLAGS) -ltls -o crawlerTests.exe
+	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) $(CPPFLAGS) $(INCLUDE) -ltls -o crawlerTests.exe
 
 .PHONY: clean
 
 clean:
-	rm -f ssl_test.exe
-	rm -f crawler.exe
-	rm -f testRobots.exe
+	rm -f crawlerTests.exe
