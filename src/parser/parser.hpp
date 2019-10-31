@@ -1,3 +1,10 @@
+// parser.hpp
+//
+// Provides functions to parse HTML content and deliver 
+//
+// 2019-10-26: Created get_links function to get urls from basic html:
+//             medhak, tjha
+
 #include "../utils/basicString.hpp"
 #include "../utils/vector.hpp"
 #include "../utils/algorithm.hpp"
