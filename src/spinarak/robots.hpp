@@ -1,6 +1,8 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-11-01: Added iterators for add/remove paths functions, refactored
+//             code to reflect our standards: combsc
 // 2019-10-31: Path sets defined size now, hash func, Copy constructors, 
 //             operator=: jhirsh
 // 2019-10-21: Improved definition of path: Chris
@@ -52,202 +54,185 @@ namespace dex
          // within this set are also allowed.
          unorderedSet < string > allowedPaths { 10 };
 
-         bool pathIsAllowed( string );
-         string fixPath( const string &);
+         bool pathIsAllowed( string path )
+            {
+            path = fixPath( path );
+            // if the path passed in is explicitly in disallowed paths, return false
+            if ( disallowedPaths.count( path ) > 0 )
+               return false;
+               
+            // if the path passed in is explicitly in allowed paths, return true
+            if ( allowedPaths.count( path ) > 0 )
+               return true;
+
+            bool pathIsAllowed = true;
+            // Parse the path to see if it is part of a disallowed path or allowed path
+            for ( size_t nextSlashLocation = path.find( "/" );  nextSlashLocation != string::npos;
+                  nextSlashLocation = path.find( "/", nextSlashLocation + 1 ) )
+               {
+               string toCheck = path.substr(0, nextSlashLocation + 1 );
+
+               // If at any point our path is in disallowed paths, we know that if it's not explicitly
+               // allowed we need to return false
+               if ( disallowedPaths.count( toCheck ) > 0 )
+                  pathIsAllowed = false;
+
+               // If at any point our path is in allowed paths, we know that it's allowed and we can return true
+               if ( allowedPaths.count( toCheck ) > 0 )
+                  return true;
+               }
+
+            return pathIsAllowed;
+            }
+
+         // A valid path has a '/' at the beginning and end.
+         string fixPath( const string & path )
+            {
+            string fixedPath = path;
+            if ( fixedPath[ 0 ] != '/' )
+               fixedPath.insert( 0, "/" );
+            if ( fixedPath.back( ) != '/' )
+               fixedPath += "/";
+            return fixedPath;
+            }
          
 
       public:
          static const unsigned defaultDelay = 10;
 
-         RobotTxt( );
-         RobotTxt( const RobotTxt &other );
-         RobotTxt( const string &domain, unsigned crawlDelay);
-         RobotTxt( const string &domain, const string &robotTxtFile );
+         RobotTxt( )
+            {
+            }
+         RobotTxt( const RobotTxt &other ) : domain( other.domain ), crawlDelay( other.crawlDelay ), 
+               allowedPaths( other.allowedPaths )
+            {
+            updateLastVisited( );
+            }
+         RobotTxt( const string &domain, unsigned crawlDelay) : domain( domain ), crawlDelay( crawlDelay )
+            {
+            updateLastVisited( );
+            }
+         RobotTxt( const string &domain, const string &robotTxtFile )
+            {
+            // here is where the parsing of the actual file will take place
+            std::cout << "Parsing Time" << std::endl;
+            std::cout << domain << std::endl;
+            std::cout << robotTxtFile << std::endl;
+            }
          
-         RobotTxt operator=( const RobotTxt &other );
-         RobotTxt operator=( RobotTxt &&other );
+         RobotTxt operator=( const RobotTxt &other )
+            {
+            RobotTxt otherCopy ( other );
+            dex::swap( domain, otherCopy.domain );
+            dex::swap( crawlDelay, otherCopy.crawlDelay );
+            dex::swap( disallowedPaths, otherCopy.disallowedPaths );
+            dex::swap( allowedPaths, otherCopy.allowedPaths );
+            return *this;
+            }
+         RobotTxt operator=( RobotTxt &&other )
+            {
+            dex::swap( domain, other.domain );
+            dex::swap( crawlDelay, other.crawlDelay );
+            dex::swap( disallowedPaths, other.disallowedPaths );
+            dex::swap( allowedPaths, other.allowedPaths );
+            return *this;
+            }
 
          // File stream input, output
          friend ostream &operator<<( ostream& out, RobotTxt &obj );
          //friend istream &operator>>( istream& in, RobotTxt &rhs );
 
          // Call each time you HTTP request a website
-         void updateLastVisited( );
+         void updateLastVisited( )
+            {
+            lastTimeVisited = time( nullptr );
+            allowedVisitTime = lastTimeVisited + crawlDelay;
+            }
 
          // Set the disallowed paths for the domain
-         void setPathsDisallowed( const unorderedSet < string > & );
+         template < class InputIt,
+					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+         void setPathsDisallowed( const InputIt &begin, const InputIt &end )
+            {
+            disallowedPaths.clear( );
+            addPathsDisallowed( begin, end );
+            }
+         void setPathsDisallowed( const unorderedSet < string > &paths )
+            {
+            setPathsDisallowed( paths.cbegin( ), paths.cend( ) );
+            }
 
          // Add paths to the disallowed paths for the domain
-         void addPathsDisallowed( const unorderedSet < string > & );
-         void addPathsDisallowed( const vector < string > & );
-         void addPathsDisallowed( const string & );
+         template < class InputIt,
+					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+         void addPathsDisallowed( const InputIt &begin, const InputIt &end )
+            {
+            for ( InputIt it = begin;  it != end;  ++it )
+               disallowedPaths.insert( fixPath( *it ) );
+            }
+         void addPathsDisallowed( const unorderedSet < string > &paths )
+            {
+            addPathsDisallowed( paths.cbegin( ), paths.cend( ) );
+            }
+         void addPathsDisallowed( const vector < string > &paths )
+            {
+            addPathsDisallowed( paths.cbegin( ), paths.cend( ) );
+            }
+         void addPathsDisallowed( const string &str )
+            {
+            disallowedPaths.insert( fixPath( str ) );
+            }
 
          // Set the allowed paths for the domain
-         void setPathsAllowed( const unorderedSet < string > & );
+         template < class InputIt,
+					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+         void setPathsAllowed( const InputIt &begin, const InputIt &end )
+            {
+            allowedPaths.clear( );
+            addPathsAllowed( begin, end );
+            }
+         void setPathsAllowed( const unorderedSet < string > &paths )
+            {
+            setPathsAllowed( paths.cbegin( ), paths.cend( ) );
+            }
 
          // Add paths to the allowed paths for the domain
-         void addPathsAllowed( const unorderedSet < string > & );
-         void addPathsAllowed( const vector < string > & );
-         void addPathsAllowed( const string & );
+         template < class InputIt,
+					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+         void addPathsAllowed( const InputIt &begin, const InputIt &end )
+            {
+            for ( InputIt it = begin;  it != end;  ++it )
+               allowedPaths.insert( fixPath( *it ) );
+            }
+         void addPathsAllowed( const unorderedSet < string > &paths )
+            {
+            addPathsAllowed( paths.cbegin( ), paths.cend( ) );
+            }
+         void addPathsAllowed( const vector < string > &paths )
+            {
+            addPathsAllowed( paths.cbegin( ), paths.cend( ) );
+            }
+         void addPathsAllowed( const string &path )
+            {
+            allowedPaths.insert( fixPath( path) );
+            }
 
          // Checks for if you can perform HTTP request
-         bool canVisitPath( const string & );
-
-         // need domain for hash func
-         const string getDomain( ) const;
-      };
-   // A valid path has a '/' at the beginning and end.
-   string RobotTxt::fixPath( const string &path )
-      {
-      string ret = path;
-      if ( ret[ 0 ] != '/' )
-         ret.insert( 0, "/" );
-      if ( ret.back( ) != '/' )
-         ret += "/";
-      return ret;
-      }
-   bool RobotTxt::pathIsAllowed( string path )
-      {
-      path = fixPath( path );
-      // if the path passed in is explicitly in disallowed paths, return false
-      if ( disallowedPaths.count( path ) > 0 )
-         return false;
-         
-      // if the path passed in is explicitly in allowed paths, return true
-      if ( allowedPaths.count( path ) > 0 )
-         return true;
-
-      bool pathIsAllowed = true;
-      // Parse the path to see if it is part of a disallowed path or allowed path
-      for ( size_t nextSlashLocation = path.find( "/" );  nextSlashLocation != string::npos;
-            nextSlashLocation = path.find( "/", nextSlashLocation + 1 ) )
+         bool canVisitPath( const string &path )
          {
-         string toCheck = path.substr(0, nextSlashLocation + 1 );
-
-         // If at any point our path is in disallowed paths, we know that if it's not explicitly
-         // allowed we need to return false
-         if ( disallowedPaths.count( toCheck ) > 0 )
-            pathIsAllowed = false;
-
-         // If at any point our path is in allowed paths, we know that it's allowed and we can return true
-         if ( allowedPaths.count( toCheck ) > 0 )
-            return true;
+         string fixedPath = fixPath( path );
+         if ( !pathIsAllowed( fixedPath ) )
+            return false;
+         
+         return time( 0 ) > allowedVisitTime; 
          }
 
-      return pathIsAllowed;
-      }
-
-   RobotTxt::RobotTxt ( )
-      {
-      }
-
-   RobotTxt::RobotTxt ( const RobotTxt &other )
-      {
-      domain = other.domain;
-      crawlDelay = other.crawlDelay;
-      disallowedPaths = other.disallowedPaths;
-      allowedPaths = other.allowedPaths;
-      updateLastVisited( );
-      }
-
-   RobotTxt::RobotTxt ( const string &dom, unsigned del = defaultDelay)
-         : domain( dom ), crawlDelay( del )
-      {
-      updateLastVisited( );
-      }
-
-   RobotTxt::RobotTxt ( const string &dom, const string &robotTxtFile )
-      {
-      // here is where the parsing of the actual file will take place
-      std::cout << "Parsing Time" << std::endl;
-      std::cout << dom << std::endl;
-      std::cout << robotTxtFile << std::endl;
-      }
-
-   RobotTxt RobotTxt::operator=( const RobotTxt &other )
-      {
-      RobotTxt otherCopy ( other );
-      dex::swap( domain, otherCopy.domain );
-      dex::swap( crawlDelay, otherCopy.crawlDelay );
-      dex::swap( disallowedPaths, otherCopy.disallowedPaths );
-      dex::swap( allowedPaths, otherCopy.allowedPaths );
-      return *this;
-      }
-
-   RobotTxt RobotTxt::operator=( RobotTxt &&other )
-      {
-      dex::swap( domain, other.domain );
-      dex::swap( crawlDelay, other.crawlDelay );
-      dex::swap( disallowedPaths, other.disallowedPaths );
-      dex::swap( allowedPaths, other.allowedPaths );
-      return *this;
-      }
-
-   const string RobotTxt::getDomain ( ) const
-      {
-      return domain;
-      }
-
-   void RobotTxt::updateLastVisited( )
-      {
-      lastTimeVisited = time( nullptr );
-      allowedVisitTime = lastTimeVisited + crawlDelay;
-      }
-
-   void RobotTxt::setPathsDisallowed( const unorderedSet < string > &disallowed )
-      {
-      disallowedPaths.clear( );
-      addPathsDisallowed( disallowed );
-      }
-   
-   void RobotTxt::addPathsDisallowed( const unorderedSet < string > &disallowed )
-      {
-      for ( auto it = disallowed.cbegin( );  it != disallowed.cend( );  ++it )
-         disallowedPaths.insert( fixPath( *it ) );
-      }
-
-   void RobotTxt::addPathsDisallowed( const vector < string > &disallowed )
-      {
-      for ( auto it = disallowed.cbegin( );  it != disallowed.cend( );  ++it )
-         disallowedPaths.insert( fixPath( *it ) );
-      }
-   
-    void RobotTxt::addPathsDisallowed( const string &path )
-      {
-      disallowedPaths.insert( fixPath( path ) );
-      }
-
-   void RobotTxt::setPathsAllowed( const unorderedSet < string > &allowed )
-      {
-      allowedPaths.clear( );
-      addPathsAllowed( allowed );
-      }
-
-   void RobotTxt::addPathsAllowed( const unorderedSet < string > &allowed )
-      {
-      for ( auto it = allowed.cbegin( );  it != allowed.cend( );  ++it )
-         allowedPaths.insert( fixPath( *it ) );
-      }
-
-   void RobotTxt::addPathsAllowed( const vector < string > &allowed)
-      {
-      for ( auto it = allowed.cbegin( );  it != allowed.cend( );  ++it )
-         allowedPaths.insert( fixPath( *it ) );
-      }
-   
-    void RobotTxt::addPathsAllowed( const string &path )
-      {
-      allowedPaths.insert( fixPath( path ) );
-      }
-   
-   bool RobotTxt::canVisitPath ( const string &path )
-      {
-      string fixedPath = fixPath( path );
-      if ( !pathIsAllowed( fixedPath ) )
-         return false;
-      
-      return time( 0 ) > allowedVisitTime; 
-      }
+         // need domain for hash func
+         const string getDomain( ) const
+            {
+            return domain;
+            }
+      };
 
    ostream & operator<<( ostream &out, RobotTxt &obj ) 
       {
