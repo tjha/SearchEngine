@@ -234,17 +234,16 @@ namespace dex
 
 		
 		public:
-			static int crawlUrl( Url url, int fileToWrite, string &res, dex::unorderedMap < string, RobotTxt > *robots )
+			static int crawlUrl( Url url, int fileToWrite, string &res, dex::unorderedMap < string, RobotTxt > &robots )
 				{
 				RobotTxt robot;
-				if ( robots->find( url.host ) == robots->end() )
+				if ( robots.count( url.host ) > 0 )
 					{
-					std::cout << "Creating new robot for domain:" << url.host << std::endl;
 					string robotFile;
 					Url robotUrl( url );
 					robotUrl.path = "robots.txt";
 
-					int a = -1000;
+					int a;
 					if ( robotUrl.service == "https" )
 						{
 						a = httpsConnect( robotUrl, robotFile, fileToWrite );
@@ -254,26 +253,24 @@ namespace dex
 						a = httpConnect( robotUrl, robotFile, fileToWrite );
 						}
 
-					std::cout << "robot connect result: " << a << std::endl;
-					std::cout << robotFile << std::endl;
 					if ( a != -1 )
 						{
-						//create new RobotsTxt
+						// Create new RobotsTxt
 						RobotTxt newRobot( url.host, robotFile );
-						dex::swap( robot, newRobot );
+						robot = newRobot;
 						}
 					else
 						{
-						//create default
+						// Create Default
 						RobotTxt newRobot( url.host );
+						robot = newRobot;
 						}
 					}
 				else
 					{
-					robot = robots->find( url.host )->second;
+					robot = robots[ url.host ];
 					}
 
-				std::cout << "Should have a working robotsFile\n";
 				if ( url.service == "https" )
 					{
 					int a = httpsConnect( url, res, fileToWrite );
