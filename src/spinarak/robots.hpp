@@ -108,7 +108,7 @@ namespace dex
             {
             updateLastVisited( );
             }
-         RobotTxt( const string &domain, unsigned crawlDelay) : domain( domain ), crawlDelay( crawlDelay )
+         RobotTxt( const string &domain, unsigned crawlDelay = defaultDelay) : domain( domain ), crawlDelay( crawlDelay )
             {
             updateLastVisited( );
             }
