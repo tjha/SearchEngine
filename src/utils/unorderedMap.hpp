@@ -373,15 +373,28 @@ namespace dex
 				dex::swap( other.ghostCount, ghostCount );
 				}
 
-			friend ostream & operator<<( ostream &out, unorderedMap < Key, Value > &obj );
+			friend std::ostream & operator<<( std::ostream &out, unorderedMap < Key, Value > &obj );
+
+         string compress( )
+            {
+            string compressed = "";
+            Key defaultKey = Key( );
+            for ( auto it = begin( );  it != end( );  ++it )
+               {
+               if ( *it != defaultKey )
+                  {
+                  compressed += "\t\t" + *it + "\n";
+                  }
+               }
+            }
 		};
 
 		template < class Key, class Value >
-		ostream & operator<<( ostream &out, unorderedMap < Key, Value > &obj )
+		std::ostream & operator<<( std::ostream &out, unorderedMap < Key, Value > &obj )
 			{
-            Key defaultKey = Key( );
+         Key defaultKey = Key( );
 			for ( auto it = obj.begin();  it != obj.end();  ++it )
-				{	
+				{
 				if ( *it != defaultKey )
 					{
 				    out << *it;
