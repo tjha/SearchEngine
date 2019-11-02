@@ -106,7 +106,7 @@ namespace dex
             crawlDelay = defaultDelay;
             }
          RobotTxt( const RobotTxt &other ) : domain( other.domain ), crawlDelay( other.crawlDelay ), 
-               allowedPaths( other.allowedPaths ), disallowedPaths( other.disallowedPaths )
+               disallowedPaths( other.disallowedPaths ), allowedPaths( other.allowedPaths ) 
             {
             allowedVisitTime = time( nullptr );
             }
