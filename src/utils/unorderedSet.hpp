@@ -3,7 +3,7 @@
 //
 // We ignore the key_equal predicate and allocator
 //
-// 2019-11-02: Change default table size: jasina
+// 2019-11-02: Change default table size, allocate memory for pair only when needed: jasina
 // 2019-10-28: File created: jasina
 
 #ifndef DEX_UNORDERED_SET
@@ -37,12 +37,15 @@ namespace dex
 
 			struct wrappedDatum
 				{
-				Key key;
+				Key *keyPtr;
 				bool isEmpty;
 				bool isGhost;
 
-				wrappedDatum( ) : key( Key{ } ), isEmpty( true ), isGhost( false ) { }
-				wrappedDatum( Key key ) : key( key ), isEmpty( false ), isGhost( false ) { }
+				wrappedDatum( ) : keyPtr( nullptr ), isEmpty( true ), isGhost( false ) { }
+				wrappedDatum( Key key ) : isEmpty( false ), isGhost( false )
+					{
+					keyPtr = new Key( key );
+					}
 				};
 
 			size_t probe( const Key &key ) const
@@ -74,7 +77,7 @@ namespace dex
 						}
 					else
 						// We're done if we find the key we want
-						if ( table[ location ].key == key )
+						if ( *( table[ location ].keyPtr ) == key )
 							return location;
 
 					location = ( location + 1 ) % tableSize;
@@ -120,7 +123,12 @@ namespace dex
 			~unorderedSet( )
 				{
 				if ( table )
+					{
+					for ( size_t index = 0;  index != tableSize;  ++index )
+						if ( !( table[ index ].isEmpty || table[ index ].isGhost ) )
+							delete table[ index ].keyPtr;
 					delete [ ] table;
+					}
 				}
 
 		private:
@@ -166,11 +174,11 @@ namespace dex
 
 					datumType &operator*( ) const
 						{
-						return set->table[ position ].key;
+						return *( set->table[ position ].keyPtr );
 						}
 					datumType *operator->( ) const
 						{
-						return &( set->table[ position ].key );
+						return set->table[ position ].keyPtr;
 						}
 
 					_iterator &operator++( )
@@ -257,6 +265,7 @@ namespace dex
 			iterator erase( constIterator position )
 				{
 				table[ position.position ].isGhost = true;
+				delete table[ position.position ].keyPtr;
 				++ghostCount;
 				--numberElements;
 				return iterator( *this, position.position );
@@ -275,6 +284,7 @@ namespace dex
 				if ( table[ location ].isEmpty || table[ location ].isGhost )
 					return 0;
 				table[ location ].isGhost = true;
+				delete table[ location ].keyPtr;
 				++ghostCount;
 				--numberElements;
 				return 1;
@@ -294,7 +304,7 @@ namespace dex
 				if ( bucket->isEmpty || bucket->isGhost )
 					{
 					inserted = true;
-					bucket->key = key;
+					bucket->keyPtr = new Key( key );
 					bucket->isEmpty = false;
 					ghostCount -= bucket->isGhost;
 					bucket->isGhost = false;

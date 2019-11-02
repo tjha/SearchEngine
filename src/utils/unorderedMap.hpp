@@ -3,7 +3,7 @@
 //
 // We ignore the key_equal predicate and allocator
 //
-// 2019-11-02: Change default table size: jasina
+// 2019-11-02: Change default table size, allocate memory for pair only when needed: jasina
 // 2019-10-28: Implement insert: jasina
 // 2019-10-27: Address PR style comments: jasina
 // 2019-10-26: Wrote count, rehash, constructors, operator[ ], operator=, at, empty, size, maxSize, bucketCount, clear,
@@ -41,12 +41,15 @@ namespace dex
 
 			struct wrappedPair
 				{
-				dex::pair < Key, Value > pair;
+				dex::pair < Key, Value > *pairPtr;
 				bool isEmpty;
 				bool isGhost;
 
-				wrappedPair( ) : pair( Key{ }, Value{ } ), isEmpty( true ), isGhost( false ) { }
-				wrappedPair( Key key, Value value ) : pair( key, value ), isEmpty( false ), isGhost( false ) { }
+				wrappedPair( ) : pairPtr( nullptr ), isEmpty( true ), isGhost( false ) { }
+				wrappedPair( Key key, Value value ) : isEmpty( false ), isGhost( false )
+					{
+					pairPtr = new dex::pair < Key, Value >( key, value );
+					}
 				};
 
 			size_t probe( const Key &key ) const
@@ -78,7 +81,7 @@ namespace dex
 						}
 					else
 						// We're done if we find the key we want
-						if ( table[ location ].pair.first == key )
+						if ( table[ location ].pairPtr->first == key )
 							return location;
 
 					location = ( location + 1 ) % tableSize;
@@ -125,7 +128,12 @@ namespace dex
 			~unorderedMap( )
 				{
 				if ( table )
+					{
+					for ( size_t index = 0;  index != tableSize;  ++index )
+						if ( !( table[ index ].isEmpty || table[ index ].isGhost ) )
+							delete table[ index ].pairPtr;
 					delete [ ] table;
+					}
 				}
 
 		private:
@@ -172,11 +180,11 @@ namespace dex
 
 					pairType &operator*( ) const
 						{
-						return map->table[ position ].pair;
+						return *( map->table[ position ].pairPtr );
 						}
 					pairType *operator->( ) const
 						{
-						return &( map->table[ position ].pair );
+						return map->table[ position ].pairPtr;
 						}
 
 					_iterator &operator++( )
@@ -254,14 +262,14 @@ namespace dex
 				size_t location = probe( key );
 				if ( table[ location ].isEmpty || table[ location ].isGhost )
 					throw outOfRangeException( );
-				return table[ location ].pair.second;
+				return table[ location ].pairPtr->second;
 				}
 			Value &at( const Key &key )
 				{
 				size_t location = probe( key );
 				if ( table[ location ].isEmpty || table[ location ].isGhost )
 					throw outOfRangeException( );
-				return table[ location ].pair.second;
+				return table[ location ].pairPtr->second;
 				}
 
 			iterator find( const Key &key )
@@ -283,6 +291,7 @@ namespace dex
 			iterator erase( constIterator position )
 				{
 				table[ position.position ].isGhost = true;
+				delete table[ position.position ].pairPtr;
 				++ghostCount;
 				--numberElements;
 				return iterator( *this, position.position );
@@ -301,6 +310,7 @@ namespace dex
 				if ( table[ location ].isEmpty || table[ location ].isGhost )
 					return 0;
 				table[ location ].isGhost = true;
+				delete table[ location ].pairPtr;
 				++ghostCount;
 				--numberElements;
 				return 1;
@@ -321,7 +331,7 @@ namespace dex
 				if ( bucket->isEmpty || bucket->isGhost )
 					{
 					inserted = true;
-					bucket->pair = datum;
+					bucket->pairPtr = new dex::pair < Key, Value >( datum );
 					bucket->isEmpty = false;
 					ghostCount -= bucket->isGhost;
 					bucket->isGhost = false;
