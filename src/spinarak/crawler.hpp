@@ -32,7 +32,8 @@ namespace dex
 		resolveDnsError = -1,
 		connectionError = -2,
 		sendingError = -3,
-		noResponseError = -4
+		noResponseError = -4,
+		politenessError = -5
 		};
 	
 	class crawler
@@ -41,6 +42,11 @@ namespace dex
 		// We're keeping it a class so that we can make the interface clear when
 		// you're using it.
 		private:
+
+			static bool isError( const int &in )
+				{
+				return in >= politenessError && in <= resolveDnsError;
+				}
 			static string makeGetMessage( const string &path, const string &host )
 				{
 				return "GET /" 
@@ -237,23 +243,35 @@ namespace dex
 			static int crawlUrl( Url url, int fileToWrite, string &res, dex::unorderedMap < string, RobotTxt > &robots )
 				{
 				RobotTxt robot;
+				// Check to see if we have a robot object for the domain we're crawling
+				std::cout << url.host << std::endl;
+				std::cout << url.completeUrl << std::endl;
 				if ( robots.count( url.host ) > 0 )
 					{
-					string robotFile;
 					Url robotUrl( url );
-					robotUrl.path = "robots.txt";
+					robotUrl.path = "robots.txt/";
+
+					// Remember, the way that we read the content of a page is through writing it to a file.
+					// the "res" field should only be used for redirects (because the value is contained
+					// in the header) or error stuff.
+					// When I was trying to get content into a string I kept running into errors in the content.
+					// If we could get it into a string that'd be dope, but I think that for now we should
+					// be printing the robot content into a file that we specify, which we can then open
+					// and parse for the robots object... something to discuss in person.
+					int robotFile = 1;
 
 					int a;
 					if ( robotUrl.service == "https" )
 						{
-						a = httpsConnect( robotUrl, robotFile, fileToWrite );
+						a = httpsConnect( robotUrl, res, robotFile );
 						}
 					else
 						{
-						a = httpConnect( robotUrl, robotFile, fileToWrite );
+						a = httpConnect( robotUrl, res, robotFile );
 						}
 
-					if ( a != -1 )
+					// if there is an error connecting to the path, it doesn't exist
+					if ( !isError( a ) )
 						{
 						// Create new RobotsTxt
 						RobotTxt newRobot( url.host, robotFile );
@@ -265,11 +283,21 @@ namespace dex
 						RobotTxt newRobot( url.host );
 						robot = newRobot;
 						}
+					// Add our robot to the cache
+					robots[ url.host ] = robot;
 					}
 				else
 					{
 					robot = robots[ url.host ];
 					}
+
+				if ( !robot.canVisitPath( url.path ) )
+					{
+					res = "Cannot visit path due to robots object";
+					return politenessError;
+					}
+				std::cout << robot << std::endl;
+				robot.updateLastVisited( );
 
 				if ( url.service == "https" )
 					{

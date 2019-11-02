@@ -102,22 +102,30 @@ namespace dex
 
          RobotTxt( )
             {
+            crawlDelay = defaultDelay;
             }
          RobotTxt( const RobotTxt &other ) : domain( other.domain ), crawlDelay( other.crawlDelay ), 
                allowedPaths( other.allowedPaths )
             {
-            updateLastVisited( );
+            allowedVisitTime = time( nullptr );
             }
          RobotTxt( const string &domain, unsigned crawlDelay = defaultDelay) : domain( domain ), crawlDelay( crawlDelay )
             {
-            updateLastVisited( );
+            allowedVisitTime = time( nullptr );
             }
          RobotTxt( const string &domain, const string &robotTxtFile )
             {
             // here is where the parsing of the actual file will take place
-            std::cout << "Parsing Time" << std::endl;
-            std::cout << domain << std::endl;
-            std::cout << robotTxtFile << std::endl;
+            //std::cout << "Parsing Time" << std::endl;
+            //std::cout << domain << std::endl;
+
+
+            // this is to silence -wall
+            this->domain = robotTxtFile;
+            this->domain = domain;
+            crawlDelay = defaultDelay;
+            
+            //std::cout << robotTxtFile << std::endl;
             }
          
          RobotTxt operator=( const RobotTxt &other )
@@ -125,6 +133,8 @@ namespace dex
             RobotTxt otherCopy ( other );
             dex::swap( domain, otherCopy.domain );
             dex::swap( crawlDelay, otherCopy.crawlDelay );
+            dex::swap( lastTimeVisited, otherCopy.lastTimeVisited );
+            dex::swap( allowedVisitTime, otherCopy.allowedVisitTime );
             dex::swap( disallowedPaths, otherCopy.disallowedPaths );
             dex::swap( allowedPaths, otherCopy.allowedPaths );
             return *this;
@@ -133,6 +143,8 @@ namespace dex
             {
             dex::swap( domain, other.domain );
             dex::swap( crawlDelay, other.crawlDelay );
+            dex::swap( lastTimeVisited, other.lastTimeVisited );
+            dex::swap( allowedVisitTime, other.allowedVisitTime );
             dex::swap( disallowedPaths, other.disallowedPaths );
             dex::swap( allowedPaths, other.allowedPaths );
             return *this;
@@ -224,7 +236,7 @@ namespace dex
          if ( !pathIsAllowed( fixedPath ) )
             return false;
          
-         return time( 0 ) > allowedVisitTime; 
+         return time( nullptr ) >= allowedVisitTime; 
          }
 
          // need domain for hash func
@@ -238,8 +250,8 @@ namespace dex
       {
       return out << "Domain:\t\t\t" << obj.domain << "\n" 
                  << "Crawl-Delay:\t\t" << obj.crawlDelay << "\n" 
-                 << "Allowed-Visit-Time:\t" << obj.allowedVisitTime << "\n"
-                 << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << "\r\n";
+                 << "Allowed-Visit-Time:\t" << ctime( &obj.allowedVisitTime )
+                 << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << "\n";
       }
 
    template < class Key >

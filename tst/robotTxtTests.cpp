@@ -14,11 +14,13 @@ TEST_CASE( "timing for visiting sites", "[robotsTxt]" )
 	{
 	string url = "https://domain.com";
 	RobotTxt hello = RobotTxt( url, 1 );
+	hello.updateLastVisited( );
 	REQUIRE( !hello.canVisitPath( "/" ) );
 	sleep(2);
 	REQUIRE( hello.canVisitPath( "/" ) );
 
 	RobotTxt henlo = RobotTxt( url, 1 );
+	henlo.updateLastVisited( );
 	henlo.addPathsDisallowed( "/" );
 	REQUIRE( !henlo.canVisitPath( "/" ) );
 	sleep(2);
@@ -29,6 +31,7 @@ TEST_CASE( "whitelist and blacklist rules", "[robotsTxt]" )
 	{
 	string url = "https://domain.com";
 	RobotTxt hello = RobotTxt( url, 0 );
+	hello.updateLastVisited( );
 	sleep(1);
 	hello.addPathsDisallowed( "/" );
 	hello.addPathsAllowed( "/secret/path/" );

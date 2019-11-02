@@ -24,7 +24,7 @@ unorderedMap < string, RobotTxt > robots{ 10 };
 
 void testHttps( )
 	{
-	int fileToWrite = 1;
+	int fileToWrite = 2;
 	string res;
 	
 	int errorCode = dex::crawler::crawlUrl( "https://www.runescape.com", fileToWrite, res, robots );
@@ -57,10 +57,11 @@ void testHttps( )
 
 void testHttp( )
 	{
-	int fileToWrite = 1;
+	int fileToWrite = 2;
 	string res;
 
 	int errorCode = dex::crawler::crawlUrl( "http://www.runescape.com/splash", fileToWrite, res, robots );
+	std::cout << errorCode << std::endl;
 	assert( errorCode == 302 );
 	assert( res == "https://www.runescape.com/splash" );
 	
