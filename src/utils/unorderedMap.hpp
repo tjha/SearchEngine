@@ -3,6 +3,7 @@
 //
 // We ignore the key_equal predicate and allocator
 //
+// 2019-11-02: Change default table size: jasina
 // 2019-10-28: Implement insert: jasina
 // 2019-10-27: Address PR style comments: jasina
 // 2019-10-26: Wrote count, rehash, constructors, operator[ ], operator=, at, empty, size, maxSize, bucketCount, clear,
@@ -34,7 +35,7 @@ namespace dex
 			size_t numberElements;
 			size_t ghostCount;
 
-			static const size_t DEFAULT_TABLE_SIZE = 1 << 14;
+			static const size_t DEFAULT_TABLE_SIZE = 1 << 4;
 
 			Hash hasher;
 

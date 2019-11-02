@@ -3,7 +3,8 @@
 //
 // We ignore the key_equal predicate and allocator
 //
-// 2019-10-28: File created
+// 2019-11-02: Change default table size: jasina
+// 2019-10-28: File created: jasina
 
 #ifndef DEX_UNORDERED_SET
 #define DEX_UNORDERED_SET
@@ -30,7 +31,7 @@ namespace dex
 			size_t numberElements;
 			size_t ghostCount;
 
-			static const size_t DEFAULT_TABLE_SIZE = 1 << 14;
+			static const size_t DEFAULT_TABLE_SIZE = 1 << 4;
 
 			Hash hasher;
 
