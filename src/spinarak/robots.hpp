@@ -102,6 +102,7 @@ namespace dex
 
          RobotTxt( )
             {
+            domain = "no-domain";
             crawlDelay = defaultDelay;
             }
          RobotTxt( const RobotTxt &other ) : domain( other.domain ), crawlDelay( other.crawlDelay ), 
@@ -251,9 +252,12 @@ namespace dex
       return out << "Domain:\t\t\t" << obj.domain << "\n" 
                  << "Crawl-Delay:\t\t" << obj.crawlDelay << "\n" 
                  << "Allowed-Visit-Time:\t" << ctime( &obj.allowedVisitTime )
-                 << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << "\n";
+                 << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << "\n"
+                 << "Allowed-Paths\t\t" << obj.allowedPaths << "\n";
       }
 
+
+   
    template < class Key >
    struct hash;
 

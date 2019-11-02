@@ -13,6 +13,7 @@
 #include "algorithm.hpp"
 #include "exception.hpp"
 #include "utility.hpp"
+#include <iostream>
 
 namespace dex
 	{
@@ -344,7 +345,23 @@ namespace dex
 				dex::swap( other.numberElements, numberElements );
 				dex::swap( other.ghostCount, ghostCount );
 				}
+
+			friend std::ostream & operator<<( std::ostream &out, unorderedSet < Key, Hash > &obj );
 		};
+
+		template < class Key, class Hash >
+		std::ostream & operator<<( std::ostream &out, unorderedSet < Key, Hash > &obj )
+			{
+            return out << "hello\n";
+            /*Key defaultKey;
+			for ( auto it = obj.begin();  it != obj.end();  ++it )
+				{	
+				if ( *it != defaultKey )
+					{
+				    out << *it;
+					}
+				}*/
+			}
 
 		template < class Key, class Hash >
 		void swap( unorderedSet < Key, Hash > &a, unorderedSet < Key, Hash > &b )

@@ -372,7 +372,22 @@ namespace dex
 				dex::swap( other.numberElements, numberElements );
 				dex::swap( other.ghostCount, ghostCount );
 				}
+
+			friend ostream & operator<<( ostream &out, unorderedMap < Key, Value > &obj );
 		};
+
+		template < class Key, class Value >
+		ostream & operator<<( ostream &out, unorderedMap < Key, Value > &obj )
+			{
+            Key defaultKey = Key( );
+			for ( auto it = obj.begin();  it != obj.end();  ++it )
+				{	
+				if ( *it != defaultKey )
+					{
+				    out << *it;
+					}
+				}
+			}
 
 		template < class Key, class Value, class Hash >
 		void swap( unorderedMap < Key, Value, Hash > &a, unorderedMap < Key, Value, Hash > &b )
