@@ -106,7 +106,7 @@ namespace dex
             crawlDelay = defaultDelay;
             }
          RobotTxt( const RobotTxt &other ) : domain( other.domain ), crawlDelay( other.crawlDelay ), 
-               allowedPaths( other.allowedPaths )
+               allowedPaths( other.allowedPaths ), disallowedPaths( other.disallowedPaths )
             {
             allowedVisitTime = time( nullptr );
             }
@@ -117,16 +117,10 @@ namespace dex
          RobotTxt( const string &domain, const string &robotTxtFile )
             {
             // here is where the parsing of the actual file will take place
-            //std::cout << "Parsing Time" << std::endl;
-            //std::cout << domain << std::endl;
-
-
             // this is to silence -wall
             this->domain = robotTxtFile;
             this->domain = domain;
             crawlDelay = defaultDelay;
-            
-            //std::cout << robotTxtFile << std::endl;
             }
          
          RobotTxt operator=( const RobotTxt &other )
@@ -240,6 +234,18 @@ namespace dex
          return time( nullptr ) >= allowedVisitTime; 
          }
 
+         // All of the information of the robot
+         string compress( )
+            {
+            string robot = "Domain:\t\t\t" + domain + "\n" +
+                           "Crawl-Delay:\t\t" + char( crawlDelay ) + "\n" +
+                           "Allowed-Visit-Time:\t" + ctime( &allowedVisitTime ) +
+                           "Last-Visit:\t\t" + ctime( &lastTimeVisited ) + "\n" +
+                           "Allowed-Paths\n" + allowedPaths.compress( ) +
+                           "Disallowed-Paths\n" + disallowedPaths.compress( );
+            return robot;
+            }
+
          // need domain for hash func
          const string getDomain( ) const
             {
@@ -249,11 +255,12 @@ namespace dex
 
    ostream & operator<<( ostream &out, RobotTxt &obj ) 
       {
-      return out << "Domain:\t\t\t" << obj.domain << "\n" 
-                 << "Crawl-Delay:\t\t" << obj.crawlDelay << "\n" 
+      return out << "Domain:\t\t\t" << obj.domain << std::endl
+                 << "Crawl-Delay:\t\t" << obj.crawlDelay << std::endl
                  << "Allowed-Visit-Time:\t" << ctime( &obj.allowedVisitTime )
-                 << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << "\n"
-                 << "Allowed-Paths\t\t" << obj.allowedPaths << "\n";
+                 << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << std::endl
+                 << "Allowed-Paths\n" << obj.allowedPaths.compress( )
+                 << "Disallowed-Paths\n" << obj.disallowedPaths.compress( );
       }
 
 

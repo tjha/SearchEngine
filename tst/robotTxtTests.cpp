@@ -9,6 +9,7 @@
 #include "../src/spinarak/robots.hpp"
 #include "../src/utils/unorderedMap.hpp"
 #include "../src/utils/basicString.hpp"
+#include "../src/utils/vector.hpp"
 #include <iostream>
 #include <stdlib.h>
 
@@ -79,7 +80,6 @@ TEST_CASE( "constructors and operator=", "[robotTxt]")
       RobotTxt rob2 = RobotTxt( rob1 );
       REQUIRE ( rob2.canVisitPath( "/" ) );
       REQUIRE ( rob2.canVisitPath( "/secret/path/" ) );
-      rob2.addPathsDisallowed( "/disallowed/path/");
       REQUIRE ( !rob2.canVisitPath( "/disallowed/path/" ) );
       rob2.updateLastVisited( );
       REQUIRE ( !rob2.canVisitPath( "/" ) );
@@ -89,20 +89,37 @@ TEST_CASE( "constructors and operator=", "[robotTxt]")
       REQUIRE ( rob2.canVisitPath( "/secret/path/" ) );
       }
 
-   SECTION( "operator <<" )
+   SECTION( "Different Robots" )
       {
       string url = "https://domain.com";
       RobotTxt rob1 = RobotTxt( url, 2);
       rob1.addPathsAllowed( "/" );
       rob1.addPathsAllowed( "/secret/path/" );
       rob1.addPathsDisallowed( "/disallowed/path/");
-      RobotTxt rob2 = RobotTxt( rob1 );
+      RobotTxt rob2 = RobotTxt( url, 2);
+      rob2.addPathsAllowed( "/" );
+      rob2.addPathsDisallowed( "/disallowed/path/");
+      RobotTxt rob3 = RobotTxt( url, 2);
+      rob3.addPathsAllowed( "/" );
+      RobotTxt rob4 = RobotTxt( url, 1);
+      rob4.addPathsAllowed( "/" );
+      RobotTxt rob5 = RobotTxt( url, 2);
+      rob5.addPathsAllowed( "/" );
+      rob5.addPathsAllowed( "/secret/path/" );
+      rob5.addPathsDisallowed( "/disallowed/path/");
+      vector< RobotTxt > robots;
+      robots.pushBack( rob1 );
+      robots.pushBack( rob2 );
+      robots.pushBack( rob3 );
+      robots.pushBack( rob4 );
 
-      std::cout << rob1;
-      // std::ostream rob1Output;
-      /*rob1Output << rob1;
-
-      std::ostream rob2Output;
-      rob2Output << rob2;*/
+      REQUIRE( rob1.compress( ) == rob5.compress( ) );
+      for ( int i = 0;  i < 4;  ++i )
+         {
+         for ( int j = i + 1;  j < 4;  ++j )
+            {
+            REQUIRE( robots[ i ].compress( ) != robots[ j ].compress( ) );
+            }
+         }
       }
    }

@@ -347,20 +347,33 @@ namespace dex
 				}
 
 			friend std::ostream & operator<<( std::ostream &out, unorderedSet < Key, Hash > &obj );
+
+         string compress( )
+            {
+            string compressed = "";
+            Key defaultKey;
+            for ( auto it = begin();  it != end();  ++it )
+               {
+               if ( *it != defaultKey )
+                  {
+                  compressed += "\t\t" + *it + "\n";
+                  }
+               }
+            return compressed;
+            }
 		};
 
 		template < class Key, class Hash >
 		std::ostream & operator<<( std::ostream &out, unorderedSet < Key, Hash > &obj )
 			{
-            return out << "hello\n";
-            /*Key defaultKey;
-			for ( auto it = obj.begin();  it != obj.end();  ++it )
-				{	
-				if ( *it != defaultKey )
-					{
-				    out << *it;
-					}
-				}*/
+            Key defaultKey;
+            for ( auto it = obj.begin();  it != obj.end();  ++it )
+               {
+               if ( *it != defaultKey )
+                  {
+                  out << *it;
+                  }
+               }
 			}
 
 		template < class Key, class Hash >
