@@ -1,6 +1,8 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-11-03: Added default values for all member variables for all 
+//             constructors, fixed the copy constructor: combsc
 // 2019-11-01: Added iterators for add/remove paths functions, refactored
 //             code to reflect our standards: combsc
 // 2019-10-31: Path sets defined size now, hash func, Copy constructors, 
@@ -104,23 +106,28 @@ namespace dex
             {
             domain = "no-domain";
             crawlDelay = defaultDelay;
+            allowedVisitTime = time( nullptr );
+            lastTimeVisited = allowedVisitTime - crawlDelay;
             }
          RobotTxt( const RobotTxt &other ) : domain( other.domain ), crawlDelay( other.crawlDelay ), 
-               disallowedPaths( other.disallowedPaths ), allowedPaths( other.allowedPaths ) 
+               lastTimeVisited( other.lastTimeVisited ), allowedVisitTime( other.allowedVisitTime ),
+               disallowedPaths( other.disallowedPaths ), allowedPaths( other.allowedPaths )
             {
-            allowedVisitTime = time( nullptr );
             }
          RobotTxt( const string &domain, unsigned crawlDelay = defaultDelay) : domain( domain ), crawlDelay( crawlDelay )
             {
             allowedVisitTime = time( nullptr );
+            lastTimeVisited = allowedVisitTime - crawlDelay;
             }
-         RobotTxt( const string &domain, const string &robotTxtFile )
+         RobotTxt( const string &otherDomain, const string &robotTxtFile )
             {
             // here is where the parsing of the actual file will take place
             // this is to silence -wall
-            this->domain = robotTxtFile;
-            this->domain = domain;
+            domain = robotTxtFile;
+            domain = otherDomain;
             crawlDelay = defaultDelay;
+            allowedVisitTime = time( nullptr );
+            lastTimeVisited = allowedVisitTime - crawlDelay;
             }
          
          RobotTxt operator=( const RobotTxt &other )
