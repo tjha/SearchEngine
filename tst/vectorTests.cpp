@@ -11,8 +11,8 @@
 // 2019-09-17 Tejas Jha - Implemented basic constructor test cases
 
 #include "catch.hpp"
-#include "../src/utils/vector.hpp"
-#include "../src/utils/basicString.hpp"
+#include "vector.hpp"
+#include "basicString.hpp"
 
 using dex::vector;
 using dex::string;
