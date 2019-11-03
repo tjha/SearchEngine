@@ -11,14 +11,14 @@ TEST_SOURCES := $(wildcard $(TEST_PATH)/*/*.cpp)
 TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(TEST_SOURCES))
 TESTS_PATHS := $(filter-out $(TEST_PATH)/%.cpp $(TEST_PATH)/%.hpp, $(wildcard $(TEST_PATH)/*/))
 
-MODULE_CASES := $(wildcard $(TEST_PATH)/$(case)/*.cpp)
+MODULE_CASES := $(wildcard $(TEST_PATH)/$(module)/*.cpp)
 MODULE_TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(MODULE_CASES))
 
-tests: $(TESTS)
+all: $(TESTS)
 
 test: $(BUILD_PATH)/tst/$(case)Tests.exe
 
-module_tests: $(MODULE_TESTS)
+tests: $(MODULE_TESTS)
 
 build:
 	@mkdir -p $(BUILD_PATH)/$(TESTS_PATHS)
