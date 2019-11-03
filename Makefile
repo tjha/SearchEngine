@@ -11,17 +11,25 @@ TEST_SOURCES := $(wildcard $(TEST_PATH)/*/*.cpp)
 TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(TEST_SOURCES))
 TESTS_PATHS := $(filter-out $(TEST_PATH)/%.cpp $(TEST_PATH)/%.hpp, $(wildcard $(TEST_PATH)/*/))
 
+MODULE_CASES := $(wildcard $(TEST_PATH)/$(case)/*.cpp)
+MODULE_TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(MODULE_CASES))
+
 tests: $(TESTS)
 
 test: $(BUILD_PATH)/tst/$(case)Tests.exe
 
+module_tests: $(MODULE_TESTS)
+
+build:
+	@mkdir -p $(BUILD_PATH)/$(TESTS_PATHS)
+
 $(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@
 	./$@
-	@rm -rf $@
+	make clean
 
 $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
-	@mkdir -p $(BUILD_PATH)/$(TESTS_PATHS)
+	make build
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 	
 # TODO: run_integration_tests #
