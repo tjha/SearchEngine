@@ -1,6 +1,6 @@
 // functional.hpp
 //
-// A custom implementation of part of std::functional
+// A custom implementation of part of some of the function objects defined in std::functional
 //
 // 2019-11-02: File created, implement hash: jasina
 
