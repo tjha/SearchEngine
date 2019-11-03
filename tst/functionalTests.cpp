@@ -4,7 +4,7 @@
 // 2019-11-02: File created, some hash tests: jasina
 
 #include "catch.hpp"
-#include "../src/utils/functional.hpp"
+#include "functional.hpp"
 
 using dex::hash;
 

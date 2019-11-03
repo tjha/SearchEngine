@@ -5,9 +5,9 @@
 // 2019-10-28: File created: jasina
 
 #include "catch.hpp"
-#include "../src/utils/basicString.hpp"
-#include "../src/utils/exception.hpp"
-#include "../src/utils/unorderedSet.hpp"
+#include "basicString.hpp"
+#include "exception.hpp"
+#include "unorderedSet.hpp"
 
 using dex::string;
 using dex::unorderedSet;
