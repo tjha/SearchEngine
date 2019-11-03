@@ -44,6 +44,7 @@
 #include <type_traits>
 #include "algorithm.hpp"
 #include "exception.hpp"
+#include "functional.hpp"
 
 namespace dex
 	{
@@ -1113,9 +1114,6 @@ namespace dex
 	
 
 	typedef dex::basicString < char > string;
-
-	template < class Key >
-	struct hash;
 
 	template < > struct hash < dex::string >
 		{
