@@ -19,6 +19,8 @@ namespace dex
 			static const string step1aAppendations[ ];
 			static const string step2Truncations[ ];
 			static const string step2Appendations[ ];
+			static const string step3Truncations[ ];
+			static const string step3Appendations[ ];
 
 			// struct representing a word when split into alternating consonant and vowel parts
 			struct wordForm
@@ -262,6 +264,18 @@ namespace dex
 						break;
 						}
 
+				// Step 3
+				for ( unsigned i = 0;  i != 7;  ++i )
+					if ( form.endsWith( step3Truncations[ i ] ) )
+						{
+						if ( form.stemMeasure( step3Truncations[ i ].size( ) ) > 0)
+							{
+							form.truncate( step3Truncations[ i ].size( ) );
+							form.append( step3Appendations[ i ] );
+							}
+						break;
+						}
+
 				return form.word;
 				}
 		};
@@ -321,6 +335,24 @@ namespace dex
 			"al",
 			"ive",
 			"ble"
+		};
+		const string porterStemmer::step3Truncations[ ] {
+			"icate",
+			"ative",
+			"alize",
+			"iciti",
+			"ical",
+			"ful",
+			"ness"
+		};
+		const string porterStemmer::step3Appendations[ ] {
+			"ic",
+			"",
+			"al",
+			"ic",
+			"ic",
+			"",
+			""
 		};
 	}
 

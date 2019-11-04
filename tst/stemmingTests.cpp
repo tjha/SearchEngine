@@ -47,20 +47,28 @@ TEST_CASE( "test stuff", "[stemmer]" )
 		{ "hesitanci", "hesitance" },
 		{ "digitizer", "digitize" },
 		{ "conformabli", "conformable" },
-		{ "radicalli", "radical" },
+		{ "radicalli", "radic" }, // This one fails in step 3
 		{ "differentli", "different" },
 		{ "vileli", "vile" },
 		{ "analogousli", "analogous" },
 		{ "vietnamization", "vietnamize" },
-		{ "predication", "predicate" },
+		{ "predication", "predic" }, // This one fails in step 3
 		{ "operator", "operate" },
 		{ "feudalism", "feudal" },
 		{ "decisiveness", "decisive" },
-		{ "hopefulness", "hopeful" },
+		{ "hopefulness", "hope" }, // This one fails in step 3
 		{ "callousness", "callous" },
 		{ "formaliti", "formal" },
 		{ "sensitiviti", "sensitive" },
-		{ "sensibiliti", "sensible" }
+		{ "sensibiliti", "sensible" },
+		// Step 3
+		{ "triplicate", "triplic" },
+		{ "formative", "form" },
+		{ "formalize", "formal" },
+		{ "electriciti", "electric" },
+		{ "electrical", "electric" },
+		{ "hopeful", "hope" },
+		{ "goodness", "good" }
 	};
 
 	for ( const string *wordPair : wordPairs)
