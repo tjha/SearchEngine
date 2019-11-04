@@ -12,9 +12,36 @@
 using namespace dex;
 TEST_CASE( "test stuff", "[stemmer]" )
 	{
-	std::cout << porterStemmer::stem( "caresses" ) << std::endl;
-	std::cout << porterStemmer::stem( "ponies" ) << std::endl;
-	std::cout << porterStemmer::stem( "ties" ) << std::endl;
-	std::cout << porterStemmer::stem( "caress" ) << std::endl;
-	std::cout << porterStemmer::stem( "cats" ) << std::endl;
+	const string wordPairs[ ][ 2 ] = {
+		{ "caresses", "caress" },
+		{ "ponies", "poni" },
+		{ "ties", "ti" },
+		{ "caress", "caress" },
+		{ "cats", "cat" },
+		{ "feed", "feed" },
+		{ "agreed", "agree" },
+		{ "plastered", "plaster" },
+		{ "bled", "bled" },
+		{ "motoring", "motor" },
+		{ "sing", "sing" },
+		{ "conflated", "conflate" },
+		{ "troubled", "trouble" },
+		{ "sized", "size" },
+		{ "hopping", "hop" },
+		{ "tanned", "tan" },
+		{ "falling", "fall" },
+		{ "hissing", "hiss" },
+		{ "fizzed", "fizz" },
+		{ "failing", "fail" },
+		{ "filing", "file" },
+		{ "happy", "happi" },
+		{ "sky", "sky" }
+	};
+
+	for ( const string *wordPair : wordPairs)
+		{
+		string stemmedWord = porterStemmer::stem( wordPair[ 0 ] );
+		std::cout << wordPair[ 0 ]  << " -> " << stemmedWord << ", " << wordPair[ 1 ] << std::endl;
+		REQUIRE( stemmedWord == wordPair[ 1 ] );
+		}
 	}

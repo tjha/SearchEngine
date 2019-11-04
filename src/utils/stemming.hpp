@@ -26,6 +26,11 @@ namespace dex
 				bool firstIsVowel;
 				bool lastIsVowel;
 
+				bool endsWith( const char c ) const
+					{
+					return !word.empty( ) && word[ word.size( ) - 1 ] == c;
+					}
+
 				bool endsWith( const string &str ) const
 					{
 					return word.size( ) >= str.size( ) && !word.compare( word.size( ) - str.size( ), str.size( ), str );
@@ -34,6 +39,13 @@ namespace dex
 				bool stemEndsWith( size_t suffixLength, const char c ) const
 					{
 					return word.size( ) > suffixLength && word[ word.size( ) - suffixLength - 1 ] == c;
+					}
+
+				size_t measure( ) const
+					{
+					if ( word.empty( ) )
+						return 0;
+					return ( deltas.size( ) - !firstIsVowel - lastIsVowel ) / 2;
 					}
 
 				size_t stemMeasure( size_t suffixLength ) const
@@ -61,11 +73,10 @@ namespace dex
 							&& ( firstIsVowel || ( deltas.size( ) != 1 && deltas.front( ) < word.size( ) - suffixLength ) );
 					}
 
-				bool stemEndsWithDoubleConsonant( size_t suffixLength ) const
+				bool endsWithDoubleConsonant( ) const
 					{
-					return word.size( ) - suffixLength > 1
-						&& word[ word.size( ) - suffixLength - 1 ] == word[ word.size( ) - suffixLength - 2 ]
-						&& !isVowel( word[ word.size( ) - suffixLength - 1 ] );
+					char lastCharacter = word[ word.size( ) - 1 ];
+					return word.size( ) > 1 && lastCharacter == word[ word.size( ) - 2 ] && !isVowel( lastCharacter );
 					}
 
 				bool stemEndsWithCVCAndNotWXY( size_t suffixLength )
@@ -73,40 +84,34 @@ namespace dex
 					if ( word.size( ) <= suffixLength || deltas.size( ) < 3 )
 						return false;
 
-					bool previousWasVowel = firstIsVowel;
-					size_t deltasIndex = 0;
-					size_t wordIndex = deltas.front( );
-					while ( wordIndex < word.size( ) - suffixLength )
-						{
-						wordIndex += deltas[ ++deltasIndex ];
-						previousWasVowel = !previousWasVowel;
-						}
-
 					char lastCharacter = word[ word.size( ) - suffixLength - 1 ];
-					return deltasIndex > 1 && !previousWasVowel
+					return !isVowel( word, word.size( ) - suffixLength - 3 )
+							&& isVowel( word, word.size( ) - suffixLength - 2 )
+							&& !isVowel( word, word.size( ) - suffixLength - 1 )
 							&& lastCharacter != 'w' && lastCharacter != 'x' && lastCharacter != 'y';
 					}
 
-				bool truncate( const string &str )
+				void truncate( size_t suffixLength )
 					{
-					if ( !endsWith( str ) )
-						return false;
+					if ( suffixLength >= word.size( ) )
+						{
+						word.clear( );
+						deltas.clear( );
+						}
 
 					size_t deltasNewSize = deltas.size( );
 					size_t charactersRemoved = 0;
-					while ( charactersRemoved < str.size( ) )
+					while ( charactersRemoved <= suffixLength )
 						charactersRemoved += deltas[ --deltasNewSize ];
 					charactersRemoved -= deltas[ deltasNewSize++ ];
 
 					if ( ( deltas.size( ) - deltasNewSize ) % 2 )
 						lastIsVowel = !lastIsVowel;
 
-					word.resize( word.size( ) - str.size( ) );
+					word.resize( word.size( ) - suffixLength );
 					deltas.resize( deltasNewSize );
-					if ( charactersRemoved != str.size( ) )
-						deltas.back( ) -= str.size( ) - charactersRemoved;
-
-					return true;
+					if ( charactersRemoved != suffixLength )
+						deltas.back( ) -= suffixLength - charactersRemoved;
 					}
 
 				void append( const string &str )
@@ -185,25 +190,68 @@ namespace dex
 
 				// Step 1a
 				for ( unsigned i = 0;  i != 4;  ++i )
-					if ( form.truncate( step1aTruncations[ i ] ) )
+					if ( form.endsWith( step1aTruncations[ i ] ) )
 						{
+						form.truncate( step1aTruncations[ i ].size( ) );
 						form.append( step1aAppendations[ i ] );
 						break;
 						}
 
 				// Step 1b
-				if ( form.truncate( "eed" ) )
-					form.append( "ee" );
+				bool secondOrThirdStepSuccessful = false;;
+				if ( form.endsWith( "eed" ) )
+					{
+					if ( form.stemMeasure( 3 ) > 0 )
+						{
+						form.truncate( 3 );
+						form.append( "ee" );
+						}
+					}
 				else
 					{
-					
+					if ( form.endsWith( "ed" ) )
+						{
+						if ( form.stemContainsVowel( 2 ) )
+							{
+							form.truncate( 2 );
+							secondOrThirdStepSuccessful = true;
+							}
+						}
+					else
+						if ( form.endsWith( "ing" ) )
+							if ( form.stemContainsVowel( 3 ) )
+								{
+								form.truncate( 3 );
+								secondOrThirdStepSuccessful = true;
+								}
+					}
+				if ( secondOrThirdStepSuccessful )
+					{
+					if ( form.endsWith( "at" ) || form.endsWith( "bl" ) || form.endsWith( "iz" ) )
+						form.append( "e" );
+					else
+						{
+						if ( form.endsWithDoubleConsonant( )
+								&& !form.endsWith( 'l' ) && !form.endsWith( 's' ) && !form.endsWith( 'z' ) )
+							form.truncate( 1 );
+						else
+							if ( form.measure( ) == 1 && form.stemEndsWithCVCAndNotWXY( 0 ) )
+								form.append( "e" );
+						}
 					}
 
-				/*
+
+				// Step 1c
+				if ( form.endsWith( 'y' ) && form.stemContainsVowel( 1 ) )
+					{
+					form.truncate( 1 );
+					form.append( "i" );
+					}
+
+
 				for ( size_t delta : form.deltas )
 					std::cout << delta << ", ";
 				std::cout << std::endl;
-				*/
 				return form.word;
 				}
 		};
