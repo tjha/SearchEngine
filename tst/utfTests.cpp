@@ -3,8 +3,6 @@
 //
 // 2019-11-03: File created: jasina, lougheem
 
-#include <bitset>
-#include <iostream>
 #include "catch.hpp"
 #include "../src/utils/exception.hpp"
 #include "../src/utils/utf.hpp"

@@ -6,8 +6,6 @@
 #ifndef DEX_UTF
 #define DEX_UTF
 
-#include <bitset>
-#include <iostream>
 #include "exception.hpp"
 #include "vector.hpp"
 
