@@ -12,6 +12,8 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-10-31: Make +operator a friend function
+// 2019-10-30: Add +operator, improve insert and append for single characters: combsc
 // 2019-10-27: Fix dex::swap and fix indentation
 // 2019-10-26: Rewrite iterators to not duplicate code: jasina
 // 2019-10-24: Call lexicographicalCompare from algorithm, fix tempaltes with inputIterators: jasina
@@ -42,6 +44,7 @@
 #include <type_traits>
 #include "algorithm.hpp"
 #include "exception.hpp"
+#include "functional.hpp"
 
 namespace dex
 	{
@@ -969,6 +972,37 @@ namespace dex
 				{
 				return dex::lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length, other, other + n );
 				}
+
+			friend basicString < charT > operator+( const basicString < charT > &lhs, const charT *rhs )
+				{
+				basicString < charT > ret;
+				ret.reserve( lhs.size( ) + basicString < charT >::cStringLength( rhs ) );
+				return ret.append( lhs ).append( rhs );
+				}
+			friend basicString < charT > operator+( const charT *lhs, const basicString < charT > &rhs )
+				{
+				basicString < charT > ret;
+				ret.reserve( basicString < charT >::cStringLength( lhs ) + rhs.size( ) );
+				return ret.append( lhs ).append( rhs );
+				}
+			friend basicString < charT > operator+( const basicString < charT > &lhs, const basicString < charT > &rhs )
+				{
+				basicString < charT > ret;
+				ret.reserve( lhs.size( ) + rhs.size( ) );
+				return ret.append( lhs ).append( rhs );
+				}
+			friend basicString < charT > operator+( const basicString < charT > &lhs, const charT &rhs )
+				{
+				basicString < charT > ret;
+				ret.reserve( lhs.size( ) + 1 );
+				return ret.append( lhs ).append( rhs );
+				}
+			friend basicString < charT > operator+( const charT &lhs, const basicString < charT > &rhs )
+				{
+				basicString < charT > ret;
+				ret.reserve( rhs.size( ) + 1 );
+				return ret.append( lhs ).append( rhs );
+				}
 		};
 
 	// CTRLF Non-member Functions
@@ -1077,45 +1111,9 @@ namespace dex
 		return lhs.compare( rhs ) <= 0;
 		}
 
-	template < class charT >
-	basicString < charT > operator+( const basicString < charT > &lhs, const charT *rhs )
-		{
-		basicString < charT > ret = lhs;
-		return ret.append( rhs );
-		}
-
-	template < class charT >
-	basicString < charT > operator+( const charT *lhs, const basicString < charT > &rhs )
-		{
-		basicString < charT > ret = rhs;
-		return ret.insert( 0, lhs );
-		}
-
-	template < class charT >
-	basicString < charT > operator+( const basicString < charT > &lhs, const basicString < charT > &rhs )
-		{
-		basicString < charT > ret = lhs;
-		return ret.append( rhs );
-		}
-
-	template < class charT >
-	basicString < charT > operator+( const basicString < charT > &lhs, const charT &rhs )
-		{
-		basicString < charT > ret = lhs;
-		return ret.append( rhs );
-		}
-
-	template < class charT >
-	basicString < charT > operator+( const charT &lhs, const basicString < charT > &rhs )
-		{
-		basicString < charT > ret = rhs;
-		return ret.insert( 0, lhs );
-		}
+	
 
 	typedef dex::basicString < char > string;
-
-	template < class Key >
-	struct hash;
 
 	template < > struct hash < dex::string >
 		{
