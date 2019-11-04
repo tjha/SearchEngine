@@ -1,37 +1,19 @@
 ROBOTS DATA
-www.apple.com
-Domain:			www.apple.com
-Crawl-Delay:		
-
-Allowed-Visit-Time:	Mon Nov  4 02:44:53 2019
-Last-Visit:		Mon Nov  4 02:44:43 2019
-
-Allowed-Paths
-Disallowed-Paths
-www.wikipedia.org
-Domain:			www.wikipedia.org
-Crawl-Delay:		
-
-Allowed-Visit-Time:	Mon Nov  4 02:44:53 2019
-Last-Visit:		Mon Nov  4 02:44:43 2019
-
-Allowed-Paths
-Disallowed-Paths
-www.latimes.com
-Domain:			www.latimes.com
-Crawl-Delay:		
-
-Allowed-Visit-Time:	Mon Nov  4 02:44:55 2019
-Last-Visit:		Mon Nov  4 02:44:45 2019
-
-Allowed-Paths
-Disallowed-Paths
 www.nytimes.com
 Domain:			www.nytimes.com
 Crawl-Delay:		
 
-Allowed-Visit-Time:	Mon Nov  4 02:44:53 2019
-Last-Visit:		Mon Nov  4 02:44:43 2019
+Allowed-Visit-Time:	Mon Nov  4 13:39:41 2019
+Last-Visit:		Mon Nov  4 13:39:31 2019
+
+Allowed-Paths
+Disallowed-Paths
+www.apple.com
+Domain:			www.apple.com
+Crawl-Delay:		
+
+Allowed-Visit-Time:	Mon Nov  4 13:39:41 2019
+Last-Visit:		Mon Nov  4 13:39:31 2019
 
 Allowed-Paths
 Disallowed-Paths
@@ -39,8 +21,17 @@ www.wsj.com
 Domain:			www.wsj.com
 Crawl-Delay:		
 
-Allowed-Visit-Time:	Mon Nov  4 02:44:54 2019
-Last-Visit:		Mon Nov  4 02:44:44 2019
+Allowed-Visit-Time:	Mon Nov  4 13:39:42 2019
+Last-Visit:		Mon Nov  4 13:39:32 2019
+
+Allowed-Paths
+Disallowed-Paths
+www.twitter.com
+Domain:			www.twitter.com
+Crawl-Delay:		
+
+Allowed-Visit-Time:	Mon Nov  4 13:39:44 2019
+Last-Visit:		Mon Nov  4 13:39:34 2019
 
 Allowed-Paths
 Disallowed-Paths
@@ -48,8 +39,17 @@ www.google.com
 Domain:			www.google.com
 Crawl-Delay:		
 
-Allowed-Visit-Time:	Mon Nov  4 02:44:51 2019
-Last-Visit:		Mon Nov  4 02:44:41 2019
+Allowed-Visit-Time:	Mon Nov  4 13:39:39 2019
+Last-Visit:		Mon Nov  4 13:39:29 2019
+
+Allowed-Paths
+Disallowed-Paths
+www.latimes.com
+Domain:			www.latimes.com
+Crawl-Delay:		
+
+Allowed-Visit-Time:	Mon Nov  4 13:39:43 2019
+Last-Visit:		Mon Nov  4 13:39:33 2019
 
 Allowed-Paths
 Disallowed-Paths
@@ -57,26 +57,8 @@ www.imdb.com
 Domain:			www.imdb.com
 Crawl-Delay:		
 
-Allowed-Visit-Time:	Mon Nov  4 02:44:55 2019
-Last-Visit:		Mon Nov  4 02:44:45 2019
-
-Allowed-Paths
-Disallowed-Paths
-www.github.com
-Domain:			www.github.com
-Crawl-Delay:		
-
-Allowed-Visit-Time:	Mon Nov  4 02:44:53 2019
-Last-Visit:		Mon Nov  4 02:44:43 2019
-
-Allowed-Paths
-Disallowed-Paths
-www.medium.com
-Domain:			www.medium.com
-Crawl-Delay:		
-
-Allowed-Visit-Time:	Mon Nov  4 02:44:56 2019
-Last-Visit:		Mon Nov  4 02:44:46 2019
+Allowed-Visit-Time:	Mon Nov  4 13:39:43 2019
+Last-Visit:		Mon Nov  4 13:39:33 2019
 
 Allowed-Paths
 Disallowed-Paths
@@ -84,8 +66,8 @@ www.amazon.com
 Domain:			www.amazon.com
 Crawl-Delay:		
 
-Allowed-Visit-Time:	Mon Nov  4 02:44:52 2019
-Last-Visit:		Mon Nov  4 02:44:42 2019
+Allowed-Visit-Time:	Mon Nov  4 13:39:40 2019
+Last-Visit:		Mon Nov  4 13:39:30 2019
 
 Allowed-Paths
 Disallowed-Paths

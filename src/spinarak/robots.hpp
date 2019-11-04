@@ -1,6 +1,7 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-11-04: fixed fixPath function, should NOT have / at the end: combsc
 // 2019-11-03: Added default values for all member variables for all 
 //             constructors, fixed the copy constructor: combsc
 // 2019-11-01: Added iterators for add/remove paths functions, refactored
@@ -93,8 +94,8 @@ namespace dex
             string fixedPath = path;
             if ( fixedPath[ 0 ] != '/' )
                fixedPath.insert( 0, "/" );
-            if ( fixedPath.back( ) != '/' )
-               fixedPath += "/";
+            if ( fixedPath.back( ) == '/' )
+               fixedPath.popBack( );
             return fixedPath;
             }
          

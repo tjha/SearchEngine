@@ -9,6 +9,8 @@
 #include "url.hpp"
 #include <iostream>
 
+// 2019-11-04: Added more error codes, added file for RobotsTxt content to be
+//             printed to, added better error handling: combsc
 // 2019-11-03: Fixed crawler politeness bugs, added ability to toggle politeness
 //             in crawlUrl for testing purposes, fixed logic in crawlUrl function
 //             regarding using the map of robots: combsc
@@ -35,7 +37,10 @@ namespace dex
 		connectionError = -2,
 		sendingError = -3,
 		noResponseError = -4,
-		politenessError = -5
+		politenessError = -5,
+		noLocationError = -6,
+		noHeaderEndError = -7,
+		lastError = -8
 		};
 	
 	class crawler
@@ -47,7 +52,7 @@ namespace dex
 
 			static bool isError( const int &in )
 				{
-				return in >= politenessError && in <= resolveDnsError;
+				return in >= politenessError && in <= lastError;
 				}
 			static string makeGetMessage( const string &path, const string &host )
 				{
@@ -73,6 +78,7 @@ namespace dex
 					}
 				else 
 					{
+					write( fileToWrite , buffer, bytes );
 					string toSearch = buffer;
 					int location = toSearch.find( "HTTP/1.1 " );
 					if ( location != -1 )
@@ -89,7 +95,8 @@ namespace dex
 							// What should we do if we can't find the header end? Honestly don't know...
 							if ( headerEnd == -1 )
 								{
-								throw dex::invalidArgumentException( );
+								res = "Can't find the header end";
+								return noHeaderEndError;
 								}
 							size_t restOfMessage = bytes - headerEnd;
 							const char* startOfMessage = buffer + headerEnd;
@@ -105,7 +112,8 @@ namespace dex
 								int locationStart = toSearch.find( "Location: " );
 								if ( locationStart == -1 )
 									{
-									throw dex::invalidArgumentException( );
+									res = "Can't find the location in the header";
+									return noLocationError;
 									}
 								const char *beginRedirect = buffer + locationStart + 10;
 								const char *endRedirect = beginRedirect;
@@ -130,7 +138,6 @@ namespace dex
 			static int httpConnect( Url url, string &res, int fileToWrite )
 				{
 				// Create a TCP/IP socket.
-
 				struct addrinfo *address, hints;
 				memset( &hints, 0, sizeof( hints ) );
 				hints.ai_family = AF_INET;
@@ -243,7 +250,7 @@ namespace dex
 		
 		public:
 			// Function used for crawling URLs. bePolite should ALWAYS be on, only turned off for testing.
-			static int crawlUrl( Url url, int fileToWrite, string &res, dex::unorderedMap < string, RobotTxt > &robots, bool bePolite = true )
+			static int crawlUrl( Url url, int contentFile, int robotFile, string &res, dex::unorderedMap < string, RobotTxt > &robots, bool bePolite = true )
 				{
 				if ( !bePolite )
 					{
@@ -253,11 +260,11 @@ namespace dex
 					{
 					RobotTxt robot;
 					// Check to see if we have a robot object for the domain we're crawling
-					if ( robots.count( url.host ) == 0 )
+					if ( robots.count( url.host ) < 1 )
 						{
+						// visit robots.txt
 						Url robotUrl( url );
-						robotUrl.path = "robots.txt/";
-						int robotFile = 2;
+						robotUrl.path = "robots.txt";
 
 						int a;
 						if ( robotUrl.service == "https" )
@@ -269,18 +276,23 @@ namespace dex
 							a = httpConnect( robotUrl, res, robotFile );
 							}
 
-						// if there is an error connecting to the path, it doesn't exist
-						if ( !isError( a ) )
+						// If our error code is 404, the path does not exist and we create a default robots.txt object
+						if ( a == 404 )
+							{
+							// Create Default
+							RobotTxt newRobot( url.host );
+							robot = newRobot;
+							}
+						// If there was an error, we need to abort and return the error
+						if ( a != 0 )
+							{
+							return a;
+							}
+						else
 							{
 							// Create new RobotsTxt
 							string robotsTxtInformation = "";
 							RobotTxt newRobot( url.host, robotsTxtInformation );
-							robot = newRobot;
-							}
-						else
-							{
-							// Create Default
-							RobotTxt newRobot( url.host );
 							robot = newRobot;
 							}
 						}
@@ -303,12 +315,12 @@ namespace dex
 
 				if ( url.service == "https" )
 					{
-					int a = httpsConnect( url, res, fileToWrite );
+					int a = httpsConnect( url, res, contentFile );
 					return a;
 					}
 				else
 					{
-					int a = httpConnect( url, res, fileToWrite );
+					int a = httpConnect( url, res, contentFile );
 					return a;
 					}
 				}

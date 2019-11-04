@@ -1,7 +1,8 @@
 // crawl.cpp
 // Testing for our crawler class
 //
-// 2019-11-4: File creation: jhirsh
+// 2019-11-04: edited code logic slightly to match other changes made today: combsc
+// 2019-11-04: File creation: jhirsh
 
 #include <unistd.h>
 #include <cassert>
@@ -82,28 +83,26 @@ int main( int argc, char ** argv )
    std::list< string > frontier = loadFrontier( argv[ 1 ] );
 
    string res;
-   int fileToWrite = 3;
+   int fileToWrite = 2;
+   int robotFile = 2;
    unorderedMap < string, RobotTxt > robots{ 20 };
 
    for ( auto it = frontier.begin( );  it != frontier.end( ); )
       {
-      try
+      int errorCode = dex::crawler::crawlUrl( it->cStr( ), fileToWrite, robotFile, res, robots );
+      if ( errorCode == 0 )
          {
-         int errorCode = dex::crawler::crawlUrl( it->cStr( ), fileToWrite, res, robots );
-         if ( errorCode == 0 )
-            {
-            cout << "crawled " << it->cStr( ) << endl;
-            it = frontier.erase( it );
-            }
-         else
-            {
-            ++it;
-            }
+         cout << "crawled domain: " << it->cStr( ) << endl;
+         it = frontier.erase( it );
          }
-      catch ( exception &e )
+      else
          {
-         cout << it->cStr( ) << " " << e.what() << endl;
+         cout << "Failed to crawl domain: " << it->cStr( ) << endl;
+         cout << errorCode << endl;
+         cout << res << endl;
          ++it;
+         // Should do something else with this url. If we failed to crawl it, we shouldn't keep it
+         // in the frontier, it should go to a different file so we can see why failed to crawl it
          }
       }
 
