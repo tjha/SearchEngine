@@ -13,7 +13,6 @@
 #include "../utils/basicString.hpp"
 #include "../utils/exception.hpp"
 #include <unordered_map>
-#include "../utils/file.hpp"
 // Believe we need to implement std::list for frontier
 #include <list>
 #include <iterator>
@@ -74,40 +73,47 @@ int outputNewFrontier( const char * fileName, std::list< string > &frontier )
 
 int main( int argc, char ** argv )
    {
-   if ( argc != 3 )
+   if ( argc != 4 )
       {
-      std::cerr << "Usage: ./crawl.exe [ frontier_file ] [ robots_save_file ]" << endl;
+      std::cerr << "Usage: ./crawl.exe [ frontier ] [ robots_save ] [ crawler_results ]" << endl;
       exit( 1 );
       }
 
    std::list< string > frontier = loadFrontier( argv[ 1 ] );
+   std::list< string > brokenLinks;
 
    string res;
-   int fileToWrite = 2;
-   int robotFile = 2;
+   int robotFile = open( argv[2], O_RDWR | O_CREAT | O_TRUNC, S_IRWXU );
+   int crawlFile = open( argv[3], O_RDWR | O_CREAT | O_TRUNC, S_IRWXU );
    unorderedMap < string, RobotTxt > robots{ 20 };
 
    for ( auto it = frontier.begin( );  it != frontier.end( ); )
       {
-      int errorCode = dex::crawler::crawlUrl( it->cStr( ), fileToWrite, robotFile, res, robots );
+      int errorCode = dex::crawler::crawlUrl( it->cStr( ), crawlFile, robotFile, res, robots );
       if ( errorCode == 0 )
          {
          cout << "crawled domain: " << it->cStr( ) << endl;
          it = frontier.erase( it );
          }
-      else
+
+      if ( errorCode == dex::politenessError )
          {
-         cout << "Failed to crawl domain: " << it->cStr( ) << endl;
-         cout << errorCode << endl;
+         cout << "Mr. Robot says to be polite: " << it->cStr( ) << endl;
          cout << res << endl;
          ++it;
-         // Should do something else with this url. If we failed to crawl it, we shouldn't keep it
-         // in the frontier, it should go to a different file so we can see why failed to crawl it
+         }
+
+      if ( errorCode >= 300 && errorCode < 400 )
+         {
+         cout << "broken link: " << it->cStr( ) << endl;
+         brokenLinks.push_back( *it );
+         it = frontier.erase( it );
          }
       }
 
    // TODO make this output to a file such that the parser can pick it up
    // easily
-   outputNewFrontier( "frontierNew.txt", frontier );
+   outputNewFrontier( "savedFrontier.txt", frontier );
+   outputNewFrontier( "savedBrokenLinks.txt", brokenLinks );
    outputRobots( argv[ 2 ], robots );
    }

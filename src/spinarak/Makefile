@@ -10,7 +10,7 @@ crawlerTests: crawlerTests.cpp robots.hpp
 
 crawl: 	
 	$(CXX) $(CXXFLAGS) crawl.cpp $(LDFLAGS) $(CPPFLAGS) $(INCLUDE) -ltls -o crawl.exe
-	./crawl.exe seedlist.txt savedRobots.txt
+	./crawl.exe seedlist.txt savedRobots.txt savedCrawl.txt
 
 .PHONY: clean
 

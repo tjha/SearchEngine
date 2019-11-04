@@ -6,6 +6,7 @@
 #include "robots.hpp"
 #include "../utils/exception.hpp"
 #include "../utils/unorderedMap.hpp"
+#include "../utils/file.hpp"
 #include "url.hpp"
 #include <iostream>
 
@@ -28,6 +29,7 @@
 
 using dex::string;
 using dex::RobotTxt;
+using dex::writeToFile;
 
 namespace dex
 	{
