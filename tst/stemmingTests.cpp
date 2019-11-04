@@ -13,11 +13,13 @@ using namespace dex;
 TEST_CASE( "test stuff", "[stemmer]" )
 	{
 	const string wordPairs[ ][ 2 ] = {
+		// Step 1a
 		{ "caresses", "caress" },
 		{ "ponies", "poni" },
 		{ "ties", "ti" },
 		{ "caress", "caress" },
 		{ "cats", "cat" },
+		// Step 1b
 		{ "feed", "feed" },
 		{ "agreed", "agree" },
 		{ "plastered", "plaster" },
@@ -34,8 +36,31 @@ TEST_CASE( "test stuff", "[stemmer]" )
 		{ "fizzed", "fizz" },
 		{ "failing", "fail" },
 		{ "filing", "file" },
+		// Step 1c
 		{ "happy", "happi" },
-		{ "sky", "sky" }
+		{ "sky", "sky" },
+		// Step 2
+		{ "relational", "relate" },
+		{ "conditional", "condition" },
+		{ "rational", "rational" },
+		{ "valenci", "valence" },
+		{ "hesitanci", "hesitance" },
+		{ "digitizer", "digitize" },
+		{ "conformabli", "conformable" },
+		{ "radicalli", "radical" },
+		{ "differentli", "different" },
+		{ "vileli", "vile" },
+		{ "analogousli", "analogous" },
+		{ "vietnamization", "vietnamize" },
+		{ "predication", "predicate" },
+		{ "operator", "operate" },
+		{ "feudalism", "feudal" },
+		{ "decisiveness", "decisive" },
+		{ "hopefulness", "hopeful" },
+		{ "callousness", "callous" },
+		{ "formaliti", "formal" },
+		{ "sensitiviti", "sensitive" },
+		{ "sensibiliti", "sensible" }
 	};
 
 	for ( const string *wordPair : wordPairs)

@@ -1,5 +1,5 @@
 // stemming.hpp
-// Library implementing the Porter stemmer
+// Library implementing the Porter stemmer. See http://snowball.tartarus.org/algorithms/porter/stemmer.html
 //
 // 2019-11-04: File created
 
@@ -7,7 +7,6 @@
 #define DEX_STEMMING
 
 #include <cstddef>
-#include <iostream>
 #include "../utils/basicString.hpp"
 #include "../utils/vector.hpp"
 
@@ -18,11 +17,14 @@ namespace dex
 		private:
 			static const string step1aTruncations[ ];
 			static const string step1aAppendations[ ];
+			static const string step2Truncations[ ];
+			static const string step2Appendations[ ];
 
+			// struct representing a word when split into alternating consonant and vowel parts
 			struct wordForm
 				{
 				string word;
-				vector < size_t > deltas;
+				vector < size_t > deltas; // lengths of each part
 				bool firstIsVowel;
 				bool lastIsVowel;
 
@@ -41,6 +43,7 @@ namespace dex
 					return word.size( ) > suffixLength && word[ word.size( ) - suffixLength - 1 ] == c;
 					}
 
+				// Calculate m
 				size_t measure( ) const
 					{
 					if ( word.empty( ) )
@@ -48,6 +51,7 @@ namespace dex
 					return ( deltas.size( ) - !firstIsVowel - lastIsVowel ) / 2;
 					}
 
+				// Calculate m
 				size_t stemMeasure( size_t suffixLength ) const
 					{
 					if ( word.size( ) <= suffixLength || deltas.size( ) < 2 )
@@ -67,18 +71,21 @@ namespace dex
 					return measure;
 					}
 
+				// Determine *v*
 				bool stemContainsVowel( size_t suffixLength ) const
 					{
 					return !word.empty( ) && word.size( ) > suffixLength
 							&& ( firstIsVowel || ( deltas.size( ) != 1 && deltas.front( ) < word.size( ) - suffixLength ) );
 					}
 
+				// Determine *d
 				bool endsWithDoubleConsonant( ) const
 					{
 					char lastCharacter = word[ word.size( ) - 1 ];
 					return word.size( ) > 1 && lastCharacter == word[ word.size( ) - 2 ] && !isVowel( lastCharacter );
 					}
 
+				// Determine *o
 				bool stemEndsWithCVCAndNotWXY( size_t suffixLength )
 					{
 					if ( word.size( ) <= suffixLength || deltas.size( ) < 3 )
@@ -178,11 +185,6 @@ namespace dex
 				return wordForm{ word, deltas, firstIsVowel, previousWasVowel };
 				}
 
-			static unsigned measure( const wordForm &form )
-				{
-				return ( form.deltas.size( ) - !form.firstIsVowel - form.lastIsVowel ) / 2;
-				}
-
 		public:
 			static string stem( const string &word )
 				{
@@ -248,10 +250,18 @@ namespace dex
 					form.append( "i" );
 					}
 
+				// Step 2
+				for ( unsigned i = 0;  i != 20;  ++i )
+					if ( form.endsWith( step2Truncations[ i ] ) )
+						{
+						if ( form.stemMeasure( step2Truncations[ i ].size( ) ) > 0)
+							{
+							form.truncate( step2Truncations[ i ].size( ) );
+							form.append( step2Appendations[ i ] );
+							}
+						break;
+						}
 
-				for ( size_t delta : form.deltas )
-					std::cout << delta << ", ";
-				std::cout << std::endl;
 				return form.word;
 				}
 		};
@@ -267,6 +277,50 @@ namespace dex
 			"i",
 			"ss",
 			""
+		};
+		const string porterStemmer::step2Truncations[ ] = {
+			"ational",
+			"tional",
+			"enci",
+			"anci",
+			"izer",
+			"abli",
+			"alli",
+			"entli",
+			"eli",
+			"ousli",
+			"ization",
+			"ation",
+			"ator",
+			"alism",
+			"iveness",
+			"fulness",
+			"ousness",
+			"aliti",
+			"iviti",
+			"biliti"
+		};
+		const string porterStemmer::step2Appendations[ ] = {
+			"ate",
+			"tion",
+			"ence",
+			"ance",
+			"ize",
+			"able",
+			"al",
+			"ent",
+			"e",
+			"ous",
+			"ize",
+			"ate",
+			"ate",
+			"al",
+			"ive",
+			"ful",
+			"ous",
+			"al",
+			"ive",
+			"ble"
 		};
 	}
 
