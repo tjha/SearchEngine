@@ -42,33 +42,53 @@ TEST_CASE( "test stuff", "[stemmer]" )
 		// Step 2
 		{ "relational", "relate" },
 		{ "conditional", "condition" },
-		{ "rational", "rational" },
+		{ "rational", "ration" }, // This one deviates in step 4
 		{ "valenci", "valence" },
-		{ "hesitanci", "hesitance" },
-		{ "digitizer", "digitize" },
-		{ "conformabli", "conformable" },
-		{ "radicalli", "radic" }, // This one fails in step 3
-		{ "differentli", "different" },
+		{ "hesitanci", "hesit" }, // This one deviates in step 4
+		{ "digitizer", "digit" }, // This one deviates in step 4
+		{ "conformabli", "conform" }, // This one deviates in step 4
+		{ "radicalli", "radic" }, // This one deviates in step 3
+		{ "differentli", "differ" }, // This one deviates in step 4
 		{ "vileli", "vile" },
-		{ "analogousli", "analogous" },
-		{ "vietnamization", "vietnamize" },
-		{ "predication", "predic" }, // This one fails in step 3
-		{ "operator", "operate" },
+		{ "analogousli", "analog" }, // This one deviates in step 4
+		{ "vietnamization", "vietnam" },// This one deviates in step 4
+		{ "predication", "predic" }, // This one deviates in step 3
+		{ "operator", "oper" }, // This one deviates in step 4
 		{ "feudalism", "feudal" },
-		{ "decisiveness", "decisive" },
-		{ "hopefulness", "hope" }, // This one fails in step 3
+		{ "decisiveness", "decis" }, // This one deviates in step 4
+		{ "hopefulness", "hope" }, // This one deviates in step 3
 		{ "callousness", "callous" },
 		{ "formaliti", "formal" },
-		{ "sensitiviti", "sensitive" },
+		{ "sensitiviti", "sensit" }, // This one deviates in step 4
 		{ "sensibiliti", "sensible" },
 		// Step 3
 		{ "triplicate", "triplic" },
 		{ "formative", "form" },
 		{ "formalize", "formal" },
-		{ "electriciti", "electric" },
-		{ "electrical", "electric" },
+		{ "electriciti", "electr" }, // This one deviates in step 4
+		{ "electrical", "electr" }, // This one deviates in step 4
 		{ "hopeful", "hope" },
-		{ "goodness", "good" }
+		{ "goodness", "good" },
+		// Step 4
+		{ "revival", "reviv" },
+		{ "allowance", "allow" },
+		{ "inference", "infer" },
+		{ "airliner", "airlin" },
+		{ "gyroscopic", "gyroscop" },
+		{ "adjustable", "adjust" },
+		{ "defensible", "defens" },
+		{ "irritant", "irrit" },
+		{ "replacement", "replac" },
+		{ "adjustment", "adjust" },
+		{ "dependent", "depend" },
+		{ "adoption", "adopt" },
+		{ "homologou", "homolog" },
+		{ "communism", "commun" },
+		{ "activate", "activ" },
+		{ "angulariti", "angular" },
+		{ "homologous", "homolog" },
+		{ "effective", "effect" },
+		{ "bowdlerize", "bowdler" }
 	};
 
 	for ( const string *wordPair : wordPairs)
