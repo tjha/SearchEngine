@@ -1,6 +1,7 @@
 // vector.hpp
 // Vector class. We don't implement emplace.
 //
+// 2019-11-04: Use typeTraits.hpp: jasina
 // 2019-10-27 - Fix dex::swap: jasina
 // 2019-10-26 - Changed delete array to delete [] array in reserve: medhak, tjha
 //            - Rewrite iterators to not duplicate code: jasina
@@ -22,9 +23,9 @@
 #define DEX_VECTOR
 
 #include <cstddef>
-#include <type_traits>
 #include "algorithm.hpp"
 #include "exception.hpp"
+#include "typeTraits.hpp"
 
 namespace dex
 	{
@@ -37,7 +38,7 @@ namespace dex
 			vector( size_t numElements, const T &val );
 			// Only use the next constructor if InputIterator isn't integral type
 			template < class InputIterator,
-					typename = typename std::enable_if < !std::is_integral< InputIterator >::value >::type >
+					typename = typename dex::enableIf < !dex::isIntegral< InputIterator >::value >::type >
 			vector( InputIterator first, InputIterator last )
 				{
 				array = new T[ 1 ];
@@ -130,7 +131,7 @@ namespace dex
 				}
 		public:
 			template < class InputIterator,
-					typename = typename std::enable_if < !std::is_integral< InputIterator >::value >::type >
+					typename = typename dex::enableIf < !dex::isIntegral< InputIterator >::value >::type >
 			void insert( constIterator index, InputIterator first, InputIterator last )
 				{
 				size_t count = 0;
@@ -564,15 +565,15 @@ namespace dex
 	class vector < T >::_iterator
 		{
 		private:
-			typedef typename std::conditional < isConst, const vector < T >, vector < T > >::type vectorType;
-			typedef typename std::conditional < isConst, const T, T >::type dataType;
+			typedef typename dex::conditional < isConst, const vector < T >, vector < T > >::type vectorType;
+			typedef typename dex::conditional < isConst, const T, T >::type dataType;
 
 			friend class vector < T >;
 			vectorType *vec;
 			size_t position;
 			_iterator( vectorType &vec, size_t position ) : vec( &vec ), position( position ) { }
 		public:
-			template < typename = typename std::enable_if < isConst > >
+			template < typename = typename dex::enableIf < isConst > >
 			_iterator( const _iterator < false, isForward > &other ) : vec( other.vec ), position( other.position ) { }
 
 			friend bool operator==( const _iterator &a, const _iterator &b )
