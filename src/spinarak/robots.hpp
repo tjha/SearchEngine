@@ -94,8 +94,8 @@ namespace dex
             string fixedPath = path;
             if ( fixedPath[ 0 ] != '/' )
                fixedPath.insert( 0, "/" );
-            if ( fixedPath.back( ) == '/' )
-               fixedPath.popBack( );
+            if ( fixedPath.back( ) != '/' )
+               fixedPath.append( "/" );
             return fixedPath;
             }
          

@@ -62,6 +62,7 @@ void testHttp( )
 	{
 	unorderedMap < string, RobotTxt > robots{ 10 };
 	int fileToWrite = 2;
+	int robotFile = 2;
 	string res;
 
 	int errorCode = dex::crawler::crawlUrl( "http://www.runescape.com/splash", fileToWrite, robotFile, res, robots );
