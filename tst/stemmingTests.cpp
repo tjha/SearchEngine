@@ -1,16 +1,15 @@
 // stemmingTests
-// test[s] for the Port[er] stem[mer]
+// test[s] for the Port[er] stem[mer]. Taken from http://snowball.tartarus.org/algorithms/porter/stemmer.html
 //
 // 2019-11-04: File created: jasina
 
-#include <iostream>
 #include "catch.hpp"
 #include "../src/utils/basicString.hpp"
 #include "../src/utils/stemming.hpp"
 #include "../src/utils/vector.hpp"
 
 using namespace dex;
-TEST_CASE( "test stuff", "[stemmer]" )
+TEST_CASE( "test stems", "[stemmer]" )
 	{
 	const string wordPairs[ ][ 2 ] = {
 		// Step 1a
@@ -21,13 +20,13 @@ TEST_CASE( "test stuff", "[stemmer]" )
 		{ "cats", "cat" },
 		// Step 1b
 		{ "feed", "feed" },
-		{ "agreed", "agree" },
+		{ "agreed", "agre" }, // This one deviates in step 5
 		{ "plastered", "plaster" },
 		{ "bled", "bled" },
 		{ "motoring", "motor" },
 		{ "sing", "sing" },
-		{ "conflated", "conflate" },
-		{ "troubled", "trouble" },
+		{ "conflated", "conflat" }, // This one deviates in step 5
+		{ "troubled", "troubl" }, // This one deviates in step 5
 		{ "sized", "size" },
 		{ "hopping", "hop" },
 		{ "tanned", "tan" },
@@ -40,10 +39,10 @@ TEST_CASE( "test stuff", "[stemmer]" )
 		{ "happy", "happi" },
 		{ "sky", "sky" },
 		// Step 2
-		{ "relational", "relate" },
+		{ "relational", "relat" }, // This one deviates in step 5
 		{ "conditional", "condition" },
 		{ "rational", "ration" }, // This one deviates in step 4
-		{ "valenci", "valence" },
+		{ "valenci", "valenc" }, // This one deviates in step 5
 		{ "hesitanci", "hesit" }, // This one deviates in step 4
 		{ "digitizer", "digit" }, // This one deviates in step 4
 		{ "conformabli", "conform" }, // This one deviates in step 4
@@ -60,7 +59,7 @@ TEST_CASE( "test stuff", "[stemmer]" )
 		{ "callousness", "callous" },
 		{ "formaliti", "formal" },
 		{ "sensitiviti", "sensit" }, // This one deviates in step 4
-		{ "sensibiliti", "sensible" },
+		{ "sensibiliti", "sensibl" }, // This one deviates in step 5
 		// Step 3
 		{ "triplicate", "triplic" },
 		{ "formative", "form" },
@@ -88,13 +87,15 @@ TEST_CASE( "test stuff", "[stemmer]" )
 		{ "angulariti", "angular" },
 		{ "homologous", "homolog" },
 		{ "effective", "effect" },
-		{ "bowdlerize", "bowdler" }
+		{ "bowdlerize", "bowdler" },
+		// Step 5a
+		{ "probate", "probat" },
+		{ "rate", "rate" },
+		// Step 5b
+		{ "controll", "control" },
+		{ "roll", "roll" }
 	};
 
 	for ( const string *wordPair : wordPairs)
-		{
-		string stemmedWord = porterStemmer::stem( wordPair[ 0 ] );
-		std::cout << wordPair[ 0 ]  << " -> " << stemmedWord << ", " << wordPair[ 1 ] << std::endl;
-		REQUIRE( stemmedWord == wordPair[ 1 ] );
-		}
+		REQUIRE( porterStemmer::stem( wordPair[ 0 ] ) == wordPair[ 1 ] );
 	}

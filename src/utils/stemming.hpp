@@ -290,6 +290,18 @@ namespace dex
 						break;
 						}
 
+				// Step 5a
+				if ( form.endsWith( 'e' ) )
+					{
+					size_t stemMeasure = form.stemMeasure( 1 );
+					if ( stemMeasure > 1 || ( stemMeasure == 1 && !form.stemEndsWithCVCAndNotWXY( 1 ) ) )
+						form.truncate( 1 );
+					}
+
+				// Step 5b
+				if ( form.endsWith( 'l' ) && form.endsWithDoubleConsonant( ) && form.measure( ) > 1 )
+					form.truncate( 1 );
+
 				return form.word;
 				}
 		};
