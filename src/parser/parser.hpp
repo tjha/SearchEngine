@@ -5,50 +5,47 @@
 // 2019-10-26: Created get_links function to get urls from basic html:
 //             medhak, tjha
 
-#include "../utils/basicString.hpp"
-#include "../utils/vector.hpp"
-#include "../utils/algorithm.hpp"
-#include "../utils/exception.hpp"
-#include <iostream>
+#include "basicString.hpp"
+#include "vector.hpp"
+#include "algorithm.hpp"
+#include "exception.hpp"
 
 using dex::string;
 using dex::vector;
 using dex::exception;
 
-using std::cout;
-using std::endl;
 
-vector<string> get_links(string html_file)
+vector< string > GetLinks( string htmlFile )
    {
-   int pos_open_tag = 0, pos_close_tag = 0;
+   size_t posOpenTag = 0, posCloseTag = 0;
    string url;
    vector <string> urlList;
   
-   while ( pos_open_tag != -1 )
+   while ( posOpenTag != string::npos )
       {
-      pos_close_tag = html_file.find(">", pos_open_tag);
-      if (html_file[ pos_open_tag + 1 ] == '!')
+      posCloseTag = htmlFile.find(">", posOpenTag );
+      if ( htmlFile[ posOpenTag + 1 ] == '!')
          {
-         pos_close_tag = html_file.find("-->", pos_open_tag);
-         pos_close_tag += 2;
+         posCloseTag = htmlFile.find( "-->", posOpenTag );
+         posCloseTag += 2;
          }
       else
          {
-         if (pos_close_tag != -1)
+         if ( posCloseTag != string::npos )
             {
-            int pos_href = html_file.find("href", pos_open_tag);
-            if (pos_href < pos_close_tag && pos_href != -1)
+            size_t posHref = htmlFile.find( "href", posOpenTag );
+            if ( posHref < posCloseTag && posHref != string::npos )
                {
-               if (html_file.find("a", pos_open_tag) < pos_href)
+               if ( htmlFile.find("a", posOpenTag) < posHref )
                   {
-                  int pos_temp1 = html_file.find("=", pos_href);
-                  if (pos_temp1 != -1)
+                  size_t posTemp1 = htmlFile.find( "=", posHref );
+                  if ( posTemp1 != string::npos )
                      {
-                     url = html_file.substr(pos_temp1 + 1, pos_close_tag-pos_temp1-1);               
-                     if (url[0] == '\"')
+                     url = htmlFile.substr( posTemp1 + 1, posCloseTag-posTemp1-1 );               
+                     if ( url[0] == '\"' )
                         {
-                        url = url.substr(1, url.length()-2);
-                        urlList.pushBack(url);
+                        url = url.substr( 1, url.length()-2 );
+                        urlList.pushBack( url );
                         }
                      }
                   
@@ -56,7 +53,7 @@ vector<string> get_links(string html_file)
                }
             }
          }
-      pos_open_tag = html_file.find("<", pos_close_tag);   
+      posOpenTag = htmlFile.find( "<", posCloseTag );   
       
       }
    return urlList;

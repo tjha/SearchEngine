@@ -4,38 +4,37 @@
 //
 
 #include "catch.hpp"
-#include "../src/parser/parser.hpp"
-#include "../utils/basicString.hpp"
-#include "../utils/exception.hpp"
-#include <iostream>
+#include "parser.hpp"
+#include "basicString.hpp"
+#include "exception.hpp"
 
 using dex::outOfRangeException;
 using dex::string;
 
-using std::cout;
-using std::endl;
+
+// helper function to convert file to string for use in tests
 
 TEST_CASE( "get links", "[parser]" )
    {
 
 	SECTION( "parsed simple html document with one link" )
       {
-      string html_doc = 
+      string htmlDoc = 
          "<html>\
             <title>Title</title>\
             <body>\
             <a href=\"https://web.eecs.umich.edu/~pmchen/software\">Software</a>\
             </body>\
          </html>";
-      vector< string > links = get_links( html_doc );
-      string expected_link = "https://web.eecs.umich.edu/~pmchen/software";
+      vector< string > links = GetLinks( htmlDoc );
+      string expectedLink = "https://web.eecs.umich.edu/~pmchen/software";
       REQUIRE( links.size() == 1);
-      REQUIRE( links[0] == expected_link);
+      REQUIRE( links[0] == expectedLink);
       }
 
 	SECTION( "parsed simple html document with one link" )
       {
-      string html_doc = 
+      string htmlDoc = 
          "<html>\
             <title>Title</title>\
             <body>\
@@ -44,14 +43,14 @@ TEST_CASE( "get links", "[parser]" )
             <a href=\"https://web.eecs.umich.edu/~pmchen/software3\">Software</a>\
             </body>\
          </html>";
-      vector< string > links = get_links( html_doc );
-      string expected_link1 = "https://web.eecs.umich.edu/~pmchen/software1";
-      string expected_link2 = "https://web.eecs.umich.edu/~pmchen/software2";
-      string expected_link3 = "https://web.eecs.umich.edu/~pmchen/software3";
+      vector< string > links = GetLinks( htmlDoc );
+      string expectedLink1 = "https://web.eecs.umich.edu/~pmchen/software1";
+      string expectedLink2 = "https://web.eecs.umich.edu/~pmchen/software2";
+      string expectedLink3 = "https://web.eecs.umich.edu/~pmchen/software3";
       REQUIRE( links.size() == 3);
-      REQUIRE( links[0] == expected_link1);
-      REQUIRE( links[1] == expected_link2);
-      REQUIRE( links[2] == expected_link3);
+      REQUIRE( links[0] == expectedLink1);
+      REQUIRE( links[1] == expectedLink2);
+      REQUIRE( links[2] == expectedLink3);
       }
 
    }
