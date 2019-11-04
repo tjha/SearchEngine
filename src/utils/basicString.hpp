@@ -12,7 +12,8 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
-// 2019-10-31: Make +operator a friend function
+// 2019-11-04: Use typeTraits.hpp: jasina
+// 2019-10-31: Make +operator a friend function: combsc
 // 2019-10-30: Add +operator, improve insert and append for single characters: combsc
 // 2019-10-27: Fix dex::swap and fix indentation
 // 2019-10-26: Rewrite iterators to not duplicate code: jasina
@@ -41,10 +42,10 @@
 
 #include <cstddef>
 #include <iostream>
-#include <type_traits>
 #include "algorithm.hpp"
 #include "exception.hpp"
 #include "functional.hpp"
+#include "typeTraits.hpp"
 
 namespace dex
 	{
@@ -115,7 +116,7 @@ namespace dex
 				array[ stringSize ] = charT { };
 				}
 			template < class InputIt,
-					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+					typename = typename dex::enableIf < !dex::isIntegral< InputIt >::value >::type >
 			basicString( InputIt first, InputIt last )
 				{
 				// This is an uber-naive way to allocate memory. Maybe we should change this later.
@@ -250,17 +251,17 @@ namespace dex
 				private:
 					friend class basicString < charT >;
 					typename
-							std::conditional < isConst, const basicString < charT > *, basicString < charT > * >::type
+							dex::conditional < isConst, const basicString < charT > *, basicString < charT > * >::type
 							string;
 					size_t position;
 					_iterator(
 							typename
-									std::conditional < isConst, const basicString < charT > &, basicString < charT > & >::type
+									dex::conditional < isConst, const basicString < charT > &, basicString < charT > & >::type
 									string,
 							size_t position ) :
 							string( &string ), position( position ) { }
 				public:
-					template < typename = typename std::enable_if < isConst > >
+					template < typename = typename dex::enableIf < isConst > >
 					_iterator( const _iterator < false, isForward > &other ) :
 							string( other.string ), position( other.position ) { }
 
@@ -278,13 +279,13 @@ namespace dex
 						return a.position != b.position;
 						}
 
-					typename std::conditional < isConst, const charT &, charT & >::type operator*( ) const
+					typename dex::conditional < isConst, const charT &, charT & >::type operator*( ) const
 						{
 						if ( isForward )
 							return ( *string )[ position ];
 						return ( *string )[ string->size( ) - position - 1 ];
 						}
-					typename std::conditional < isConst, const charT *, charT * >::type operator->( ) const
+					typename dex::conditional < isConst, const charT *, charT * >::type operator->( ) const
 						{
 						if ( isForward )
 							return &( ( *string )[ position ] );
@@ -380,7 +381,7 @@ namespace dex
 						}
 
 					typename
-							std::conditional < isConst, const charT &, charT & >::type operator[ ]( const size_t index ) const
+							dex::conditional < isConst, const charT &, charT & >::type operator[ ]( const size_t index ) const
 						{
 						return ( *string )[ index ];
 						}
@@ -519,7 +520,7 @@ namespace dex
 				return append( 1, character );
 				}
 			template < class InputIt,
-					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+					typename = typename dex::enableIf < !dex::isIntegral< InputIt >::value >::type >
 			basicString < charT > &append( InputIt first, InputIt last )
 				{
 				insert( cend( ), first, last );
@@ -562,7 +563,7 @@ namespace dex
 				return *this;
 				}
 			template < class InputIt,
-					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+					typename = typename dex::enableIf < !dex::isIntegral< InputIt >::value >::type >
 			basicString < charT > &assign( InputIt first, InputIt last )
 				{
 				basicString temporaryString( first, last );
@@ -630,7 +631,7 @@ namespace dex
 				return insert( first, 1, character );
 				}
 			template < class InputIt,
-					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+					typename = typename dex::enableIf < !dex::isIntegral< InputIt >::value >::type >
 			iterator insert( constIterator insertionPoint, InputIt first, InputIt last )
 				{
 				size_t originalSize = size( );
@@ -730,7 +731,7 @@ namespace dex
 				return *this;
 				}
 			template < class InputIt,
-					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+					typename = typename dex::enableIf < !dex::isIntegral< InputIt >::value >::type >
 			basicString < charT > &replace( constIterator first, constIterator last,
 					InputIt inputFirst, InputIt inputLast )
 				{
