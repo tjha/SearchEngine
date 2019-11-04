@@ -1,10 +1,7 @@
-// crawlerTests.cpp
+// crawl.cpp
 // Testing for our crawler class
 //
-// 2019-11-03: Added tests for politeness: combsc
-// 2019-10-31: added an unordered map of robots, passed to crawlUrl: Jonas
-// 2019-10-31: Added basic query + fragment testing: combsc
-// 2019-10-30: File creation: combsc
+// 2019-11-4: File creation: jhirsh
 
 #include <unistd.h>
 #include <cassert>

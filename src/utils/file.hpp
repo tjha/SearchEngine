@@ -1,6 +1,7 @@
 // file.hpp
 // file for dealing with our fileIO
 //
+// 2019-11-4: Swapped out memcpy for dex::copy: combsc
 // 2019-11-2: Initial Commit: combsc
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -9,6 +10,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "exception.hpp"
+#include "algorithm.hpp"
 
 namespace dex
 	{
@@ -34,7 +36,7 @@ namespace dex
 		result = write( fd, " ", 1 );
 
 		char *map = ( char * ) mmap( nullptr, length, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0 );
-		memcpy( map, toWrite, length );
+		copy( toWrite, toWrite + length, map );
 
 		close( fd );
 		return 0;
