@@ -378,14 +378,15 @@ namespace dex
          string compress( )
             {
             string compressed = "";
-            Key defaultKey = Key( );
+            Key defaultKey;
             for ( auto it = begin( );  it != end( );  ++it )
                {
-               if ( *it != defaultKey )
+               if ( it->first != defaultKey )
                   {
-                  compressed += "\t\t" + *it + "\n";
+                  compressed += it->first + "\n" + it->second.compress( );
                   }
                }
+            return compressed;
             }
 		};
 

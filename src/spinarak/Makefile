@@ -8,7 +8,12 @@ INCLUDE := -I$(SRC_PATH)/utils/
 crawlerTests: crawlerTests.cpp robots.hpp 
 	$(CXX) $(CXXFLAGS) crawlerTests.cpp $(LDFLAGS) $(CPPFLAGS) $(INCLUDE) -ltls -o crawlerTests.exe
 
+crawl: 	
+	$(CXX) $(CXXFLAGS) crawl.cpp $(LDFLAGS) $(CPPFLAGS) $(INCLUDE) -ltls -o crawl.exe
+	./crawl.exe seedlist.txt savedRobots.txt
+
 .PHONY: clean
 
 clean:
 	rm -f crawlerTests.exe
+	rm -f crawler.exe
