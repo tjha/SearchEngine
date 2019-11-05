@@ -104,6 +104,9 @@ TEST_CASE( "get links", "[parser]" )
             {
             REQUIRE ( links[i] == expectedLinks[i] );
             }
+         vector <string> words = testParser.ReturnWords();
+         
+         // REQUIRE(1 == 0);
          } 
       catch ( outOfRangeException &e )
          {

@@ -62,17 +62,23 @@ namespace dex
       return links;
       }
 
+   
+   
    vector < string > HTMLparser::ReturnWords ( )
       {
       return words;
       }
 
-   // vector < dex::pair < size_t, size_t > > HTMLparser::ReturnAnchorText ( )
+  
    vector < dex::paired > HTMLparser::ReturnAnchorText ( )
       {
       return anchorText;
       }
 
+
+
+
+  
    // breaks anchor string into individual words and returns them to add to words.
    vector < string > HTMLparser::BreakAnchors ( string anchor )
       {
@@ -80,11 +86,22 @@ namespace dex
       vector < string > output;
       size_t pos_whitespace = anchor.find(" ");
       size_t pos_start = 0;
+      if ( pos_whitespace != string::npos ){
+         if (anchor.find("\n", pos_start) != string::npos && anchor.find("\n", pos_start) < pos_whitespace)
+               {
+               pos_whitespace = anchor.find("\n", pos_start);
+               }   
+         if (anchor.find("\t", pos_start) != string::npos && anchor.find("\t", pos_start) < pos_whitespace)
+               {
+               pos_whitespace = anchor.find("\t", pos_start);
+               }
+      }
       while( pos_whitespace != string::npos )
          {
          word = anchor.substr(pos_start, pos_whitespace - pos_start + 1);
+         
          if (word != " " && word != "\n" && word != "\t" && word!= ""){
-         output.pushBack( word );
+               output.pushBack( word );
          }
          pos_start = pos_whitespace + 1;
          pos_whitespace = anchor.find( " ", pos_start );
@@ -92,7 +109,19 @@ namespace dex
             {
             pos_whitespace = anchor.find( "\n", pos_start );
             }
+         else
+            {
+            if (anchor.find("\n", pos_start) != string::npos && anchor.find("\n", pos_start) < pos_whitespace)
+               {
+               pos_whitespace = anchor.find("\n", pos_start);
+               }   
+            if (anchor.find("\t", pos_start) != string::npos && anchor.find("\t", pos_start) < pos_whitespace)
+               {
+               pos_whitespace = anchor.find("\t", pos_start);
+               }
+            }
          }
+
       if ( pos_start == 0 )
          {
          output.pushBack( anchor );
@@ -183,6 +212,8 @@ namespace dex
 
    // don't think we need a separate function for this -- added it to GetLinks. Kept this version here in case we want
    // to revert. 
+
+
    void HTMLparser:: GetAnchorText ( )
       {
       string anchor;
