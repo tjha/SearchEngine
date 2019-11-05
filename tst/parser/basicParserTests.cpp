@@ -1,7 +1,6 @@
 // basicParserTests.cpp
 // Basic testing of Parser functionality
 //
-// 2019-11-04 : Commented out tests because parser.hpp changed to class. Will change tomorrow.
 //
 
 #include "basicString.hpp"

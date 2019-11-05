@@ -68,7 +68,7 @@ namespace dex
       }   
 
 
-   // Maybe we can use continue's to avoid the nested loops? 
+   // Maybe we can use continue's to avoid the nested loops? Needs to be tested 
    void parser::GetLinks( )
       {
       size_t posOpenTag = 0, posCloseTag = 0;
@@ -134,7 +134,7 @@ namespace dex
             }
          posOpenTag = htmlFile.find( "<", posCloseTag );   
          }
-      }
+      }   
 
 
 
@@ -155,7 +155,7 @@ namespace dex
             posCloseTag += 2;
             }
          else
-            {
+            {   
             if ( posCloseTag != string::npos )
                {
                size_t posHref = htmlFile.find( "href", posOpenTag );
