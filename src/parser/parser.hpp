@@ -8,6 +8,7 @@
 // 2019-10-26:  Created get_links function to get urls from basic html:
 //              medhak, tjha
 
+
 #include "basicString.hpp"
 #include "vector.hpp"
 #include "algorithm.hpp"
@@ -19,57 +20,94 @@ using dex::string;
 using dex::vector;
 using dex::exception;
 
+
 namespace dex
 {
-   class parser
+   struct paired
+         {
+         size_t first;
+         size_t second;
+         };
+
+   class HTMLparser
    {
       private:
       string htmlFile;
       vector < string > links;
       vector < string > words;
       // Doing this as pair of < size_t, size_t >. The other option is pair of <size_t, vector <size_t> >.
-      vector< dex::pair< size_t, size_t > > anchorText; 
-
+      
+      // vector< dex::pair< size_t, size_t > > anchorText; 
+      vector< paired > anchorText; 
       public:
-      parser( string html );
-    
-      ~parser( ); // Do we need a copy constructor?
+      HTMLparser (){ htmlFile = "";}
+
+      HTMLparser( string html )
+      {
+         htmlFile = html; 
+      }
 
       void GetLinks( );
       vector <string> BreakAnchors ( string anchor );
       void GetAnchorText( );
-      void GetWords( );
+      vector < string > ReturnLinks ( );
+      // vector < dex::pair <size_t, size_t > > ReturnAnchorText ( );
+      vector < dex::paired > ReturnAnchorText ( );
+      vector < string > ReturnWords ( );
+      // void GetWords( );
    };
 
-   parser::parser ( string html )
+   vector < string > HTMLparser::ReturnLinks ( )
       {
-      htmlFile = html;
+      return links;
       }
 
+   vector < string > HTMLparser::ReturnWords ( )
+      {
+      return words;
+      }
+
+   // vector < dex::pair < size_t, size_t > > HTMLparser::ReturnAnchorText ( )
+   vector < dex::paired > HTMLparser::ReturnAnchorText ( )
+      {
+      return anchorText;
+      }
 
    // breaks anchor string into individual words and returns them to add to words.
-   vector < string > parser::BreakAnchors ( string anchor )
+   vector < string > HTMLparser::BreakAnchors ( string anchor )
       {
       string word;
       vector < string > output;
-      size_t pos_whitespace = anchor.find(" "), pos_start = 0;
+      size_t pos_whitespace = anchor.find(" ");
+      size_t pos_start = 0;
       while( pos_whitespace != string::npos )
          {
          word = anchor.substr(pos_start, pos_whitespace - pos_start + 1);
+         if (word != " " && word != "\n" && word != "\t" && word!= ""){
          output.pushBack( word );
-         pos_start = pos_whitespace;
+         }
+         pos_start = pos_whitespace + 1;
          pos_whitespace = anchor.find( " ", pos_start );
+         if ( pos_whitespace == string::npos )
+            {
+            pos_whitespace = anchor.find( "\n", pos_start );
+            }
          }
       if ( pos_start == 0 )
          {
          output.pushBack( anchor );
+         }
+      else if ( pos_start != (anchor.length() -1) )
+         {
+         word = anchor.substr(pos_start, anchor.length()- pos_start + 1);
+         output.pushBack( word );
          }
       return output;
       }   
 
 
    // Maybe we can use continue's to avoid the nested loops? Needs to be tested 
-   void parser::GetLinks( )
+   void HTMLparser::GetLinks( )
       {
       size_t posOpenTag = 0, posCloseTag = 0;
       string url;
@@ -99,6 +137,7 @@ namespace dex
                         if ( url[0] == '\"' )
                            {
                            url = url.substr( 1, url.length()-2 );
+                           // cout << url << "\n";
                            links.pushBack( url );
                            size_t link_ind = links.size();
 
@@ -118,7 +157,11 @@ namespace dex
                                     {
                                     words.pushBack( wordsInAnchor[i] );
                                     //pushing back the link index and the word index. Can't think of a better way rn..
-                                    anchorText.pushBack( dex::pair( link_ind, words.size() ) );
+                                    // anchorText.pushBack( dex::pair( link_ind, words.size() ) );
+                                    dex::paired temp;
+                                    temp.second = words.size() -1 ;
+                                    temp.first = link_ind;
+                                    anchorText.pushBack( temp );
                                     }
                                  
                                  }
@@ -140,7 +183,7 @@ namespace dex
 
    // don't think we need a separate function for this -- added it to GetLinks. Kept this version here in case we want
    // to revert. 
-   void parser:: GetAnchorText ( )
+   void HTMLparser:: GetAnchorText ( )
       {
       string anchor;
       vector < string > OGAnchorText; //name changed to avoid confusion with pvt member variable.
