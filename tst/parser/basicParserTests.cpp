@@ -101,3 +101,22 @@ TEST_CASE( "get links", "[parser]" )
          }
       }
    }
+
+TEST_CASE( "get anchor text", "[parser]" )
+   {
+
+	SECTION( "parsed simple html document with one link" )
+      {
+      string htmlDoc = 
+         "<html>\
+            <title>Title</title>\
+            <body>\
+            <a href=\"https://web.eecs.umich.edu/~pmchen/software\">Software</a>\
+            </body>\
+         </html>";
+      vector< string > anchorText = GetAnchorText( htmlDoc );
+      string expectedAnchorText = "Software";
+      REQUIRE( anchorText.size() == 1 );
+      REQUIRE( anchorText[0] == expectedAnchorText );
+      }
+   }
