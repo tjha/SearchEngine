@@ -9,6 +9,7 @@
 #include "../src/utils/vector.hpp"
 
 using namespace dex;
+using namespace dex::utf;
 
 TEST_CASE( "decode", "[utf]" )
 	{
