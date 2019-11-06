@@ -1,7 +1,7 @@
 // basicParserTests.cpp
 // Basic testing of Parser functionality
-//
-//
+// 2019-11-06 : Made compatible with new paired struct;
+// 2019-11-05 : Made compatible with Parser class
 
 #include "basicString.hpp"
 #include "catch.hpp"
@@ -34,7 +34,7 @@ TEST_CASE( "get links", "[parser]" )
             </body>\
          </html>";
       HTMLparser testParser( htmlDoc );
-      testParser.GetLinks();
+      // testParser.GetLinks();
       vector< string > links = testParser.ReturnLinks( );
       string expectedLink = "https://web.eecs.umich.edu/~pmchen/software";
       REQUIRE( links.size() == 1 );
@@ -53,7 +53,7 @@ TEST_CASE( "get links", "[parser]" )
             </body>\
          </html>";
       HTMLparser testParser( htmlDoc );
-      testParser.GetLinks();
+      // testParser.GetLinks();
       vector< string > links = testParser.ReturnLinks( );
       string expectedLink1 = "https://web.eecs.umich.edu/~pmchen/software1";
       string expectedLink2 = "https://web.eecs.umich.edu/~pmchen/software2";
@@ -72,8 +72,9 @@ TEST_CASE( "get links", "[parser]" )
          {
          htmlDoc = readFromFile( filename.cStr() );
          HTMLparser testParser( htmlDoc );
-         testParser.GetLinks();
+         // testParser.GetLinks();
          vector< string > links = testParser.ReturnLinks( );
+        
          std::cout << "Done with parser\n";
       
          // vector < string > links = GetLinks ( htmlDoc );
@@ -104,9 +105,19 @@ TEST_CASE( "get links", "[parser]" )
             {
             REQUIRE ( links[i] == expectedLinks[i] );
             }
+         vector <dex::paired> anchors = testParser.ReturnAnchorText();
          vector <string> words = testParser.ReturnWords();
-         
-         // REQUIRE(1 == 0);
+         vector <string> AnchorWords;
+         AnchorWords.pushBack("Computer");
+         AnchorWords.pushBack("Science");
+         AnchorWords.pushBack("and");
+         AnchorWords.pushBack("Engineering");
+         AnchorWords.pushBack("Division");
+         // Using 7 cuz i know the indices - couldn't think of a better way of doing this.
+         for (size_t i = 0; i < anchors[7].second.size();i++)
+            {
+            REQUIRE(AnchorWords[i] == words[anchors[7].second[i]]);
+            }
          } 
       catch ( outOfRangeException &e )
          {
@@ -129,11 +140,11 @@ TEST_CASE( "get anchor text", "[parser]" )
             </body>\
          </html>";
       HTMLparser testParser( htmlDoc );
-      testParser.GetLinks();
+      // testParser.GetLinks();
       vector< string > words = testParser.ReturnWords( );
       vector< paired > anchorText = testParser.ReturnAnchorText();
       string expectedAnchorText = "Software";
       REQUIRE( anchorText.size() == 1 );
-      REQUIRE( words[ anchorText[ 0 ].second ] == expectedAnchorText );
+      REQUIRE( words[ anchorText[ 0 ].second[0] ] == expectedAnchorText );
       }
    }

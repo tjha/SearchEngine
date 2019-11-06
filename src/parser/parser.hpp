@@ -1,6 +1,8 @@
 // parser.hpp
 //
 // Provides functions to parse HTML content and deliver 
+// 2019-11-06:  Fixed whitespace errors, changed to paired to <size_t vector <size_t>>, : medhak
+// 2019-11-05:  Implemented return functions, fixed errors in breakanchor.
 // 2019-11-04:  Created parser class, some basic functions - constructor, BreakAnchor. Merged GetAnchorText and 
 //              GetLinks into GetLinks - makes it easier to build anchorText vector : medhak
 // 2019-11-04:  Added GetAnchorText function to get link anchor text: tjha
@@ -26,7 +28,7 @@ namespace dex
    struct paired
          {
          size_t first;
-         size_t second;
+         vector <size_t> second;
          };
 
    class HTMLparser
@@ -37,7 +39,6 @@ namespace dex
       vector < string > words;
       // Doing this as pair of < size_t, size_t >. The other option is pair of <size_t, vector <size_t> >.
       
-      // vector< dex::pair< size_t, size_t > > anchorText; 
       vector< paired > anchorText; 
       public:
       HTMLparser (){ htmlFile = "";}
@@ -45,6 +46,7 @@ namespace dex
       HTMLparser( string html )
       {
          htmlFile = html; 
+         GetLinks();
       }
 
       void GetLinks( );
@@ -63,7 +65,6 @@ namespace dex
       }
 
    
-   
    vector < string > HTMLparser::ReturnWords ( )
       {
       return words;
@@ -74,9 +75,6 @@ namespace dex
       {
       return anchorText;
       }
-
-
-
 
   
    // breaks anchor string into individual words and returns them to add to words.
@@ -98,9 +96,20 @@ namespace dex
       }
       while( pos_whitespace != string::npos )
          {
-         word = anchor.substr(pos_start, pos_whitespace - pos_start + 1);
-         
+         word = anchor.substr(pos_start, pos_whitespace - pos_start + 1);   
          if (word != " " && word != "\n" && word != "\t" && word!= ""){
+               if(word.find("\n") != string::npos)
+               {
+                  word = word.replace(word.find("\n"), 1, "");
+               }
+               if (word.find("\t") != string::npos)
+               {
+                  word = word.replace(word.find("\t"), 1, "");
+               }
+               if (word.find(" ") != string::npos)
+               {
+                  word = word.replace(word.find(" "), 1, "");
+               }
                output.pushBack( word );
          }
          pos_start = pos_whitespace + 1;
@@ -168,7 +177,7 @@ namespace dex
                            url = url.substr( 1, url.length()-2 );
                            // cout << url << "\n";
                            links.pushBack( url );
-                           size_t link_ind = links.size();
+                           size_t link_ind = links.size() - 1;
 
                            //finding anchor text - - i think this should just be one function.
                            posOpenTag = htmlFile.find ( "<", posCloseTag );
@@ -182,17 +191,16 @@ namespace dex
                                  anchor = htmlFile.substr( posCloseTag + 1, posOpenTag - posCloseTag - 1 );
                                  vector< string > wordsInAnchor;
                                  wordsInAnchor = BreakAnchors( anchor );
+                                 dex::paired temp;
+                                 temp.first = link_ind;
                                  for( size_t i = 0; i < wordsInAnchor.size(); i++)
                                     {
                                     words.pushBack( wordsInAnchor[i] );
                                     //pushing back the link index and the word index. Can't think of a better way rn..
                                     // anchorText.pushBack( dex::pair( link_ind, words.size() ) );
-                                    dex::paired temp;
-                                    temp.second = words.size() -1 ;
-                                    temp.first = link_ind;
-                                    anchorText.pushBack( temp );
+                                    temp.second.pushBack( words.size() -1) ;
                                     }
-                                 
+                                 anchorText.pushBack( temp );
                                  }
                               }
                            }
