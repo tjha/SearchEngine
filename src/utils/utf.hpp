@@ -10,7 +10,6 @@
 #include <cstddef>
 #include "basicString.hpp"
 #include "exception.hpp"
-#include "typeTraits.hpp"
 #include "utility.hpp"
 #include "unorderedMap.hpp"
 #include "unorderedSet.hpp"
@@ -20,7 +19,7 @@ namespace dex
 	{
 	namespace utf
 		{
-		template < class T, typename = typename dex::enableIf < !dex::isIntegral< T >::value >::type >
+		template < class T >
 		class encoder
 			{
 			public:
@@ -177,8 +176,7 @@ namespace dex
 			return decodedValue;
 			}
 
-		template < class T, class InputIt = unsigned char *,
-				typename = typename dex::enableIf < !dex::isIntegral< T >::value >::type >
+		template < class T, class InputIt = unsigned char * >
 		class decoder
 			{
 			public:
