@@ -1,42 +1,126 @@
 // utf.hpp
 // Utilities for dealing with UTF-8 encodings
 //
+// 2019-11-10: Reformat file into encoder and decoder classes that take in many data types: jasina, lougheem
 // 2019-11-03: File created, functions for converting between 32 bit numbers and UTF encodings: jasina, lougheem
 
 #ifndef DEX_UTF
 #define DEX_UTF
 
+#include <cstddef>
+#include "basicString.hpp"
 #include "exception.hpp"
 #include "typeTraits.hpp"
+#include "utility.hpp"
+#include "unorderedMap.hpp"
 #include "vector.hpp"
 
 namespace dex
 	{
 	namespace utf
 		{
-		unsigned long utfToLong( const unsigned char *encoding )
+		template < class T, typename = typename dex::enableIf < !dex::isIntegral< T >::value >::type >
+		class encoder
 			{
-			// How many bits of the first byte we need to care about
-			unsigned count = 8;
-			// Value to return
-			unsigned long decodedValue;
+			public:
+				dex::vector < unsigned char > operator( )( T number )
+					{
+					if ( number > 0x7FFFFFFF )
+						throw invalidArgumentException( );
 
-			// Handle the ASCII case
-			if ( *encoding < 0x80 )
-				return *encoding;
+					dex::vector < unsigned char > returnVector;
+					// Find smallest number of bits to encode this number
 
-			// Find how many bits of the first byte we need to care about
-			while ( ( *encoding >> ( --count ) ) % 2 );
+					if ( number < 0x80 )
+						{
+						returnVector.pushBack( number );
+						return returnVector;
+						}
 
-			// Determine the encoded value
-			decodedValue = *( encoding++ ) & ( 0xFF >> ( 8 - count ) );
-			for ( unsigned bytesToRead = 6 - count;  bytesToRead != 0;  ++encoding, --bytesToRead )
-				decodedValue = ( decodedValue << 6 ) + ( *encoding & 0x3F );
+					// Find how many bytes we need to represent number in UTF (technically, find 1 less than that)
+					unsigned numberAdditionalBytes = 0;
+					while ( number >> ( 5 * ++numberAdditionalBytes + 6 ) );
 
-			return decodedValue;
-			}
+					returnVector.reserve( numberAdditionalBytes + 1 );
 
-		unsigned long utfToLongSafe( const unsigned char *encoding )
+					// Add the first byte
+					returnVector.pushBack( ( 0xFF << ( 7 - numberAdditionalBytes ) ) + ( number >> ( 6 * numberAdditionalBytes ) ) );
+
+					// Add the remaining bytes
+					while ( numberAdditionalBytes != 0 )
+						returnVector.pushBack( 0x80 + ( ( number >> ( 6 * ( --numberAdditionalBytes ) ) ) & 0x3F ) );
+
+					return returnVector;
+					}
+			};
+
+		template < class T1, class T2 >
+		class encoder < dex::pair < T1, T2 > >
+			{
+			public:
+				dex::vector < unsigned char > operator( )( const dex::pair < T1, T2 > &data )
+					{
+					dex::vector < unsigned char > encodedData = encoder < T1 >( )( data.first );
+					dex::vector < unsigned char > encodedSecond = encoder < T2 >( )( data.second );
+					encodedData.insert( encodedData.cend( ), encodedSecond.cbegin( ), encodedSecond.cend( ) );
+					return encodedData;
+					}
+			};
+
+		template < class T >
+		class encoder < dex::vector < T > >
+			{
+			public:
+				dex::vector < unsigned char > operator( )( const dex::vector < T > &data )
+					{
+					encoder < T > TEncoder;
+					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
+					for ( typename dex::vector < T >::constIterator it = data.cbegin( );  it != data.cend( );  ++it )
+						{
+						dex::vector < unsigned char > encodedDatum = TEncoder( *it );
+						encodedData.insert( encodedData.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
+						}
+					return encodedData;
+					}
+			};
+
+		template < class T >
+		class encoder < dex::basicString < T > >
+			{
+			public:
+				dex::vector < unsigned char > operator( )( const dex::basicString < T > &data )
+					{
+					encoder < T > TEncoder;
+					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
+					for ( typename dex::basicString < T >::constIterator it = data.cbegin( );  it != data.cend( );  ++it )
+						{
+						dex::vector < unsigned char > encodedDatum = TEncoder( *it );
+						encodedData.insert( encodedData.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
+						}
+					return encodedData;
+					}
+			};
+
+		template < class Key, class Value >
+		class encoder < dex::unorderedMap < Key, Value > >
+			{
+			public:
+				dex::vector < unsigned char > operator( )( const dex::unorderedMap < Key, Value > &data )
+					{
+					encoder < dex::pair < Key, Value > > KeyValueEncoder;
+					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
+					for ( typename dex::unorderedMap < Key, Value >::constIterator it = data.cbegin( );
+							it != data.cend( );  ++it )
+						{
+						dex::vector < unsigned char > encodedDatum = KeyValueEncoder( *it );
+						encodedData.insert( encodedData.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
+						}
+					return encodedData;
+					}
+			};
+
+		template < class InputIt >
+		unsigned long decodeSafe( InputIt encoding )
 			{
 			// How many bits of the first byte we need to care about
 			unsigned count = 8;
@@ -68,44 +152,134 @@ namespace dex
 				}
 
 			// Check that the encoded sequence is not overly long
-			if ( ( count == 5 && decodedValue < 0x80 ) || decodedValue < ( 1 << ( 31 - 5 * count ) ) )
+			if ( ( count == 5 && decodedValue < 0x80 )
+					|| decodedValue < static_cast < unsigned long >( 1 << ( 31 - 5 * count ) ) )
 				throw invalidArgumentException( );
 
 			return decodedValue;
 			}
 
-		dex::vector < unsigned char > longToUTF( unsigned long number )
+		template < class T, class InputIt = unsigned char *,
+				typename = typename dex::enableIf < !dex::isIntegral< T >::value >::type >
+		class decoder
 			{
-			if ( number > 0x7FFFFFFF )
-				throw invalidArgumentException( );
+			public:
+				unsigned long operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+					{
+					// How many bits of the first byte we need to care about
+					unsigned count = 8;
+					// Value to return
+					T decodedValue;
 
-			dex::vector < unsigned char > returnVector;
-			// Find smallest number of bits to encode this number
+					// Handle the ASCII case
+					if ( *encoding < 0x80 )
+						{
+						if ( advancedEncoding )
+							{
+							*advancedEncoding = encoding;
+							++( *advancedEncoding );
+							}
+						return *encoding;
+						}
 
-			if ( number < 0x80 )
-				{
-				returnVector.pushBack( number );
-				return returnVector;
-				}
+					// Find how many bits of the first byte we need to care about
+					while ( ( *encoding >> ( --count ) ) % 2 );
 
-			// Find how many bytes we need to represent number in UTF (technically, find 1 less than that)
-			unsigned numberAdditionalBytes = 0;
-			while ( number >> ( 5 * ++numberAdditionalBytes + 6 ) );
+					// Determine the encoded value
+					decodedValue = *( encoding++ ) & ( 0xFF >> ( 8 - count ) );
+					for ( unsigned bytesToRead = 6 - count;  bytesToRead != 0;  ++encoding, --bytesToRead )
+						decodedValue = ( decodedValue << 6 ) + ( *encoding & 0x3F );
 
-			returnVector.reserve( numberAdditionalBytes + 1 );
+					if ( advancedEncoding )
+						*advancedEncoding = encoding;
 
-			// Add the first byte
-			returnVector.pushBack( ( 0xFF << ( 7 - numberAdditionalBytes ) ) + ( number >> ( 6 * numberAdditionalBytes ) ) );
+					return decodedValue;
+					}
+			};
 
-			// Add the remaining bytes
-			while ( numberAdditionalBytes != 0 )
-				returnVector.pushBack( 0x80 + ( ( number >> ( 6 * ( --numberAdditionalBytes ) ) ) & 0x3F ) );
+		template < class T1, class T2, class InputIt >
+		class decoder < dex::pair < T1, T2 >, InputIt >
+			{
+			public:
+				dex::pair < T1, T2 > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+					{
+					InputIt *localAdvancedEncoding = &encoding;
+					T1 first = decoder < T1, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					T2 second = decoder < T2, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
 
-			return returnVector;
-			}
+					if ( advancedEncoding )
+						*advancedEncoding = *localAdvancedEncoding;
+
+					return dex::pair < T1, T2 >( first, second );
+					}
+			};
+
+		template < class T, class InputIt >
+		class decoder < dex::vector < T >, InputIt >
+			{
+			public:
+				dex::vector < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+					{
+					InputIt *localAdvancedEncoding = &encoding;
+					decoder < T > TDecoder;
+					dex::vector < T > decodedData;
+					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+
+					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
+						decodedData.pushBack( TDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
+
+					if ( advancedEncoding )
+						*advancedEncoding = *localAdvancedEncoding;
+
+					return decodedData;
+					}
+			};
+
+		template < class T, class InputIt >
+		class decoder < dex::basicString < T >, InputIt >
+			{
+			public:
+				dex::basicString < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+					{
+					InputIt *localAdvancedEncoding = &encoding;
+					decoder < T > TDecoder;
+					dex::basicString < T > decodedData;
+					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+
+					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
+						decodedData.pushBack( TDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
+
+					if ( advancedEncoding )
+						*advancedEncoding = *localAdvancedEncoding;
+
+					return decodedData;
+					}
+			};
+
+		template < class Key, class Value, class InputIt >
+		class decoder < dex::unorderedMap < Key, Value >, InputIt >
+			{
+			public:
+				dex::unorderedMap < Key, Value > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+					{
+					InputIt *localAdvancedEncoding = &encoding;
+					decoder < dex::pair < Key, Value > > KeyValueDecoder;
+					dex::unorderedMap < Key, Value > decodedData;
+					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+
+					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
+						decodedData.insert( KeyValueDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
+
+					if ( advancedEncoding )
+						*advancedEncoding = *localAdvancedEncoding;
+
+					return decodedData;
+					}
+			};
 
 		// We'll say a byte is a sentinel if it looks like 11111111
-		bool isUTFSentinel( const unsigned char *encoding )
+		template < class InputIt >
+		bool isUTFSentinel( InputIt encoding )
 			{
 			return *encoding == 0xFF;
 			}
