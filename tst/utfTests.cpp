@@ -4,12 +4,10 @@
 // 2019-11-10: Write and pass tests for encoding and decoding various data types: jasina, lougheem
 // 2019-11-03: File created: jasina, lougheem
 
-// TODO: remove these
-#include <bitset>
-#include <iostream>
-
 #include "catch.hpp"
 #include "../src/utils/exception.hpp"
+#include "../src/utils/unorderedMap.hpp"
+#include "../src/utils/unorderedSet.hpp"
 #include "../src/utils/utf.hpp"
 #include "../src/utils/vector.hpp"
 
@@ -302,5 +300,24 @@ TEST_CASE( "encode and decode", "[utf]" )
 		REQUIRE( mappyCopy[ "beta" ] == 200 );
 		REQUIRE( mappyCopy[ "gamma" ] == 300 );
 		REQUIRE( mappyCopy[ "delta" ] == 400 );
+		}
+
+	SECTION( "unordered set" )
+		{
+		unorderedSet < string > set;
+		set.insert( "alpha" );
+		set.insert( "beta" );
+		set.insert( "gamma" );
+		set.insert( "delta" );
+
+		unorderedSet < string > setCopy =
+				decoder < unorderedSet < string > >( )
+				( encoder < unorderedSet < string > >( )( set ).data( ) );
+
+		REQUIRE( set.size( ) == 4 );
+		REQUIRE( set.count( "alpha" ) );
+		REQUIRE( set.count( "beta" ) );
+		REQUIRE( set.count( "gamma" ) );
+		REQUIRE( set.count( "delta" ) );
 		}
 	}

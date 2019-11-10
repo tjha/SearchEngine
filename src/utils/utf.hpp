@@ -13,6 +13,7 @@
 #include "typeTraits.hpp"
 #include "utility.hpp"
 #include "unorderedMap.hpp"
+#include "unorderedSet.hpp"
 #include "vector.hpp"
 
 namespace dex
@@ -113,6 +114,23 @@ namespace dex
 							it != data.cend( );  ++it )
 						{
 						dex::vector < unsigned char > encodedDatum = KeyValueEncoder( *it );
+						encodedData.insert( encodedData.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
+						}
+					return encodedData;
+					}
+			};
+
+		template < class Key >
+		class encoder < dex::unorderedSet < Key > >
+			{
+			public:
+				dex::vector < unsigned char > operator( )( const dex::unorderedSet < Key > &data )
+					{
+					encoder < Key > KeyEncoder;
+					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
+					for ( typename dex::unorderedSet < Key >::constIterator it = data.cbegin( ); it != data.cend( );  ++it )
+						{
+						dex::vector < unsigned char > encodedDatum = KeyEncoder( *it );
 						encodedData.insert( encodedData.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
 						}
 					return encodedData;
@@ -269,6 +287,27 @@ namespace dex
 
 					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
 						decodedData.insert( KeyValueDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
+
+					if ( advancedEncoding )
+						*advancedEncoding = *localAdvancedEncoding;
+
+					return decodedData;
+					}
+			};
+
+		template < class Key, class InputIt >
+		class decoder < dex::unorderedSet < Key >, InputIt >
+			{
+			public:
+				dex::unorderedSet < Key > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+					{
+					InputIt *localAdvancedEncoding = &encoding;
+					decoder < Key > KeyDecoder;
+					dex::unorderedSet < Key > decodedData;
+					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+
+					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
+						decodedData.insert( KeyDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
 
 					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;
