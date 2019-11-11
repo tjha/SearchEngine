@@ -19,6 +19,7 @@ using dex::outOfRangeException;
 using dex::string;
 using dex::HTMLparser;
 using dex::paired;
+using dex::vector;
 
 using std::cerr;
 using std::cout;
@@ -150,6 +151,7 @@ TEST_CASE( "get anchor text", "[parser]" )
       REQUIRE( words[ anchorText[ 0 ].second[0] ] == expectedAnchorText );
       }
 
+    /*
    SECTION ( "peter chen html page with commented out html" )
       {
       string filename = "tst/parser/peter_chen.html";
@@ -168,8 +170,7 @@ TEST_CASE( "get anchor text", "[parser]" )
          
          vector < paired > expectedLinks;
          expectedLinks.pushBack({0, });
-         cout << expectedLinks[0].second << endl;
-         /*
+         //cout << expectedLinks[0].second << endl;
          // Check anchor text for every link
          for (size_t i = 0; i < links.size(); i++)
             {
@@ -179,7 +180,6 @@ TEST_CASE( "get anchor text", "[parser]" )
                }
 
             }
-         */
          vector <string> words = testParser.ReturnWords();
          
          } 
@@ -188,5 +188,5 @@ TEST_CASE( "get anchor text", "[parser]" )
          cerr << "Cannot read file: " << filename << endl;
          REQUIRE( false ); // force test failure
          }
-      }
+      }*/
    }

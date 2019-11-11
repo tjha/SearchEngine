@@ -1,5 +1,7 @@
 // parser.hpp
-// Provides functions to parse HTML content and deliver 
+// Provides functions to parse HTML content and deliver
+//
+// 2019-11-11:  Implemented ParseTag function to aid in recursive parsing: tjha
 // 2019-11-06:  Fixed whitespace errors, changed to paired to <size_t vector <size_t>>, : medhak
 // 2019-11-05:  Implemented return functions, fixed errors in breakanchor.
 // 2019-11-04:  Created parser class, some basic functions - constructor, BreakAnchor. Merged GetAnchorText and 
@@ -17,72 +19,90 @@
 #include "utility.hpp"
 
 
-using dex::string;
-using dex::vector;
-using dex::exception;
-
-
 namespace dex
 {
    struct paired
          {
          size_t first;
-         vector <size_t> second;
+         dex::vector <size_t> second;
          };
 
    class HTMLparser
    {
    private:
-      string htmlFile;
-      vector < string > links;
-      vector < string > words;
-      // Doing this as pair of < size_t, size_t >. The other option is pair of <size_t, vector <size_t> >.
-      
-      vector< paired > anchorText; 
+      dex::string htmlFile;
+      dex::vector < dex::string > links;
+      dex::vector < dex::string > words;
+      dex::vector< paired > anchorText;
+
+      struct Positions
+         {
+         size_t start;
+         size_t end;
+         };
+
+      Positions ParseTag( Positions &pos, dex::string &start_tag, dex::string &end_tag )
+         {
+         Positions newPos;
+         newPos.start = htmlFile.find(start_tag.cStr(), pos.start, pos.end - pos.start);
+         if ( newPos.start == dex::string::npos )
+            {
+            // incorporate some form of error logging
+            throw dex::outOfRangeException();
+            }
+         newPos.end = htmlFile.find(end_tag.cStr(), pos.start, pos.end - pos.start);
+         if ( newPos.end == dex::string::npos )
+            {
+            // incorporate some form of error logging
+            throw dex::outOfRangeException();
+            }
+         newPos.end += end_tag.length();
+         return newPos;
+         }
+
    public:
       HTMLparser (){ htmlFile = "";}
-
-      HTMLparser( string html )
+      HTMLparser( dex::string &html )
       {
          htmlFile = html; 
          GetLinks();
       }
-
       void GetLinks( );
-      vector <string> BreakAnchors ( string anchor );
+      dex::vector < dex::string > BreakAnchors ( dex::string anchor );
       void GetAnchorText( );
-      vector < string > ReturnLinks ( );
+      dex::vector < dex::string > ReturnLinks ( );
       // vector < dex::pair <size_t, size_t > > ReturnAnchorText ( );
-      vector < dex::paired > ReturnAnchorText ( );
-      vector < string > ReturnWords ( );
+      dex::vector < dex::paired > ReturnAnchorText ( );
+      dex::vector < dex::string > ReturnWords ( );
       // void GetWords( );
+      //
    };
 
-   vector < string > HTMLparser::ReturnLinks ( )
+   dex::vector < dex::string > HTMLparser::ReturnLinks ( )
       {
       return links;
       }
 
    
-   vector < string > HTMLparser::ReturnWords ( )
+   dex::vector < dex::string > HTMLparser::ReturnWords ( )
       {
       return words;
       }
 
   
-   vector < dex::paired > HTMLparser::ReturnAnchorText ( )
+   dex::vector < dex::paired > HTMLparser::ReturnAnchorText ( )
       {
       return anchorText;
       }
 
    // breaks anchor string into individual words and returns them to add to words.
-   vector < string > HTMLparser::BreakAnchors ( string anchor )
+   dex::vector < dex::string > HTMLparser::BreakAnchors ( dex::string anchor )
       {
-      string word;
-      vector < string > output;
+      dex::string word;
+      dex::vector < dex::string > output;
       size_t pos_whitespace = anchor.find(" ");
       size_t pos_start = 0;
-      if ( pos_whitespace != string::npos ){
+      if ( pos_whitespace != dex::string::npos ){
          if (anchor.find("\n", pos_start) != string::npos && anchor.find("\n", pos_start) < pos_whitespace)
                {
                pos_whitespace = anchor.find("\n", pos_start);
@@ -187,7 +207,7 @@ namespace dex
                                     && htmlFile[ posOpenTag + 2 ] == 'a')
                                  {
                                  anchor = htmlFile.substr( posCloseTag + 1, posOpenTag - posCloseTag - 1 );
-                                 vector< string > wordsInAnchor;
+                                 dex::vector< string > wordsInAnchor;
                                  wordsInAnchor = BreakAnchors( anchor );
                                  dex::paired temp;
                                  temp.first = link_ind;
@@ -223,7 +243,7 @@ namespace dex
    void HTMLparser:: GetAnchorText ( )
       {
       string anchor;
-      vector < string > OGAnchorText; //name changed to avoid confusion with pvt member variable.
+      dex::vector < string > OGAnchorText; //name changed to avoid confusion with pvt member variable.
       size_t posOpenTag = 0, posCloseTag = 0;
       
       while ( posOpenTag != string::npos )
