@@ -1,5 +1,4 @@
 // parser.hpp
-//
 // Provides functions to parse HTML content and deliver 
 // 2019-11-06:  Fixed whitespace errors, changed to paired to <size_t vector <size_t>>, : medhak
 // 2019-11-05:  Implemented return functions, fixed errors in breakanchor.
@@ -33,14 +32,14 @@ namespace dex
 
    class HTMLparser
    {
-      private:
+   private:
       string htmlFile;
       vector < string > links;
       vector < string > words;
       // Doing this as pair of < size_t, size_t >. The other option is pair of <size_t, vector <size_t> >.
       
       vector< paired > anchorText; 
-      public:
+   public:
       HTMLparser (){ htmlFile = "";}
 
       HTMLparser( string html )
@@ -76,7 +75,6 @@ namespace dex
       return anchorText;
       }
 
-  
    // breaks anchor string into individual words and returns them to add to words.
    vector < string > HTMLparser::BreakAnchors ( string anchor )
       {

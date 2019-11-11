@@ -1,8 +1,12 @@
 // basicParserTests.cpp
 // Basic testing of Parser functionality
-// 2019-11-06 : Made compatible with new paired struct;
-// 2019-11-05 : Made compatible with Parser class
-
+// 2019-11-06: Made compatible with new paired struct: medhak
+// 2019-11-06: AnchorText test with peter_chen.html: tjha
+// 2019-11-05: Made compatible with Parser classL medhak
+// 2019-11-04: GetLinks test with peter_chen.html
+//             Hard-coded html test for anchor text: tjha
+// 2019-10-26: File created, two GetLinks tests with hard-coded html: medhak,
+//             tjha
 #include "basicString.hpp"
 #include "catch.hpp"
 #include "exception.hpp"
@@ -74,8 +78,6 @@ TEST_CASE( "get links", "[parser]" )
          HTMLparser testParser( htmlDoc );
          // testParser.GetLinks();
          vector< string > links = testParser.ReturnLinks( );
-        
-         std::cout << "Done with parser\n";
       
          // vector < string > links = GetLinks ( htmlDoc );
 
@@ -146,5 +148,45 @@ TEST_CASE( "get anchor text", "[parser]" )
       string expectedAnchorText = "Software";
       REQUIRE( anchorText.size() == 1 );
       REQUIRE( words[ anchorText[ 0 ].second[0] ] == expectedAnchorText );
+      }
+
+   SECTION ( "peter chen html page with commented out html" )
+      {
+      string filename = "tst/parser/peter_chen.html";
+      string htmlDoc;
+      try
+         {
+         htmlDoc = readFromFile( filename.cStr() );
+         HTMLparser testParser( htmlDoc );
+         testParser.GetLinks();
+         vector< string > links = testParser.ReturnLinks( );
+         vector< paired > anchorText = testParser.ReturnAnchorText();
+      
+         REQUIRE ( links.size() == 13 );
+         REQUIRE ( anchorText.size() == 13 );
+
+         
+         vector < paired > expectedLinks;
+         expectedLinks.pushBack({0, });
+         cout << expectedLinks[0].second << endl;
+         /*
+         // Check anchor text for every link
+         for (size_t i = 0; i < links.size(); i++)
+            {
+            for (size_t i = 0; i < expectedLinks.size(); i++ )
+               {
+               REQUIRE ( links[i] == expectedLinks[i] );
+               }
+
+            }
+         */
+         vector <string> words = testParser.ReturnWords();
+         
+         } 
+      catch ( outOfRangeException &e )
+         {
+         cerr << "Cannot read file: " << filename << endl;
+         REQUIRE( false ); // force test failure
+         }
       }
    }
