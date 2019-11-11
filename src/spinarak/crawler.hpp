@@ -10,6 +10,7 @@
 #include "url.hpp"
 #include <iostream>
 
+// 2019-11-10: Follow robots redirects until you find the url
 // 2019-11-04: Added more error codes, added file for RobotsTxt content to be
 //             printed to, added better error handling: combsc
 // 2019-11-03: Fixed crawler politeness bugs, added ability to toggle politeness
@@ -58,7 +59,7 @@ namespace dex
 				}
 			static string makeGetMessage( const string &path, const string &host )
 				{
-				return "GET /" 
+				return "GET " 
 					+ path
 					+ " HTTP/1.1\r\nHost: "
 					+ host
@@ -146,29 +147,28 @@ namespace dex
 				hints.ai_socktype = SOCK_STREAM;
 				hints.ai_protocol = IPPROTO_TCP;
 
-				int getaddrresult = getaddrinfo( url.host.cStr( ), url.port != "" ? url.port.cStr( ) : "80", &hints, &address );
-				if ( getaddrresult == 1 ) 
+				int getaddrresult = getaddrinfo( url.getHost( ).cStr( ), url.getPort( ) != "" ? url.getPort( ).cStr( ) : "80", &hints, &address );
+				if ( getaddrresult != 0 ) 
 					{
 					res = "Could not resolve DNS\n";
 					return resolveDnsError;
 					}
 
+				
 				int socketFD = socket( address->ai_family, address->ai_socktype, address->ai_protocol );
-
 				// Connect the socket to the host address.
 				int connectRes = connect( socketFD, address->ai_addr, address->ai_addrlen);
-				if ( connectRes == -1 )
+				if ( connectRes != 0 )
 					{
 					res = "Could not connect to Host\n";
 					return connectionError;
 					}
-
-				string getMessage = makeGetMessage( url.path, url.host );
+				string getMessage = makeGetMessage( url.getPath( ), url.getHost( ) );
 
 				int error = send( socketFD, getMessage.cStr( ), getMessage.length( ), 0 );
 				// Read from the socket until there's no more data, copying it to
 				// stdout.
-				if (error == -1)
+				if ( error == -1 )
 					{
 					res =  "Failure in sending\n";
 					return sendingError;
@@ -209,14 +209,14 @@ namespace dex
 				tls_configure( ctx, config );
 
 				// Connect to the host address
-				int connectRes = tls_connect( ctx, url.host.cStr( ), url.port != "" ? url.port.cStr( ) : "443" );
-				if ( connectRes == -1 )
+				int connectRes = tls_connect( ctx, url.getHost( ).cStr( ), url.getPort( ) != "" ? url.getPort( ).cStr( ) : "443" );
+				if ( connectRes != 0 )
 					{
 					res = "Could not connect to Host\n";
 					return connectionError;
 					}
 
-				string getMessage = makeGetMessage( url.path, url.host );
+				string getMessage = makeGetMessage( url.getPath( ), url.getHost( ) );
 				
 				int error = tls_write( ctx, getMessage.cStr( ), getMessage.length( ) );
 				if ( error == -1 )
@@ -262,48 +262,57 @@ namespace dex
 					{
 					RobotTxt robot;
 					// Check to see if we have a robot object for the domain we're crawling
-					if ( robots.count( url.host ) < 1 )
+					if ( robots.count( url.getHost( ) ) < 1 )
 						{
-						// visit robots.txt
+						// visit robots.txt until we no longer receieve a redirect or until we've
+						// gone too long and we need to kill this redirect chain.
 						Url robotUrl( url );
-						robotUrl.path = "robots.txt";
+						robotUrl.setPath( "/robots.txt" );
 
-						int a;
-						if ( robotUrl.service == "https" )
+						string urlToVisit = robotUrl.completeUrl( );
+						int errorCode = 300;
+						int numRedirectsFollowed = 0;
+
+						for ( ;  numRedirectsFollowed < 10 && errorCode / 100 == 3;  ++numRedirectsFollowed )
 							{
-							a = httpsConnect( robotUrl, res, robotFile );
-							}
-						else
-							{
-							a = httpConnect( robotUrl, res, robotFile );
+							Url robotUrl( urlToVisit.cStr( ) );
+							if ( robotUrl.getService( ) == "https" )
+								{
+								errorCode = httpsConnect( robotUrl, res, robotFile );
+								}
+							else
+								{
+								errorCode = httpConnect( robotUrl, res, robotFile );
+								}
+							urlToVisit = res;
 							}
 
 						// If our error code is 404, the path does not exist and we create a default robots.txt object
-						if ( a == 404 )
+						if ( errorCode == 404 )
 							{
 							// Create Default
-							RobotTxt newRobot( url.host );
+							RobotTxt newRobot( url.getHost( ) );
 							robot = newRobot;
 							}
 						// If there was an error, we need to abort and return the error
-						if ( a != 0 )
+						if ( errorCode != 0 )
 							{
-							return a;
+							return errorCode;
 							}
 						else
 							{
 							// Create new RobotsTxt
 							string robotsTxtInformation = "";
-							RobotTxt newRobot( url.host, robotsTxtInformation );
+							RobotTxt newRobot( url.getHost( ), robotsTxtInformation );
 							robot = newRobot;
 							}
 						}
 					else
 						{
-						robot = robots[ url.host ];
+						robot = robots[ url.getHost( ) ];
 						}
 
-					if ( !robot.canVisitPath( url.path ) )
+					if ( !robot.canVisitPath( url.getPath( ) ) )
 						{
 						res = "Cannot visit path due to robots object";
 						return politenessError;
@@ -311,19 +320,19 @@ namespace dex
 					
 					robot.updateLastVisited( );
 					// Update the robot in our cache
-					robots[ url.host ] = robot;
+					robots[ url.getHost( ) ] = robot;
 					}
 				
 
-				if ( url.service == "https" )
+				if ( url.getService( ) == "https" )
 					{
-					int a = httpsConnect( url, res, contentFile );
-					return a;
+					int errorCode = httpsConnect( url, res, contentFile );
+					return errorCode;
 					}
 				else
 					{
-					int a = httpConnect( url, res, contentFile );
-					return a;
+					int errorCode = httpConnect( url, res, contentFile );
+					return errorCode;
 					}
 				}
 		};

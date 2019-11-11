@@ -65,8 +65,10 @@ void testHttp( )
 	int robotFile = 2;
 	string res;
 
+	
 	int errorCode = dex::crawler::crawlUrl( "http://www.runescape.com/splash", fileToWrite, robotFile, res, robots );
 	assert( errorCode == 302 );
+	
 	assert( res == "https://www.runescape.com/splash" );
 	
 	errorCode = dex::crawler::crawlUrl( "http://man7.org/", fileToWrite, robotFile, res, robots );

@@ -1,6 +1,9 @@
 
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
+#include "../utils/exception.hpp"
+// 2019-11-10: made parts of url private, have to call get and set
+//             to ensure we don't mess up the url in the future: combsc
 // 2019-10-31: Copy constructor for robots: jhirsh
 // 2019-10-31: Init commit, added query and fragment: combsc
 
@@ -8,9 +11,22 @@ namespace dex
 	{
 	class Url
 		{
+		private:
+			// Service must ONLY be the service, no :// allowed.
+			string service;
+			// Host does not include '/' at the end. Host should be in
+			// the form of www.someSite.domain
+			string host;
+			// port does NOT include : nor /, it should ONLY be the numbers.
+			string port;
+			// path ALWAYS begins with '/'. Port should NOT end with
+			// '/', since this is a URL and therefore an endpoint.
+			string path;
+			// query should not include ?
+			string query;
+			// fragment should not include #
+			string fragment;
 		public:
-			string service, host, port, path, query, fragment;
-
 			Url( const char *url )
 				{
 				// Assumes url points to static text but
@@ -62,10 +78,11 @@ namespace dex
 							port = "";
 						}
 					}
-				int beginPath = endPort + 1;
+				int beginPath = endPort;
 				int endPath;
 				// Check to see if there are any queries or fragments in our path.
-				if ( beginPath > int( totalUrl.size( ) ) )
+				
+				if ( beginPath >= int( totalUrl.size( ) ) )
 					{
 					endPath = int( totalUrl.size( ) );
 					path = "/";
@@ -105,6 +122,17 @@ namespace dex
             query = other.query;
             fragment = other.fragment;
             }
+
+			Url operator=( const Url &other )
+				{
+				service = other.service;
+            host = other.host;
+            port = other.port;
+            path = other.path;
+            query = other.query;
+            fragment = other.fragment;
+				return *this;
+				}
 			
 			string completeUrl( )
 				{
@@ -126,6 +154,75 @@ namespace dex
 					completeUrl += "#" + fragment;
 					}
 				return completeUrl;
+				}
+			
+			string getService( )
+				{
+				return service;
+				}
+			void setService( const string &s )
+				{
+				service = s;
+				if ( service != "http" && service != "https" )
+					{
+					std::cerr << "We do not support service of the type " << service << "\n";
+					throw invalidArgumentException( );
+					}
+				}
+
+			string getHost( )
+				{
+				return host;
+				}
+			void setHost( const string &h )
+				{
+				host = h;
+				}
+
+			string getPort( )
+				{
+				return port;
+				}
+			
+			void setPort( const string &p )
+				{
+				port = p;
+				if ( port.back( ) == ':' )
+					port = port.substr(0, port.size( ) - 1 );
+				}
+
+			string getPath( )
+				{
+				return path;
+				}
+
+			void setPath( const string &p )
+				{
+				path = p;
+				if ( path.size( ) == 0 || path.front( ) != '/' )
+					path.insert( 0, '/' );
+				while ( path.back( ) == '/' )
+					path.popBack( );
+				}
+
+			string getQuery( )
+				{
+				return query;
+				}
+
+			void setQuery( const string &q )
+				{
+				query = q;
+				}
+
+			string getFragment( )
+				{
+				return fragment;
+				}
+
+			void setFragment( const string &f )
+				{
+				fragment = f;
 				}
 		};
 	}
