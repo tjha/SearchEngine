@@ -282,6 +282,7 @@ namespace dex
 						for ( ;  numRedirectsFollowed < 10 && errorCode / 100 == 3;  ++numRedirectsFollowed )
 							{
 							Url robotUrl( urlToVisit.cStr( ) );
+							protocol = ( robotUrl.getService( ) == "http" ) ? HTTP : HTTPS;
 							errorCode = connectPage( robotUrl, result, protocol );
 							urlToVisit = result;
 							}
@@ -323,6 +324,7 @@ namespace dex
 					}
 				
 				result = "";
+				protocol = ( url.getService( ) == "http" ) ? HTTP : HTTPS;
 				int errorCode = connectPage( url, result, protocol );
 
 				if ( errorCode == 0 )

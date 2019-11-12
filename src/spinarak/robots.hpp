@@ -27,7 +27,6 @@ using std::ostream;
 using dex::unorderedSet;
 using dex::vector;
 using dex::string;
-using dex::writeToFile;
 
 namespace dex
 	{
