@@ -105,7 +105,16 @@ int main( int argc, char ** argv )
 
 		if ( errorCode >= 300 && errorCode < 400 )
 			{
-			cout << "broken link: " << it->cStr( ) << endl;
+			cout << "link asks to be redirected: " << it->cStr( ) << endl;
+			cout << "redirect location: " << res << endl;
+			cout << errorCode << endl;
+			brokenLinks.push_back( *it );
+			it = frontier.erase( it );
+			}
+		if ( errorCode >= 400 )
+			{
+			cout << "link broken: " << it->cStr( ) << endl;
+			cout << errorCode << endl;
 			brokenLinks.push_back( *it );
 			it = frontier.erase( it );
 			}
