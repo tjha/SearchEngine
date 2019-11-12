@@ -1,6 +1,7 @@
 // crawl.cpp
 // Testing for our crawler class
 //
+// 2019-11-10: pass filenames instead of file descriptors: jhirsh
 // 2019-11-04: edited code logic slightly to match other changes made today: combsc
 // 2019-11-04: File creation: jhirsh
 
@@ -82,14 +83,12 @@ int main( int argc, char ** argv )
 	std::list< string > frontier = loadFrontier( argv[ 1 ] );
 	std::list< string > brokenLinks;
 
-	string res;
-	int robotFile = open( argv[2], O_RDWR | O_CREAT | O_TRUNC, S_IRWXU );
-	int crawlFile = open( argv[3], O_RDWR | O_CREAT | O_TRUNC, S_IRWXU );
+	string result = "";
 	unorderedMap < string, RobotTxt > robots{ 20 };
 
 	for ( auto it = frontier.begin( );  it != frontier.end( ); )
 		{
-		int errorCode = dex::crawler::crawlUrl( it->cStr( ), crawlFile, robotFile, res, robots );
+		int errorCode = dex::crawler::crawlUrl( it->cStr( ), result, robots, argv[ 3 ] );
 		if ( errorCode == 0 )
 			{
 			cout << "crawled domain: " << it->cStr( ) << endl;
@@ -99,14 +98,14 @@ int main( int argc, char ** argv )
 		if ( errorCode == dex::politenessError )
 			{
 			cout << "Mr. Robot says to be polite: " << it->cStr( ) << endl;
-			cout << res << endl;
+			cout << result << endl;
 			++it;
 			}
 
 		if ( errorCode >= 300 && errorCode < 400 )
 			{
 			cout << "link asks to be redirected: " << it->cStr( ) << endl;
-			cout << "redirect location: " << res << endl;
+			cout << "redirect location: " << result << endl;
 			cout << errorCode << endl;
 			brokenLinks.push_back( *it );
 			it = frontier.erase( it );
@@ -118,6 +117,8 @@ int main( int argc, char ** argv )
 			brokenLinks.push_back( *it );
 			it = frontier.erase( it );
 			}
+
+		result = "";
 		}
 
 	// TODO make this output to a file such that the parser can pick it up

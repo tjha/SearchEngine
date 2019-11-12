@@ -27,7 +27,7 @@ using std::ostream;
 using dex::unorderedSet;
 using dex::vector;
 using dex::string;
-
+using dex::writeToFile;
 
 namespace dex
 	{
@@ -129,6 +129,8 @@ namespace dex
 				crawlDelay = defaultDelay;
 				allowedVisitTime = time( nullptr );
 				lastTimeVisited = allowedVisitTime - crawlDelay;
+
+				// TODO parse the actual robotTxtFile here
 				}
 			
 			RobotTxt operator=( const RobotTxt &other )
