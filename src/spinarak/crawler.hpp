@@ -10,6 +10,7 @@
 #include "url.hpp"
 #include <iostream>
 
+// 2019-11-13: fixed isError function, generalized User-agent: combsc
 // 2019-11-10: Follow robots redirects until you find the url
 // 2019-11-04: Added more error codes, added file for RobotsTxt content to be
 //             printed to, added better error handling: combsc
@@ -52,10 +53,9 @@ namespace dex
 		// We're keeping it a class so that we can make the interface clear when
 		// you're using it.
 		private:
-
 			static bool isError( const int &in )
 				{
-				return in >= politenessError && in <= lastError;
+				return in >= resolveDnsError && in <= lastError;
 				}
 			static string makeGetMessage( const string &path, const string &host )
 				{
@@ -63,7 +63,7 @@ namespace dex
 					+ path
 					+ " HTTP/1.1\r\nHost: "
 					+ host
-					+ "\r\nUser-Agent: LinuxGetUrl/2.0 jhirshey@umich.edu (Linux)\r\n"
+					+ "\r\nUser-Agent: " + RobotTxt::userAgent + "\r\n"
 					+ "Accept: */*\r\n"
 					+ "Accept-Encoding: identity\r\n"
 					+ "Connection: close\r\n\r\n";

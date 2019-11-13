@@ -1,6 +1,7 @@
 // robotTxtTests.cpp
 // Testing for our robots class
 //
+// 2019-11-13: Add robots.txt parse tests: combsc
 // 2019-11-02: better testing: combsc, jonas
 // 2019-10-21: File creation: combsc
 
@@ -16,6 +17,7 @@
 using dex::RobotTxt;
 using dex::string;
 
+/*
 TEST_CASE( "timing for visiting sites", "[robotsTxt]" )
 	{
 	string url = "https://domain.com";
@@ -122,4 +124,44 @@ TEST_CASE( "constructors and operator=", "[robotTxt]")
             }
          }
       }
+   }
+*/
+TEST_CASE( "parsing a robots.txt file", "[robotTxt]" )
+   {
+   // basic case
+   string dummy = "";
+   string exampleString0 = dummy + "User-agent: notUs\n" + 
+         "Disallow: /\n" +
+         "Crawl-delay: 500\n" +
+         "User-agent: *\n" +
+         "Disallow: /secret/\n" +
+         "Allow: /secret/okpath/\n" +
+         "Allow: /secret/okfile\n" +
+         "Crawl-delay: 0\n" +
+         "User-agent: susBot\n" +
+         "Disallow: /\n";
+   RobotTxt rob0 = RobotTxt( "https://www.domain.com", exampleString0 );
+   REQUIRE( rob0.getDelay( ) == 0 );
+   REQUIRE( rob0.canVisitPath( "/secret/okpath/otherfile") );
+   REQUIRE( rob0.canVisitPath( "/secret/okfile") );
+   REQUIRE( rob0.canVisitPath( "/somepublicthing") );
+   REQUIRE( !rob0.canVisitPath( "/secret/file") );
+
+   // spaces
+   string exampleString1 = dummy + "User-agent: notUs\n" + 
+         "Disallow: / \n" +
+         "Crawl-delay: 500 \n" +
+         "User-agent: * \n" +
+         "Disallow: /secret/ \n" +
+         "Allow: /secret/okpath/ \n" +
+         "Allow: /secret/okfile \n" +
+         "Crawl-delay: 0 \n" +
+         "User-agent: susBot \n" +
+         "Disallow: / \n";
+   RobotTxt rob1 = RobotTxt( "https://www.domain.com", exampleString1 );
+   REQUIRE( rob1.getDelay( ) == 0 );
+   REQUIRE( rob1.canVisitPath( "/secret/okpath/otherfile") );
+   REQUIRE( rob1.canVisitPath( "/secret/okfile") );
+   REQUIRE( rob1.canVisitPath( "/somepublicthing") );
+   REQUIRE( !rob1.canVisitPath( "/secret/file") );
    }

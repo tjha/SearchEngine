@@ -1,6 +1,7 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-11-13: Added parsing for robots.txt files: combsc
 // 2019-11-04: fixed fixPath function, should NOT have / at the end: combsc
 // 2019-11-03: Added default values for all member variables for all 
 //             constructors, fixed the copy constructor: combsc
@@ -32,6 +33,8 @@ using dex::string;
 namespace dex
 	{
 
+	
+
 	// using this link to understand the protocol: 
 	// https://www.promptcloud.com/blog/how-to-read-and-respect-robots-file/
 	struct RobotTxt
@@ -45,6 +48,8 @@ namespace dex
 			//int visitTimeMinuteStart;
 			//int visitTimeHourEnd;
 			//int visitTimeMinuteEnd;
+
+			// TODO: ADD TIME WHEN CACHE NEEDS TO BE REFRESHED
 
 			// Last time this domain was visited, time that we're allowed to visit again
 			time_t lastTimeVisited;
@@ -91,7 +96,7 @@ namespace dex
 			// A valid path has a '/' at the beginning and end.
 			string fixPath( const string & path )
 				{
-				string fixedPath = path;
+				string fixedPath = path.stripWhitespace( );
 				if ( fixedPath[ 0 ] != '/' )
 					fixedPath.insert( 0, "/" );
 				if ( fixedPath.back( ) != '/' )
@@ -102,6 +107,7 @@ namespace dex
 
 		public:
 			static const unsigned defaultDelay = 10;
+			static const string userAgent;
 
 			RobotTxt( )
 				{
@@ -122,13 +128,52 @@ namespace dex
 				}
 			RobotTxt( const string &otherDomain, const string &robotTxtFile )
 				{
-				// here is where the parsing of the actual file will take place
-				// this is to silence -wall
-				domain = robotTxtFile;
 				domain = otherDomain;
 				crawlDelay = defaultDelay;
 				allowedVisitTime = time( nullptr );
 				lastTimeVisited = allowedVisitTime - crawlDelay;
+				// see if user-agent matches our user-agent OR if it's *
+				int start = robotTxtFile.find( "User-agent: " + userAgent );
+				if ( start == -1 )
+					start = robotTxtFile.find( "User-agent: *" );
+				if ( start != -1 )
+					{
+					int end = robotTxtFile.find( "User-agent:", start + 1 );
+					if ( end == -1 )
+						end = robotTxtFile.size( );
+					string toParse = robotTxtFile.substr( start, end - start );
+
+					// find the crawling rate they'd prefer us to use.
+					int crawlStart, crawlEnd;
+					crawlStart = toParse.find( "Crawl-rate: " );
+					if ( crawlStart != -1 )
+						{
+						crawlEnd = toParse.find( "\n", crawlStart + 1 );
+						crawlDelay = 1 / atoi( toParse.substr( crawlStart + 12, crawlEnd - crawlStart - 12 ).cStr( ) );
+						}
+					crawlStart = toParse.find( "Crawl-delay: " );
+					if ( crawlStart != -1 )
+						{
+						crawlEnd = toParse.find( "\n", crawlStart + 1 );
+						crawlDelay = atoi( toParse.substr( crawlStart + 13, crawlEnd - crawlStart - 13 ).cStr( ) );
+						}
+
+					// find all allowed paths
+					int allowStart, allowEnd;
+					for ( allowStart = toParse.find( "Allow: " );  allowStart != -1;  allowStart = toParse.find( "Allow: ", allowStart + 1) ) 
+						{
+						allowEnd = toParse.find( "\n", allowStart + 1 );
+						addPathsAllowed( toParse.substr( allowStart + 7, allowEnd - allowStart - 7 ) );
+						}
+
+					// find all disallowed paths
+					int disallowStart, disallowEnd;
+					for ( disallowStart = toParse.find( "Disallow: " );  disallowStart != -1;  disallowStart = toParse.find( "Disallow: ", disallowStart + 1 ) )
+						{
+						disallowEnd = toParse.find( "\n", disallowStart + 1 );
+						addPathsDisallowed( toParse.substr( disallowStart + 10, disallowEnd - disallowStart - 10 ) );
+						}
+					}
 				}
 			
 			RobotTxt operator=( const RobotTxt &other )
@@ -259,7 +304,13 @@ namespace dex
 				{
 				return domain;
 				}
+			int getDelay( ) const
+				{
+				return crawlDelay;
+				}
 		};
+
+	const string RobotTxt::userAgent = "jhirshey@umich.edu (Linux)";
 
 	ostream & operator<<( ostream &out, RobotTxt &obj ) 
 		{

@@ -1,6 +1,7 @@
 // basicStringTests.cpp
 // Testing for the basicString class
 //
+// 2019-11-13: Add stripWhitespace tests: combsc
 // 2019-10-27: Revamp swap tests: jasina
 // 2019-10-20: Revamp assignment, write substring tests, combine (append, insert, erase, replace) into one, write hash
 //             tests: combsc, jasina, lougheem
@@ -639,4 +640,15 @@ TEST_CASE( "+ operator", "[string]" )
 
 	string j = 'X' + i;
 	REQUIRE( j == "XcoolUserNameX" );
+	}
+
+TEST_CASE( "strip whitespace", "[string]" )
+	{
+
+	string a = "                   to strip              ";
+	REQUIRE( a.stripWhitespace( ) == "to strip" );
+	a = "   to\nstrip  \r\n ";
+	REQUIRE( a.stripWhitespace( ) == "to\nstrip" );
+	a = " to strip      out ";
+	REQUIRE( a.stripWhitespace( ) == "to strip      out" );
 	}
