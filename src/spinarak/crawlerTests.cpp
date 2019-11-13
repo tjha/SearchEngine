@@ -27,57 +27,53 @@ using std::endl;
 void testHttps( )
 	{
 	unorderedMap < string, RobotTxt > robots{ 10 };
-	int fileToWrite = 2;
-	int robotFile = 2;
 	string res;
 	
-	int errorCode = dex::crawler::crawlUrl( "https://www.runescape.com", fileToWrite, robotFile, res, robots );
+	int errorCode = dex::crawler::crawlUrl( "https://www.runescape.com", res, robots, "savedTestOutput.txt" );
 	assert( errorCode == 302 );
 	assert( res == "https://www.runescape.com/splash" );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/jaggywaggy", fileToWrite, robotFile, res, robots );
+	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/jaggywaggy", res, robots, "savedTestOutput.txt" );
 	assert( errorCode == -5 );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash", fileToWrite, robotFile, res, robots, false );
+	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash", res, robots, "savedTestOutput.txt", false );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash?woodcutting=100", fileToWrite, robotFile, res, robots, false  );
+	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash?woodcutting=100", res, robots, "savedTestOutput.txt", false );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash?woodcutting=100#jagex", fileToWrite, robotFile, res, robots, false  );
+	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash?woodcutting=100#jagex", res, robots, "savedTestOutput.txt", false );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash#jagex", fileToWrite, robotFile, res, robots, false  );
+	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash#jagex", res, robots, "savedTestOutput.txt", false );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.fb.com", fileToWrite, robotFile, res, robots );
+	errorCode = dex::crawler::crawlUrl( "https://www.fb.com", res, robots, "savedTestOutput.txt" );
 	assert( errorCode == 301 );
 	assert( res == "https://www.facebook.com/");
 
-	errorCode = dex::crawler::crawlUrl( "https://www.fb.com/", fileToWrite, robotFile, res, robots );
+	errorCode = dex::crawler::crawlUrl( "https://www.fb.com/", res, robots, "savedTestOutput.txt" );
 	assert( errorCode == -5 );
 	}
 
 void testHttp( )
 	{
 	unorderedMap < string, RobotTxt > robots{ 10 };
-	int fileToWrite = 2;
-	int robotFile = 2;
 	string res;
 
 	
-	int errorCode = dex::crawler::crawlUrl( "http://www.runescape.com/splash", fileToWrite, robotFile, res, robots );
+	int errorCode = dex::crawler::crawlUrl( "http://www.runescape.com/splash", res, robots, "savedTestOutput.txt" );
 	assert( errorCode == 302 );
 	
 	assert( res == "https://www.runescape.com/splash" );
 	
-	errorCode = dex::crawler::crawlUrl( "http://man7.org/", fileToWrite, robotFile, res, robots );
+	errorCode = dex::crawler::crawlUrl( "http://man7.org/", res, robots, "savedTestOutput.txt" );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "http://man7.org/?man=page", fileToWrite, robotFile, res, robots, false );
+	errorCode = dex::crawler::crawlUrl( "http://man7.org/?man=page", res, robots, "savedTestOutput.txt", false );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "http://man7.org/?man=page#foobar", fileToWrite, robotFile, res, robots );
+	errorCode = dex::crawler::crawlUrl( "http://man7.org/?man=page#foobar", res, robots, "savedTestOutput.txt" );
 	assert( errorCode == -5 );
 	}
 
