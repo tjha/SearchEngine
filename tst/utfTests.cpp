@@ -1,6 +1,7 @@
 // utfTests.cpp
 // Tests for utf
 //
+// 2019-11-14: Write and pass tests for iterator based operator( ): jasina
 // 2019-11-10: Write and pass tests for encoding and decoding various data types: jasina, lougheem
 // 2019-11-03: File created: jasina, lougheem
 
@@ -17,7 +18,6 @@ using namespace dex::utf;
 TEST_CASE( "decode", "[utf]" )
 	{
 	unsigned char array[ 6 ];
-	
 
 	SECTION( "unsigned long" )
 		{
@@ -204,39 +204,77 @@ TEST_CASE( "encode and decode", "[utf]" )
 	{
 	SECTION( "unsigned long" )
 		{
-		unsigned long number;
+		unsigned long number = 1;
+		unsigned char array[ 10 ];
 		decoder < unsigned long > unsignedLongDecoder;
 		encoder <unsigned long > unsignedLongEncoder;
 
-		for ( number = 1;  number != 0x80000000;  number <<= 1 )
+		for ( unsigned bits = 1;  number != 0x80000000;  number <<= 1, ++bits )
 			{
 			REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+			REQUIRE( unsignedLongEncoder( number, array ) - array == ( bits <= 7 ? 1 : ( bits + 3 ) / 5 ) );
+			REQUIRE( unsignedLongDecoder( array ) == number );
+
 			REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number - 1 ).data( ) ) == number - 1 );
+			REQUIRE( unsignedLongEncoder( number - 1, array ) - array == ( bits <= 8 ? 1 : ( bits + 2 ) / 5 ) );
+			REQUIRE( unsignedLongDecoder( array ) == number - 1 );
 			}
 
 		// Just a bunch of random numbers
 		number = 0b11110001101011101;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 4 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
+
 		number = 0b1011011100101;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 3 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
+
 		number = 0b1100010111000101010010101010001;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 6 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
+
 		number = 0b1101;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 1 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
+
 		number = 0b110101010100011111001;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 4 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
+
 		number = 0b111000010111001111001100110;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 6 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
+
 		number = 0b111111111111111111111111111110;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 6 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
+
 		number = 0b111000;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 1 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
+
 		number = 0b11111111111111000111000;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 5 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
+
 		number = 0b1010101010101010101010;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 5 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
+
 		number = 0b101;
 		REQUIRE( unsignedLongDecoder( unsignedLongEncoder( number ).data( ) ) == number );
+		REQUIRE( unsignedLongEncoder( number, array ) - array == 1 );
+		REQUIRE( unsignedLongDecoder( array ) == number );
 		}
 
 	SECTION( "vector" )
@@ -247,9 +285,14 @@ TEST_CASE( "encode and decode", "[utf]" )
 			v.pushBack( 123 );
 			v.pushBack( 456 );
 			v.pushBack( 789 );
+			unsigned char array[ 100 ];
 
-			vector < unsigned char > encodedV = encoder < vector < unsigned > >( )( v );
-			REQUIRE( v == decoder < vector < unsigned > >( )( encodedV.data( ) ) );
+			REQUIRE( v == decoder < vector < unsigned > >( )( encoder < vector < unsigned > >( )( v ).data( ) ) );
+			REQUIRE( v == decoder < vector < unsigned >, vector < unsigned char >::constIterator >( )(
+				encoder < vector < unsigned > >( )( v ).cbegin( ) ) );
+
+			REQUIRE( encoder < vector < unsigned > >( )( v, array ) - array == 1 + 1 + 2 + 2 );
+			REQUIRE( v == decoder< vector < unsigned > >( )( array ) );
 			}
 
 		SECTION( "vector of vectors of unsigneds" )
@@ -268,19 +311,30 @@ TEST_CASE( "encode and decode", "[utf]" )
 			v[ 2 ][ 2 ] = 2398;
 			v[ 2 ][ 3 ] = 2938792;
 			v[ 2 ][ 4 ] = 234;
+			unsigned char array[ 100 ];
 
 			vector < unsigned char > encodedV = encoder < vector < vector < unsigned > > >( )( v );
 			REQUIRE( v == decoder < vector < vector< unsigned > > >( )( encodedV.data( ) ) );
+
+			REQUIRE( encoder < vector < vector < unsigned > > >( )( v, array ) - array ==
+					1 + 1 + 1 + 1 + 2 + 4 + 2 + 1 + 2 + 1 + 3 + 5 + 2 );
+			REQUIRE( v == decoder < vector < vector< unsigned > > >( )( array ) );
 			}
 		}
 
 	SECTION( "string" )
 		{
+		unsigned char array[ 100 ];
+
 		string s = "I am a string!";
 		REQUIRE( s == decoder < string >( )( ( encoder < string >( )( s ) ).data( ) ) );
+		REQUIRE( encoder < string >( )( s, array ) - array == s.size( ) + 1 );
+		REQUIRE( s == decoder < string >( )( array ) );
 
 		s.clear( );
 		REQUIRE( s == decoder < string >( )( ( encoder < string >( )( s ) ).data( ) ) );
+		REQUIRE( encoder < string >( )( s, array ) - array == s.size( ) + 1 );
+		REQUIRE( s == decoder < string >( )( array ) );
 		}
 
 	SECTION( "unordered map" )
@@ -290,10 +344,22 @@ TEST_CASE( "encode and decode", "[utf]" )
 		mappy[ "beta" ] = 200;
 		mappy[ "gamma" ] = 300;
 		mappy[ "delta" ] = 400;
+		unsigned char array[ 100 ];
+		unsigned char *next;
 
-		unorderedMap < string, unsigned > mappyCopy =
-				decoder < unorderedMap < string, unsigned > >( )
-				( encoder < unorderedMap < string, unsigned > >( )( mappy ).data( ) );
+		unorderedMap < string, unsigned > mappyCopy = decoder < unorderedMap < string, unsigned > >( )(
+				encoder < unorderedMap < string, unsigned > >( )( mappy ).data( ) );
+
+		REQUIRE( mappyCopy.size( ) == 4 );
+		REQUIRE( mappyCopy[ "alpha" ] == 100 );
+		REQUIRE( mappyCopy[ "beta" ] == 200 );
+		REQUIRE( mappyCopy[ "gamma" ] == 300 );
+		REQUIRE( mappyCopy[ "delta" ] == 400 );
+
+		REQUIRE( encoder < unorderedMap < string, unsigned > >( )( mappy, array ) - array ==
+				1 + 1 + 5 + 1 + 1 + 4 + 2 + 1 + 5 + 2 + 1 + 5 + 2 );
+		mappyCopy = decoder < unorderedMap < string, unsigned > >( )( array, &next );
+		REQUIRE( next - array == 1 + 1 + 5 + 1 + 1 + 4 + 2 + 1 + 5 + 2 + 1 + 5 + 2 );
 
 		REQUIRE( mappyCopy.size( ) == 4 );
 		REQUIRE( mappyCopy[ "alpha" ] == 100 );
@@ -309,10 +375,21 @@ TEST_CASE( "encode and decode", "[utf]" )
 		set.insert( "beta" );
 		set.insert( "gamma" );
 		set.insert( "delta" );
+		unsigned char array[ 100 ];
+		unsigned char *next;
 
-		unorderedSet < string > setCopy =
-				decoder < unorderedSet < string > >( )
-				( encoder < unorderedSet < string > >( )( set ).data( ) );
+		unorderedSet < string > setCopy = decoder < unorderedSet < string > >( )(
+				encoder < unorderedSet < string > >( )( set ).data( ) );
+
+		REQUIRE( set.size( ) == 4 );
+		REQUIRE( set.count( "alpha" ) );
+		REQUIRE( set.count( "beta" ) );
+		REQUIRE( set.count( "gamma" ) );
+		REQUIRE( set.count( "delta" ) );
+
+		REQUIRE( encoder < unorderedSet < string > >( )( set, array ) - array == 1 + 1 + 5 + 1 + 4 + 1 + 5 + 1 + 5 );
+		setCopy = decoder < unorderedSet < string > >( )( array, &next );
+		REQUIRE( next - array == 1 + 1 + 5 + 1 + 4 + 1 + 5 + 1 + 5 );
 
 		REQUIRE( set.size( ) == 4 );
 		REQUIRE( set.count( "alpha" ) );
