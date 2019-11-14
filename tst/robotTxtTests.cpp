@@ -17,7 +17,7 @@
 using dex::RobotTxt;
 using dex::string;
 
-/*
+
 TEST_CASE( "timing for visiting sites", "[robotsTxt]" )
 	{
 	string url = "https://domain.com";
@@ -125,7 +125,7 @@ TEST_CASE( "constructors and operator=", "[robotTxt]")
          }
       }
    }
-*/
+
 TEST_CASE( "parsing a robots.txt file", "[robotTxt]" )
    {
    // basic case
