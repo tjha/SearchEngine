@@ -23,7 +23,7 @@ using std::cout;
 using std::endl;
 
 
-
+// TODO put this in tst/ and make it catch2
 void testHttps( )
 	{
 	unorderedMap < string, RobotTxt > robots{ 10 };

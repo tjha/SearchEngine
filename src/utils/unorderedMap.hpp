@@ -385,35 +385,17 @@ namespace dex
 				dex::swap( other.ghostCount, ghostCount );
 				}
 
-			friend std::ostream & operator<<( std::ostream &out, unorderedMap < Key, Value > &obj );
-
-         string compress( )
-            {
-            string compressed = "";
-            Key defaultKey;
-            for ( auto it = begin( );  it != end( );  ++it )
-               {
-               if ( it->first != defaultKey )
-                  {
-                  compressed += it->first + "\n" + it->second.compress( );
-                  }
-               }
-            return compressed;
-            }
-		};
-
-		template < class Key, class Value >
-		std::ostream & operator<<( std::ostream &out, unorderedMap < Key, Value > &obj )
-			{
-         Key defaultKey = Key( );
-			for ( auto it = obj.begin();  it != obj.end();  ++it )
+			string compress( )
 				{
-				if ( *it != defaultKey )
+				string compressed = "";
+				Key defaultKey;
+				for ( auto it = begin( );  it != cend( );  ++it )
 					{
-				    out << *it;
+					compressed += it->first + "\n" + it->second.compress( );
 					}
+					return compressed;
 				}
-			}
+		};
 
 		template < class Key, class Value, class Hash >
 		void swap( unorderedMap < Key, Value, Hash > &a, unorderedMap < Key, Value, Hash > &b )

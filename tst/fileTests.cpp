@@ -5,8 +5,6 @@
 
 #include "catch.hpp"
 #include "../src/utils/file.hpp"
-#include <iostream>
-#include <stdio.h>
 
 TEST_CASE( "write to file", "[robotsTxt]")
 	{

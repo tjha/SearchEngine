@@ -114,23 +114,23 @@ namespace dex
 				}
 
 			Url( const Url &other )
-            {
-            service = other.service;
-            host = other.host;
-            port = other.port;
-            path = other.path;
-            query = other.query;
-            fragment = other.fragment;
-            }
+				{
+				service = other.service;
+				host = other.host;
+				port = other.port;
+				path = other.path;
+				query = other.query;
+				fragment = other.fragment;
+				}
 
 			Url operator=( const Url &other )
 				{
 				service = other.service;
-            host = other.host;
-            port = other.port;
-            path = other.path;
-            query = other.query;
-            fragment = other.fragment;
+				host = other.host;
+				port = other.port;
+				path = other.path;
+				query = other.query;
+				fragment = other.fragment;
 				return *this;
 				}
 			
