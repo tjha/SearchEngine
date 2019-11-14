@@ -1,6 +1,7 @@
 // index.hpp
 // MVP indexer
 //
+// 2019-11-13: Define most of index chunk internals: jasina, lougheem
 // 2019-11-10: Outline of main classes and functions created: jasina, lougheem
 // 2019-11-03: File created
 
@@ -45,22 +46,18 @@ namespace dex
 									previousPostsChunkOffset( previousPostsChunkOffset ), nextPostsChunkOffset( 0 ),
 									currentPostOffset( 0 ) { }
 
-							bool full( )
-								{
-								// We're "full" if we can't insert a "widest" UTF-8 character
-								return currentPostOffset + 8 > postsChunkSize;
-								}
-
 							bool append( size_t delta )
 								{
-								// TODO: maybe remove this?
-								if ( full( ) )
+								// We're "full" if we can't insert a "widest" UTF-8 character
+								if ( currentPostOffset + 8 > postsChunkSize )
 									return false;
 
 								// TODO: This should use something like longLongToUTF to take care of the "big delta" case
-								vector < byte > utf8Delta = dex::utf::longToUTF( delta );
+								dex::vector < byte > utf8Delta = dex::utf::encoder < size_t >( )( delta );
 								for ( byte b : utf8Delta )
 									posts[ currentPostOffset++ ] = b;
+
+								return true;
 								}
 						};
 
@@ -142,82 +139,127 @@ namespace dex
 						};
 
 					// These consts can be adjusted if necessary
-					static const size_t postsChunkArraySize = 1 << 40;
-					static const size_t postsMetadataArraySize = 1 << 30;
+					static const size_t maxURLCount = 1L << 25;
+					static const size_t maxURLLength = 1L << 10;
+					static const size_t maxWordLength = 64;
+					static const size_t postsChunkArraySize = 1LL << 40;
+					static const size_t postsMetadataArraySize = 1L << 30;
 
-					// TODO: make these just pointers. When mmapping in, then "assign" their sizes (i.e. make a huge blank
-					// file first, and then map stuff in)
-					postsChunk *postsChunkArray;
-					postsMetadata *postsMetadataArray;
+					static const size_t urlsMemorySize = 7 + maxURLCount * ( 7 + maxURLLength );
+					static const size_t dictionaryMemorySize = 7 + ( 7 + maxWordLength + 7 ) * postsMetadataArraySize;
+					static const size_t postsMetadataArrayMemorySize = postsMetadataArraySize * sizeof( postsMetadata );
+					static const size_t postsChunkArrayMemorySize = postsChunkArraySize * sizeof( postsChunk );
+
+					static const size_t urlsMemoryOffset = 200;
+					static const size_t dictionaryOffset = urlsMemoryOffset + urlsMemorySize;
+					static const size_t postsMetadataArrayMemoryOffset = dictionaryOffset + dictionaryMemorySize;
+					static const size_t postsChunkArrayMemoryOffset =
+							postsMetadataArrayMemoryOffset + postsChunkArrayMemorySize;
 
 					// How many spots are filled in the postsChunkArray
-					size_t postsChunkCount;
+					size_t *postsChunkCount;
 
 					// Number of tokens in the index
-					size_t location;
+					size_t *location;
 
 					// Use urls.size( ) to get how many documents there are in the index
-					vector < string > urls;
+					dex::vector < dex::string > urls;
+					byte *encodedURLs;
 
 					//  Use dictionary.size( ) to get "postsMetadataCount" (cf. postsChunkCount)
-					unorderedMap < string, size_t > dictionary;
+					dex::unorderedMap < dex::string, size_t > dictionary;
+					byte *encodedDictionary;
+
+					postsMetadata *postsMetadataArray;
+					postsChunk *postsChunkArray;
 
 				public:
-					indexChunk( int fileDescriptor, bool reinitialize = true )
+					indexChunk( int fileDescriptor, bool initialize = true )
 						{
-						struct stat fileInfo;
-						fstat( fileDescriptor, &fileInfo );
-						byte *map = static_cast < byte * >( mmap( nullptr, fileInfo.st_size,
+						postsChunkCount = static_cast < size_t * >( mmap( nullptr, sizeof( size_t ),
 								PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, 0 ) );
 
-						postsChunkArray = static_cast < postsChunk * >( mmap( nullptr, sizeof( postsChunk ) * postsChunkArraySize,
-								PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, asdlkfjlkasdjfklsj ) );
+						location = static_cast < size_t * >( mmap( nullptr, sizeof( size_t ),
+								PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, sizeof( size_t ) ) );
 
-						if ( reinitialize )
+						encodedURLs = static_cast < byte * >( mmap( nullptr, urlsMemorySize,
+								PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, urlsMemoryOffset ) );
+
+						urls = dex::utf::decoder < dex::vector < dex::string > >( )( encodedURLs );
+
+						encodedDictionary = static_cast < byte * >( mmap( nullptr, urlsMemorySize,
+								PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, dictionaryOffset) );
+
+						dictionary = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedDictionary );
+
+						postsMetadataArray = static_cast < postsMetadata * >( mmap( nullptr, postsMetadataArrayMemorySize,
+								PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, postsMetadataArrayMemoryOffset ) );
+
+						postsChunkArray = static_cast < postsChunk * >( mmap( nullptr, postsChunkArrayMemorySize,
+								PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, postsChunkArrayMemoryOffset ) );
+
+						if ( initialize )
 							{
-							postsChunkCount = 0;
-							location = 0;
-							}
-						else
-							{
-							
+							*postsChunkCount = 0;
+							*location = 0;
+
+							// TODO: Add end of document metadata
+							// postsMetadataArray[ 0 ] = postsMetadata( 0, postsMetadata::END_OF_DOCUMENT,  )
 							}
 						}
 
 					~indexChunk( )
 						{
-						// Write stuff back into the memory-mapped file maybe.
+						dex::utf::encoder < dex::vector < dex::string > >( )( urls, encodedURLs );
+						dex::utf::encoder < dex::unorderedMap < dex::string, size_t > >( )( dictionary, encodedDictionary );
 						}
 
 					// InputIt should dereference to a string
 					template < class InputIt >
-					void append( InputIt first, InputIt last )
+					bool append( InputIt first, InputIt last )
 						{
-						while ( first != last )
+						// Need to keep track of our old state in case the appendation fails
+						dex::unorderedMap < dex::string, size_t > newWords;
+						size_t newLocation = *location;
+
+						for ( ;  first != last;  ++first, ++newLocation )
 							{
-							if ( !dictionary.count( *first ) )
+							if ( !dictionary.count( *first ) && !newWords.count( *first ) )
 								{
+								// TODO: maybe there is a way to not have to do the postsChunk check?
+								if ( dictionary.size( ) == postsMetadataArraySize || *postsChunkCount == postsChunkArraySize )
+									return false;
+
 								// Add a new postsMetaData
 								// TODO: make this sensitive to non-BODY types
-								postsMetadataArray[ dictionary.size( ) ] 
-										= postsMetadata( postsChunkCount, postsMetadata::BODY, nullptr );
+								postsMetadataArray[ dictionary.size( ) + newWords.size( ) ]
+										= postsMetadata( *postsChunkCount, postsMetadata::BODY, nullptr );
 
 								// Add a new postsChunk
-								postsChunkArray[ postsChunkCount++ ] = postsChunk( 0 );
+								postsChunkArray[ *postsChunkCount++ ] = postsChunk( 0 );
 
-								dictionary[ *first ] = dictionary.size( );
+								newWords[ *first ] = dictionary.size( ) + newWords.size( );
 								}
 
 							postsMetadata &wordMetadata = postsMetadataArray[ dictionary[ *first ] ]
-							while ( !wordMetadata.append( location, ostsChunkArray, postsMetadataArray ) )
+							while ( !wordMetadata.append( *location, ostsChunkArray, postsMetadataArray ) )
 								{
+								if ( *postsChunkCount == postsChunkArraySize )
+									return false;
+
 								postsChunkArray[ wordMetadata.lastPostsChunkOffset ].nextPostsChunkOffset = postChunkCount;
-								postsChunkArray[ postsChunkCount ] = postsChunk( wordMetadata.lastPostsChunkOffset );
+								postsChunkArray[ *postsChunkCount ] = postsChunk( wordMetadata.lastPostsChunkOffset );
 								wordMetadata.lastPostsChunkOffset = postChunkCount++;
 								}
-
-							++location;
 							}
+
+						// Copy over newWords into dict
+						for ( const dex::unorderedMap::constIterator &it : newWords )
+							dictionary.insert( *it );
+
+						*location = newLocation;
+
+						return true;
 						}
 				};
 
