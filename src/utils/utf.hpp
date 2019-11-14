@@ -1,6 +1,7 @@
 // utf.hpp
 // Utilities for dealing with UTF-8 encodings
 //
+// 2019-11-14: Overload operator( ) to take in an iterator: jasina, lougheem
 // 2019-11-10: Reformat file into encoder and decoder classes that take in many data types: jasina, lougheem
 // 2019-11-03: File created, functions for converting between 32 bit numbers and UTF encodings: jasina, lougheem
 
@@ -8,8 +9,10 @@
 #define DEX_UTF
 
 #include <cstddef>
+#include "algorithm.hpp"
 #include "basicString.hpp"
 #include "exception.hpp"
+#include "typeTraits.hpp"
 #include "utility.hpp"
 #include "unorderedMap.hpp"
 #include "unorderedSet.hpp"
@@ -19,17 +22,46 @@ namespace dex
 	{
 	namespace utf
 		{
-		template < class T >
+		template < class T, typename = typename dex::enableIf < !dex::isIntegral< T >::value >::type >
 		class encoder
 			{
 			public:
-				dex::vector < unsigned char > operator( )( T number )
+				template < class InputIt >
+				InputIt operator( )( T number, InputIt it ) const
+					{
+					if ( number > 0x7FFFFFFF )
+						throw invalidArgumentException( );
+
+					if ( number < 0x80 )
+						{
+						*it = number;
+						return ++it;
+						}
+
+					// Find how many bytes we need to represent number in UTF (technically, find 1 less than that)
+					unsigned numberAdditionalBytes = 0;
+					while ( number >> ( 5 * ++numberAdditionalBytes + 6 ) );
+
+					// Add the first byte
+					*it = ( 0xFF << ( 7 - numberAdditionalBytes ) ) + ( number >> ( 6 * numberAdditionalBytes ) );
+					++it;
+
+					// Add the remaining bytes
+					while ( numberAdditionalBytes != 0 )
+						{
+						*it = 0x80 + ( ( number >> ( 6 * ( --numberAdditionalBytes ) ) ) & 0x3F );
+						++it;
+						}
+
+					return it;
+					}
+
+				dex::vector < unsigned char > operator( )( T number ) const
 					{
 					if ( number > 0x7FFFFFFF )
 						throw invalidArgumentException( );
 
 					dex::vector < unsigned char > returnVector;
-					// Find smallest number of bits to encode this number
 
 					if ( number < 0x80 )
 						{
@@ -58,7 +90,19 @@ namespace dex
 		class encoder < dex::pair < T1, T2 > >
 			{
 			public:
-				dex::vector < unsigned char > operator( )( const dex::pair < T1, T2 > &data )
+				template < class InputIt >
+				InputIt operator( )( const dex::pair < T1, T2 > &data, InputIt it ) const
+					{
+					dex::vector < unsigned char > encodedFirst = encoder < T1 >( )( data.first );
+					it = dex::copy( encodedFirst.cbegin( ), encodedFirst.cend( ), it );
+
+					dex::vector < unsigned char > encodedSecond = encoder < T2 >( )( data.second );
+					it = dex::copy( encodedSecond.cbegin( ), encodedSecond.cend( ), it );
+
+					return it;
+					}
+
+				dex::vector < unsigned char > operator( )( const dex::pair < T1, T2 > &data ) const
 					{
 					dex::vector < unsigned char > encodedData = encoder < T1 >( )( data.first );
 					dex::vector < unsigned char > encodedSecond = encoder < T2 >( )( data.second );
@@ -71,7 +115,18 @@ namespace dex
 		class encoder < dex::vector < T > >
 			{
 			public:
-				dex::vector < unsigned char > operator( )( const dex::vector < T > &data )
+				template < class InputIt >
+				InputIt operator( )( const dex::vector < T > &data, InputIt it ) const
+					{
+					encoder < T > TEncoder;
+					it = encoder< size_t >( )( data.size( ), it );
+					for ( typename dex::vector < T >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );
+							++dataIt )
+						it = TEncoder( *dataIt, it );
+					return it;
+					}
+
+				dex::vector < unsigned char > operator( )( const dex::vector < T > &data ) const
 					{
 					encoder < T > TEncoder;
 					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
@@ -88,7 +143,18 @@ namespace dex
 		class encoder < dex::basicString < T > >
 			{
 			public:
-				dex::vector < unsigned char > operator( )( const dex::basicString < T > &data )
+				template < class InputIt >
+				InputIt operator( )( const dex::basicString < T > &data, InputIt it ) const
+					{
+					encoder < T > TEncoder;
+					it = encoder< size_t >( )( data.size( ), it );
+					for ( typename dex::basicString < T >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );
+							++dataIt )
+						it = TEncoder( *dataIt, it );
+					return it;
+					}
+
+				dex::vector < unsigned char > operator( )( const dex::basicString < T > &data ) const
 					{
 					encoder < T > TEncoder;
 					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
@@ -105,7 +171,18 @@ namespace dex
 		class encoder < dex::unorderedMap < Key, Value > >
 			{
 			public:
-				dex::vector < unsigned char > operator( )( const dex::unorderedMap < Key, Value > &data )
+				template < class InputIt >
+				InputIt operator( )( const dex::unorderedMap < Key, Value > &data, InputIt it ) const
+					{
+					encoder < dex::pair < Key, Value > > KeyValueEncoder;
+					it = encoder< size_t >( )( data.size( ), it );
+					for ( typename dex::unorderedMap < Key, Value >::constIterator dataIt = data.cbegin( );
+							dataIt != data.cend( );  ++dataIt )
+						it = KeyValueEncoder( *dataIt, it );
+					return it;
+					}
+
+				dex::vector < unsigned char > operator( )( const dex::unorderedMap < Key, Value > &data ) const
 					{
 					encoder < dex::pair < Key, Value > > KeyValueEncoder;
 					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
@@ -123,7 +200,18 @@ namespace dex
 		class encoder < dex::unorderedSet < Key > >
 			{
 			public:
-				dex::vector < unsigned char > operator( )( const dex::unorderedSet < Key > &data )
+				template < class InputIt >
+				InputIt operator( )( const dex::unorderedSet < Key > &data, InputIt it ) const
+					{
+					encoder < Key > KeyEncoder;
+					it = encoder< size_t >( )( data.size( ), it );
+					for ( typename dex::unorderedSet < Key >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );
+							++dataIt )
+						it = KeyEncoder( *dataIt, it );
+					return it;
+					}
+
+				dex::vector < unsigned char > operator( )( const dex::unorderedSet < Key > &data ) const
 					{
 					encoder < Key > KeyEncoder;
 					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
@@ -176,11 +264,12 @@ namespace dex
 			return decodedValue;
 			}
 
-		template < class T, class InputIt = unsigned char * >
+		template < class T, class InputIt = unsigned char *,
+				typename = typename dex::enableIf < !dex::isIntegral< T >::value >::type >
 		class decoder
 			{
 			public:
-				unsigned long operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+				unsigned long operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					// How many bits of the first byte we need to care about
 					unsigned count = 8;
@@ -217,7 +306,7 @@ namespace dex
 		class decoder < dex::pair < T1, T2 >, InputIt >
 			{
 			public:
-				dex::pair < T1, T2 > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+				dex::pair < T1, T2 > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
 					T1 first = decoder < T1, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
@@ -234,10 +323,10 @@ namespace dex
 		class decoder < dex::vector < T >, InputIt >
 			{
 			public:
-				dex::vector < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+				dex::vector < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					decoder < T > TDecoder;
+					decoder < T, InputIt > TDecoder;
 					dex::vector < T > decodedData;
 					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
 
@@ -255,10 +344,10 @@ namespace dex
 		class decoder < dex::basicString < T >, InputIt >
 			{
 			public:
-				dex::basicString < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+				dex::basicString < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					decoder < T > TDecoder;
+					decoder < T, InputIt > TDecoder;
 					dex::basicString < T > decodedData;
 					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
 
@@ -276,10 +365,10 @@ namespace dex
 		class decoder < dex::unorderedMap < Key, Value >, InputIt >
 			{
 			public:
-				dex::unorderedMap < Key, Value > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+				dex::unorderedMap < Key, Value > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					decoder < dex::pair < Key, Value > > KeyValueDecoder;
+					decoder < dex::pair < Key, Value >, InputIt > KeyValueDecoder;
 					dex::unorderedMap < Key, Value > decodedData;
 					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
 
@@ -297,10 +386,10 @@ namespace dex
 		class decoder < dex::unorderedSet < Key >, InputIt >
 			{
 			public:
-				dex::unorderedSet < Key > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr )
+				dex::unorderedSet < Key > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					decoder < Key > KeyDecoder;
+					decoder < Key, InputIt > KeyDecoder;
 					dex::unorderedSet < Key > decodedData;
 					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
 
