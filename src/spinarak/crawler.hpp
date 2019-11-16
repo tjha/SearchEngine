@@ -1,3 +1,7 @@
+
+#ifndef DEX_CRAWLER_HPP
+#define DEX_CRAWLER_HPP
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -335,3 +339,4 @@ namespace dex
 		};
 	}
 
+#endif

@@ -1,4 +1,7 @@
 
+#ifndef DEX_URL_HPP
+#define DEX_URL_HPP
+
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
 #include "../utils/exception.hpp"
@@ -27,6 +30,9 @@ namespace dex
 			// fragment should not include #
 			string fragment;
 		public:
+			Url( )
+				{
+				}
 			Url( const char *url )
 				{
 				// Assumes url points to static text but
@@ -134,7 +140,7 @@ namespace dex
 				return *this;
 				}
 			
-			string completeUrl( )
+			string completeUrl( ) const
 				{
 				string completeUrl = service + "://" + host;
 				if ( port != "" && port != "443" && port != "80" )
@@ -226,3 +232,4 @@ namespace dex
 				}
 		};
 	}
+#endif
