@@ -6,13 +6,11 @@
 // 2019-11-04: File creation: jhirsh
 
 #include <unistd.h>
-#include <cassert>
 #include <iostream>
 #include "crawler.hpp"
 #include "robots.hpp"
 #include <unordered_map>
 #include <string>
-#include <exception>
 // Believe we need to implement std::list for frontier
 #include <list>
 #include <iterator>
@@ -22,7 +20,6 @@ using dex::RobotTxt;
 using dex::unorderedMap;
 using dex::writeToFile;
 using dex::readFromFile;
-using dex::exception;
 using std::cout;
 using std::endl;
 

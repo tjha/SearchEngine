@@ -982,7 +982,7 @@ namespace dex
 				//size_t frontStripped = findFirstNotOf( " vf\t\r\n", 0 );
 				//size_t backStripped = findLastNotOf( " vf\t\r\n", frontStripped );
 				while ( !stripped.empty( ) && ( stripped.back( ) == ' ' || stripped.back( ) == '\n' || stripped.back( ) == '\r' || stripped.back( ) == '\t' ||
-						stripped.back( ) == 'v' || stripped.back( ) == 'f' ) )
+						stripped.back( ) == '\v' || stripped.back( ) == '\f' ) )
 					{
 					stripped.popBack( );
 					}
