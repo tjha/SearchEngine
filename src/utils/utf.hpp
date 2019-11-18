@@ -1,5 +1,20 @@
 // utf.hpp
 // Utilities for dealing with UTF-8 encodings
+// Usage:
+//    T data;
+//    dex::utf::encoder < T > tEncoder;
+//    dex::utf::decoder < T > tDecoder;
+//    unsigned char *pt; // In this example, we just assume that this has been allocated and assigned
+//
+//    // Populate data from an unsigned char *
+//    data = tDecoder( pt );
+//
+//    // store to mmapped file (or just to pt)
+//    dex::vector < unsigned char > encodedData = encoder( data );
+//    dex::copy( encodedData.cbegin( ), encodedData.cend( ), pt );
+//
+//   // Additional arugments can be passed into the decoder's and encoder's operator( ) to keep track of where the
+//   // encodings end
 //
 // 2019-11-14: Overload operator( ) to take in an iterator: jasina, lougheem
 // 2019-11-10: Reformat file into encoder and decoder classes that take in many data types: jasina, lougheem
@@ -75,7 +90,8 @@ namespace dex
 					returnVector.reserve( numberAdditionalBytes + 1 );
 
 					// Add the first byte
-					returnVector.pushBack( ( 0xFF << ( 7 - numberAdditionalBytes ) ) + ( number >> ( 6 * numberAdditionalBytes ) ) );
+					returnVector.pushBack( ( 0xFF << ( 7 - numberAdditionalBytes ) ) +
+							( number >> ( 6 * numberAdditionalBytes ) ) );
 
 					// Add the remaining bytes
 					while ( numberAdditionalBytes != 0 )
