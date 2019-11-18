@@ -22,6 +22,13 @@ namespace dex
 		return fileInfo.st_size;
 		}
 
+	// Returns the size of a file
+	size_t getFileSize( const char *filePath )
+		{
+		int fd = open( filePath, O_RDONLY );
+		return fileSize( fd );
+		}
+
 	// Writes to the file name specified. Will overwrite whatever was there before.
 	int writeToFile( const char *filePath, const char *toWrite, size_t length )
 		{
@@ -42,6 +49,7 @@ namespace dex
 		return 0;
 		}
 
+// TODO add a offset into the mmap-ed file
 	// Returns a char* pointing to the beginning of memory of the file specified.
 	char *readFromFile( const char *filePath )
 		{
@@ -53,13 +61,6 @@ namespace dex
 		char *map = ( char * ) mmap( nullptr, filesize, PROT_READ, MAP_SHARED, fd, 0 );
 		close( fd );
 		return map;
-		}
-
-	// Returns the size of a file
-	size_t getFileSize( const char *filePath )
-		{
-		int fd = open( filePath, O_RDONLY );
-		return fileSize( fd );
 		}
 	}
 

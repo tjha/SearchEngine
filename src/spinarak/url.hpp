@@ -47,7 +47,6 @@ namespace dex
 					service = totalUrl.substr( 0, endservice );
 					beginHost = endservice + 3;
 					}
-					
 
 				int endHost = totalUrl.findFirstOf( "/:", beginHost );
 				// If there is no path or port, the end of the host is the end of the string.
@@ -199,9 +198,9 @@ namespace dex
 			void setPath( const string &p )
 				{
 				path = p;
-				if ( path.size( ) == 0 || path.front( ) != '/' )
+				if ( path.empty( ) || path.front( ) != '/' )
 					path.insert( 0, '/' );
-				while ( path.back( ) == '/' )
+				while ( path.size( ) > 1 && path.back( ) == '/' )
 					path.popBack( );
 				}
 

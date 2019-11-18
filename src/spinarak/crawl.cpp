@@ -57,7 +57,7 @@ std::list< string > loadFrontier( const char * fileName )
 
 int outputRobots( const char * fileName, unorderedMap < string, RobotTxt > &robots )
 	{
-	string robotsData = "ROBOTS DATA\n" + robots.compress( );
+	string robotsData = "ROBOTS DATA\n" + robots.compress( ); // TODO use reserve
 	return writeToFile( fileName, robotsData.cStr( ), robotsData.size( ) );
 	}
 

@@ -44,7 +44,8 @@ namespace dex
 		POLITENESS_ERROR = -5,
 		NO_LOCATION_ERROR = -6,
 		NO_HEADER_END_ERROR = -7,
-		LAST_ERROR = -8
+		LAST_ERROR = -8,
+		PROTOCOL_ERROR = -9
 		};
 	
 	enum httpProtocol
@@ -53,7 +54,7 @@ namespace dex
 		HTTPS = 1
 		};
 	
-	class crawler
+	class crawler // TODO make namespace because no private members
 		{
 		// This is a class that is stateless, so every function within is static.
 		// We're keeping it a class so that we can make the interface clear when
@@ -157,8 +158,8 @@ namespace dex
 					hints.ai_socktype = SOCK_STREAM;
 					hints.ai_protocol = IPPROTO_TCP;
 
-					int getaddrresult = getaddrinfo( url.getHost( ).cStr( ), url.getPort( ) != "" ? url.getPort( ).cStr( ) : "80", &hints, &address );
-					if ( getaddrresult == 1 ) 
+					int getaddrresult = getaddrinfo( url.getHost( ).cStr( ), !url.getPort( ).empty( ) ? url.getPort( ).cStr( ) : "80", &hints, &address );
+					if ( getaddrresult == 1 )
 						{
 						result = "Could not resolve DNS\n";
 						return RESOLVE_DNS_ERROR;
@@ -169,8 +170,14 @@ namespace dex
 					// Connect the socket to the host address.
 					connectResult = connect( socketFD, address->ai_addr, address->ai_addrlen);
 					}
-				else if ( protocol == HTTPS )
+				else
 					{
+					if ( protocol != HTTPS )
+						{
+						result = "Disallowed protocol\n";
+						return PROTOCOL_ERROR;
+						}
+
 					// setup libressl stuff
 					tls_init( );
 					tls_config * config = tls_config_new( );  
@@ -178,7 +185,7 @@ namespace dex
 					tls_configure( ctx, config );
 
 					// Connect to the host address
-					connectResult = tls_connect( ctx, url.getHost( ).cStr( ), url.getPort( ) != "" ? url.getPort( ).cStr( ) : "443" );
+					connectResult = tls_connect( ctx, url.getHost( ).cStr( ), !url.getPort( ).empty( ) ? url.getPort( ).cStr( ) : "443" );
 					}
 
 				if ( connectResult == -1 )
@@ -194,7 +201,7 @@ namespace dex
 					{
 					sendGETResult = send( socketFD, getMessage.cStr( ), getMessage.length( ), 0 );
 					}
-				else if ( protocol == HTTPS )
+				else
 					{
 					sendGETResult = tls_write( ctx, getMessage.cStr( ), getMessage.length( ) );
 					}
@@ -209,6 +216,7 @@ namespace dex
 				int bytes;
 				bool filteredHeader = false;
 
+				// TODO receive all of the data, then POST PROCESS it
 				if ( protocol == HTTP )
 					{
 					while ( ( bytes = recv( socketFD, buffer, sizeof( buffer ), 0 ) ) > 0 )
@@ -224,7 +232,7 @@ namespace dex
 					close( socketFD );
 					freeaddrinfo( address );
 					}
-				else if ( protocol == HTTPS ) 
+				else
 					{
 					while ( ( bytes = tls_read( ctx, buffer, sizeof( buffer ) ) ) > 0 )
 						{

@@ -391,7 +391,7 @@ namespace dex
 				Key defaultKey;
 				for ( auto it = begin( );  it != cend( );  ++it )
 					{
-					compressed += it->first + "\n" + it->second.compress( );
+					compressed += it->first + "\n" + it->second.compress( ); // TODO compress passes in a string by ref to append to
 					}
 					return compressed;
 				}
