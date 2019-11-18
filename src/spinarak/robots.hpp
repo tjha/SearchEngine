@@ -1,6 +1,7 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-11-18: Added expiration date: combsc
 // 2019-11-13: Added parsing for robots.txt files: combsc
 // 2019-11-04: fixed fixPath function, should NOT have / at the end: combsc
 // 2019-11-03: Added default values for all member variables for all 
@@ -37,17 +38,12 @@ namespace dex
 			dex::string domain;
 			// Time we have to wait to hit domain again in seconds
 			int crawlDelay;
-			// TODO: To be used if there is a specified time when crawling is disallowed
-			//int visitTimeHourStart;
-			//int visitTimeMinuteStart;
-			//int visitTimeHourEnd;
-			//int visitTimeMinuteEnd;
-
-			// TODO: ADD TIME WHEN CACHE NEEDS TO BE REFRESHED
 
 			// Last time this domain was visited, time that we're allowed to visit again
 			time_t lastTimeVisited;
 			time_t allowedVisitTime;
+			// When the cache entry needs to expire
+			time_t expireTime;
 
 			// Paths that are disallowed. All extensions on the paths within this set are
 			// also disallowed, unless explicitly allowed in allowedPaths.
@@ -101,6 +97,7 @@ namespace dex
 
 		public:
 			static const unsigned defaultDelay = 10;
+			static const unsigned defaultExpiration = 60 * 60 * 24;
 			static const dex::string userAgent;
 
 			RobotTxt( )
@@ -109,23 +106,27 @@ namespace dex
 				crawlDelay = defaultDelay;
 				allowedVisitTime = time( nullptr );
 				lastTimeVisited = allowedVisitTime - crawlDelay;
+				expireTime = allowedVisitTime + defaultExpiration;
 				}
 			RobotTxt( const RobotTxt &other ) : domain( other.domain ), crawlDelay( other.crawlDelay ), 
 					lastTimeVisited( other.lastTimeVisited ), allowedVisitTime( other.allowedVisitTime ),
-					disallowedPaths( other.disallowedPaths ), allowedPaths( other.allowedPaths )
+					expireTime( other.expireTime ), disallowedPaths( other.disallowedPaths ),
+					allowedPaths( other.allowedPaths )
 				{
 				}
 			RobotTxt( const dex::string &domain, unsigned crawlDelay = defaultDelay) : domain( domain ), crawlDelay( crawlDelay )
 				{
 				allowedVisitTime = time( nullptr );
 				lastTimeVisited = allowedVisitTime - crawlDelay;
+				expireTime = allowedVisitTime + defaultExpiration;
 				}
 			RobotTxt( const dex::string &otherDomain, const dex::string &robotTxtFile )
 				{
 				domain = otherDomain;
 				crawlDelay = defaultDelay;
-				allowedVisitTime = time( nullptr );
 				lastTimeVisited = allowedVisitTime - crawlDelay;
+				allowedVisitTime = time( nullptr );
+				expireTime = allowedVisitTime + defaultExpiration;
 				// see if user-agent matches our user-agent OR if it's *
 				int start = robotTxtFile.find( "User-agent: " + userAgent );
 				if ( start == -1 )
@@ -177,6 +178,7 @@ namespace dex
 				dex::swap( crawlDelay, otherCopy.crawlDelay );
 				dex::swap( lastTimeVisited, otherCopy.lastTimeVisited );
 				dex::swap( allowedVisitTime, otherCopy.allowedVisitTime );
+				dex::swap( expireTime, otherCopy.expireTime );
 				dex::swap( disallowedPaths, otherCopy.disallowedPaths );
 				dex::swap( allowedPaths, otherCopy.allowedPaths );
 				return *this;
@@ -187,6 +189,7 @@ namespace dex
 				dex::swap( crawlDelay, other.crawlDelay );
 				dex::swap( lastTimeVisited, other.lastTimeVisited );
 				dex::swap( allowedVisitTime, other.allowedVisitTime );
+				dex::swap( expireTime, other.expireTime );
 				dex::swap( disallowedPaths, other.disallowedPaths );
 				dex::swap( allowedPaths, other.allowedPaths );
 				return *this;
@@ -265,21 +268,27 @@ namespace dex
 
 			// Checks for if you can perform HTTP request
 			bool canVisitPath( const dex::string &path )
-			{
-			dex::string fixedPath = fixPath( path );
-			if ( !pathIsAllowed( fixedPath ) )
-				return false;
-			
-			return time( nullptr ) >= allowedVisitTime; 
-			}
+				{
+				dex::string fixedPath = fixPath( path );
+				if ( !pathIsAllowed( fixedPath ) )
+					return false;
+				
+				return time( nullptr ) >= allowedVisitTime; 
+				}
+
+			bool hasExpired( )
+				{
+				return time( nullptr ) >= expireTime;
+				}
 
 			// All of the information of the robot
 			dex::string compress( )
 				{
 				return "Domain:\t\t\t" + domain + "\n" +
-							"Crawl-Delay:\t\t" + char( crawlDelay ) + "\n" +
+							"Crawl-Delay:\t\t" + int( crawlDelay ) + "\n" +
 							"Allowed-Visit-Time:\t" + ctime( &allowedVisitTime ) +
 							"Last-Visit:\t\t" + ctime( &lastTimeVisited ) + "\n" +
+							"Expire Time:\t\t" + ctime( &expireTime ) + "\n" + 
 							"Allowed-Paths\n" + allowedPaths.compress( ) +
 							"Disallowed-Paths\n" + disallowedPaths.compress( );
 				}
