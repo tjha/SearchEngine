@@ -644,11 +644,15 @@ TEST_CASE( "+ operator", "[string]" )
 
 TEST_CASE( "strip whitespace", "[string]" )
 	{
-
 	string a = "                   to strip              ";
 	REQUIRE( a.stripWhitespace( ) == "to strip" );
 	a = "   to\nstrip  \r\n ";
 	REQUIRE( a.stripWhitespace( ) == "to\nstrip" );
 	a = " to strip      out ";
 	REQUIRE( a.stripWhitespace( ) == "to strip      out" );
+	a = "";
+	REQUIRE( a.stripWhitespace( ) == "" );
+	a = "     \t \n \n\r\n ";
+	REQUIRE( a.stripWhitespace( ) == "" );
 	}
+

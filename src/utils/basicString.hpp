@@ -977,16 +977,23 @@ namespace dex
 
 			basicString < charT > stripWhitespace( ) const
 				{
-				basicString < charT > other = basicString( *this );
-				while ( other.back( ) == ' ' || other.back( ) == '\n' || other.back( ) == '\r' || other.back( ) == '\t' || 
-						other.back( ) == 'v' || other.back( ) == 'f' )
+				basicString < charT > stripped = basicString( *this );
+				// TODO change to firstNotOf or FindLastNotOf
+				//size_t frontStripped = findFirstNotOf( " vf\t\r\n", 0 );
+				//size_t backStripped = findLastNotOf( " vf\t\r\n", frontStripped );
+				while ( !stripped.empty( ) && ( stripped.back( ) == ' ' || stripped.back( ) == '\n' || stripped.back( ) == '\r' || stripped.back( ) == '\t' ||
+						stripped.back( ) == 'v' || stripped.back( ) == 'f' ) )
 					{
-					other.popBack( );
+					stripped.popBack( );
+					}
+				if ( stripped.empty ( ) )
+					{
+					return stripped;
 					}
 				size_t front;
-				for ( front = 0;  other[ front ] == ' ' || other[ front ] == '\n' || other[ front ] == '\r' || other[ front ] == '\t' || 
-						other[ front ] == 'v' || other[ front ] == 'f';  ++front );
-				return other.substr( front, other.size( ) - front );
+				for ( front = 0;  stripped[ front ] == ' ' || stripped[ front ] == '\n' || stripped[ front ] == '\r' ||
+						stripped[ front ] == '\t' || stripped[ front ] == 'v' || stripped[ front ] == 'f';  ++front );
+				return stripped.substr( front, stripped.size( ) - front );
 				}
 
 			friend basicString < charT > operator+( const basicString < charT > &lhs, const charT *rhs )

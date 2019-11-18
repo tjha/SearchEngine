@@ -22,24 +22,19 @@
 #include "../utils/vector.hpp"
 #include "../utils/unorderedSet.hpp"
 #include "../utils/algorithm.hpp"
+#include "../utils/functional.hpp"
 
-using std::cerr;
 using std::ostream;
-using dex::unorderedSet;
-using dex::vector;
 using dex::string;
 
 namespace dex
 	{
-
-	
-
 	// using this link to understand the protocol: 
 	// https://www.promptcloud.com/blog/how-to-read-and-respect-robots-file/
 	struct RobotTxt
 		{
 		private:
-			string domain;
+			dex::string domain;
 			// Time we have to wait to hit domain again in seconds
 			int crawlDelay;
 			// TODO: To be used if there is a specified time when crawling is disallowed
@@ -56,12 +51,12 @@ namespace dex
 
 			// Paths that are disallowed. All extensions on the paths within this set are
 			// also disallowed, unless explicitly allowed in allowedPaths.
-			unorderedSet < string > disallowedPaths { 10 };
+			dex::unorderedSet < dex::string > disallowedPaths { 10 };
 			// Paths that are exceptions to disallowed paths above. All extensions on the paths
 			// within this set are also allowed.
-			unorderedSet < string > allowedPaths { 10 };
+			dex::unorderedSet < dex::string > allowedPaths { 10 };
 
-			bool pathIsAllowed( string path )
+			bool pathIsAllowed( dex::string path )
 				{
 				path = fixPath( path );
 				// if the path passed in is explicitly in disallowed paths, return false
@@ -74,10 +69,10 @@ namespace dex
 
 				bool pathIsAllowed = true;
 				// Parse the path to see if it is part of a disallowed path or allowed path
-				for ( size_t nextSlashLocation = path.find( "/" );  nextSlashLocation != string::npos;
+				for ( size_t nextSlashLocation = path.find( "/" );  nextSlashLocation != dex::string::npos;
 						nextSlashLocation = path.find( "/", nextSlashLocation + 1 ) )
 					{
-					string toCheck = path.substr(0, nextSlashLocation + 1 );
+					dex::string toCheck = path.substr(0, nextSlashLocation + 1 );
 
 					// If at any point our path is in disallowed paths, we know that if it's not explicitly
 					// allowed we need to return false
@@ -93,10 +88,10 @@ namespace dex
 				}
 
 			// A valid path has a '/' at the beginning and end.
-			string fixPath( const string & path )
+			dex::string fixPath( const dex::string & path )
 				{
-				string fixedPath = path.stripWhitespace( );
-				if ( fixedPath[ 0 ] != '/' )
+				dex::string fixedPath = path.stripWhitespace( );
+				if ( fixedPath.front( ) != '/' )
 					fixedPath.insert( 0, "/" );
 				if ( fixedPath.back( ) != '/' )
 					fixedPath.append( "/" );
@@ -106,7 +101,7 @@ namespace dex
 
 		public:
 			static const unsigned defaultDelay = 10;
-			static const string userAgent;
+			static const dex::string userAgent;
 
 			RobotTxt( )
 				{
@@ -120,12 +115,12 @@ namespace dex
 					disallowedPaths( other.disallowedPaths ), allowedPaths( other.allowedPaths )
 				{
 				}
-			RobotTxt( const string &domain, unsigned crawlDelay = defaultDelay) : domain( domain ), crawlDelay( crawlDelay )
+			RobotTxt( const dex::string &domain, unsigned crawlDelay = defaultDelay) : domain( domain ), crawlDelay( crawlDelay )
 				{
 				allowedVisitTime = time( nullptr );
 				lastTimeVisited = allowedVisitTime - crawlDelay;
 				}
-			RobotTxt( const string &otherDomain, const string &robotTxtFile )
+			RobotTxt( const dex::string &otherDomain, const dex::string &robotTxtFile )
 				{
 				domain = otherDomain;
 				crawlDelay = defaultDelay;
@@ -140,7 +135,7 @@ namespace dex
 					int end = robotTxtFile.find( "User-agent:", start + 1 );
 					if ( end == -1 )
 						end = robotTxtFile.size( );
-					string toParse = robotTxtFile.substr( start, end - start );
+					dex::string toParse = robotTxtFile.substr( start, end - start );
 
 					// find the crawling rate they'd prefer us to use.
 					int crawlStart, crawlEnd;
@@ -197,10 +192,6 @@ namespace dex
 				return *this;
 				}
 
-			// File stream input, output
-			friend ostream &operator<<( ostream& out, RobotTxt &obj );
-			//friend istream &operator>>( istream& in, RobotTxt &rhs );
-
 			// Call each time you HTTP request a website
 			void updateLastVisited( )
 				{
@@ -209,77 +200,73 @@ namespace dex
 				}
 
 			// Set the disallowed paths for the domain
-			template < class InputIt,
-					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+			template < class InputIt >
 			void setPathsDisallowed( const InputIt &begin, const InputIt &end )
 				{
 				disallowedPaths.clear( );
 				addPathsDisallowed( begin, end );
 				}
-			void setPathsDisallowed( const unorderedSet < string > &paths )
+			void setPathsDisallowed( const dex::unorderedSet < dex::string > &paths )
 				{
 				setPathsDisallowed( paths.cbegin( ), paths.cend( ) );
 				}
 
 			// Add paths to the disallowed paths for the domain
-			template < class InputIt,
-					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+			template < class InputIt >
 			void addPathsDisallowed( const InputIt &begin, const InputIt &end )
 				{
 				for ( InputIt it = begin;  it != end;  ++it )
 					disallowedPaths.insert( fixPath( *it ) );
 				}
-			void addPathsDisallowed( const unorderedSet < string > &paths )
+			void addPathsDisallowed( const dex::unorderedSet < dex::string > &paths )
 				{
 				addPathsDisallowed( paths.cbegin( ), paths.cend( ) );
 				}
-			void addPathsDisallowed( const vector < string > &paths )
+			void addPathsDisallowed( const dex::vector < dex::string > &paths )
 				{
 				addPathsDisallowed( paths.cbegin( ), paths.cend( ) );
 				}
-			void addPathsDisallowed( const string &str )
+			void addPathsDisallowed( const dex::string &str )
 				{
 				disallowedPaths.insert( fixPath( str ) );
 				}
 
 			// Set the allowed paths for the domain
-			template < class InputIt,
-					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+			template < class InputIt >
 			void setPathsAllowed( const InputIt &begin, const InputIt &end )
 				{
 				allowedPaths.clear( );
 				addPathsAllowed( begin, end );
 				}
-			void setPathsAllowed( const unorderedSet < string > &paths )
+			void setPathsAllowed( const dex::unorderedSet < dex::string > &paths )
 				{
 				setPathsAllowed( paths.cbegin( ), paths.cend( ) );
 				}
 
 			// Add paths to the allowed paths for the domain
-			template < class InputIt,
-					typename = typename std::enable_if < !std::is_integral< InputIt >::value >::type >
+			template < class InputIt >
 			void addPathsAllowed( const InputIt &begin, const InputIt &end )
 				{
 				for ( InputIt it = begin;  it != end;  ++it )
 					allowedPaths.insert( fixPath( *it ) );
 				}
-			void addPathsAllowed( const unorderedSet < string > &paths )
+			void addPathsAllowed( const dex::unorderedSet < dex::string > &paths )
 				{
 				addPathsAllowed( paths.cbegin( ), paths.cend( ) );
 				}
-			void addPathsAllowed( const vector < string > &paths )
+			void addPathsAllowed( const dex::vector < dex::string > &paths )
 				{
 				addPathsAllowed( paths.cbegin( ), paths.cend( ) );
 				}
-			void addPathsAllowed( const string &path )
+			void addPathsAllowed( const dex::string &path )
 				{
 				allowedPaths.insert( fixPath( path) );
 				}
 
 			// Checks for if you can perform HTTP request
-			bool canVisitPath( const string &path )
+			bool canVisitPath( const dex::string &path )
 			{
-			string fixedPath = fixPath( path );
+			dex::string fixedPath = fixPath( path );
 			if ( !pathIsAllowed( fixedPath ) )
 				return false;
 			
@@ -287,19 +274,18 @@ namespace dex
 			}
 
 			// All of the information of the robot
-			string compress( )
+			dex::string compress( )
 				{
-				string robot = "Domain:\t\t\t" + domain + "\n" +
-									"Crawl-Delay:\t\t" + char( crawlDelay ) + "\n" +
-									"Allowed-Visit-Time:\t" + ctime( &allowedVisitTime ) +
-									"Last-Visit:\t\t" + ctime( &lastTimeVisited ) + "\n" +
-									"Allowed-Paths\n" + allowedPaths.compress( ) +
-									"Disallowed-Paths\n" + disallowedPaths.compress( );
-				return robot;
+				return "Domain:\t\t\t" + domain + "\n" +
+							"Crawl-Delay:\t\t" + char( crawlDelay ) + "\n" +
+							"Allowed-Visit-Time:\t" + ctime( &allowedVisitTime ) +
+							"Last-Visit:\t\t" + ctime( &lastTimeVisited ) + "\n" +
+							"Allowed-Paths\n" + allowedPaths.compress( ) +
+							"Disallowed-Paths\n" + disallowedPaths.compress( );
 				}
 
 			// need domain for hash func
-			const string getDomain( ) const
+			const dex::string getDomain( ) const
 				{
 				return domain;
 				}
@@ -309,22 +295,7 @@ namespace dex
 				}
 		};
 
-	const string RobotTxt::userAgent = "jhirshey@umich.edu (Linux)";
-
-	ostream & operator<<( ostream &out, RobotTxt &obj ) 
-		{
-		return out << "Domain:\t\t\t" << obj.domain << std::endl
-					  << "Crawl-Delay:\t\t" << obj.crawlDelay << std::endl
-					  << "Allowed-Visit-Time:\t" << ctime( &obj.allowedVisitTime )
-					  << "Last-Visit:\t\t" << ctime( &obj.lastTimeVisited ) << std::endl
-					  << "Allowed-Paths\n" << obj.allowedPaths.compress( )
-					  << "Disallowed-Paths\n" << obj.disallowedPaths.compress( );
-		}
-
-
-	
-	template < class Key >
-	struct hash;
+	const dex::string RobotTxt::userAgent = "jhirshey@umich.edu (Linux)";
 
 	template< >
 	struct hash< dex::RobotTxt >

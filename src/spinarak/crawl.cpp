@@ -7,13 +7,12 @@
 
 #include <unistd.h>
 #include <cassert>
-#include "crawler.hpp"
 #include <iostream>
+#include "crawler.hpp"
 #include "robots.hpp"
-#include "../utils/unorderedMap.hpp"
-#include "../utils/basicString.hpp"
-#include "../utils/exception.hpp"
 #include <unordered_map>
+#include <string>
+#include <exception>
 // Believe we need to implement std::list for frontier
 #include <list>
 #include <iterator>
@@ -41,15 +40,15 @@ std::list< string > loadFrontier( const char * fileName )
 	while ( start < frontierList.size( ) )
 		{
 		size_t found = frontierList.find( delimiter, start );
-		if ( found < frontierList.npos ) 
+		if ( found < frontierList.npos )
 			{
 			string url( frontierList.begin( ) + start, frontierList.begin( ) + found );
-			frontier.push_back ( url );
+			frontier.push_back( url );
 			start = found + delimiter.size( );
 			}
 		else
 			{
-			start = frontierList.npos;
+			break;
 			}
 		}
 
@@ -58,7 +57,7 @@ std::list< string > loadFrontier( const char * fileName )
 
 int outputRobots( const char * fileName, unorderedMap < string, RobotTxt > &robots )
 	{
-	string robotsData = "ROBOTS DATA\n" + robots.compress( );
+	string robotsData = "ROBOTS DATA\n" + robots.compress( ); // TODO use reserve
 	return writeToFile( fileName, robotsData.cStr( ), robotsData.size( ) );
 	}
 
@@ -95,7 +94,7 @@ int main( int argc, char ** argv )
 			it = frontier.erase( it );
 			}
 
-		if ( errorCode == dex::politenessError )
+		if ( errorCode == dex::POLITENESS_ERROR )
 			{
 			cout << "Mr. Robot says to be polite: " << it->cStr( ) << endl;
 			cout << result << endl;

@@ -11,11 +11,10 @@
 #include "../src/utils/unorderedMap.hpp"
 #include "../src/utils/basicString.hpp"
 #include "../src/utils/vector.hpp"
-#include <iostream>
-#include <stdlib.h>
 
 using dex::RobotTxt;
 using dex::string;
+using dex::vector;
 
 
 TEST_CASE( "timing for visiting sites", "[robotsTxt]" )
@@ -165,3 +164,4 @@ TEST_CASE( "parsing a robots.txt file", "[robotTxt]" )
    REQUIRE( rob1.canVisitPath( "/somepublicthing") );
    REQUIRE( !rob1.canVisitPath( "/secret/file") );
    }
+
