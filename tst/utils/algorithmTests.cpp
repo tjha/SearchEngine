@@ -1,6 +1,7 @@
 // algorithmTests.cpp
 // Testing for the algorithm library
 //
+// 2019-11-18: Add lower_bound tests: lougheem
 // 2019-10-24: Add lexicographicalCompare tests: jasina
 // 2019-10-17: Get tests to all compile and pass: jasina
 // 2019-10-13: Write copy, fill, find, search, and findEnd tests: jasina
@@ -149,4 +150,26 @@ TEST_CASE( "test lexicographical compare" )
 	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.begin( ), b.begin( ), b.begin( ) ) == 0 );
 	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.end( ), a.begin( ), a.end( ) ) == 0 );
 	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.begin( ), a.end( ), a.end( ) ) == 0 );
+	}
+
+TEST_CASE( "test lower_bound" )
+	{
+	std::vector < int > a, b, c;
+	for ( int number = 0;  number < 30;  ++number )
+		{
+		a.push_back( number );
+		b.push_back( 100 + number );
+		c.push_back( number );
+		c.push_back( number );
+		}
+
+	REQUIRE( *dex::lower_bound( a.begin( ), a.end( ), 5 ) == 5 );
+	REQUIRE( *dex::lower_bound( a.begin( ), a.end( ), 3 ) == 3 );
+	for ( int number = 0;  number < 10;  ++number )
+		{
+		REQUIRE( *dex::lower_bound( a.begin( ), a.end( ), number ) == number );
+		REQUIRE( *dex::lower_bound( b.begin( ), b.end( ), 100 + number ) == 100 + number );
+		REQUIRE( *dex::lower_bound( c.begin( ), c.end( ), number) == number );
+		REQUIRE( *( 1 + dex::lower_bound( c.begin( ), c.end( ), number ) ) == number );
+		}
 	}
