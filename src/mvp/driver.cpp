@@ -16,7 +16,7 @@ pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV;
 pthread_t workers [ 1 ];
 
-dex::unorderedMap < string, RobotTxt > robotsCache{ 1000 };
+dex::unorderedMap < dex::string, dex::RobotTxt > robotsCache{ 1000 };
 pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 
 dex::vector < dex::Url > brokenLinks;
@@ -49,7 +49,7 @@ bool fakeUrlInDomain( const dex::Url &url )
 	return true;
 	}
 
-int fakeCrawl( dex::Url url, dex::string &result, dex::unorderedMap < string, RobotTxt > &robots, dex::string contentFilename )
+int fakeCrawl( dex::Url url, dex::string &result, dex::unorderedMap < dex::string, dex::RobotTxt > &robots, dex::string contentFilename )
 	{
 	return 0;
 	}
@@ -110,7 +110,7 @@ void *worker( void *args )
 				}
 			}
 
-		if ( errorCode == dex::politenessError )
+		if ( errorCode == dex::POLITENESS_ERROR )
 			{
 			std::cout << "Mr. Robot says to be polite: " << toCrawl.completeUrl( ) << std::endl;
 			std::cout << result << std::endl;
