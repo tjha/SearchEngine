@@ -19,7 +19,7 @@
 #include "exception.hpp"
 #include "typeTraits.hpp"
 #include "utility.hpp"
-#include <string>
+#include "basicString.hpp"
 
 namespace dex
 	{
