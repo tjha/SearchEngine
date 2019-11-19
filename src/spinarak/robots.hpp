@@ -277,6 +277,8 @@ namespace dex
 				return time( nullptr ) >= expireTime;
 				}
 
+			// TODO add encode and decode functions as vector< unsigned char > and
+			// are not human readable
 			// All of the information of the robot
 			dex::string compress( )
 				{
