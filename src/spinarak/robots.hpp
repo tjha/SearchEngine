@@ -15,7 +15,6 @@
 #ifndef DEX_ROBOTS_HPP
 #define DEX_ROBOTS_HPP
 
-#include <iostream>
 #include <time.h>
 #include <stdio.h>
 #include "../utils/basicString.hpp"
@@ -23,9 +22,6 @@
 #include "../utils/unorderedSet.hpp"
 #include "../utils/algorithm.hpp"
 #include "../utils/functional.hpp"
-
-using std::ostream;
-using dex::string;
 
 namespace dex
 	{

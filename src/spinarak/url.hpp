@@ -185,9 +185,19 @@ namespace dex
 			
 			void setPort( const string &p )
 				{
-				port = p;
-				if ( port.back( ) == ':' )
-					port = port.substr(0, port.size( ) - 1 );
+				if ( p.empty() )
+					{
+					std::cerr << "Need to set port to a nonempty string";
+					throw invalidArgumentException( );
+					}
+				if ( p.back( ) != ':' )
+					{
+					port = p;
+					}
+				else
+					{
+					port = p.substr( 0, p.size( ) - 1 );
+					}
 				}
 
 			string getPath( )
