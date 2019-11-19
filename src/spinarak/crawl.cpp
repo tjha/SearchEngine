@@ -5,7 +5,6 @@
 // 2019-11-04: edited code logic slightly to match other changes made today: combsc
 // 2019-11-04: File creation: jhirsh
 
-#include <cassert>
 #include "crawler.hpp"
 #include <string>
 #include <list> // Believe we need to implement std::list for frontier
@@ -16,7 +15,6 @@ using dex::RobotTxt;
 using dex::unorderedMap;
 using dex::writeToFile;
 using dex::readFromFile;
-using dex::exception;
 using std::cout;
 using std::endl;
 

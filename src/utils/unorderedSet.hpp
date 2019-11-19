@@ -15,7 +15,6 @@
 #include "exception.hpp"
 #include "typeTraits.hpp"
 #include "utility.hpp"
-#include <iostream>
 
 namespace dex
 	{

@@ -10,6 +10,7 @@
 #include "url.hpp"
 #include <iostream>
 
+// 2019-11-18: removed isError function, receive input correctly, let robots expire: combsc
 // 2019-11-13: fixed isError function, generalized User-agent: combsc
 // 2019-11-12: http/sConect functions are now connectPage. Concatenate results
 //					of requests to one dex::string, then have crawlUrl handle the result:
@@ -44,7 +45,6 @@ namespace dex
 		POLITENESS_ERROR = -5,
 		NO_LOCATION_ERROR = -6,
 		NO_HEADER_END_ERROR = -7,
-		LAST_ERROR = -8,
 		PROTOCOL_ERROR = -9
 		};
 	
@@ -60,10 +60,6 @@ namespace dex
 		// We're keeping it a class so that we can make the interface clear when
 		// you're using it.
 		private:
-			static bool isError( const int &in )
-				{
-				return in >= RESOLVE_DNS_ERROR && in <= LAST_ERROR;
-				}
 			static dex::string makeGetMessage( const dex::string &path, const dex::string &host )
 				{
 				return "GET " 
@@ -80,70 +76,74 @@ namespace dex
 			//		If we're in the response we're looking for specific fields, otherwise we're printing
 			// res is how we return any information back to the callee. If we get a redirect for example,
 			//		the URL we're being redirected to will be contained within res.
-			static int receive( const char *buffer, int bytes, bool &filteredHeader, dex::string &result )
+			static void receive( const char *buffer, unsigned bytes, dex::vector < char > &response )
 				{
-				if ( filteredHeader )
+				response.reserve( response.size( ) + bytes );
+				for ( unsigned i = 0;  i < bytes;  ++i )
+					response.pushBack( buffer[ i ] );
+				}
+
+			static int parseResponse( dex::vector < char > response , dex::string &result )
+				{
+				char buffer[ response.size( ) + 1 ];
+				buffer[ response.size( ) ] = '\0';
+				dex::copy( response.cbegin( ), response.cend( ), buffer );
+				dex::string toSearch = buffer;
+				int endHeader;
+				int startContent;
+				int location = toSearch.find( "HTTP/1.1 " );
+				if ( location != -1 )
 					{
-					result += buffer;
-					}
-				else 
-					{
-					dex::string toSearch = buffer;
-					int location = toSearch.find( "HTTP/1.1 " );
-					if ( location != -1 )
+					char statusCode[ 4 ] = { buffer[ location + 9 ], buffer[ location + 10 ],
+							buffer[ location + 11 ], '\0' };
+					int status = ( statusCode[ 0 ] - '0' ) * 100 +
+							( statusCode[ 1 ] - '0' ) * 10 +
+							( statusCode[ 2 ] - '0' );
+					// If the status code starts with 2, it's a valid response
+					if ( statusCode[ 0 ] == '2' )
 						{
-						char statusCode[ 4 ] = { buffer[ location + 9 ], buffer[ location + 10 ],
-								buffer[ location + 11 ], '\0' };
-						int status = ( statusCode[ 0 ] - '0' ) * 100 +
-								( statusCode[ 1 ] - '0' ) * 10 +
-								( statusCode[ 2 ] - '0' );
-						// If the status code starts with 2, it's a valid response
-						if ( statusCode[ 0 ] == '2' )
+						endHeader = toSearch.find( "\r\n\r\n" );
+						if ( endHeader == -1 )
 							{
-							int headerEnd = toSearch.find( "\r\n\r\n" );
-							// What should we do if we can't find the header end? Honestly don't know...
-							if ( headerEnd == -1 )
-								{
-								result = "Can't find the header end";
-								return NO_HEADER_END_ERROR;
-								}
-							result += buffer;
-							filteredHeader = true;
+							result = toSearch;
+							return NO_HEADER_END_ERROR;
 							}
-						// If the status code starts with a 3, it's a redirect
+						startContent = endHeader + 4;
+						result = toSearch.substr( startContent, toSearch.size( ) - startContent );
+						return 0;
+						}
+					// If the status code starts with a 3, it's a redirect
+					else
+						{
+						if ( statusCode[ 0 ] == '3' )
+							{
+							// Copy the locaton into res and return the status code
+							int locationStart = toSearch.find( "Location: " );
+							if ( locationStart == -1 )
+								{
+								result = toSearch;
+								return NO_LOCATION_ERROR;
+								}
+							const char *beginRedirect = buffer + locationStart + 10;
+							const char *endRedirect = beginRedirect;
+							for ( ; *endRedirect != '\r' ;  ++endRedirect );
+							result = dex::string( beginRedirect, endRedirect );
+							return status;
+							}
+						// Otherwise we don't get a good response and need to return an error
 						else
 							{
-							if ( statusCode[ 0 ] == '3' )
-								{
-								// Copy the locaton into res and return the status code
-								int locationStart = toSearch.find( "Location: " );
-								if ( locationStart == -1 )
-									{
-									result = "Can't find the location in the header";
-									return NO_LOCATION_ERROR;
-									}
-								const char *beginRedirect = buffer + locationStart + 10;
-								const char *endRedirect = beginRedirect;
-								for ( ; *endRedirect != '\r' ;  ++endRedirect );
-								result = dex::string( beginRedirect, endRedirect );
-								return status;
-								}
-							// Otherwise we don't get a good response and need to return an error
-							else
-								{
-								// Copy the HTTP response into res, then return the status code
-								int headerEnd = toSearch.find( "\r\n\r\n" );
-								result = dex::string( buffer, buffer + headerEnd );
-								return status;
-								}
+							// Copy the HTTP response into res, then return the status code
+							result = toSearch;
+							return status;
 							}
 						}
 					}
-				return 0;
+				return NO_RESPONSE_ERROR;
 				}
 
-		static int connectPage( Url url, dex::string &result, bool protocol )
-			{
+			static int connectPage( Url url, dex::string &result, bool protocol )
+				{
 				int connectResult = 0;
 				struct addrinfo *address;
 				int socketFD; // HTTP				
@@ -214,19 +214,12 @@ namespace dex
 				
 				char buffer[ 10240 ];
 				int bytes;
-				bool filteredHeader = false;
-
+				dex::vector < char > response;
 				// TODO receive all of the data, then POST PROCESS it
 				if ( protocol == HTTP )
 					{
 					while ( ( bytes = recv( socketFD, buffer, sizeof( buffer ), 0 ) ) > 0 )
-						{
-						int errorCode = receive( buffer, bytes, filteredHeader, result );
-						if ( errorCode != 0 )
-							{
-							return errorCode;
-							}
-						}
+						receive( buffer, bytes, response );
 
 					// Close the socket and free the address info structure.
 					close( socketFD );
@@ -235,27 +228,15 @@ namespace dex
 				else
 					{
 					while ( ( bytes = tls_read( ctx, buffer, sizeof( buffer ) ) ) > 0 )
-						{
-						int errorCode = receive( buffer, bytes, filteredHeader, result );
-						if ( errorCode != 0 )
-							{
-							return errorCode;
-							}
-						}
-
+						receive( buffer, bytes, response );
+					
 					// Close SSL connection
 					tls_close( ctx );
 					tls_free( ctx );
 					}
-
-				if ( !filteredHeader && bytes == 0 )
-					{
-					result = "No response from TLS_READ of:\n" + getMessage;
-					return NO_RESPONSE_ERROR;
-					}
-
-				return 0;
-			}
+				int errorCode = parseResponse( response, result );
+				return errorCode;
+				}
 		
 		public:
 			// Function used for crawling URLs. bePolite should ALWAYS be on, only turned off for testing.
@@ -271,7 +252,7 @@ namespace dex
 					{
 					dex::RobotTxt robot;
 					// Check to see if we have a robot object for the domain we're crawling
-					if ( robots.count( url.getHost( ) ) < 1 )
+					if ( robots.count( url.getHost( ) ) < 1 || ( robots.count( url.getHost( ) ) >= 1 && robots[ url.getHost( ) ].hasExpired( ) ) )
 						{
 						// visit robots.txt until we no longer receieve a redirect or until we've
 						// gone too long and we need to kill this redirect chain.
