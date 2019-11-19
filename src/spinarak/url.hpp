@@ -59,6 +59,9 @@ namespace dex
 				int endPort = endHost;
 				if ( totalUrl[ endHost ] == ':' )
 					{
+					// TODO links might be malformed and not have the / even though
+					// they should. Need to make sure to fix the list or account for
+					// that here
 					endPort = totalUrl.find( "/", beginPort );
 					// If there is no path, the end of the port is the end of the string.
 					if ( endPort == -1 )
