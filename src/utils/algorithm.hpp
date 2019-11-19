@@ -1,6 +1,7 @@
 // algorithm.hpp
 // Artisan crafted version of <algorithm> that keeps all of the interfaces.
 //
+// 2019-11-18: Add lower_bound: lougheem
 // 2019-10-27: Fix lexicographicalCompare return statement: jasina
 // 2019-10-24: Add lexicographicalCompare: jasina
 // 2019-10-17: Disambiguate call to search, add include guard: jasina
@@ -110,6 +111,25 @@ namespace dex
 				return 1;
 			}
 		return ( first2 == last2 ) - ( first1 == last1 );
+		}
+
+	template < class ForwardIt, class T >
+	ForwardIt lower_bound( ForwardIt first, ForwardIt last, const T &value )
+		{
+		size_t rangeHigh = 0, rangeLow = 0;
+		ForwardIt firstCopy = first;
+		for ( ;  firstCopy != last;  ++firstCopy )
+			++rangeHigh;
+
+		while ( rangeLow < rangeHigh )
+			{
+			size_t rangeMid = rangeLow + ( rangeHigh - rangeLow ) / 2;
+			if ( *( first + rangeMid ) < value )
+				rangeLow = rangeMid + 1;
+			else 
+				rangeHigh = rangeMid;
+			}
+		return first + rangeLow;
 		}
 	}
 
