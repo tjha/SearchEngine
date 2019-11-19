@@ -34,9 +34,10 @@ dex::vector < dex::Url > fakeParseForLinks( dex::string html )
 	return toReturn;
 	}
 
-dex::Url fakeRedirectLink( const dex::Url &in)
+dex::Url fakeRedirectLink( dex::Url in)
 	{
 	std::cout << "Fixed link " << in.completeUrl( ) << std::endl;
+	in.setPath( "fixed" );
 	return in;
 	}
 
