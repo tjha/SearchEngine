@@ -1,6 +1,6 @@
 // Implementation of basic mercator architecture
 
-// 2019-11-20: Add logging: combsc
+// 2019-11-20: Add logging, add file structure for saving html: combsc
 // 2019-11-16: Init Commit: combsc
 #include "../spinarak/crawler.hpp"
 #include "../utils/basicString.hpp"
@@ -35,6 +35,38 @@ void log( dex::string toWrite )
 	pthread_mutex_lock( &loggingLock );
 	dex::appendToFile( loggingFileName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
 	pthread_mutex_unlock( &loggingLock );
+	}
+
+
+// Folder structure
+// Hash the URL
+// 2 layers of folders
+// bytes 1 determines the first folder
+// bytes 2 determines the second folder
+// bytes 3-4 determine the name of the files
+// This gives us 4,294,967,296 possible locations for html
+int saveHtml( dex::Url url )
+	{
+	dex::hash < dex::string > hasher;
+	unsigned long h = hasher( url.completeUrl( ) );
+	unsigned long first = h & 0x000000FF;
+	unsigned long second = ( h & 0x0000FF00 ) >> 8;
+	unsigned long name = ( h & 0xFFFF0000 ) >> 16 ;
+	std::cout << "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html" << std::endl;
+	int err = dex::makeDirectory( "html" );
+	if ( err == -1 )
+		return err;
+	dex::string dirName = "html/" + dex::toString( first );
+	err = dex::makeDirectory( dirName.cStr( ) );
+	if ( err == -1 )
+		return err;
+	dirName = "html/" + dex::toString( first ) + "/" + dex::toString( second );
+	err = dex::makeDirectory( dirName.cStr( ) );
+	if ( err == -1 )
+		return err;
+	dex::string filename = "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html";
+	err = dex::writeToFile( filename.cStr( ), url.completeUrl( ).cStr( ), url.completeUrl( ).size( ) );
+	return err;
 	}
 
 dex::vector < dex::Url > fakeParseForLinks( dex::string html )
@@ -81,7 +113,6 @@ void *worker( void *args )
 	{
 	workerStruct a = *static_cast <workerStruct*>(args);
 	dex::string name = a.name;
-	size_t iteration = 0;
 	for ( int i = 0;  i < 3;  ++i )
 		{
 		pthread_mutex_lock( &frontierLock );
@@ -152,9 +183,7 @@ void *worker( void *args )
 			pthread_mutex_unlock( &brokenLinksLock );
 			// All links that redirect to this should also be categorized as broken.
 			}
-		++iteration; 
 		}
-
 	return nullptr;
 	}
 
@@ -172,5 +201,6 @@ int main( )
 	workerStruct a = { "test" };
 	pthread_create( &workers[ 0 ], nullptr, worker, static_cast < void * > ( &a ) );
 	pthread_join( workers[ 0 ], nullptr );
+	saveHtml( "https://www.bonescape.bomb" );
 	return 0;
 	}

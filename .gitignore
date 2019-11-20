@@ -11,3 +11,5 @@ ehthumbs.db
 Thumbs.db
 *.gch
 *.dSYM
+html/
+logs/

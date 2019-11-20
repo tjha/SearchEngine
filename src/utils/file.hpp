@@ -1,7 +1,7 @@
 // file.hpp
 // file for dealing with our fileIO
 //
-// 2019-11-20: Added appendToFile, add offset, add create: combsc
+// 2019-11-20: Added appendToFile, add offset, add create, add makeDirectory: combsc
 // 2019-11-4: Swapped out memcpy for dex::copy: combsc
 // 2019-11-2: Initial Commit: combsc
 #include <sys/types.h>
@@ -35,10 +35,17 @@ namespace dex
 		return fileSize( fd );
 		}
 
+	int makeDirectory( const char *directoryName )
+		{
+		struct stat st = { 0 };
+		if ( stat( directoryName, &st ) == -1 )
+			return mkdir( directoryName, 0700 );
+		return 0;
+		}
+
 	// Writes to the file name specified. Will overwrite whatever was there before.
 	int writeToFile( const char *filePath, const char *toWrite, size_t length )
 		{
-
 		int fd = open( filePath, O_RDWR | O_CREAT| O_TRUNC, S_IRWXU );
 		if ( fd == -1 )
 			return -1;
