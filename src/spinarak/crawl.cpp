@@ -1,6 +1,7 @@
 // crawl.cpp
 // Testing for our crawler class
 //
+// 2019-11-21: turned crawler from an object to a namespace: combsc
 // 2019-11-10: pass filenames instead of file descriptors: jhirsh
 // 2019-11-04: edited code logic slightly to match other changes made today: combsc
 // 2019-11-04: File creation: jhirsh
