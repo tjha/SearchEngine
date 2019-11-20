@@ -1,5 +1,6 @@
-// basicParserTests.cpp
+// parserTests.cpp
 // Basic testing of Parser functionality
+//
 // 2019-11-06: Made compatible with new paired struct: medhak
 // 2019-11-06: AnchorText test with peter_chen.html: tjha
 // 2019-11-05: Made compatible with Parser classL medhak
