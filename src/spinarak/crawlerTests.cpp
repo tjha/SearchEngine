@@ -8,14 +8,8 @@
 // 2019-10-31: Added basic query + fragment testing: combsc
 // 2019-10-30: File creation: combsc
 
-#include <unistd.h>
 #include <cassert>
 #include "crawler.hpp"
-#include <iostream>
-#include "robots.hpp"
-#include "../utils/unorderedMap.hpp"
-#include "../utils/basicString.hpp"
-#include <unordered_map>
 
 using dex::string;
 using dex::RobotTxt;

@@ -307,7 +307,6 @@ namespace dex
 					// Update the robot in our cache
 					robots[ url.getHost( ) ] = robot;
 					}
-				
 				result = "";
 				protocol = ( url.getService( ) == "http" ) ? HTTP : HTTPS;
 				int errorCode = connectPage( url, result, protocol );

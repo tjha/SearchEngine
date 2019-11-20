@@ -1,7 +1,10 @@
 
+<<<<<<< HEAD
 #ifndef DEX_URL_HPP
 #define DEX_URL_HPP
 
+=======
+>>>>>>> 0eb72391e09292f6c39b06204a9a10d9dd95b21b
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
 #include "../utils/exception.hpp"
@@ -30,9 +33,12 @@ namespace dex
 			// fragment should not include #
 			string fragment;
 		public:
+<<<<<<< HEAD
 			Url( )
 				{
 				}
+=======
+>>>>>>> 0eb72391e09292f6c39b06204a9a10d9dd95b21b
 			Url( const char *url )
 				{
 				// Assumes url points to static text but
@@ -65,7 +71,11 @@ namespace dex
 				int endPort = endHost;
 				if ( totalUrl[ endHost ] == ':' )
 					{
+<<<<<<< HEAD
 					endPort = totalUrl.find( "/", beginPort );
+=======
+					endPort = totalUrl.findFirstOf( "/?#", beginPort );
+>>>>>>> 0eb72391e09292f6c39b06204a9a10d9dd95b21b
 					// If there is no path, the end of the port is the end of the string.
 					if ( endPort == -1 )
 						endPort = totalUrl.size( );
@@ -97,7 +107,14 @@ namespace dex
 					endPath = totalUrl.findFirstOf( "?#", beginPath );
 					if ( endPath == -1 )
 						endPath = int( totalUrl.size( ) );
+<<<<<<< HEAD
 					path = totalUrl.substr( beginPath, endPath - beginPath );
+=======
+					if ( endPath == beginPath )
+						path = "/";
+					else
+						path = totalUrl.substr( beginPath, endPath - beginPath );
+>>>>>>> 0eb72391e09292f6c39b06204a9a10d9dd95b21b
 					}
 				// If queries exist
 				int beginQuery = totalUrl.find( "?", endPath );
@@ -139,7 +156,11 @@ namespace dex
 				return *this;
 				}
 			
+<<<<<<< HEAD
 			string completeUrl( ) const
+=======
+			string completeUrl( )
+>>>>>>> 0eb72391e09292f6c39b06204a9a10d9dd95b21b
 				{
 				string completeUrl = service + "://" + host;
 				if ( port != "" && port != "443" && port != "80" )
@@ -191,9 +212,25 @@ namespace dex
 			
 			void setPort( const string &p )
 				{
+<<<<<<< HEAD
 				port = p;
 				if ( port.back( ) == ':' )
 					port = port.substr(0, port.size( ) - 1 );
+=======
+				if ( p.empty() )
+					{
+					std::cerr << "Need to set port to a nonempty string";
+					throw invalidArgumentException( );
+					}
+				if ( p.back( ) != ':' )
+					{
+					port = p;
+					}
+				else
+					{
+					port = p.substr( 0, p.size( ) - 1 );
+					}
+>>>>>>> 0eb72391e09292f6c39b06204a9a10d9dd95b21b
 				}
 
 			string getPath( )
@@ -231,4 +268,7 @@ namespace dex
 				}
 		};
 	}
+<<<<<<< HEAD
 #endif
+=======
+>>>>>>> 0eb72391e09292f6c39b06204a9a10d9dd95b21b

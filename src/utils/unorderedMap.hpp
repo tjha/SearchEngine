@@ -19,6 +19,7 @@
 #include "exception.hpp"
 #include "typeTraits.hpp"
 #include "utility.hpp"
+#include "basicString.hpp"
 
 namespace dex
 	{
@@ -385,9 +386,9 @@ namespace dex
 				dex::swap( other.ghostCount, ghostCount );
 				}
 
-			string compress( )
+			dex::string compress( )
 				{
-				string compressed = "";
+				dex::string compressed = "";
 				Key defaultKey;
 				for ( auto it = begin( );  it != cend( );  ++it )
 					{

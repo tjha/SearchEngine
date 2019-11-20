@@ -15,7 +15,7 @@
 #include "exception.hpp"
 #include "typeTraits.hpp"
 #include "utility.hpp"
-#include <iostream>
+#include "basicString.hpp"
 
 namespace dex
 	{
@@ -358,9 +358,9 @@ namespace dex
 				dex::swap( other.ghostCount, ghostCount );
 				}
 
-			string compress( )
+			dex::string compress( )
 				{
-				string compressed = "";
+				dex::string compressed = "";
 				for ( auto it = begin();  it != cend();  ++it )
 					{
 					// tabs are formatting decisions
