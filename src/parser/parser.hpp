@@ -1,6 +1,7 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
 //
+// 2019-11-19:  Changed BreakAnchors, Getlinks; made removePunctuation : medhak
 // 2019-11-11:  Implemented ParseTag function to aid in recursive parsing: tjha
 // 2019-11-06:  Fixed whitespace errors, changed to paired to <size_t vector <size_t>>, : medhak
 // 2019-11-05:  Implemented return functions, fixed errors in breakanchor.
@@ -17,23 +18,26 @@
 #include "algorithm.hpp"
 #include "exception.hpp"
 #include "utility.hpp"
+#include <iostream> 
 
 
 namespace dex
 {
-   struct paired
+   struct AnchorPos
          {
-         size_t first;
-         dex::vector <size_t> second;
+         size_t linkInd;
+         size_t startPos;
+         size_t endPos;
          };
 
    class HTMLparser
    {
    private:
-      dex::string htmlFile;
-      dex::vector < dex::string > links;
-      dex::vector < dex::string > words;
-      dex::vector< paired > anchorText;
+      string htmlFile;
+      vector < string > links;
+      vector < string > words;
+      vector < string > relativeLinks;
+      vector< AnchorPos > anchorText;
 
       struct Positions
          {
@@ -41,92 +45,259 @@ namespace dex
          size_t end;
          };
 
-      Positions ParseTag( Positions &pos, dex::string &start_tag, dex::string &end_tag )
+      Positions ParseTag( Positions &pos, string &startTag, string &endTag )
          {
          Positions newPos;
-         newPos.start = htmlFile.find(start_tag.cStr(), pos.start, pos.end - pos.start);
-         if ( newPos.start == dex::string::npos )
+         newPos.start = htmlFile.find( startTag.cStr( ), pos.start, pos.end - pos.start );
+         if ( newPos.start == string::npos )
             {
             // incorporate some form of error logging
             throw dex::outOfRangeException();
             }
-         newPos.end = htmlFile.find(end_tag.cStr(), pos.start, pos.end - pos.start);
-         if ( newPos.end == dex::string::npos )
+         newPos.end = htmlFile.find(endTag.cStr(), pos.start, pos.end - pos.start);
+         if ( newPos.end == string::npos )
             {
+            std::cerr << "Error caught in ParseTag\n";
             // incorporate some form of error logging
             throw dex::outOfRangeException();
             }
-         newPos.end += end_tag.length();
+         newPos.end += endTag.length();
          return newPos;
          }
 
    public:
-      HTMLparser (){ htmlFile = "";}
-      HTMLparser( dex::string &html )
-      {
-         htmlFile = html; 
-         GetLinks();
-      }
+      HTMLparser( );
+      HTMLparser( string &html );
       void GetLinks( );
-      dex::vector < dex::string > BreakAnchors ( dex::string anchor );
+      string removePunctuation( string word );
+      static vector < string > BreakAnchorsOG ( const string anchor );
+      vector < string > BreakAnchors ( string anchor );
       void GetAnchorText( );
-      dex::vector < dex::string > ReturnLinks ( );
+      vector < string > ReturnLinks ( );
       // vector < dex::pair <size_t, size_t > > ReturnAnchorText ( );
-      dex::vector < dex::paired > ReturnAnchorText ( );
-      dex::vector < dex::string > ReturnWords ( );
-      // void GetWords( );
-      //
+      vector < AnchorPos > ReturnAnchorText ( );
+      vector < string > ReturnWords ( );
+      
    };
 
-   dex::vector < dex::string > HTMLparser::ReturnLinks ( )
+   HTMLparser::HTMLparser( )
+      {
+      htmlFile = ""; 
+      }
+
+   HTMLparser::HTMLparser( string &html )
+      {
+      htmlFile = html;
+      GetLinks();
+      }
+
+   vector < string > HTMLparser::ReturnLinks ( )
       {
       return links;
       }
-
    
-   dex::vector < dex::string > HTMLparser::ReturnWords ( )
+   vector < string > HTMLparser::ReturnWords ( )
       {
       return words;
       }
-
   
-   dex::vector < dex::paired > HTMLparser::ReturnAnchorText ( )
+   vector < AnchorPos > HTMLparser::ReturnAnchorText ( )
       {
       return anchorText;
       }
-
-   // breaks anchor string into individual words and returns them to add to words.
-   dex::vector < dex::string > HTMLparser::BreakAnchors ( dex::string anchor )
+   
+   vector < string > HTMLparser::BreakAnchors ( string anchor )
       {
-      dex::string word;
-      dex::vector < dex::string > output;
+      static const char WHITESPACE [ ] = { ' ', '\t', '\n', '\r' };
+      size_t indexNotOf = anchor.findFirstNotOf( WHITESPACE, 0, 4 ), indexOf = 0, start = indexNotOf;
+      vector < string > output;
+      string word;
+      while ( indexNotOf != string::npos && indexOf != string::npos )
+         {
+         indexOf = anchor.findFirstOf( WHITESPACE, indexNotOf, 4 );
+         if ( indexOf != string::npos )
+            {
+            word = anchor.substr( indexNotOf, indexOf - indexNotOf + 1 );
+            word = removePunctuation( word );
+            output.pushBack( word );
+            indexNotOf = anchor.findFirstNotOf( WHITESPACE, indexOf, 4 );
+            }
+         else
+            {
+            word = anchor.substr( indexNotOf, anchor.length( ) - indexNotOf + 1 );
+            word = removePunctuation( word );
+            output.pushBack( word );
+            indexNotOf = anchor.findFirstNotOf( WHITESPACE, indexNotOf + 1, 4 );
+            
+            }
+         }
+      if( indexNotOf == start )
+         {
+         output.pushBack( anchor );
+         }
+      return output;  
+      }
+
+
+   string HTMLparser::removePunctuation( string word )
+      {
+      static const char DELIMITERS [ ] = { '\n', '\t', '\r', ' ', ',', '.', '?', '>', '<', '!', '[', ']',
+                                           '{', '}', '|', '\\', '-', '_', '=', '+', ')', '(', '*', '&', 
+                                           '^', '%', '$', '#', '@', '~', '`', '\'', '\'', ';', ':', '/' };
+      for( size_t i = 0; i < 36; i++ )
+         {
+         size_t ind = word.find( DELIMITERS[ i ] );
+         while( ind != string::npos )
+            {
+            word = word.replace( ind , 1, "" );
+            ind = word.find( DELIMITERS[ i ], ind );
+            }
+         } 
+      return word;      
+      }
+
+
+   // Maybe we can use continue's to avoid the nested loops? Needs to be tested 
+   void HTMLparser::GetLinks( )
+      {
+      size_t posOpenTag = htmlFile.find( "<", 0 ), posCloseTag = 0;
+      string url;
+      string anchor;
+
+      while ( posOpenTag != string::npos )
+         {
+         posCloseTag = htmlFile.find( ">", posOpenTag );
+         if ( htmlFile[ posOpenTag + 1 ] == '!' && htmlFile[ posOpenTag + 2 ] == '-' 
+               && htmlFile[ posOpenTag + 3 ] == '-' )
+            {
+            posCloseTag = htmlFile.find( "-->", posOpenTag ) + 3;
+            }
+         else
+            {
+            if ( posCloseTag == string::npos )
+               {
+               posCloseTag = posOpenTag + 1;
+               if( posCloseTag >= htmlFile.length( ) )
+                  {
+                  posOpenTag = string::npos;
+                  }
+               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               continue;
+               }
+            size_t posHref = htmlFile.find( "href", posOpenTag );
+            if ( posHref >= posCloseTag || posHref == string::npos )
+               {
+               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               continue;
+               }
+            if ( htmlFile.find( "a", posOpenTag ) >= posHref ) 
+               {
+               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               continue;
+               }
+            size_t posEqual = htmlFile.find( "=", posHref );
+            if ( posEqual == string::npos )
+               {
+               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               continue;
+               }
+            url = htmlFile.substr( posEqual + 1, posCloseTag-posEqual-1 );  
+            size_t qPos = url.find( "\"" );
+            if ( qPos == string::npos )
+               {
+               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               continue;
+               }
+            else
+               {
+               url = url.substr( qPos+1, url.find( "\"", qPos+1 ) - qPos - 1 );
+               }
+            size_t linkIndex = 0;
+            if ( url.front( ) == '.' || url.front( ) == '\\' )
+               {
+               relativeLinks.pushBack( url );
+               linkIndex = relativeLinks.size( ) - 1;
+               }
+            else
+               {
+               links.pushBack( url );     
+               linkIndex = links.size( ) - 1;
+               }
+
+            //finding anchor text - - i think this should just be one function.
+            posOpenTag = htmlFile.find ( "<", posCloseTag );
+            if ( posOpenTag == string::npos )
+               {
+               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               continue;
+               }
+            if ( posOpenTag < htmlFile.length( ) - 2
+                  && htmlFile[ posOpenTag + 1 ] == '/'
+                  && htmlFile[ posOpenTag + 2 ] == 'a' )
+               {
+               anchor = htmlFile.substr( posCloseTag + 1, posOpenTag - posCloseTag - 1 );
+               vector< string > wordsInAnchor;
+               wordsInAnchor = BreakAnchors( anchor );
+               AnchorPos anchorIndex;
+               anchorIndex.linkInd = linkIndex;
+               words.pushBack( wordsInAnchor[ 0 ] );
+               anchorIndex.startPos = words.size( )-1;
+               anchorIndex.endPos = words.size( )-1 + wordsInAnchor.size( );
+               for( size_t i = 1; i < wordsInAnchor.size( ); i++ )
+                  {
+                  words.pushBack( wordsInAnchor[ i ] );
+                  }
+               anchorText.pushBack( anchorIndex );
+               }
+            }
+         posOpenTag = htmlFile.find( "<", posCloseTag );   
+         }
+      }   
+
+   // DO NOT REVIEW ; NOT BEING USED ANYMORE 
+   // - - - breaks anchor string into individual words and returns them to add to words.
+   /*         
+      vector < string > HTMLparser::BreakAnchorsOG ( const string anchor )
+      {
+       string word;
+      vector < string > output;
       size_t pos_whitespace = anchor.find(" ");
       size_t pos_start = 0;
-      if ( pos_whitespace != dex::string::npos ){
-         if (anchor.find("\n", pos_start) != string::npos && anchor.find("\n", pos_start) < pos_whitespace)
+      if ( pos_whitespace != string::npos ){
+         size_t nfind = anchor.find("\n", pos_start);
+         size_t tfind = anchor.find("\t", pos_start);
+         if ( nfind != string::npos && nfind < pos_whitespace)
                {
-               pos_whitespace = anchor.find("\n", pos_start);
+               pos_whitespace = nfind;
                }   
-         if (anchor.find("\t", pos_start) != string::npos && anchor.find("\t", pos_start) < pos_whitespace)
+         if ( tfind != string::npos && tfind < pos_whitespace)
                {
-               pos_whitespace = anchor.find("\t", pos_start);
+               pos_whitespace = tfind;
                }
       }
+      size_t nfind = 0, tfind = 0, sfind = 0;
       while( pos_whitespace != string::npos )
          {
          word = anchor.substr(pos_start, pos_whitespace - pos_start + 1);   
+        
          if (word != " " && word != "\n" && word != "\t" && word!= ""){
-               if(word.find("\n") != string::npos)
+               nfind = word.find("\n");
+               tfind = word.find("\t");
+               sfind = word.find(" ");
+               if ( word.find("\n") != string::npos )
                {
-                  word = word.replace(word.find("\n"), 1, "");
+                  // nfind = word.find("\n");
+                  word = word.replace( nfind , 1, "" );
                }
-               if (word.find("\t") != string::npos)
+               if ( tfind != string::npos )
                {
-                  word = word.replace(word.find("\t"), 1, "");
+                  // tfind = word.find("\t");
+                  word = word.replace( tfind, 1, "");
                }
-               if (word.find(" ") != string::npos)
+               if ( sfind != string::npos )
                {
-                  word = word.replace(word.find(" "), 1, "");
+                  // sfind = word.find(" ");
+                  word = word.replace( sfind, 1, "");
                }
                output.pushBack( word );
          }
@@ -138,152 +309,33 @@ namespace dex
             }
          else
             {
-            if (anchor.find("\n", pos_start) != string::npos && anchor.find("\n", pos_start) < pos_whitespace)
+            size_t nfind = anchor.find("\n", pos_start);
+            size_t tfind = anchor.find("\t", pos_start);
+            if ( nfind != string::npos && nfind < pos_whitespace)
                {
-               pos_whitespace = anchor.find("\n", pos_start);
+               pos_whitespace = nfind;
                }   
-            if (anchor.find("\t", pos_start) != string::npos && anchor.find("\t", pos_start) < pos_whitespace)
+            if ( tfind != string::npos && tfind < pos_whitespace)
                {
-               pos_whitespace = anchor.find("\t", pos_start);
+               pos_whitespace = tfind;
                }
             }
          }
-
-      if ( pos_start == 0 )
+        if ( pos_start == 0 )
          {
          output.pushBack( anchor );
          }
-      else if ( pos_start != (anchor.length() -1) )
+         else 
          {
-         word = anchor.substr(pos_start, anchor.length()- pos_start + 1);
-         output.pushBack( word );
-         }
-      return output;
-      }   
-
-
-   // Maybe we can use continue's to avoid the nested loops? Needs to be tested 
-   void HTMLparser::GetLinks( )
-      {
-      size_t posOpenTag = 0, posCloseTag = 0;
-      string url;
-      string anchor;
-
-      while ( posOpenTag != string::npos )
-         {
-         posCloseTag = htmlFile.find( ">", posOpenTag );
-         if ( htmlFile[ posOpenTag + 1 ] == '!')
+         if ( pos_start != (anchor.length() -1) )
             {
-            posCloseTag = htmlFile.find( "-->", posOpenTag );
-            posCloseTag += 2;
+            word = anchor.substr(pos_start, anchor.length()- pos_start + 1);
+            output.pushBack( word );
             }
-         else
-            {
-            if ( posCloseTag != string::npos )
-               {
-               size_t posHref = htmlFile.find( "href", posOpenTag );
-               if ( posHref < posCloseTag && posHref != string::npos )
-                  {
-                  if ( htmlFile.find("a", posOpenTag) < posHref )
-                     {
-                     size_t posTemp1 = htmlFile.find( "=", posHref );
-                     if ( posTemp1 != string::npos )
-                        {
-                        url = htmlFile.substr( posTemp1 + 1, posCloseTag-posTemp1-1 );               
-                        if ( url[0] == '\"' )
-                           {
-                           url = url.substr( 1, url.length()-2 );
-                           // cout << url << "\n";
-                           links.pushBack( url );
-                           size_t link_ind = links.size() - 1;
-
-                           //finding anchor text - - i think this should just be one function.
-                           posOpenTag = htmlFile.find ( "<", posCloseTag );
-                           if ( posOpenTag != string::npos )
-                              {
-                              //can we go over this logic later?
-                              if ( posOpenTag < htmlFile.length() - 2
-                                    && htmlFile[ posOpenTag + 1 ] == '/'
-                                    && htmlFile[ posOpenTag + 2 ] == 'a')
-                                 {
-                                 anchor = htmlFile.substr( posCloseTag + 1, posOpenTag - posCloseTag - 1 );
-                                 dex::vector< string > wordsInAnchor;
-                                 wordsInAnchor = BreakAnchors( anchor );
-                                 dex::paired temp;
-                                 temp.first = link_ind;
-                                 for( size_t i = 0; i < wordsInAnchor.size(); i++)
-                                    {
-                                    words.pushBack( wordsInAnchor[i] );
-                                    //pushing back the link index and the word index. Can't think of a better way rn..
-                                    // anchorText.pushBack( dex::pair( link_ind, words.size() ) );
-                                    temp.second.pushBack( words.size() -1) ;
-                                    }
-                                 anchorText.pushBack( temp );
-                                 }
-                              }
-                           }
-
-                        
-                        }
-                     
-                     }
-                  }
-               }
-            }
-         posOpenTag = htmlFile.find( "<", posCloseTag );   
-         }
-      }   
-
-
-
-   // don't think we need a separate function for this -- added it to GetLinks. Kept this version here in case we want
-   // to revert. 
-
-
-   void HTMLparser:: GetAnchorText ( )
-      {
-      string anchor;
-      dex::vector < string > OGAnchorText; //name changed to avoid confusion with pvt member variable.
-      size_t posOpenTag = 0, posCloseTag = 0;
-      
-      while ( posOpenTag != string::npos )
-         {
-         posCloseTag = htmlFile.find( ">", posOpenTag );
-         if ( htmlFile[ posOpenTag + 1 ] == '!')
-            {
-            posCloseTag = htmlFile.find( "-->", posOpenTag );
-            posCloseTag += 2;
-            }
-         else
-            {   
-            if ( posCloseTag != string::npos )
-               {
-               size_t posHref = htmlFile.find( "href", posOpenTag );
-               if ( posHref < posCloseTag && posHref != string::npos )
-                  {
-                  if ( htmlFile.find("a", posOpenTag) < posHref )
-                     {
-                     size_t posTemp1 = htmlFile.find( "=", posHref );
-                     if ( posTemp1 != string::npos )
-                        {
-                        posOpenTag = htmlFile.find ( "<", posCloseTag );
-                        if ( posOpenTag != string::npos )
-                           {
-                           if ( posOpenTag < htmlFile.length() - 2
-                                 && htmlFile[ posOpenTag + 1 ] == '/'
-                                 && htmlFile[ posOpenTag + 2 ] == 'a')
-                              {
-                              anchor = htmlFile.substr( posCloseTag + 1, posOpenTag - posCloseTag - 1 );
-                              OGAnchorText.pushBack( anchor );
-                              }
-                           }
-                        }
-                     }
-                  }
-               }
-            }
-         posOpenTag = htmlFile.find( "<", posCloseTag );   
-         }
-      }
+         }     
+        return output;
+       }   
+       //nxt
+   */
 };
 
