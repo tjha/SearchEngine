@@ -3,6 +3,7 @@
 //
 // We ignore the key_equal predicate and allocator
 //
+// 2019-11-04: Use typeTraits.hpp: jasina
 // 2019-11-02: Change default table size, allocate memory for pair only when needed: jasina
 // 2019-10-28: Implement insert: jasina
 // 2019-10-27: Address PR style comments: jasina
@@ -14,10 +15,11 @@
 #define DEX_UNORDERED_MAP
 
 #include <cstddef>
-#include <type_traits>
 #include "algorithm.hpp"
 #include "exception.hpp"
+#include "typeTraits.hpp"
 #include "utility.hpp"
+#include "basicString.hpp"
 
 namespace dex
 	{
@@ -143,9 +145,9 @@ namespace dex
 				private:
 					friend class unorderedMap < Key, Value, Hash >;
 
-					typedef typename std::conditional < isConst, const unorderedMap < Key, Value, Hash >,
+					typedef typename dex::conditional < isConst, const unorderedMap < Key, Value, Hash >,
 							unorderedMap < Key, Value, Hash > >::type mapType;
-					typedef typename std::conditional < isConst, const dex::pair < Key, Value >,
+					typedef typename dex::conditional < isConst, const dex::pair < Key, Value >,
 							dex::pair < Key, Value > >::type pairType;
 
 					mapType *map;
@@ -160,7 +162,7 @@ namespace dex
 						this->position = position;
 						}
 				public:
-					template < typename = typename std::enable_if < isConst > >
+					template < typename = typename dex::enableIf < isConst > >
 					_iterator( const _iterator < false > &other ) :
 							map( other.map ), position( other.position ) { }
 
@@ -382,6 +384,17 @@ namespace dex
 				dex::swap( other.tableSize, tableSize );
 				dex::swap( other.numberElements, numberElements );
 				dex::swap( other.ghostCount, ghostCount );
+				}
+
+			dex::string compress( )
+				{
+				dex::string compressed = "";
+				Key defaultKey;
+				for ( auto it = begin( );  it != cend( );  ++it )
+					{
+					compressed += it->first + "\n" + it->second.compress( ); // TODO compress passes in a string by ref to append to
+					}
+					return compressed;
 				}
 		};
 

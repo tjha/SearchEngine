@@ -3,6 +3,7 @@
 //
 // We ignore the key_equal predicate and allocator
 //
+// 2019-11-04: Use typeTraits.hpp: jasina
 // 2019-11-02: Change default table size, allocate memory for pair only when needed: jasina
 // 2019-10-28: File created: jasina
 
@@ -10,10 +11,11 @@
 #define DEX_UNORDERED_SET
 
 #include <cstddef>
-#include <type_traits>
 #include "algorithm.hpp"
 #include "exception.hpp"
+#include "typeTraits.hpp"
 #include "utility.hpp"
+#include "basicString.hpp"
 
 namespace dex
 	{
@@ -138,9 +140,9 @@ namespace dex
 				private:
 					friend class unorderedSet < Key, Hash >;
 
-					typedef typename std::conditional < isConst, const unorderedSet < Key, Hash >,
+					typedef typename dex::conditional < isConst, const unorderedSet < Key, Hash >,
 							unorderedSet < Key, Hash > >::type setType;
-					typedef typename std::conditional < isConst, const Key, Key >::type datumType;
+					typedef typename dex::conditional < isConst, const Key, Key >::type datumType;
 
 					setType *set;
 					size_t position;
@@ -154,7 +156,7 @@ namespace dex
 						this->position = position;
 						}
 				public:
-					template < typename = typename std::enable_if < isConst > >
+					template < typename = typename dex::enableIf < isConst > >
 					_iterator( const _iterator < false > &other ) :
 							set( other.set ), position( other.position ) { }
 
@@ -354,6 +356,17 @@ namespace dex
 				dex::swap( other.tableSize, tableSize );
 				dex::swap( other.numberElements, numberElements );
 				dex::swap( other.ghostCount, ghostCount );
+				}
+
+			dex::string compress( )
+				{
+				dex::string compressed = "";
+				for ( auto it = begin();  it != cend();  ++it )
+					{
+					// tabs are formatting decisions
+					compressed += "\t\t" + *it + "\n";
+					}
+				return compressed;
 				}
 		};
 
