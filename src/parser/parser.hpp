@@ -1,7 +1,8 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
 //
-// 2019-11-19:  Changed BreakAnchors, Getlinks; made removePunctuation : medhak
+// 2019-11-20:  Fixed cstdef to cstddef, modified size-t to std::size_t: tjha
+// 2019-11-19:  Changed BreakAnchors, Getlinks; made removePunctuation: medhak
 // 2019-11-11:  Implemented ParseTag function to aid in recursive parsing: tjha
 // 2019-11-06:  Fixed whitespace errors, changed to paired to <size_t vector <size_t>>, : medhak
 // 2019-11-05:  Implemented return functions, fixed errors in breakanchor.
@@ -12,39 +13,38 @@
 // 2019-10-26:  Created get_links function to get urls from basic html:
 //              medhak, tjha
 
-
-#include "basicString.hpp"
-#include "vector.hpp"
 #include "algorithm.hpp"
+#include "basicString.hpp"
 #include "exception.hpp"
 #include "utility.hpp"
-#include <cstdef> 
+#include "vector.hpp"
 
+#include <cstddef>
 
 namespace dex
 {
    struct anchorPos
          {
-         size_t linkInd;
-         size_t startPos;
-         size_t endPos;
+         std::size_t linkInd;
+         std::size_t startPos;
+         std::size_t endPos;
          };
 
    class HTMLparser
    {
    private:
       string htmlFile;
-      vector < string > links;
-      vector < string > words;
-      vector < string > relativeLinks;
+      vector< string > links;
+      vector< string > words;
+      vector< string > relativeLinks;
       vector< anchorPos > anchorText;
 
       void GetLinks( );
 
       struct Positions
          {
-         size_t start;
-         size_t end;
+         std::size_t start;
+         std::size_t end;
          };
 
       Positions ParseTag( Positions &pos, string &startTag, string &endTag )
@@ -111,7 +111,7 @@ namespace dex
    vector < string > HTMLparser::BreakAnchors ( string anchor )
       {
       static const char WHITESPACE [ ] = { ' ', '\t', '\n', '\r' };
-      size_t indexNotOf = anchor.findFirstNotOf( WHITESPACE, 0, 4 ), indexOf = 0, start = indexNotOf;
+      std::size_t indexNotOf = anchor.findFirstNotOf( WHITESPACE, 0, 4 ), indexOf = 0, start = indexNotOf;
       vector < string > output;
       string word;
       while ( indexNotOf != string::npos && indexOf != string::npos )
@@ -146,9 +146,9 @@ namespace dex
       static const char DELIMITERS [ ] = { '\n', '\t', '\r', ' ', ',', '.', '?', '>', '<', '!', '[', ']',
                                            '{', '}', '|', '\\', '-', '_', '=', '+', ')', '(', '*', '&', 
                                            '^', '%', '$', '#', '@', '~', '`', '\'', '\'', ';', ':', '/' };
-      for( size_t i = 0; i < 36; i++ )
+      for( std::size_t i = 0; i < 36; i++ )
          {
-         size_t ind = word.find( DELIMITERS[ i ] );
+         std::size_t ind = word.find( DELIMITERS[ i ] );
          while( ind != string::npos )
             {
             word = word.replace( ind , 1, "" );
@@ -162,7 +162,7 @@ namespace dex
    // Maybe we can use continue's to avoid the nested loops? Needs to be tested 
    void HTMLparser::GetLinks( )
       {
-      size_t posOpenTag = htmlFile.find( "<", 0 ), posCloseTag = 0;
+      std::size_t posOpenTag = htmlFile.find( "<", 0 ), posCloseTag = 0;
       string url;
       string anchor;
 
@@ -186,7 +186,7 @@ namespace dex
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
                }
-            size_t posHref = htmlFile.find( "href", posOpenTag );
+            std::size_t posHref = htmlFile.find( "href", posOpenTag );
             if ( posHref >= posCloseTag || posHref == string::npos )
                {
                posOpenTag = htmlFile.find( "<", posCloseTag );   
@@ -197,14 +197,14 @@ namespace dex
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
                }
-            size_t posEqual = htmlFile.find( "=", posHref );
+            std::size_t posEqual = htmlFile.find( "=", posHref );
             if ( posEqual == string::npos )
                {
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
                }
             url = htmlFile.substr( posEqual + 1, posCloseTag-posEqual-1 );  
-            size_t qPos = url.find( "\"" );
+            std::size_t qPos = url.find( "\"" );
             if ( qPos == string::npos )
                {
                posOpenTag = htmlFile.find( "<", posCloseTag );   
@@ -214,7 +214,7 @@ namespace dex
                {
                url = url.substr( qPos+1, url.find( "\"", qPos+1 ) - qPos - 1 );
                }
-            size_t linkIndex = 0;
+            std::size_t linkIndex = 0;
             if ( url.front( ) == '.' || url.front( ) == '\\' )
                {
                relativeLinks.pushBack( url );
@@ -245,7 +245,7 @@ namespace dex
                words.pushBack( wordsInAnchor[ 0 ] );
                anchorIndex.startPos = words.size( )-1;
                anchorIndex.endPos = words.size( )-1 + wordsInAnchor.size( );
-               for( size_t i = 1; i < wordsInAnchor.size( ); i++ )
+               for( std::size_t i = 1; i < wordsInAnchor.size( ); i++ )
                   {
                   words.pushBack( wordsInAnchor[ i ] );
                   }
@@ -310,7 +310,7 @@ namespace dex
             pos_whitespace = anchor.find( "\n", pos_start );
             }
          else
-            {
+    cstddef{
             size_t nfind = anchor.find("\n", pos_start);
             size_t tfind = anchor.find("\t", pos_start);
             if ( nfind != string::npos && nfind < pos_whitespace)
