@@ -73,7 +73,7 @@ namespace dex
       HTMLparser( string &html );
       string removePunctuation( string word );
       // static vector < string > BreakAnchorsOG ( const string anchor );
-      vector < string > BreakAnchors ( string anchor );
+      void BreakAnchors ( string anchor );
       // void GetAnchorText( );
       vector < string > ReturnLinks ( );
       // vector < dex::pair <size_t, size_t > > ReturnAnchorText ( );
@@ -108,11 +108,10 @@ namespace dex
       return anchorText;
       }
    
-   vector < string > HTMLparser::BreakAnchors ( string anchor )
+   void HTMLparser::BreakAnchors ( string anchor )
       {
       static const char WHITESPACE [ ] = { ' ', '\t', '\n', '\r' };
       std::size_t indexNotOf = anchor.findFirstNotOf( WHITESPACE, 0, 4 ), indexOf = 0, start = indexNotOf;
-      vector < string > output;
       string word;
       while ( indexNotOf != string::npos && indexOf != string::npos )
          {
@@ -121,23 +120,22 @@ namespace dex
             {
             word = anchor.substr( indexNotOf, indexOf - indexNotOf + 1 );
             word = removePunctuation( word );
-            output.pushBack( word );
+            words.pushBack( word );
             indexNotOf = anchor.findFirstNotOf( WHITESPACE, indexOf, 4 );
             }
          else
             {
             word = anchor.substr( indexNotOf, anchor.length( ) - indexNotOf + 1 );
             word = removePunctuation( word );
-            output.pushBack( word );
+            words.pushBack( word );
             indexNotOf = anchor.findFirstNotOf( WHITESPACE, indexNotOf + 1, 4 );
-            
+         
             }
          }
       if( indexNotOf == start )
          {
-         output.pushBack( anchor );
+         words.pushBack( anchor );
          }
-      return output;  
       }
 
 
@@ -238,17 +236,12 @@ namespace dex
                   && htmlFile[ posOpenTag + 2 ] == 'a' )
                {
                anchor = htmlFile.substr( posCloseTag + 1, posOpenTag - posCloseTag - 1 );
-               vector< string > wordsInAnchor;
-               wordsInAnchor = BreakAnchors( anchor );
+               
                anchorPos anchorIndex;
                anchorIndex.linkInd = linkIndex;
-               words.pushBack( wordsInAnchor[ 0 ] );
-               anchorIndex.startPos = words.size( )-1;
-               anchorIndex.endPos = words.size( )-1 + wordsInAnchor.size( );
-               for( std::size_t i = 1; i < wordsInAnchor.size( ); i++ )
-                  {
-                  words.pushBack( wordsInAnchor[ i ] );
-                  }
+               anchorIndex.startPos = words.size( );
+               BreakAnchors( anchor );
+               anchorIndex.endPos = words.size( ) - 1;
                anchorText.pushBack( anchorIndex );
                }
             }

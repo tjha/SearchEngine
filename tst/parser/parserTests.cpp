@@ -120,7 +120,7 @@ TEST_CASE( "get links", "[parser]" )
          AnchorWords.pushBack("Division");
          // Using 7 cuz i know the indices - couldn't think of a better way of doing this.
          
-         for (size_t i = 0; i < anchors[7].endPos - anchors[7].startPos;i++)
+         for (size_t i = 0; i < anchors[7].endPos - anchors[7].startPos + 1;i++)
             {
             REQUIRE(AnchorWords[i] == words[anchors[7].startPos + i]);
             }
