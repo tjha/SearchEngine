@@ -977,23 +977,13 @@ namespace dex
 
 			basicString < charT > stripWhitespace( ) const
 				{
+				const charT * whitespace = " \v\f\t\r\n";
 				basicString < charT > stripped = basicString( *this );
-				// TODO change to firstNotOf or FindLastNotOf
-				//size_t frontStripped = findFirstNotOf( " vf\t\r\n", 0 );
-				//size_t backStripped = findLastNotOf( " vf\t\r\n", frontStripped );
-				while ( !stripped.empty( ) && ( stripped.back( ) == ' ' || stripped.back( ) == '\n' || stripped.back( ) == '\r' || stripped.back( ) == '\t' ||
-						stripped.back( ) == '\v' || stripped.back( ) == '\f' ) )
-					{
-					stripped.popBack( );
-					}
-				if ( stripped.empty ( ) )
-					{
-					return stripped;
-					}
-				size_t front;
-				for ( front = 0;  stripped[ front ] == ' ' || stripped[ front ] == '\n' || stripped[ front ] == '\r' ||
-						stripped[ front ] == '\t' || stripped[ front ] == 'v' || stripped[ front ] == 'f';  ++front );
-				return stripped.substr( front, stripped.size( ) - front );
+				size_t frontStripped = stripped.findFirstNotOf( whitespace );
+				size_t backStripped = stripped.findLastNotOf( whitespace);
+				if ( frontStripped == npos || backStripped == npos )
+					return "";
+				return stripped.substr( frontStripped, backStripped - frontStripped + 1);
 				}
 
 			friend basicString < charT > operator+( const basicString < charT > &lhs, const charT *rhs )

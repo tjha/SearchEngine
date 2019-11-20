@@ -59,10 +59,7 @@ namespace dex
 				int endPort = endHost;
 				if ( totalUrl[ endHost ] == ':' )
 					{
-					// TODO links might be malformed and not have the / even though
-					// they should. Need to make sure to fix the list or account for
-					// that here
-					endPort = totalUrl.find( "/", beginPort );
+					endPort = totalUrl.findFirstOf( "/?#", beginPort );
 					// If there is no path, the end of the port is the end of the string.
 					if ( endPort == -1 )
 						endPort = totalUrl.size( );
@@ -94,7 +91,10 @@ namespace dex
 					endPath = totalUrl.findFirstOf( "?#", beginPath );
 					if ( endPath == -1 )
 						endPath = int( totalUrl.size( ) );
-					path = totalUrl.substr( beginPath, endPath - beginPath );
+					if ( endPath == beginPath )
+						path = "/";
+					else
+						path = totalUrl.substr( beginPath, endPath - beginPath );
 					}
 				// If queries exist
 				int beginQuery = totalUrl.find( "?", endPath );

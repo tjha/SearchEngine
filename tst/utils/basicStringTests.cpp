@@ -646,13 +646,25 @@ TEST_CASE( "strip whitespace", "[string]" )
 	{
 	string a = "                   to strip              ";
 	REQUIRE( a.stripWhitespace( ) == "to strip" );
+	a = "to strip";
+	REQUIRE( a.stripWhitespace( ) == "to strip" );
 	a = "   to\nstrip  \r\n ";
 	REQUIRE( a.stripWhitespace( ) == "to\nstrip" );
 	a = " to strip      out ";
 	REQUIRE( a.stripWhitespace( ) == "to strip      out" );
 	a = "";
 	REQUIRE( a.stripWhitespace( ) == "" );
-	a = "     \t \n \n\r\n ";
+	a = "     \t\v\n\f\n\r\n ";
 	REQUIRE( a.stripWhitespace( ) == "" );
+	a = "v";
+	REQUIRE( a.stripWhitespace( ) == "v" );
+	a = "f";
+	REQUIRE( a.stripWhitespace( ) == "f" );
+	a = "n";
+	REQUIRE( a.stripWhitespace( ) == "n" );
+	a = "t";
+	REQUIRE( a.stripWhitespace( ) == "t" );
+	a = "v";
+	REQUIRE( a.stripWhitespace( ) == "v" );
 	}
 
