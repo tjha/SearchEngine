@@ -18,7 +18,7 @@ using dex::readFromFile;
 using dex::outOfRangeException;
 using dex::string;
 using dex::HTMLparser;
-using dex::AnchorPos;
+using dex::anchorPos;
 using dex::vector;
 
 using std::cerr;
@@ -109,7 +109,7 @@ TEST_CASE( "get links", "[parser]" )
             {
             REQUIRE ( links[i] == expectedLinks[i] );
             }
-         vector <AnchorPos> anchors = testParser.ReturnAnchorText();
+         vector <anchorPos> anchors = testParser.ReturnAnchorText();
          vector <string> words = testParser.ReturnWords();
          vector <string> AnchorWords;
          AnchorWords.pushBack("Computer");
@@ -148,7 +148,7 @@ TEST_CASE( "get anchor text", "[parser]" )
       HTMLparser testParser( htmlDoc );
       // testParser.GetLinks();
       vector< string > words = testParser.ReturnWords( );
-      vector< AnchorPos > anchorText = testParser.ReturnAnchorText();
+      vector< anchorPos > anchorText = testParser.ReturnAnchorText();
       string expectedAnchorText = "Software";
       REQUIRE( anchorText.size() == 1 );
       REQUIRE( words[ anchorText[ 0 ].startPos ] == expectedAnchorText );

@@ -18,12 +18,12 @@
 #include "algorithm.hpp"
 #include "exception.hpp"
 #include "utility.hpp"
-#include <iostream> 
+#include <cstdef> 
 
 
 namespace dex
 {
-   struct AnchorPos
+   struct anchorPos
          {
          size_t linkInd;
          size_t startPos;
@@ -37,7 +37,9 @@ namespace dex
       vector < string > links;
       vector < string > words;
       vector < string > relativeLinks;
-      vector< AnchorPos > anchorText;
+      vector< anchorPos > anchorText;
+
+      void GetLinks( );
 
       struct Positions
          {
@@ -52,6 +54,7 @@ namespace dex
          if ( newPos.start == string::npos )
             {
             // incorporate some form of error logging
+            std::cerr << "Error caught in ParseTag\n";
             throw dex::outOfRangeException();
             }
          newPos.end = htmlFile.find(endTag.cStr(), pos.start, pos.end - pos.start);
@@ -68,14 +71,13 @@ namespace dex
    public:
       HTMLparser( );
       HTMLparser( string &html );
-      void GetLinks( );
       string removePunctuation( string word );
-      static vector < string > BreakAnchorsOG ( const string anchor );
+      // static vector < string > BreakAnchorsOG ( const string anchor );
       vector < string > BreakAnchors ( string anchor );
-      void GetAnchorText( );
+      // void GetAnchorText( );
       vector < string > ReturnLinks ( );
       // vector < dex::pair <size_t, size_t > > ReturnAnchorText ( );
-      vector < AnchorPos > ReturnAnchorText ( );
+      vector < anchorPos > ReturnAnchorText ( );
       vector < string > ReturnWords ( );
       
    };
@@ -101,7 +103,7 @@ namespace dex
       return words;
       }
   
-   vector < AnchorPos > HTMLparser::ReturnAnchorText ( )
+   vector < anchorPos > HTMLparser::ReturnAnchorText ( )
       {
       return anchorText;
       }
@@ -238,7 +240,7 @@ namespace dex
                anchor = htmlFile.substr( posCloseTag + 1, posOpenTag - posCloseTag - 1 );
                vector< string > wordsInAnchor;
                wordsInAnchor = BreakAnchors( anchor );
-               AnchorPos anchorIndex;
+               anchorPos anchorIndex;
                anchorIndex.linkInd = linkIndex;
                words.pushBack( wordsInAnchor[ 0 ] );
                anchorIndex.startPos = words.size( )-1;
