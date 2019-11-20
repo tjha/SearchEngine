@@ -15,6 +15,7 @@
 #include "exception.hpp"
 #include "typeTraits.hpp"
 #include "utility.hpp"
+#include "basicString.hpp"
 
 namespace dex
 	{
@@ -355,6 +356,17 @@ namespace dex
 				dex::swap( other.tableSize, tableSize );
 				dex::swap( other.numberElements, numberElements );
 				dex::swap( other.ghostCount, ghostCount );
+				}
+
+			dex::string compress( )
+				{
+				dex::string compressed = "";
+				for ( auto it = begin();  it != cend();  ++it )
+					{
+					// tabs are formatting decisions
+					compressed += "\t\t" + *it + "\n";
+					}
+				return compressed;
 				}
 		};
 
