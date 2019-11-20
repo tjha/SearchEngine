@@ -12,7 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
-// 2019-11-20: Add replaceWhitespace function: combsc
+// 2019-11-20: Add replaceWhitespace and toString function: combsc
 // 2019-11-13: Add stripWhitespace function: combsc
 // 2019-11-04: Use typeTraits.hpp: jasina
 // 2019-10-31: Make +operator a friend function: combsc
@@ -43,7 +43,6 @@
 #define DEX_BASIC_STRING
 
 #include <cstddef>
-#include <iostream>
 #include "algorithm.hpp"
 #include "exception.hpp"
 #include "functional.hpp"
@@ -1139,6 +1138,26 @@ namespace dex
 	
 
 	typedef dex::basicString < char > string;
+
+	string toString( long i )
+		{
+		if ( i == 0 )
+			return "0";
+		bool isNegative = false;
+		string toReturn = "";
+		if ( i < 0 )
+			{
+			isNegative = true;
+			i = -i;
+			}
+		for ( ;  i > 0;  i /= 10 )
+			{
+			toReturn += ( '0' + i % 10 );
+			}
+		if ( isNegative )
+			toReturn += '-';
+		return string( toReturn.rbegin( ), toReturn.rend( ) );
+		}
 
 	template < > struct hash < dex::string >
 		{
