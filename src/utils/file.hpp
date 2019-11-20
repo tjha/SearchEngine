@@ -1,7 +1,7 @@
 // file.hpp
 // file for dealing with our fileIO
 //
-// 2019-11-20: Added appendToFile, add offset: combsc
+// 2019-11-20: Added appendToFile, add offset, add create: combsc
 // 2019-11-4: Swapped out memcpy for dex::copy: combsc
 // 2019-11-2: Initial Commit: combsc
 #include <sys/types.h>
@@ -62,7 +62,7 @@ namespace dex
 	// Appends to the file name specified. Will not overwrite whatever was there before.
 	int appendToFile( const char *filePath, const char *toWrite, size_t length )
 		{
-		int fd = open( filePath, O_WRONLY | O_APPEND);
+		int fd = open( filePath, O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
 		if ( fd == - 1 )
 			return -1;
 		int result = write( fd, toWrite, length );

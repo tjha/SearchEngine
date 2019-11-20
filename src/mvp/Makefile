@@ -12,3 +12,4 @@ driver: driver.cpp
 
 clean:
 	rm -f driver.exe
+	rm logs/*

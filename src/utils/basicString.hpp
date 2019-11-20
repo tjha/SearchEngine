@@ -43,6 +43,7 @@
 #define DEX_BASIC_STRING
 
 #include <cstddef>
+#include <iostream>
 #include "algorithm.hpp"
 #include "exception.hpp"
 #include "functional.hpp"
