@@ -18,7 +18,7 @@ using dex::readFromFile;
 using dex::outOfRangeException;
 using dex::string;
 using dex::HTMLparser;
-using dex::paired;
+using dex::anchorPos;
 using dex::vector;
 
 using std::cerr;
@@ -67,19 +67,20 @@ TEST_CASE( "get links", "[parser]" )
       REQUIRE( links[0] == expectedLink1 );
       REQUIRE( links[1] == expectedLink2 );
       REQUIRE( links[2] == expectedLink3 );
+
       }
 
    SECTION ( "peter chen html page with commented out html" )
       {
       string filename = "tst/parser/peter_chen.html";
       string htmlDoc;
-      try
-         {
+      // try
+      //    {
          htmlDoc = readFromFile( filename.cStr() );
+       
          HTMLparser testParser( htmlDoc );
          // testParser.GetLinks();
          vector< string > links = testParser.ReturnLinks( );
-      
          // vector < string > links = GetLinks ( htmlDoc );
 
          REQUIRE ( links.size() == 13 );
@@ -108,7 +109,7 @@ TEST_CASE( "get links", "[parser]" )
             {
             REQUIRE ( links[i] == expectedLinks[i] );
             }
-         vector <dex::paired> anchors = testParser.ReturnAnchorText();
+         vector <anchorPos> anchors = testParser.ReturnAnchorText();
          vector <string> words = testParser.ReturnWords();
          vector <string> AnchorWords;
          AnchorWords.pushBack("Computer");
@@ -117,16 +118,18 @@ TEST_CASE( "get links", "[parser]" )
          AnchorWords.pushBack("Engineering");
          AnchorWords.pushBack("Division");
          // Using 7 cuz i know the indices - couldn't think of a better way of doing this.
-         for (size_t i = 0; i < anchors[7].second.size();i++)
+         
+         for (size_t i = 0; i < anchors[7].endPos - anchors[7].startPos;i++)
             {
-            REQUIRE(AnchorWords[i] == words[anchors[7].second[i]]);
+            REQUIRE(AnchorWords[i] == words[anchors[7].startPos + i]);
             }
-         } 
-      catch ( outOfRangeException &e )
-         {
-         cerr << "Cannot read file: " << filename << endl;
-         REQUIRE( 1 == 0 ); // force test failure
-         }
+           
+      //    } 
+      // catch ( outOfRangeException &e )
+      //    {
+      //    cerr << "Cannot read file: " << filename << endl;
+      //    // REQUIRE( 1 == 0 ); // force test failure
+      //    }
       }
    }
 
@@ -145,10 +148,10 @@ TEST_CASE( "get anchor text", "[parser]" )
       HTMLparser testParser( htmlDoc );
       // testParser.GetLinks();
       vector< string > words = testParser.ReturnWords( );
-      vector< paired > anchorText = testParser.ReturnAnchorText();
+      vector< anchorPos > anchorText = testParser.ReturnAnchorText();
       string expectedAnchorText = "Software";
       REQUIRE( anchorText.size() == 1 );
-      REQUIRE( words[ anchorText[ 0 ].second[0] ] == expectedAnchorText );
+      REQUIRE( words[ anchorText[ 0 ].startPos ] == expectedAnchorText );
       }
 
     /*
