@@ -1,7 +1,12 @@
 // checkpointing.hpp
 //
 // This file contains functions that deal with writing data to persistent storage
+// 2019-11-21: Fix html saving function, add includeGuards: combsc
 // 2019-11-20: Add saving for html: combsc
+
+
+#ifndef CHECKPOINTING_HPP
+#define CHECKPOINTING_HPP
 
 #include "../utils/file.hpp"
 #include "../utils/basicString.hpp"
@@ -16,14 +21,13 @@ namespace dex
 	// bytes 2 determines the second folder
 	// bytes 3-4 determine the name of the files
 	// This gives us 4,294,967,296 possible locations for html
-	int saveHtml( dex::Url url )
+	int saveHtml( dex::Url url, dex::string html )
 		{
 		dex::hash < dex::string > hasher;
 		unsigned long h = hasher( url.completeUrl( ) );
 		unsigned long first = h & 0x000000FF;
 		unsigned long second = ( h & 0x0000FF00 ) >> 8;
 		unsigned long name = ( h & 0xFFFF0000 ) >> 16 ;
-		std::cout << "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html" << std::endl;
 		int err = dex::makeDirectory( "html" );
 		if ( err == -1 )
 			return err;
@@ -36,10 +40,13 @@ namespace dex
 		if ( err == -1 )
 			return err;
 		dex::string filename = "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html";
-		err = dex::writeToFile( filename.cStr( ), url.completeUrl( ).cStr( ), url.completeUrl( ).size( ) );
+		dex::string toWrite = url.completeUrl( ) + "\n" + html;
+		err = dex::writeToFile( filename.cStr( ), toWrite.cStr( ), toWrite.size( ) );
 		return err;
 		}
 
 	
 	
 	}
+	#endif
+	
