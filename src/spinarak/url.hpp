@@ -243,5 +243,10 @@ namespace dex
 				fragment = f;
 				}
 		};
+
+	bool operator==( const dex::Url &lhs, const dex::Url &rhs )
+		{
+		return lhs.completeUrl( ) == rhs.completeUrl( );
+		}
 	}
 #endif
