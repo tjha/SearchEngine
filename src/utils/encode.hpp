@@ -38,7 +38,7 @@ namespace dex
 					// push back bytes in LITTLE ENDIAN order
 					for ( size_t i = 0;  i < bytes;  ++i )
 						{
-						encodedData.pushBack( number & 0xFF );
+						encodedData.insert( encodedData.cbegin( ), number & 0xFF );
 						number = number >> 8;
 						}
 
@@ -127,13 +127,44 @@ namespace dex
 					}
 			};
 
-		/*template < class T >
+		template < class T, class InputIt = unsigned char * >
 		class decoder
 			{
 			public:
-				:q
-
-			}*/
+				T operator( )( InputIt encoding )
+					{
+					T decodedValue = 0;
+					size_t bytes = sizeof( T );
+					// push back bytes in LITTLE ENDIAN order
+					decodedValue += *encoding;
+					for ( size_t i = 1;  i < bytes;  ++i )
+						{
+						++encoding;
+						decodedValue = decodedValue << 8;
+						decodedValue += *encoding;
+						}
+					return decodedValue;
+					}
+			};
+		/*template < class T, class InputIt = unsigned char * >
+		class decoder < basicString< T >
+			{
+			public:
+				T operator( )( InputIt encoding )
+					{
+					T decodedValue = 0;
+					size_t bytes = sizeof( T );
+					// push back bytes in LITTLE ENDIAN order
+					decodedValue += *encoding;
+					for ( size_t i = 1;  i < bytes;  ++i )
+						{
+						++encoding;
+						decodedValue = decodedValue << 8;
+						decodedValue += *encoding;
+						}
+					return decodedValue;
+					}
+			};*/
 		}
 	}
 

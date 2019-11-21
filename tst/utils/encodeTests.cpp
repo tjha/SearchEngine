@@ -22,21 +22,26 @@ TEST_CASE( "encode", "[types]" )
 		encoder < int > tEncoder;
 		dex::vector < dex::byte > encoded = tEncoder ( i );
 		REQUIRE( encoded.size( ) == 4 );
-		REQUIRE( encoded[ 0 ] == 4 );
-		REQUIRE( encoded[ 1 ] == 0 );
+		REQUIRE( encoded[ 3 ] == 4 );
 		REQUIRE( encoded[ 2 ] == 0 );
-		REQUIRE( encoded[ 3 ] == 0 );
+		REQUIRE( encoded[ 1 ] == 0 );
+		REQUIRE( encoded[ 0 ] == 0 );
 
 		i = 0xFF;
 		encoded = tEncoder ( i );
 		REQUIRE( encoded.size( ) == 4 );
-		REQUIRE( encoded[ 0 ] == 0xFF );
+		REQUIRE( encoded[ 0 ] == 0x00 );
+		REQUIRE( encoded[ 3 ] == 0xFF );
 
 		i = 0xFF00;
 		encoded = tEncoder ( i );
 		REQUIRE( encoded.size( ) == 4 );
 		REQUIRE( encoded[ 0 ] == 0x00 );
-		REQUIRE( encoded[ 1 ] == 0xFF );
+		REQUIRE( encoded[ 2 ] == 0xFF );
+
+		decoder < int > IntegerDecoder;
+		i = 5;
+		REQUIRE( i == IntegerDecoder( tEncoder( i ).data( ) ) );
 		}
 
 	// string encoding = ( int size ) + ( string )
