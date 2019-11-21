@@ -5,7 +5,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -g
 SRC_PATH = src
 TEST_PATH = tst
 BUILD_PATH = build
-INCLUDES = -I $(SRC_PATH)/utils/ -I $(TEST_PATH) #TODO: add more src folders here as needed
+INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(TEST_PATH) #TODO: add more src folders here as needed
 
 TEST_SOURCES := $(wildcard $(TEST_PATH)/*/*.cpp)
 TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(TEST_SOURCES))
@@ -23,7 +23,6 @@ tests: $(MODULE_TESTS)
 
 build:
 	@mkdir -vp $(addprefix $(BUILD_PATH)/tst/,$(TESTS_PATHS))
-
 
 $(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@
