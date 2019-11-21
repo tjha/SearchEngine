@@ -12,7 +12,7 @@
 
 struct workerStruct
 	{
-	dex::string name;
+	int id;
 	};
 
 
@@ -90,7 +90,7 @@ void fakeAddToRedirectMap( const dex::Url &key, const dex::Url &val )
 void *worker( void *args )
 	{
 	workerStruct a = *static_cast <workerStruct*>(args);
-	dex::string name = a.name;
+	dex::string name = dex::toString( a.id );
 	for ( int i = 0;  i < 3;  ++i )
 		{
 		pthread_mutex_lock( &frontierLock );
@@ -203,10 +203,10 @@ int main( )
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
 
-	for ( size_t i = 0;  i < numWorkers;  ++i )
+	for ( int i = 0;  i < numWorkers;  ++i )
 		{
 		urlFrontier.putUrl( ( "https://www.bonescape.bomb/" + dex::toString( i ) ).cStr( ) );
-		workerStruct a = { dex::toString( i ) };
+		workerStruct a = { i };
 		pthread_create( &workers[ i ], nullptr, worker, static_cast < void * > ( &a ) );
 		}
 
