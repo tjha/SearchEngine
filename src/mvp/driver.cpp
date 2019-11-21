@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-11-20: Add logging, add file structure for saving html: combsc
 // 2019-11-16: Init Commit: combsc
 #include "../spinarak/crawler.hpp"
 #include "../utils/basicString.hpp"
@@ -10,6 +11,10 @@ struct workerStruct
 	{
 	dex::string name;
 	};
+
+
+dex::string loggingFileName;
+pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 
 dex::frontier urlFrontier;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
@@ -25,6 +30,44 @@ pthread_mutex_t brokenLinksLock = PTHREAD_MUTEX_INITIALIZER;
 dex::vector < dex::Url > linksToShip;
 pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
 
+void log( dex::string toWrite )
+	{
+	pthread_mutex_lock( &loggingLock );
+	dex::appendToFile( loggingFileName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
+	pthread_mutex_unlock( &loggingLock );
+	}
+
+
+// Folder structure
+// Hash the URL
+// 2 layers of folders
+// bytes 1 determines the first folder
+// bytes 2 determines the second folder
+// bytes 3-4 determine the name of the files
+// This gives us 4,294,967,296 possible locations for html
+int saveHtml( dex::Url url )
+	{
+	dex::hash < dex::string > hasher;
+	unsigned long h = hasher( url.completeUrl( ) );
+	unsigned long first = h & 0x000000FF;
+	unsigned long second = ( h & 0x0000FF00 ) >> 8;
+	unsigned long name = ( h & 0xFFFF0000 ) >> 16 ;
+	std::cout << "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html" << std::endl;
+	int err = dex::makeDirectory( "html" );
+	if ( err == -1 )
+		return err;
+	dex::string dirName = "html/" + dex::toString( first );
+	err = dex::makeDirectory( dirName.cStr( ) );
+	if ( err == -1 )
+		return err;
+	dirName = "html/" + dex::toString( first ) + "/" + dex::toString( second );
+	err = dex::makeDirectory( dirName.cStr( ) );
+	if ( err == -1 )
+		return err;
+	dex::string filename = "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html";
+	err = dex::writeToFile( filename.cStr( ), url.completeUrl( ).cStr( ), url.completeUrl( ).size( ) );
+	return err;
+	}
 
 dex::vector < dex::Url > fakeParseForLinks( dex::string html )
 	{
@@ -36,7 +79,7 @@ dex::vector < dex::Url > fakeParseForLinks( dex::string html )
 
 dex::Url fakeRedirectLink( dex::Url in)
 	{
-	std::cout << "Fixed link " << in.completeUrl( ) << std::endl;
+	log( "Fixed link " + in.completeUrl( ) + "\n" );
 	in.setPath( "fixed" );
 	return in;
 	}
@@ -50,7 +93,7 @@ bool fakeUrlInDomain( const dex::Url &url )
 	return true;
 	}
 
-int fakeCrawl( dex::Url url, dex::string &result, dex::unorderedMap < dex::string, dex::RobotTxt > &robots, dex::string contentFilename )
+int fakeCrawl( dex::Url url, dex::string &result, dex::unorderedMap < dex::string, dex::RobotTxt > &robots )
 	{
 	return 0;
 	}
@@ -63,14 +106,13 @@ int fakeCrawl( dex::Url url, dex::string &result, dex::unorderedMap < dex::strin
 // a value in our map and remove the entry.
 void fakeAddToRedirectMap( const dex::Url &key, const dex::Url &val )
 	{
-	std::cout << "Added " << key.completeUrl( ) << "->" << val.completeUrl( ) << " to our redirect map" << std::endl;
+	log( "Added " + key.completeUrl( ) + "->" + val.completeUrl( ) + " to our redirect map\n" );
 	}
 
 void *worker( void *args )
 	{
 	workerStruct a = *static_cast <workerStruct*>(args);
 	dex::string name = a.name;
-	size_t iteration = 0;
 	for ( int i = 0;  i < 3;  ++i )
 		{
 		pthread_mutex_lock( &frontierLock );
@@ -80,16 +122,15 @@ void *worker( void *args )
 			}
 		dex::Url toCrawl = urlFrontier.getUrl( );
 		pthread_mutex_unlock( &frontierLock );
-		std::cout << "Connecting to " << toCrawl.completeUrl( ) << std::endl;
+		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
 		dex::string result;
-		dex::string fileName = name + "_" + iteration + ".dex";
 		// I know that it's not safe to use robotsCache here
 		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
 		// lock the cache for the entire time we're crawling the URL.
-		int errorCode = fakeCrawl( toCrawl, result, robotsCache, fileName );
+		int errorCode = fakeCrawl( toCrawl, result, robotsCache );
+		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		if ( errorCode == 0 )
 			{
-			std::cout << "crawled domain: " << toCrawl.completeUrl( ) << std::endl;
 			dex::string html = result;
 			dex::vector < dex::Url > links = fakeParseForLinks( html );
 			
@@ -113,8 +154,6 @@ void *worker( void *args )
 
 		if ( errorCode == dex::POLITENESS_ERROR )
 			{
-			std::cout << "Mr. Robot says to be polite: " << toCrawl.completeUrl( ) << std::endl;
-			std::cout << result << std::endl;
 			// What should we do with the url?
 			pthread_mutex_lock( &frontierLock );
 			urlFrontier.putUrl( fakeRedirectLink( toCrawl ) );
@@ -122,9 +161,6 @@ void *worker( void *args )
 			}
 		if ( errorCode >= 300 && errorCode < 400 )
 			{
-			std::cout << "link asks to be redirected: " << toCrawl.completeUrl( ) << std::endl;
-			std::cout << "redirect location: " << result << std::endl;
-			std::cout << errorCode << std::endl;
 			if ( fakeUrlInDomain( dex::Url( result.cStr( ) ) ) )
 				{
 				pthread_mutex_lock( &frontierLock );
@@ -142,16 +178,12 @@ void *worker( void *args )
 			}
 		if ( errorCode >= 400 )
 			{
-			std::cout << "link broken: " << toCrawl.completeUrl( ) << std::endl;
-			std::cout << errorCode << std::endl;
 			pthread_mutex_lock( &brokenLinksLock );
 			brokenLinks.pushBack( toCrawl );
 			pthread_mutex_unlock( &brokenLinksLock );
 			// All links that redirect to this should also be categorized as broken.
 			}
-		++iteration; 
 		}
-
 	return nullptr;
 	}
 
@@ -159,10 +191,16 @@ void *worker( void *args )
 
 int main( )
 	{
-
+	loggingFileName = "logs/";
+	time_t now = time( nullptr );
+	loggingFileName += ctime( &now );
+	loggingFileName.popBack( );
+	loggingFileName += ".log";
+	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 	urlFrontier.putUrl( "https://www.bonescape.bomb" );
 	workerStruct a = { "test" };
 	pthread_create( &workers[ 0 ], nullptr, worker, static_cast < void * > ( &a ) );
 	pthread_join( workers[ 0 ], nullptr );
+	saveHtml( "https://www.bonescape.bomb" );
 	return 0;
 	}

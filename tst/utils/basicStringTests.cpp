@@ -1,6 +1,7 @@
 // basicStringTests.cpp
 // Testing for the basicString class
 //
+// 2019-11-20: Add replaceWhitespace and toString tests: combsc
 // 2019-11-13: Add stripWhitespace tests: combsc
 // 2019-10-27: Revamp swap tests: jasina
 // 2019-10-20: Revamp assignment, write substring tests, combine (append, insert, erase, replace) into one, write hash
@@ -666,5 +667,39 @@ TEST_CASE( "strip whitespace", "[string]" )
 	REQUIRE( a.stripWhitespace( ) == "t" );
 	a = "v";
 	REQUIRE( a.stripWhitespace( ) == "v" );
+	}
+
+TEST_CASE( "replace whitespace", "[string]" )
+	{
+	string a = "                   to strip              ";
+	REQUIRE( a.replaceWhitespace( ) == "tostrip" );
+	a = "vfnt \v\f\n\t";
+	REQUIRE( a.replaceWhitespace( ) == "vfnt" );
+	a = "";
+	REQUIRE( a.replaceWhitespace( ) == "" );
+	a = " \v\f\n\t";
+	REQUIRE( a.replaceWhitespace( ) == "" );
+	a = "potato tomato\nswag";
+	REQUIRE( a.replaceWhitespace( "_" ) == "potato_tomato_swag" );
+	}
+
+TEST_CASE( "toString", "[string]" )
+	{
+	int i = 10;
+	REQUIRE( dex::toString( i ) == "10" );
+	i = -10;
+	REQUIRE( dex::toString( i ) == "-10" );
+	i = 987;
+	REQUIRE( dex::toString( i ) == "987" );
+	i = 901;
+	REQUIRE( dex::toString( i ) == "901" );
+	i = 1234567890;
+	REQUIRE( dex::toString( i ) == "1234567890" );
+	long j = -1234567890000;
+	REQUIRE( dex::toString( j ) == "-1234567890000" );
+	i = -10;
+	REQUIRE( dex::toString( i ) == "-10" );
+	i = 0;
+	REQUIRE( dex::toString( i ) == "0" );
 	}
 
