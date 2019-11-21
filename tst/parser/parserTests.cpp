@@ -1,6 +1,7 @@
 // parserTests.cpp
 // Basic testing of Parser functionality
 //
+// 2018-11-21: Created basic link and anchor text tests for amazon.html: tjha
 // 2018-11-21: Created extensive checking of all anchor text words for
 //             peter_chen.html: tjha
 // 2019-11-20: Modified basic test to ensure content is first parsed for url
@@ -183,8 +184,8 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
       AnchorWords.pushBack( "Students" );
 
-      AnchorWords.pushBack( "Software" );
-
+      AnchorWords.pushBack( "Software" ); 
+      REQUIRE( AnchorWords.size( ) == words.size( ) );
 
       size_t word_count = 0; 
       for ( size_t j = 0; j < anchors.size( ); j++ )
@@ -202,8 +203,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
    }
 
-/*
-TEST_CASE( "amazon.com html page with comment, script, div, img, and link tags" )
+TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
    {
       string filename = "tst/parser/amazon.html";
       string htmlDoc;
@@ -234,20 +234,27 @@ TEST_CASE( "amazon.com html page with comment, script, div, img, and link tags" 
       
       SECTION ( "Expected Anchor Text" )
          {
-         vector < anchorPos > anchors = testParser.ReturnAnchorText();
-         vector < string > words = testParser.ReturnWords();
+         vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
+         vector < dex::string > words = testParser.ReturnWords();
+         vector < dex::string > AnchorWords;
 
-         vector < string > AnchorWords;
+         // push back anchor words for each link
+         AnchorWords.pushBack( "Conditions" );
+         AnchorWords.pushBack( "of" );
+         AnchorWords.pushBack( "Use" );
 
-         AnchorWords.pushBack( "Con" );
-         AnchorWords.pushBack("Science");
-         AnchorWords.pushBack("and");
-         AnchorWords.pushBack("Engineering");
-         AnchorWords.pushBack("Division");
-         
-         for ( size_t i = 0; i < anchors[ 7 ].endPos - anchors[ 7 ].startPos; i++ )
+         AnchorWords.pushBack( "Privacy" );
+         AnchorWords.pushBack( "Policy" );
+ 
+         REQUIRE( AnchorWords.size( ) == words.size( ) );
+
+         size_t word_count = 0; 
+         for ( size_t j = 0; j < anchors.size( ); j++ )
             {
-            REQUIRE( AnchorWords[ i ] == words[ anchors[ 7 ].startPos + i ] );
+            for ( size_t i = 0; i <= anchors[ j ].endPos - anchors[ j ].startPos; i++ )
+               {
+               REQUIRE( AnchorWords[ word_count++ ] == words[ anchors[ j ].startPos + i ] );
+               }
             }
          }
       
@@ -255,4 +262,3 @@ TEST_CASE( "amazon.com html page with comment, script, div, img, and link tags" 
          {
          }
    }
-   */
