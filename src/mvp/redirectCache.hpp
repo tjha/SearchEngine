@@ -30,6 +30,7 @@ namespace dex
 				dex::pair < dex::Url, time_t > next = pair( url, time( nullptr ) );
 				while ( endpoints.count( current.first ) > 0 )
 					{
+					
 					next = endpoints[ current.first ];
 					if ( time( nullptr ) >= next.second )
 						{
@@ -48,7 +49,7 @@ namespace dex
 				if ( check.completeUrl( ) == key.completeUrl( ) )
 					return -1;
 				dex::pair < dex::Url, time_t > p = pair( value, time( nullptr ) + expireTime );
-				endpoints [ key ] = p;
+				endpoints[ key ] = p;
 				return 0;
 				}
 		};
