@@ -199,6 +199,10 @@ int main( )
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
 		urlFrontier.putUrl( ( "https://www.bonescape.bomb/" + dex::toString( i ) ).cStr( ) );
+		}
+	
+	for ( int i = 0;  i < numWorkers;  ++i )
+		{
 		workerStruct a = { i };
 		pthread_create( &workers[ i ], nullptr, worker, static_cast < void * > ( &a ) );
 		}
