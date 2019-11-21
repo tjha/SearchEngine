@@ -1,6 +1,8 @@
 // parserTests.cpp
 // Basic testing of Parser functionality
 //
+// 2018-11-21: Created extensive checking of all anchor text words for
+//             peter_chen.html: tjha
 // 2019-11-20: Modified basic test to ensure content is first parsed for url
 //             format: <url>\n<html_content>: tjha
 // 2019-11-20: Reorganized test cases for different files
@@ -17,18 +19,21 @@
 #include "exception.hpp"
 #include "parser.hpp"
 #include "file.hpp"
-#include <iostream>
 
-using dex::readFromFile;
-using dex::outOfRangeException;
-using dex::string;
-using dex::HTMLparser;
+#include <cstddef>
+
+//#include <iostream>
+
 using dex::anchorPos;
+using dex::HTMLparser;
+using dex::outOfRangeException;
+using dex::readFromFile;
+using dex::string;
 using dex::vector;
 
-//using std::cerr;
-using std::cout;
-using std::endl;
+using std::size_t;
+//using std::cout;
+//using std::endl;
 
 
 TEST_CASE( "basic get links with relative paths", "[parser]" )
@@ -126,20 +131,68 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
    SECTION( "Expected Anchor Text" )
       {
-      vector < anchorPos > anchors = testParser.ReturnAnchorText();
-      vector < string > words = testParser.ReturnWords();
+      vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
+      vector < dex::string > words = testParser.ReturnWords();
+      vector < dex::string > AnchorWords;
 
-      vector < string > AnchorWords;
+      // push back anchor words for each link
+      AnchorWords.pushBack( "Arthur" );
+      AnchorWords.pushBack( "F" );
+      AnchorWords.pushBack( "Thurnau" );
+      AnchorWords.pushBack( "Professor" );
+
+      AnchorWords.pushBack( "EECS" );
+      AnchorWords.pushBack( "Department" );
+
+      AnchorWords.pushBack( "University" );
+      AnchorWords.pushBack( "of" );
+      AnchorWords.pushBack( "Michigan" );
+
+      AnchorWords.pushBack( "Contact" );
+      AnchorWords.pushBack( "information" );
+
+      AnchorWords.pushBack( "Adding" );
+      AnchorWords.pushBack( "security" );
+      AnchorWords.pushBack( "services" );
+      AnchorWords.pushBack( "through" );
+      AnchorWords.pushBack( "virtual" );
+      AnchorWords.pushBack( "machines" );
+
+
+      AnchorWords.pushBack( "Rio" );
+      AnchorWords.pushBack( "RAM" );
+      AnchorWords.pushBack( "I" );
+      AnchorWords.pushBack( "O" );
+
+      AnchorWords.pushBack( "Software" );
+      AnchorWords.pushBack( "Systems" );
+      AnchorWords.pushBack( "Lab" );
 
       AnchorWords.pushBack( "Computer" );
-      AnchorWords.pushBack("Science");
-      AnchorWords.pushBack("and");
-      AnchorWords.pushBack("Engineering");
-      AnchorWords.pushBack("Division");
-      
-      for ( size_t i = 0; i < anchors[ 7 ].endPos - anchors[ 7 ].startPos; i++ )
+      AnchorWords.pushBack( "Science" );
+      AnchorWords.pushBack( "and" );
+      AnchorWords.pushBack( "Engineering" );
+      AnchorWords.pushBack( "Division" );
+    
+      AnchorWords.pushBack( "EECS" );
+
+      AnchorWords.pushBack( "Publications" );
+
+      AnchorWords.pushBack( "EECS" );
+      AnchorWords.pushBack( "482" );
+
+      AnchorWords.pushBack( "Students" );
+
+      AnchorWords.pushBack( "Software" );
+
+
+      size_t word_count = 0; 
+      for ( size_t j = 0; j < anchors.size( ); j++ )
          {
-         REQUIRE( AnchorWords[ i] == words[anchors[7].startPos + i]);
+         for ( size_t i = 0; i <= anchors[ j ].endPos - anchors[ j ].startPos; i++ )
+            {
+            REQUIRE( AnchorWords[ word_count++ ] == words[ anchors[ j ].startPos + i ] );
+            }
          }
       }
 
@@ -149,21 +202,57 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
    }
 
+/*
 TEST_CASE( "amazon.com html page with comment, script, div, img, and link tags" )
    {
       string filename = "tst/parser/amazon.html";
       string htmlDoc;
       htmlDoc = readFromFile( filename.cStr( ) );
+      HTMLparser testParser( htmlDoc );
 
       SECTION( "Expected Links" )
-      {
-      }
+         {
+         vector< string > links = testParser.ReturnLinks( );
+
+         // Validate correct number of links were extracted
+         REQUIRE ( links.size() == 2 );
+
+         // Create vector with expected links on page
+         vector < string > expectedLinks;
+
+         expectedLinks.pushBack(
+            "https://www.amazon.com/gp/help/customer/display.html/ref=footer_cou?ie=UTF8&nodeId=508088" );
+         expectedLinks.pushBack( 
+            "https://www.amazon.com/gp/help/customer/display.html/ref=footer_privacy?ie=UTF8&nodeId=468496" );
+
+         // Verify parsed links match expected page links
+         for ( size_t i = 0; i < expectedLinks.size(); i++ )
+            {
+            REQUIRE ( links[ i ] == expectedLinks[ i ] );
+            }
+         }
       
       SECTION ( "Expected Anchor Text" )
          {
+         vector < anchorPos > anchors = testParser.ReturnAnchorText();
+         vector < string > words = testParser.ReturnWords();
+
+         vector < string > AnchorWords;
+
+         AnchorWords.pushBack( "Con" );
+         AnchorWords.pushBack("Science");
+         AnchorWords.pushBack("and");
+         AnchorWords.pushBack("Engineering");
+         AnchorWords.pushBack("Division");
+         
+         for ( size_t i = 0; i < anchors[ 7 ].endPos - anchors[ 7 ].startPos; i++ )
+            {
+            REQUIRE( AnchorWords[ i ] == words[ anchors[ 7 ].startPos + i ] );
+            }
          }
       
       SECTION( "Expected Words" )
          {
          }
    }
+   */

@@ -1,6 +1,8 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
 //
+// 2019-11-21:  Modified BreakAnchors and RemovePunctuation to separate
+//              words between punctuations except dashes: tjha
 // 2019-11-20:  Modified constructor to take in format <url>\n<htnl_content>
 //              Modified GetLinks function to correctly handle relative links:
 //              tjha
@@ -15,7 +17,6 @@
 // 2019-11-04:  Fixed document style to match style guide: tjha
 // 2019-10-26:  Created get_links function to get urls from basic html:
 //              medhak, tjha
-
 #include "algorithm.hpp"
 #include "basicString.hpp"
 #include "exception.hpp"
@@ -81,7 +82,7 @@ namespace dex
       HTMLparser( dex::string& html );
       string removePunctuation( string word );
       // static vector < string > BreakAnchorsOG ( const string anchor );
-      void BreakAnchors ( string anchor );
+      void BreakAnchors ( string& anchor );
       // void GetAnchorText( );
       vector < string > ReturnLinks ( );
       // vector < dex::pair <size_t, size_t > > ReturnAnchorText ( );
@@ -119,29 +120,44 @@ namespace dex
       return anchorText;
       }
    
-   void HTMLparser::BreakAnchors ( string anchor )
+   void HTMLparser::BreakAnchors ( string& anchor )
       {
       static const char WHITESPACE[ ] = { ' ', '\t', '\n', '\r' };
-      std::size_t indexNotOf = anchor.findFirstNotOf( WHITESPACE, 0, 4 ), indexOf = 0, start = indexNotOf;
+      std::size_t indexNotOf = anchor.findFirstNotOf( WHITESPACE, 0, 4 );
+      std::size_t indexOf = 0, start = indexNotOf;
+
       string word;
-      while ( indexNotOf != string::npos && indexOf != string::npos )
+      while ( indexNotOf != dex::string::npos && indexOf != dex::string::npos )
          {
          indexOf = anchor.findFirstOf( WHITESPACE, indexNotOf, 4 );
-         if ( indexOf != string::npos )
+         if ( indexOf != dex::string::npos )
             {
-            word = anchor.substr( indexNotOf, indexOf - indexNotOf + 1 );
-            word = removePunctuation( word );
-            words.pushBack( word );
+            word = anchor.substr( indexNotOf, indexOf - indexNotOf );
             indexNotOf = anchor.findFirstNotOf( WHITESPACE, indexOf, 4 );
             }
          else
             {
-            word = anchor.substr( indexNotOf, anchor.length( ) - indexNotOf + 1 );
-            word = removePunctuation( word );
-            words.pushBack( word );
+            word = anchor.substr( indexNotOf, anchor.length( ) - indexNotOf );
             indexNotOf = anchor.findFirstNotOf( WHITESPACE, indexNotOf + 1, 4 );
-         
             }
+
+            word = removePunctuation( word );
+            std::size_t wordIdx = word.findFirstNotOf( ' ', 0 );
+            std::size_t spaceIdx = word.find( ' ' );
+            while ( spaceIdx != dex::string::npos && wordIdx != dex::string::npos )
+               {
+               if ( wordIdx < spaceIdx )
+                  { 
+                  words.pushBack( word.substr( wordIdx, spaceIdx - wordIdx ) );
+                  wordIdx = word.findFirstNotOf ( ' ', spaceIdx );
+                  }
+               spaceIdx = word.find( ' ', spaceIdx + 1);
+               }
+            if ( wordIdx != dex::string::npos )
+               {
+               words.pushBack( word.substr( wordIdx, word.length() - wordIdx ) );
+               }
+            
          }
       if( indexNotOf == start )
          {
@@ -152,18 +168,31 @@ namespace dex
 
    string HTMLparser::removePunctuation( string word )
       {
-      static const char DELIMITERS[ ] = { '\n', '\t', '\r', ' ', ',', '.', '?', '>', '<', '!', '[', ']',
-                                           '{', '}', '|', '\\', '-', '_', '=', '+', ')', '(', '*', '&', 
-                                           '^', '%', '$', '#', '@', '~', '`', '\'', '\'', ';', ':', '/' };
-      for( std::size_t i = 0; i < 36; i++ )
+      static const char DELIMITERS[ ] = { '\n', '\t', '\r', ',', '.', '?', '>', 
+                                          '<', '!', '[', ']', '{', '}', '|', 
+                                          '\\', '_', '=', '+', ')', '(', '*', 
+                                          '&', '^', '%', '$', '#', '@', '~',
+                                          '`', '\'', '\'', ';', ':', '/'};
+
+      // TODO: Improve implementation by avoiding 36 loops over word for each
+      //       delimiter in array
+      for( std::size_t i = 0; i < 34; i++ )
          {
          std::size_t ind = word.find( DELIMITERS[ i ] );
          while( ind != string::npos )
             {
-            word = word.replace( ind , 1, "" );
-            ind = word.find( DELIMITERS[ i ], ind );
+            word = word.replace( ind , 1, " " );
+            ind = word.find( DELIMITERS[ i ], ind);
             }
-         } 
+         }
+
+      std::size_t ind = word.find( '-' );
+      while( ind != string::npos )
+         {
+         word = word.erase( ind , 1 );
+         ind = word.find( '-', ind);
+         }
+
       return word;      
       }
 
