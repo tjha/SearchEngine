@@ -1,6 +1,9 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
 //
+// 2019-11-20:  Modified constructor to take in format <url>\n<htnl_content>
+//              Modified GetLinks function to correctly handle relative links:
+//              tjha
 // 2019-11-20:  Fixed cstdef to cstddef, modified size-t to std::size_t: tjha
 // 2019-11-19:  Changed BreakAnchors, Getlinks; made removePunctuation: medhak
 // 2019-11-11:  Implemented ParseTag function to aid in recursive parsing: tjha
@@ -21,6 +24,10 @@
 
 #include <cstddef>
 
+//#include <iostream>
+//using std::cout;
+//using std::endl;
+
 namespace dex
 {
    struct anchorPos
@@ -34,9 +41,10 @@ namespace dex
    {
    private:
       dex::string htmlFile;
+      dex::string pageLink;
       dex::vector< string > links;
       dex::vector< string > words;
-      dex::vector< string > relativeLinks;
+      //dex::vector< string > relativeLinks;
       dex::vector< anchorPos > anchorText;
 
       void GetLinks( );
@@ -70,7 +78,7 @@ namespace dex
 
    public:
       HTMLparser( );
-      HTMLparser( string &html );
+      HTMLparser( dex::string& html );
       string removePunctuation( string word );
       // static vector < string > BreakAnchorsOG ( const string anchor );
       void BreakAnchors ( string anchor );
@@ -84,12 +92,15 @@ namespace dex
 
    HTMLparser::HTMLparser( )
       {
-      htmlFile = ""; 
+      htmlFile = "";
+      pageLink = "";
       }
 
-   HTMLparser::HTMLparser( string &html )
+   HTMLparser::HTMLparser( dex::string& html )
       {
-      htmlFile = html;
+      std::size_t linkEnd = html.findFirstOf( '\n' );
+      pageLink = html.substr( 0, linkEnd );
+      htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
       GetLinks();
       }
 
@@ -110,7 +121,7 @@ namespace dex
    
    void HTMLparser::BreakAnchors ( string anchor )
       {
-      static const char WHITESPACE [ ] = { ' ', '\t', '\n', '\r' };
+      static const char WHITESPACE[ ] = { ' ', '\t', '\n', '\r' };
       std::size_t indexNotOf = anchor.findFirstNotOf( WHITESPACE, 0, 4 ), indexOf = 0, start = indexNotOf;
       string word;
       while ( indexNotOf != string::npos && indexOf != string::npos )
@@ -141,7 +152,7 @@ namespace dex
 
    string HTMLparser::removePunctuation( string word )
       {
-      static const char DELIMITERS [ ] = { '\n', '\t', '\r', ' ', ',', '.', '?', '>', '<', '!', '[', ']',
+      static const char DELIMITERS[ ] = { '\n', '\t', '\r', ' ', ',', '.', '?', '>', '<', '!', '[', ']',
                                            '{', '}', '|', '\\', '-', '_', '=', '+', ')', '(', '*', '&', 
                                            '^', '%', '$', '#', '@', '~', '`', '\'', '\'', ';', ':', '/' };
       for( std::size_t i = 0; i < 36; i++ )
@@ -212,16 +223,26 @@ namespace dex
                url = url.substr( qPos+1, url.find( "\"", qPos+1 ) - qPos - 1 );
                }
             std::size_t linkIndex = 0;
+            /*
             if ( url.front( ) == '.' || url.front( ) == '\\' )
                {
                relativeLinks.pushBack( url );
                linkIndex = relativeLinks.size( ) - 1;
                }
-            else
-               {
+            else {
+            */
+            // PushBack absolute url
+            if ( url.find("https://", 0) == 0 ||
+                 url.findFirstOf("http://", 0) == 0 ) {
+               // url is already an absolute url
                links.pushBack( url );     
-               linkIndex = links.size( ) - 1;
-               }
+            } else {
+               // url is a relative url
+               links.pushBack( pageLink + url );
+               // TODO: Verify that appending url to pathLink works in 
+               //       possible edge cases
+            }
+            linkIndex = links.size( ) - 1;
 
             //finding anchor text - - i think this should just be one function.
             posOpenTag = htmlFile.find ( "<", posCloseTag );

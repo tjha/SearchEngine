@@ -1,6 +1,10 @@
 // parserTests.cpp
 // Basic testing of Parser functionality
 //
+// 2019-11-20: Modified basic test to ensure content is first parsed for url
+//             format: <url>\n<html_content>: tjha
+// 2019-11-20: Reorganized test cases for different files
+//             Each test case splits into sections to test functionality: tjha
 // 2019-11-06: Made compatible with new paired struct: medhak
 // 2019-11-06: AnchorText test with peter_chen.html: tjha
 // 2019-11-05: Made compatible with Parser classL medhak
@@ -13,7 +17,7 @@
 #include "exception.hpp"
 #include "parser.hpp"
 #include "file.hpp"
-//#include <iostream>
+#include <iostream>
 
 using dex::readFromFile;
 using dex::outOfRangeException;
@@ -23,21 +27,22 @@ using dex::anchorPos;
 using dex::vector;
 
 //using std::cerr;
-//using std::cout;
-//using std::endl;
+using std::cout;
+using std::endl;
 
 
-TEST_CASE( "get links", "[parser]" )
+TEST_CASE( "basic get links with relative paths", "[parser]" )
    {
 
 	SECTION( "parsed simple html document with one link" )
       {
       string htmlDoc = 
-         "<html>\
-            <title>Title</title>\
-            <body>\
-            <a href=\"https://web.eecs.umich.edu/~pmchen/software\">Software</a>\
-            </body>\
+         "https://web.eecs.umich.edu/~pmchen/\n\
+         <html>\n\
+            <title>Title</title>\n\
+            <body>\n\
+            <a href=\"software\">Software</a>\n\
+            </body>\n\
          </html>";
       HTMLparser testParser( htmlDoc );
       // testParser.GetLinks();
@@ -47,16 +52,17 @@ TEST_CASE( "get links", "[parser]" )
       REQUIRE( links[0] == expectedLink );
       }
 
-	SECTION( "parsed simple html document with one link" )
+	SECTION( "parsed simple html document with three links" )
       {
       string htmlDoc = 
-         "<html>\
-            <title>Title</title>\
-            <body>\
-            <a href=\"https://web.eecs.umich.edu/~pmchen/software1\">Software</a>\
-            <a href=\"https://web.eecs.umich.edu/~pmchen/software2\">Software</a>\
-            <a href=\"https://web.eecs.umich.edu/~pmchen/software3\">Software</a>\
-            </body>\
+         "https://web.eecs.umich.edu/~pmchen/\n\
+         <html>\n\
+            <title>Title</title>\n\
+            <body>\n\
+            <a href=\"software1\">Software</a>\n\
+            <a href=\"software2\">Software</a>\n\
+            <a href=\"software3\">Software</a>\n\
+            </body>\n\
          </html>";
       HTMLparser testParser( htmlDoc );
       // testParser.GetLinks();
@@ -145,11 +151,12 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
 TEST_CASE( "amazon.com html page with comment, script, div, img, and link tags" )
    {
-      SECTION( "Expected Links" )
-      {
       string filename = "tst/parser/amazon.html";
       string htmlDoc;
       htmlDoc = readFromFile( filename.cStr( ) );
+
+      SECTION( "Expected Links" )
+      {
       }
       
       SECTION ( "Expected Anchor Text" )
@@ -160,4 +167,3 @@ TEST_CASE( "amazon.com html page with comment, script, div, img, and link tags" 
          {
          }
    }
-
