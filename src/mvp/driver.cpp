@@ -49,23 +49,12 @@ pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
 dex::redirectCache redirects;
 pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
-
-
 int log( dex::string toWrite )
 	{
 	pthread_mutex_lock( &loggingLock );
 	int error = dex::appendToFile( loggingFileName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
 	pthread_mutex_unlock( &loggingLock );
 	return error;
-	}
-
-dex::vector < dex::Url > fakeParseForLinks( dex::string html )
-	{
-	dex::vector < dex::Url > toReturn;
-	toReturn.pushBack( dex::Url( "https://www.runescape.com/fun" ) );
-	toReturn.pushBack( dex::Url( "https://www.maplestory.com/fun" ) );
-	html += 'b';
-	return toReturn;
 	}
 
 // We should have a function for checking URLs to see if they're in our
@@ -77,14 +66,18 @@ bool isUrlInDomain( const dex::Url &url )
 	return true;
 	}
 
+dex::vector < dex::Url > fakeParseForLinks( dex::string html )
+	{
+	dex::vector < dex::Url > toReturn;
+	toReturn.pushBack( dex::Url( "https://www.runescape.com/fun" ) );
+	toReturn.pushBack( dex::Url( "https://www.maplestory.com/fun" ) );
+	html += 'b';
+	return toReturn;
+	}
+
 int fakeCrawl( dex::Url url, dex::string &result, dex::unorderedMap < dex::string, dex::RobotTxt > &robots )
 	{
 	return 0;
-	}
-
-void fakeAddToRedirectMap( const dex::Url &key, const dex::Url &val )
-	{
-	log( "Added " + key.completeUrl( ) + "->" + val.completeUrl( ) + " to our redirect map\n" );
 	}
 
 void *worker( void *args )
