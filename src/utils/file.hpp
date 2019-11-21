@@ -1,9 +1,13 @@
 // file.hpp
 // file for dealing with our fileIO
 //
+// 2019-11-21: Added includeGuards: combsc
 // 2019-11-20: Added appendToFile, add offset, add create, add makeDirectory: combsc
 // 2019-11-4: Swapped out memcpy for dex::copy: combsc
 // 2019-11-2: Initial Commit: combsc
+
+#ifndef FILE_HPP
+#define FILE_HPP
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -95,3 +99,4 @@ namespace dex
 		}
 	}
 
+#endif

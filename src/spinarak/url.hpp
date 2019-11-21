@@ -5,6 +5,8 @@
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
 #include "../utils/exception.hpp"
+#include "../utils/functional.hpp"
+// 2019-11-20: Add =operator, hash: combsc
 // 2019-11-10: made parts of url private, have to call get and set
 //             to ensure we don't mess up the url in the future: combsc
 // 2019-10-31: Copy constructor for robots: jhirsh
@@ -242,11 +244,20 @@ namespace dex
 				{
 				fragment = f;
 				}
+		
 		};
 
 	bool operator==( const dex::Url &lhs, const dex::Url &rhs )
 		{
 		return lhs.completeUrl( ) == rhs.completeUrl( );
 		}
+	template < >
+	struct hash < dex::Url >
+		{
+		unsigned long operator()( const dex::Url &url ) const
+			{
+			return dex::hash< dex::string >{} ( url.completeUrl( ) );
+			}
+		};
 	}
 #endif

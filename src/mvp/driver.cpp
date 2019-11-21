@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-11-21: Add working redirect cache, fix overall logic of file, test multithreading: combsc
 // 2019-11-20: Add logging, add file structure for saving html: combsc
 // 2019-11-16: Init Commit: combsc
 #include "../spinarak/crawler.hpp"
@@ -7,29 +8,46 @@
 #include "../utils/vector.hpp"
 #include "frontier.hpp"
 #include "checkpointing.hpp"
+#include "redirectCache.hpp"
 
 struct workerStruct
 	{
-	dex::string name;
+	int id;
 	};
 
 
 dex::string loggingFileName;
 pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 
+
+// All urls in the frontier must be known to be in our domain
+// and lead to a legitimate endpoint, or must be unknown. This
+// means we do not put broken links into our frontier and we do
+// not put links that aren't our responsibility into our frontier
 dex::frontier urlFrontier;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV;
-pthread_t workers [ 1 ];
+#define numWorkers 5
+pthread_t workers [ numWorkers ];
 
 dex::unorderedMap < dex::string, dex::RobotTxt > robotsCache{ 1000 };
 pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 
-dex::vector < dex::Url > brokenLinks;
+// This set contains all known links in our domain that error out
+// when visited.
+dex::unorderedSet < dex::Url > brokenLinks{ 2000 };
 pthread_mutex_t brokenLinksLock = PTHREAD_MUTEX_INITIALIZER;
 
+// This vector contains all known links that are NOT in our domain
+// and need to be given to other instances. Think of this as a frontier
+// but for the other workers.
 dex::vector < dex::Url > linksToShip;
 pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
+
+// This is the redirect cache. Used for handling known redirects on our
+// side without having to actually visit the sites.
+dex::redirectCache redirects;
+pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
 int log( dex::string toWrite )
 	{
@@ -37,21 +55,6 @@ int log( dex::string toWrite )
 	int error = dex::appendToFile( loggingFileName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
 	pthread_mutex_unlock( &loggingLock );
 	return error;
-	}
-
-dex::vector < dex::Url > fakeParseForLinks( dex::string html )
-	{
-	dex::vector < dex::Url > toReturn;
-	toReturn.pushBack( dex::Url( "https://www.runescape.com" ) );
-	html += 'b';
-	return toReturn;
-	}
-
-dex::Url fakeRedirectLink( dex::Url in)
-	{
-	log( "Fixed link " + in.completeUrl( ) + "\n" );
-	in.setPath( "fixed" );
-	return in;
 	}
 
 // We should have a function for checking URLs to see if they're in our
@@ -63,20 +66,24 @@ bool isUrlInDomain( const dex::Url &url )
 	return true;
 	}
 
+dex::vector < dex::Url > fakeParseForLinks( dex::string html )
+	{
+	dex::vector < dex::Url > toReturn;
+	toReturn.pushBack( dex::Url( "https://www.runescape.com/fun" ) );
+	toReturn.pushBack( dex::Url( "https://www.maplestory.com/fun" ) );
+	html += 'b';
+	return toReturn;
+	}
+
 int fakeCrawl( dex::Url url, dex::string &result, dex::unorderedMap < dex::string, dex::RobotTxt > &robots )
 	{
 	return 0;
 	}
 
-void fakeAddToRedirectMap( const dex::Url &key, const dex::Url &val )
-	{
-	log( "Added " + key.completeUrl( ) + "->" + val.completeUrl( ) + " to our redirect map\n" );
-	}
-
 void *worker( void *args )
 	{
 	workerStruct a = *static_cast <workerStruct*>(args);
-	dex::string name = a.name;
+	dex::string name = dex::toString( a.id );
 	for ( int i = 0;  i < 3;  ++i )
 		{
 		pthread_mutex_lock( &frontierLock );
@@ -87,63 +94,87 @@ void *worker( void *args )
 		dex::Url toCrawl = urlFrontier.getUrl( );
 		pthread_mutex_unlock( &frontierLock );
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
-		dex::string result;
+		dex::string result = "html\n";
 		// I know that it's not safe to use robotsCache here
 		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
 		// lock the cache for the entire time we're crawling the URL.
 		int errorCode = fakeCrawl( toCrawl, result, robotsCache );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
+
+		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 )
 			{
 			dex::string html = result;
-			dex::vector < dex::Url > links = fakeParseForLinks( html );
+			dex::saveHtml( toCrawl, html );
 			
+			dex::vector < dex::Url > links = fakeParseForLinks( html );
 			for ( auto it = links.cbegin( );  it != links.cend( );  ++it )
 				{
-				if ( isUrlInDomain( *it ) )
+				// Fix link using our redirects cache
+				pthread_mutex_lock( &redirectsLock );
+				dex::Url endpoint = redirects.getEndpoint( *it );
+				pthread_mutex_unlock( &redirectsLock );
+
+				// Check to see if the endpoint we have is a known broken link
+				pthread_mutex_lock( &brokenLinksLock );
+				if ( brokenLinks.count( endpoint ) == 0 )
 					{
-					pthread_mutex_lock( &frontierLock );
-					urlFrontier.putUrl( fakeRedirectLink( *it ) );
-					pthread_mutex_unlock( &frontierLock );
+					pthread_mutex_unlock( &brokenLinksLock );
+					// If we're in charge of this link, put it into our frontier
+					if ( isUrlInDomain( endpoint ) )
+						{
+						pthread_mutex_lock( &frontierLock );
+						urlFrontier.putUrl( endpoint );
+						pthread_mutex_unlock( &frontierLock );
+						}
+					// If we're not in charge of this link, send it off to be shipped
+					else
+						{
+						pthread_mutex_lock( &linksToShipLock );
+						linksToShip.pushBack( endpoint );
+						pthread_mutex_unlock( &linksToShipLock );
+						}
 					}
 				else
 					{
-					// No need to call fakeRedirectLink since it shouldn't be in our domain anyways
-					pthread_mutex_lock( &linksToShipLock );
-					linksToShip.pushBack( *it );
-					pthread_mutex_unlock( &linksToShipLock );
+					pthread_mutex_unlock( &brokenLinksLock );
 					}
 				}
 			}
-
+		// If we get a politness error for this URL, we put it back into the frontier
 		if ( errorCode == dex::POLITENESS_ERROR )
 			{
-			// What should we do with the url?
 			pthread_mutex_lock( &frontierLock );
-			urlFrontier.putUrl( fakeRedirectLink( toCrawl ) );
+			urlFrontier.putUrl( toCrawl );
 			pthread_mutex_unlock( &frontierLock );
 			}
+		// If we get a redirect, we need to update the redirects cache and put the link
+		// into the frontier or should be shipped.
 		if ( errorCode >= 300 && errorCode < 400 )
 			{
-			if ( isUrlInDomain( dex::Url( result.cStr( ) ) ) )
+			dex::Url location = dex::Url( result.cStr( ) );
+			pthread_mutex_lock( &redirectsLock );
+			redirects.updateUrl( toCrawl, location );
+			pthread_mutex_unlock( &redirectsLock );
+
+			if ( isUrlInDomain( location ) )
 				{
 				pthread_mutex_lock( &frontierLock );
-				urlFrontier.putUrl( fakeRedirectLink( dex::Url( result.cStr( ) ) ) );
+				urlFrontier.putUrl( location );
 				pthread_mutex_unlock( &frontierLock );
-				fakeAddToRedirectMap( toCrawl, dex::Url( result.cStr( ) ) );
 				}
 			else
 				{
-				// No need to call fakeRedirectLink since it shouldn't be in our domain anyways
 				pthread_mutex_lock( &linksToShipLock );
 				linksToShip.pushBack( dex::Url( result.cStr( ) ) );
 				pthread_mutex_unlock( &linksToShipLock );
 				}
 			}
+		// This link doesn't lead anywhere, we need to add it to our broken links
 		if ( errorCode >= 400 )
 			{
 			pthread_mutex_lock( &brokenLinksLock );
-			brokenLinks.pushBack( toCrawl );
+			brokenLinks.insert( toCrawl );
 			pthread_mutex_unlock( &brokenLinksLock );
 			// All links that redirect to this should also be categorized as broken.
 			}
@@ -156,6 +187,7 @@ void *worker( void *args )
 int main( )
 	{
 	// setup logging file for this run
+	dex::makeDirectory( "logs" );
 	loggingFileName = "logs/";
 	time_t now = time( nullptr );
 	loggingFileName += ctime( &now );
@@ -163,10 +195,16 @@ int main( )
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
-	urlFrontier.putUrl( "https://www.bonescape.bomb" );
-	workerStruct a = { "test" };
-	pthread_create( &workers[ 0 ], nullptr, worker, static_cast < void * > ( &a ) );
-	pthread_join( workers[ 0 ], nullptr );
-	dex::saveHtml( "https://www.bonescape.bomb" );
+
+	for ( int i = 0;  i < numWorkers;  ++i )
+		{
+		urlFrontier.putUrl( ( "https://www.bonescape.bomb/" + dex::toString( i ) ).cStr( ) );
+		workerStruct a = { i };
+		pthread_create( &workers[ i ], nullptr, worker, static_cast < void * > ( &a ) );
+		}
+
+	for ( size_t i = 0;  i < numWorkers; ++i )
+		pthread_join( workers[ i ], nullptr );
+	
 	return 0;
 	}

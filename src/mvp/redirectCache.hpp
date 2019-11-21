@@ -1,4 +1,5 @@
 //redirectCache.hpp
+// 2019-11-21: fix pair syntax: combsc
 // 2019-11-18: Init Commit: combsc
 #ifndef REDIRECT_CACHE_HPP
 #define REDIRECT_CACHE_HPP
@@ -26,10 +27,11 @@ namespace dex
 
 			dex::Url getEndpoint( const dex::Url &url )
 				{
-				dex::pair < dex::Url, time_t > current = pair( url, time( nullptr ) );
-				dex::pair < dex::Url, time_t > next = pair( url, time( nullptr ) );
+				dex::pair < dex::Url, time_t > current = pair < dex::Url, time_t > ( url, time( nullptr ) );
+				dex::pair < dex::Url, time_t > next = pair < dex::Url, time_t > ( url, time( nullptr ) );
 				while ( endpoints.count( current.first ) > 0 )
 					{
+					
 					next = endpoints[ current.first ];
 					if ( time( nullptr ) >= next.second )
 						{
@@ -47,8 +49,8 @@ namespace dex
 				dex::Url check = getEndpoint( value );
 				if ( check.completeUrl( ) == key.completeUrl( ) )
 					return -1;
-				dex::pair < dex::Url, time_t > p = pair( value, time( nullptr ) + expireTime );
-				endpoints [ key ] = p;
+				dex::pair < dex::Url, time_t > p = pair < dex::Url, time_t > ( value, time( nullptr ) + expireTime );
+				endpoints[ key ] = p;
 				return 0;
 				}
 		};
