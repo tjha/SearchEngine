@@ -291,14 +291,39 @@ namespace dex
 							"Disallowed-Paths\n" + disallowedPaths.compress( );
 				}
 
-			// need domain for hash func
-			const dex::string getDomain( ) const
+			// Need access to all member variables for encoding
+			dex::string getDomain( ) const
 				{
 				return domain;
 				}
 			int getDelay( ) const
 				{
 				return crawlDelay;
+				}
+
+			time_t getLastVisit( ) const
+				{
+				return lastTimeVisited;
+				}
+
+			time_t getAllowedVisitTime( ) const
+				{
+				return allowedVisitTime;
+				}
+
+			time_t getExpireTime( ) const
+				{
+				return expireTime;
+				}
+
+			const dex::unorderedSet < dex::string > getAllowedPaths( ) const
+				{
+				return allowedPaths;
+				}
+
+			const dex::unorderedSet < dex::string > getDisallowedPaths( ) const
+				{
+				return disallowedPaths;
 				}
 		};
 

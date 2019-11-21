@@ -7,7 +7,9 @@
 #include "exception.hpp"
 #include "unorderedMap.hpp"
 #include "vector.hpp"
-#include "storage.hpp"
+#include "encode.hpp"
+#include "basicString.hpp"
+#include <iostream>
 
 using namespace dex;
 using namespace dex::crawler;
@@ -32,6 +34,25 @@ TEST_CASE( "encode", "[types]" )
 		REQUIRE( encoded.size( ) == 2 );
 		REQUIRE( encoded[ 0 ] == 0x00 );
 		REQUIRE( encoded[ 1 ] == 0xFF );
+		}
+
+	SECTION( "basicString" )
+		{
+		string magikarp = "magikarp";
+		encoder < string > tEncoder;
+		vector< byte > encoded = tEncoder( magikarp );
+		// make sure there are 9 characters in the encoding with null terminator
+		REQUIRE( encoded.size( ) == magikarp.size( ) + 1 );
+		for ( size_t i = 1;  i < encoded.size( );  ++i )
+			{
+			REQUIRE( encoded[ i ] == magikarp[ i - 1 ] );
+			}
+
+		magikarp = "";
+		encoded = tEncoder( magikarp );
+		REQUIRE( encoded.size( ) == 1 );
+		REQUIRE( encoded[ 0 ] == '\0' );
+		REQUIRE( encoded.back( ) == '\0' );
 		}
 
 	SECTION( "empty types" )
