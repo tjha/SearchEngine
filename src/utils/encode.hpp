@@ -1,6 +1,6 @@
 // storage.hpp
 // Encode and Decode objects used in crawler
-//
+//a
 // 2019-11-20: File created and encoding integers: jhirsh
 
 #ifndef DEX_ENCODE
@@ -24,25 +24,50 @@ namespace dex
 		class encoder
 			{
 			public:
-				/*template < class InputIt >
-				InputIt operator( )( T number, InputIt it ) const
+				dex::vector < unsigned char > operator ( )( T number )
 					{
-					size_t
-					}*/
+					dex::vector < unsigned char > encodedData;
 
-				dex::vector < byte > operator ( )( T number ) const
+					size_t bytes = sizeof( T );
+					//encodedData.reserve( bytes );
+					// push back bytes in LITTLE ENDIAN order
+					for ( size_t i = 0;  i < bytes;  ++i )
+						{
+						unsigned char datum = static_cast < unsigned char > (( number >> ( 8 * ( bytes - i - 1 ) ) ) & 0x000000FF );
+						encodedData.pushBack( datum );
+						}
+
+					return encodedData;
+					}
+
+				template < class InputIt >
+				InputIt operator( )( T number, InputIt it = nullptr ) const
 					{
-					dex::vector < byte > encodedData;
+					dex::vector < unsigned char > encodedData;
+					bool advance = true;
+					if ( it == nullptr )
+						{
+						advance = false;
+						}
 
 					size_t bytes = sizeof( T );
 					// push back bytes in LITTLE ENDIAN order
 					for ( size_t i = 0;  i < bytes;  ++i )
 						{
-						encodedData.insert( encodedData.cbegin( ), number & 0xFF );
+						encodedData.pushBack( number & 0xFF );
+						if ( it != nullptr )
+							{
+							++it;
+							}
 						number = number >> 8;
 						}
 
-					return encodedData;
+					if ( !advance )
+						{
+						return encodedData.cbegin( );
+						}
+
+					return it;
 					}
 			};
 
@@ -53,16 +78,44 @@ namespace dex
 		class encoder < dex::basicString < T > >
 			{
 			public:
-				dex::vector< byte > operator( )( const dex::basicString < T > & data ) const
+				dex::vector< unsigned char > operator( )( const dex::basicString < T > & data ) const
 					{
 					encoder < char > TEncoder;
-					dex::vector < byte > encodedVector = encoder< int >( )( data.size( ) );
+					encoder < int > IntegerEncoder;
+					int size = static_cast < int > ( data.size( ) );
+					dex::vector < unsigned char > encodedVector = IntegerEncoder( size );
 					for ( typename dex::basicString < T >::constIterator it = data.cbegin( );  it != data.cend( );  ++it )
 						{
-						dex::vector < byte > encodedDatum = TEncoder( *it );
+						dex::vector < unsigned char > encodedDatum = TEncoder( *it );
 						encodedVector.insert( encodedVector.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
 						}
 					return encodedVector;
+					}
+
+				template < class InputIt >
+				InputIt operator( )( const dex::basicString < T > &data, InputIt it = nullptr ) const
+					{
+					encoder < char > TEncoder;
+					dex::vector < unsigned char > encodedString = encoder < int >( )( data.size( ) );
+
+					bool advance = true;
+					if ( it == nullptr )
+						{
+						advance = false;
+						}
+					it = encodedString.cbegin( );
+
+					for ( typename dex::basicString < T >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );  ++dataIt )
+						{
+						it = TEncoder( *dataIt, it );
+						}
+
+					if ( !advance )
+						{
+						return encodedString.cbegin( );
+						}
+
+					return it;
 					}
 			};
 
@@ -131,40 +184,51 @@ namespace dex
 		class decoder
 			{
 			public:
-				T operator( )( InputIt encoding )
+				T operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					T decodedValue = 0;
 					size_t bytes = sizeof( T );
 					// push back bytes in LITTLE ENDIAN order
 					decodedValue += *encoding;
+					++encoding;
 					for ( size_t i = 1;  i < bytes;  ++i )
 						{
-						++encoding;
 						decodedValue = decodedValue << 8;
 						decodedValue += *encoding;
+						++encoding;
 						}
-					return decodedValue;
+					if ( advancedEncoding )
+						{
+						*advancedEncoding = encoding;
+						}
+					//std::cout << "decoded : " << +decodedValue;
+					return +decodedValue;
 					}
 			};
-		/*template < class T, class InputIt = unsigned char * >
-		class decoder < basicString< T >
+
+		template < class T, class InputIt >
+		class decoder < dex::basicString < T >, InputIt >
 			{
 			public:
-				T operator( )( InputIt encoding )
+				dex::basicString < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
-					T decodedValue = 0;
-					size_t bytes = sizeof( T );
-					// push back bytes in LITTLE ENDIAN order
-					decodedValue += *encoding;
-					for ( size_t i = 1;  i < bytes;  ++i )
+					InputIt *localAdvancedEncoding = &encoding;
+					decoder < T, InputIt > TDecoder;
+					dex::basicString < T > decodedData;
+
+					size_t size = decoder < int, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
 						{
-						++encoding;
-						decodedValue = decodedValue << 8;
-						decodedValue += *encoding;
+						decodedData.pushBack( TDecoder( * localAdvancedEncoding, localAdvancedEncoding ) );
 						}
-					return decodedValue;
+					std::cout << std::endl;
+
+					if ( advancedEncoding )
+						*advancedEncoding = *localAdvancedEncoding;
+
+					return decodedData;
 					}
-			};*/
+			};
 		}
 	}
 

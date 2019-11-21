@@ -23,8 +23,8 @@ TEST_CASE( "encode", "[types]" )
 		dex::vector < dex::byte > encoded = tEncoder ( i );
 		REQUIRE( encoded.size( ) == 4 );
 		REQUIRE( encoded[ 3 ] == 4 );
-		REQUIRE( encoded[ 2 ] == 0 );
 		REQUIRE( encoded[ 1 ] == 0 );
+		REQUIRE( encoded[ 2 ] == 0 );
 		REQUIRE( encoded[ 0 ] == 0 );
 
 		i = 0xFF;
@@ -41,15 +41,33 @@ TEST_CASE( "encode", "[types]" )
 
 		decoder < int > IntegerDecoder;
 		i = 5;
+		encoded = tEncoder( i );
 		REQUIRE( i == IntegerDecoder( tEncoder( i ).data( ) ) );
+		i = 0xFF;
+		for ( int j = 0;  j < 4; ++j )
+			{
+			REQUIRE( i == IntegerDecoder( tEncoder( i ).data( ) ) );
+			i = i << 8;
+			}
 		}
 
+	/*SECTION( "iterators" )
+		{
+		encoder < int > IntegerEncoder;
+		decoder < int > IntegerDecoder;
+		int i = 0xFF;
+		auto result = IntegerEncoder( i );
+		std::cout << *result;
+		//REQUIRE ( result == i ); 
+		}*/
 	// string encoding = ( int size ) + ( string )
 	SECTION( "basicString" )
 		{
 		string magikarp = "magikarp";
-		encoder < string > tEncoder;
-		vector< byte > encoded = tEncoder( magikarp );
+		encoder < string > StringEncoder;
+		decoder < string > StringDecoder;
+		vector< byte > encoded = StringEncoder( magikarp );
+		vector< byte > size;
 
 		REQUIRE( encoded.size( ) == sizeof( int ) + magikarp.size( ) );
 		for ( size_t i = sizeof( int );  i < encoded.size( );  ++i )
@@ -58,9 +76,13 @@ TEST_CASE( "encode", "[types]" )
 			}
 
 		magikarp = "";
-		encoded = tEncoder( magikarp );
+		encoded = StringEncoder( magikarp );
 		REQUIRE( encoded.size( ) == sizeof( int ) + magikarp.size( ) );
 		REQUIRE( encoded[ 0 ] == 0 );
+		magikarp = "hello";
+		REQUIRE( magikarp == StringDecoder ( ( StringEncoder ( magikarp ) ).data( ) ) );
+		magikarp = "hello";
+		REQUIRE( magikarp == StringDecoder ( ( StringEncoder ( magikarp ) ).data( ) ) );
 		}
 
 	SECTION( "empty types" )
