@@ -6,6 +6,7 @@
 #include "../utils/basicString.hpp"
 #include "../utils/vector.hpp"
 #include "frontier.hpp"
+#include "checkpointing.hpp"
 
 struct workerStruct
 	{
@@ -30,43 +31,12 @@ pthread_mutex_t brokenLinksLock = PTHREAD_MUTEX_INITIALIZER;
 dex::vector < dex::Url > linksToShip;
 pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
 
-void log( dex::string toWrite )
+int log( dex::string toWrite )
 	{
 	pthread_mutex_lock( &loggingLock );
-	dex::appendToFile( loggingFileName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
+	int error = dex::appendToFile( loggingFileName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
 	pthread_mutex_unlock( &loggingLock );
-	}
-
-
-// Folder structure
-// Hash the URL
-// 2 layers of folders
-// bytes 1 determines the first folder
-// bytes 2 determines the second folder
-// bytes 3-4 determine the name of the files
-// This gives us 4,294,967,296 possible locations for html
-int saveHtml( dex::Url url )
-	{
-	dex::hash < dex::string > hasher;
-	unsigned long h = hasher( url.completeUrl( ) );
-	unsigned long first = h & 0x000000FF;
-	unsigned long second = ( h & 0x0000FF00 ) >> 8;
-	unsigned long name = ( h & 0xFFFF0000 ) >> 16 ;
-	std::cout << "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html" << std::endl;
-	int err = dex::makeDirectory( "html" );
-	if ( err == -1 )
-		return err;
-	dex::string dirName = "html/" + dex::toString( first );
-	err = dex::makeDirectory( dirName.cStr( ) );
-	if ( err == -1 )
-		return err;
-	dirName = "html/" + dex::toString( first ) + "/" + dex::toString( second );
-	err = dex::makeDirectory( dirName.cStr( ) );
-	if ( err == -1 )
-		return err;
-	dex::string filename = "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html";
-	err = dex::writeToFile( filename.cStr( ), url.completeUrl( ).cStr( ), url.completeUrl( ).size( ) );
-	return err;
+	return error;
 	}
 
 dex::vector < dex::Url > fakeParseForLinks( dex::string html )
@@ -88,7 +58,7 @@ dex::Url fakeRedirectLink( dex::Url in)
 // domain or not. If it's in our domain, put it back into our frontier.
 // if it's not in our domain, we need to send it to the other crawler
 // workers.
-bool fakeUrlInDomain( const dex::Url &url )
+bool isUrlInDomain( const dex::Url &url )
 	{
 	return true;
 	}
@@ -98,12 +68,6 @@ int fakeCrawl( dex::Url url, dex::string &result, dex::unorderedMap < dex::strin
 	return 0;
 	}
 
-
-// This function is not trivial. For example, suppose we know a -> c and
-// b -> c. Let's say we find that c -> d. We need to update a -> d and
-// b -> d. The values in our redirect map should either be known endpoints
-// or unknown URLs. Also if we find a broken URL we should check to see if it's
-// a value in our map and remove the entry.
 void fakeAddToRedirectMap( const dex::Url &key, const dex::Url &val )
 	{
 	log( "Added " + key.completeUrl( ) + "->" + val.completeUrl( ) + " to our redirect map\n" );
@@ -136,7 +100,7 @@ void *worker( void *args )
 			
 			for ( auto it = links.cbegin( );  it != links.cend( );  ++it )
 				{
-				if ( fakeUrlInDomain( *it ) )
+				if ( isUrlInDomain( *it ) )
 					{
 					pthread_mutex_lock( &frontierLock );
 					urlFrontier.putUrl( fakeRedirectLink( *it ) );
@@ -161,7 +125,7 @@ void *worker( void *args )
 			}
 		if ( errorCode >= 300 && errorCode < 400 )
 			{
-			if ( fakeUrlInDomain( dex::Url( result.cStr( ) ) ) )
+			if ( isUrlInDomain( dex::Url( result.cStr( ) ) ) )
 				{
 				pthread_mutex_lock( &frontierLock );
 				urlFrontier.putUrl( fakeRedirectLink( dex::Url( result.cStr( ) ) ) );
@@ -191,16 +155,18 @@ void *worker( void *args )
 
 int main( )
 	{
+	// setup logging file for this run
 	loggingFileName = "logs/";
 	time_t now = time( nullptr );
 	loggingFileName += ctime( &now );
 	loggingFileName.popBack( );
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
+
 	urlFrontier.putUrl( "https://www.bonescape.bomb" );
 	workerStruct a = { "test" };
 	pthread_create( &workers[ 0 ], nullptr, worker, static_cast < void * > ( &a ) );
 	pthread_join( workers[ 0 ], nullptr );
-	saveHtml( "https://www.bonescape.bomb" );
+	dex::saveHtml( "https://www.bonescape.bomb" );
 	return 0;
 	}
