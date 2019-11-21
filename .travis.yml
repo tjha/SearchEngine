@@ -2,7 +2,7 @@ language: cpp
 compiler: gcc
 
 script:
- - make tests
+ - make all
  - make clean
 
 after_success:

@@ -33,11 +33,11 @@ namespace dex
    class HTMLparser
    {
    private:
-      string htmlFile;
-      vector< string > links;
-      vector< string > words;
-      vector< string > relativeLinks;
-      vector< anchorPos > anchorText;
+      dex::string htmlFile;
+      dex::vector< string > links;
+      dex::vector< string > words;
+      dex::vector< string > relativeLinks;
+      dex::vector< anchorPos > anchorText;
 
       void GetLinks( );
 
@@ -157,7 +157,6 @@ namespace dex
       }
 
 
-   // Maybe we can use continue's to avoid the nested loops? Needs to be tested 
    void HTMLparser::GetLinks( )
       {
       std::size_t posOpenTag = htmlFile.find( "<", 0 ), posCloseTag = 0;
@@ -249,88 +248,5 @@ namespace dex
          }
       }   
 
-   // DO NOT REVIEW ; NOT BEING USED ANYMORE 
-   // - - - breaks anchor string into individual words and returns them to add to words.
-   /*         
-      vector < string > HTMLparser::BreakAnchorsOG ( const string anchor )
-      {
-       string word;
-      vector < string > output;
-      size_t pos_whitespace = anchor.find(" ");
-      size_t pos_start = 0;
-      if ( pos_whitespace != string::npos ){
-         size_t nfind = anchor.find("\n", pos_start);
-         size_t tfind = anchor.find("\t", pos_start);
-         if ( nfind != string::npos && nfind < pos_whitespace)
-               {
-               pos_whitespace = nfind;
-               }   
-         if ( tfind != string::npos && tfind < pos_whitespace)
-               {
-               pos_whitespace = tfind;
-               }
-      }
-      size_t nfind = 0, tfind = 0, sfind = 0;
-      while( pos_whitespace != string::npos )
-         {
-         word = anchor.substr(pos_start, pos_whitespace - pos_start + 1);   
-        
-         if (word != " " && word != "\n" && word != "\t" && word!= ""){
-               nfind = word.find("\n");
-               tfind = word.find("\t");
-               sfind = word.find(" ");
-               if ( word.find("\n") != string::npos )
-               {
-                  // nfind = word.find("\n");
-                  word = word.replace( nfind , 1, "" );
-               }
-               if ( tfind != string::npos )
-               {
-                  // tfind = word.find("\t");
-                  word = word.replace( tfind, 1, "");
-               }
-               if ( sfind != string::npos )
-               {
-                  // sfind = word.find(" ");
-                  word = word.replace( sfind, 1, "");
-               }
-               output.pushBack( word );
-         }
-         pos_start = pos_whitespace + 1;
-         pos_whitespace = anchor.find( " ", pos_start );
-         if ( pos_whitespace == string::npos )
-            {
-            pos_whitespace = anchor.find( "\n", pos_start );
-            }
-         else
-    cstddef{
-            size_t nfind = anchor.find("\n", pos_start);
-            size_t tfind = anchor.find("\t", pos_start);
-            if ( nfind != string::npos && nfind < pos_whitespace)
-               {
-               pos_whitespace = nfind;
-               }   
-            if ( tfind != string::npos && tfind < pos_whitespace)
-               {
-               pos_whitespace = tfind;
-               }
-            }
-         }
-        if ( pos_start == 0 )
-         {
-         output.pushBack( anchor );
-         }
-         else 
-         {
-         if ( pos_start != (anchor.length() -1) )
-            {
-            word = anchor.substr(pos_start, anchor.length()- pos_start + 1);
-            output.pushBack( word );
-            }
-         }     
-        return output;
-       }   
-       //nxt
-   */
 };
 

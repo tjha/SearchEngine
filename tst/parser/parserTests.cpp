@@ -13,7 +13,7 @@
 #include "exception.hpp"
 #include "parser.hpp"
 #include "file.hpp"
-#include <iostream>
+//#include <iostream>
 
 using dex::readFromFile;
 using dex::outOfRangeException;
@@ -22,9 +22,9 @@ using dex::HTMLparser;
 using dex::anchorPos;
 using dex::vector;
 
-using std::cerr;
-using std::cout;
-using std::endl;
+//using std::cerr;
+//using std::cout;
+//using std::endl;
 
 
 TEST_CASE( "get links", "[parser]" )
@@ -70,127 +70,94 @@ TEST_CASE( "get links", "[parser]" )
       REQUIRE( links[2] == expectedLink3 );
 
       }
-
-   SECTION ( "peter chen html page with commented out html" )
-      {
-      string filename = "tst/parser/peter_chen.html";
-      string htmlDoc;
-      // try
-      //    {
-         htmlDoc = readFromFile( filename.cStr() );
-       
-         HTMLparser testParser( htmlDoc );
-         // testParser.GetLinks();
-         vector< string > links = testParser.ReturnLinks( );
-         // vector < string > links = GetLinks ( htmlDoc );
-
-         REQUIRE ( links.size() == 13 );
-
-         vector < string > expectedLinks;
-         expectedLinks.pushBack(
-            "http://www.provost.umich.edu/programs/thurnau/index.html" );
-         expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
-         expectedLinks.pushBack( "http://www.umich.edu/" );
-         expectedLinks.pushBack( 
-            "https://web.eecs.umich.edu/~pmchen/contact.html" );
-         expectedLinks.pushBack( "http://web.eecs.umich.edu/virtual/" );
-         expectedLinks.pushBack( "http://www.eecs.umich.edu/~pmchen/Rio" );
-         expectedLinks.pushBack( "http://www.eecs.umich.edu/ssl" );
-         expectedLinks.pushBack( "http://www.eecs.umich.edu/cse" );
-         expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
-         expectedLinks.pushBack( "https://web.eecs.umich.edu/~pmchen/papers/" );
-         expectedLinks.pushBack( 
-            "https://web.eecs.umich.edu/~pmchen/eecs482/" );
-         expectedLinks.pushBack( 
-            "https://web.eecs.umich.edu/~pmchen/students.html" );
-         expectedLinks.pushBack( 
-            "https://web.eecs.umich.edu/~pmchen/software" );
-
-         for (size_t i = 0; i < expectedLinks.size(); i++ )
-            {
-            REQUIRE ( links[i] == expectedLinks[i] );
-            }
-         vector <anchorPos> anchors = testParser.ReturnAnchorText();
-         vector <string> words = testParser.ReturnWords();
-         vector <string> AnchorWords;
-         AnchorWords.pushBack("Computer");
-         AnchorWords.pushBack("Science");
-         AnchorWords.pushBack("and");
-         AnchorWords.pushBack("Engineering");
-         AnchorWords.pushBack("Division");
-         // Using 7 cuz i know the indices - couldn't think of a better way of doing this.
-         
-         for (size_t i = 0; i < anchors[7].endPos - anchors[7].startPos + 1;i++)
-            {
-            REQUIRE(AnchorWords[i] == words[anchors[7].startPos + i]);
-            }
-           
-      //    } 
-      // catch ( outOfRangeException &e )
-      //    {
-      //    cerr << "Cannot read file: " << filename << endl;
-      //    // REQUIRE( 1 == 0 ); // force test failure
-      //    }
-      }
    }
 
-TEST_CASE( "get anchor text", "[parser]" )
+TEST_CASE( "peter_chen.html page: simple format with comment tags" )
    {
 
-	SECTION( "parsed simple html document with one link" )
+   // Read and save HTML file uisng HTMLparser
+   string filename = "tst/parser/peter_chen.html";
+   string htmlDoc;
+   htmlDoc = readFromFile( filename.cStr( ) );
+ 
+   HTMLparser testParser( htmlDoc );
+
+   SECTION( "Expected Links" )
       {
-      string htmlDoc = 
-         "<html>\
-            <title>Title</title>\
-            <body>\
-            <a href=\"https://web.eecs.umich.edu/~pmchen/software\">Software</a>\
-            </body>\
-         </html>";
-      HTMLparser testParser( htmlDoc );
-      // testParser.GetLinks();
-      vector< string > words = testParser.ReturnWords( );
-      vector< anchorPos > anchorText = testParser.ReturnAnchorText();
-      string expectedAnchorText = "Software";
-      REQUIRE( anchorText.size() == 1 );
-      REQUIRE( words[ anchorText[ 0 ].startPos ] == expectedAnchorText );
+      vector< string > links = testParser.ReturnLinks( );
+
+      // Validate correct number of links were extracted
+      REQUIRE ( links.size() == 13 );
+
+      // Create vector with expected links on page
+      vector < string > expectedLinks;
+
+      expectedLinks.pushBack(
+         "http://www.provost.umich.edu/programs/thurnau/index.html" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
+      expectedLinks.pushBack( "http://www.umich.edu/" );
+      expectedLinks.pushBack( 
+         "https://web.eecs.umich.edu/~pmchen/contact.html" );
+      expectedLinks.pushBack( "http://web.eecs.umich.edu/virtual/" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu/~pmchen/Rio" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu/ssl" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu/cse" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
+      expectedLinks.pushBack( "https://web.eecs.umich.edu/~pmchen/papers/" );
+      expectedLinks.pushBack( 
+         "https://web.eecs.umich.edu/~pmchen/eecs482/" );
+      expectedLinks.pushBack( 
+         "https://web.eecs.umich.edu/~pmchen/students.html" );
+      expectedLinks.pushBack( 
+         "https://web.eecs.umich.edu/~pmchen/software" );
+
+      // Verify parsed links match expected page links
+      for (size_t i = 0; i < expectedLinks.size(); i++ )
+         {
+         REQUIRE ( links[ i ] == expectedLinks[ i ] );
+         }
       }
 
-    /*
-   SECTION ( "peter chen html page with commented out html" )
+   SECTION( "Expected Anchor Text" )
       {
-      string filename = "tst/parser/peter_chen.html";
-      string htmlDoc;
-      try
-         {
-         htmlDoc = readFromFile( filename.cStr() );
-         HTMLparser testParser( htmlDoc );
-         testParser.GetLinks();
-         vector< string > links = testParser.ReturnLinks( );
-         vector< paired > anchorText = testParser.ReturnAnchorText();
+      vector < anchorPos > anchors = testParser.ReturnAnchorText();
+      vector < string > words = testParser.ReturnWords();
+
+      vector < string > AnchorWords;
+
+      AnchorWords.pushBack( "Computer" );
+      AnchorWords.pushBack("Science");
+      AnchorWords.pushBack("and");
+      AnchorWords.pushBack("Engineering");
+      AnchorWords.pushBack("Division");
       
-         REQUIRE ( links.size() == 13 );
-         REQUIRE ( anchorText.size() == 13 );
-
-         
-         vector < paired > expectedLinks;
-         expectedLinks.pushBack({0, });
-         //cout << expectedLinks[0].second << endl;
-         // Check anchor text for every link
-         for (size_t i = 0; i < links.size(); i++)
-            {
-            for (size_t i = 0; i < expectedLinks.size(); i++ )
-               {
-               REQUIRE ( links[i] == expectedLinks[i] );
-               }
-
-            }
-         vector <string> words = testParser.ReturnWords();
-         
-         } 
-      catch ( outOfRangeException &e )
+      for ( size_t i = 0; i < anchors[ 7 ].endPos - anchors[ 7 ].startPos; i++ )
          {
-         cerr << "Cannot read file: " << filename << endl;
-         REQUIRE( false ); // force test failure
+         REQUIRE( AnchorWords[ i] == words[anchors[7].startPos + i]);
          }
-      }*/
+      }
+
+   SECTION( "Expected Words" )
+      {
+      }
+
    }
+
+TEST_CASE( "amazon.com html page with comment, script, div, img, and link tags" )
+   {
+      SECTION( "Expected Links" )
+      {
+      string filename = "tst/parser/amazon.html";
+      string htmlDoc;
+      htmlDoc = readFromFile( filename.cStr( ) );
+      }
+      
+      SECTION ( "Expected Anchor Text" )
+         {
+         }
+      
+      SECTION( "Expected Words" )
+         {
+         }
+   }
+
