@@ -23,7 +23,7 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 dex::frontier urlFrontier;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
-#define numWorkers 2
+#define numWorkers 5
 pthread_t workers [ numWorkers ];
 
 dex::unorderedMap < dex::string, dex::RobotTxt > robotsCache{ 1000 };
@@ -45,6 +45,15 @@ pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
 dex::redirectCache redirects;
 pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
+pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
+
+void print( dex::string toPrint )
+	{
+	pthread_mutex_lock( &printLock );
+	std::cout << toPrint << std::endl;
+	pthread_mutex_unlock( &printLock );
+	}
+
 int log( dex::string toWrite )
 	{
 	pthread_mutex_lock( &loggingLock );
@@ -64,10 +73,10 @@ bool isUrlInDomain( const dex::Url &url )
 
 void *worker( void *args )
 	{
-	int a = *((int *) args);
+	int a = * ( ( int * ) args );
 	dex::string name = dex::toString( a );
-	std::cout << "Start thread " << name << std::endl;
-	for ( int i = 0;  i < 10;  ++i )
+	print( "Start thread " + name );
+	for ( int i = 0;  true ;  ++i )
 		{
 		pthread_mutex_lock( &frontierLock );
 		while ( urlFrontier.empty( ) )
@@ -87,9 +96,9 @@ void *worker( void *args )
 		// I know that it's not safe to use robotsCache here
 		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
 		// lock the cache for the entire time we're crawling the URL
-		std::cout << toCrawl.completeUrl( ) << std::endl;
+		print( toCrawl.completeUrl( ) );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
-		std::cout << errorCode << std::endl;
+		print( dex::toString( errorCode ) );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 )
