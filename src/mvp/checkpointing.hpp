@@ -40,8 +40,7 @@ namespace dex
 		if ( err == -1 )
 			return err;
 		dex::string filename = "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html";
-		dex::string toWrite = url.completeUrl( ) + "\n" + html;
-		err = dex::writeToFile( filename.cStr( ), toWrite.cStr( ), toWrite.size( ) );
+		err = dex::writeToFile( filename.cStr( ), html.cStr( ), html.size( ) );
 		return err;
 		}
 

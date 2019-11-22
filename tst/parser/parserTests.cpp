@@ -2,6 +2,7 @@
 // Basic testing of Parser functionality
 //
 // 2018-11-21: Created basic link and anchor text tests for amazon.html: tjha
+//             Updated to use URLs instead of strings: combsc
 // 2018-11-21: Created extensive checking of all anchor text words for
 //             peter_chen.html: tjha
 // 2019-11-20: Modified basic test to ensure content is first parsed for url
@@ -52,10 +53,10 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
          </html>";
       HTMLparser testParser( htmlDoc );
       // testParser.GetLinks();
-      vector< string > links = testParser.ReturnLinks( );
+      vector< dex::Url > links = testParser.ReturnLinks( );
       string expectedLink = "https://web.eecs.umich.edu/~pmchen/software";
       REQUIRE( links.size() == 1 );
-      REQUIRE( links[0] == expectedLink );
+      REQUIRE( links[0].completeUrl( ) == expectedLink );
       }
 
 	SECTION( "parsed simple html document with three links" )
@@ -72,14 +73,14 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
          </html>";
       HTMLparser testParser( htmlDoc );
       // testParser.GetLinks();
-      vector< string > links = testParser.ReturnLinks( );
+      vector< dex::Url > links = testParser.ReturnLinks( );
       string expectedLink1 = "https://web.eecs.umich.edu/~pmchen/software1";
       string expectedLink2 = "https://web.eecs.umich.edu/~pmchen/software2";
       string expectedLink3 = "https://web.eecs.umich.edu/~pmchen/software3";
       REQUIRE( links.size() == 3 );
-      REQUIRE( links[0] == expectedLink1 );
-      REQUIRE( links[1] == expectedLink2 );
-      REQUIRE( links[2] == expectedLink3 );
+      REQUIRE( links[0].completeUrl( ) == expectedLink1 );
+      REQUIRE( links[1].completeUrl( ) == expectedLink2 );
+      REQUIRE( links[2].completeUrl( ) == expectedLink3 );
 
       }
    }
@@ -96,7 +97,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
    SECTION( "Expected Links" )
       {
-      vector< string > links = testParser.ReturnLinks( );
+      vector< dex::Url > links = testParser.ReturnLinks( );
 
       // Validate correct number of links were extracted
       REQUIRE ( links.size() == 13 );
@@ -106,15 +107,15 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
       expectedLinks.pushBack(
          "http://www.provost.umich.edu/programs/thurnau/index.html" );
-      expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
-      expectedLinks.pushBack( "http://www.umich.edu/" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu" );
+      expectedLinks.pushBack( "http://www.umich.edu" );
       expectedLinks.pushBack( 
          "https://web.eecs.umich.edu/~pmchen/contact.html" );
       expectedLinks.pushBack( "http://web.eecs.umich.edu/virtual/" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/~pmchen/Rio" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/ssl" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/cse" );
-      expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu" );
       expectedLinks.pushBack( "https://web.eecs.umich.edu/~pmchen/papers/" );
       expectedLinks.pushBack( 
          "https://web.eecs.umich.edu/~pmchen/eecs482/" );
@@ -126,7 +127,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
       // Verify parsed links match expected page links
       for (size_t i = 0; i < expectedLinks.size(); i++ )
          {
-         REQUIRE ( links[ i ] == expectedLinks[ i ] );
+         REQUIRE ( links[ i ].completeUrl( ) == expectedLinks[ i ] );
          }
       }
 
@@ -212,7 +213,7 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
 
       SECTION( "Expected Links" )
          {
-         vector< string > links = testParser.ReturnLinks( );
+         vector< dex::Url > links = testParser.ReturnLinks( );
 
          // Validate correct number of links were extracted
          REQUIRE ( links.size() == 2 );
@@ -228,7 +229,7 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
          // Verify parsed links match expected page links
          for ( size_t i = 0; i < expectedLinks.size(); i++ )
             {
-            REQUIRE ( links[ i ] == expectedLinks[ i ] );
+            REQUIRE ( links[ i ].completeUrl( ) == expectedLinks[ i ] );
             }
          }
       

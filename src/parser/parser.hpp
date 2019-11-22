@@ -3,6 +3,7 @@
 //
 // 2019-11-21:  Modified BreakAnchors and RemovePunctuation to separate
 //              words between punctuations except dashes: tjha
+//              Updated to use URLs instead of strings
 // 2019-11-20:  Modified constructor to take in format <url>\n<htnl_content>
 //              Modified GetLinks function to correctly handle relative links:
 //              tjha
@@ -17,11 +18,12 @@
 // 2019-11-04:  Fixed document style to match style guide: tjha
 // 2019-10-26:  Created get_links function to get urls from basic html:
 //              medhak, tjha
-#include "algorithm.hpp"
-#include "basicString.hpp"
-#include "exception.hpp"
-#include "utility.hpp"
-#include "vector.hpp"
+#include "../utils/algorithm.hpp"
+#include "../utils/basicString.hpp"
+#include "../utils/exception.hpp"
+#include "../utils/utility.hpp"
+#include "../utils/vector.hpp"
+#include "../spinarak/url.hpp"
 
 #include <cstddef>
 
@@ -43,9 +45,9 @@ namespace dex
    private:
       dex::string htmlFile;
       dex::string pageLink;
-      dex::vector< string > links;
+      dex::vector< dex::Url > links;
       dex::vector< string > words;
-      //dex::vector< string > relativeLinks;
+      //dex::vector< dex::Url > relativeLinks;
       dex::vector< anchorPos > anchorText;
 
       void GetLinks( );
@@ -84,7 +86,7 @@ namespace dex
       // static vector < string > BreakAnchorsOG ( const string anchor );
       void BreakAnchors ( string& anchor );
       // void GetAnchorText( );
-      vector < string > ReturnLinks ( );
+      vector < dex::Url > ReturnLinks ( );
       // vector < dex::pair <size_t, size_t > > ReturnAnchorText ( );
       vector < anchorPos > ReturnAnchorText ( );
       vector < string > ReturnWords ( );
@@ -105,7 +107,7 @@ namespace dex
       GetLinks();
       }
 
-   vector < string > HTMLparser::ReturnLinks ( )
+   vector < dex::Url > HTMLparser::ReturnLinks ( )
       {
       return links;
       }
@@ -261,13 +263,14 @@ namespace dex
             else {
             */
             // PushBack absolute url
-            if ( url.find("https://", 0) == 0 ||
-                 url.findFirstOf("http://", 0) == 0 ) {
+            if ( url.find("https://", 0) != string::npos ||
+                 url.findFirstOf("http://", 0) != string::npos ) {
                // url is already an absolute url
-               links.pushBack( url );     
+               links.pushBack( dex::Url( url.cStr( ) ) );     
             } else {
                // url is a relative url
-               links.pushBack( pageLink + url );
+               dex::string newLink = pageLink + "/" + url;
+               links.pushBack( dex::Url( newLink.cStr( ) ) );
                // TODO: Verify that appending url to pathLink works in 
                //       possible edge cases
             }

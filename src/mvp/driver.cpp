@@ -9,6 +9,7 @@
 #include "frontier.hpp"
 #include "checkpointing.hpp"
 #include "redirectCache.hpp"
+#include "../parser/parser.hpp"
 
 struct workerStruct
 	{
@@ -27,7 +28,7 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 dex::frontier urlFrontier;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV;
-#define numWorkers 5
+#define numWorkers 1
 pthread_t workers [ numWorkers ];
 
 dex::unorderedMap < dex::string, dex::RobotTxt > robotsCache{ 1000 };
@@ -84,7 +85,7 @@ void *worker( void *args )
 	{
 	workerStruct a = *static_cast <workerStruct*>(args);
 	dex::string name = dex::toString( a.id );
-	for ( int i = 0;  i < 3;  ++i )
+	for ( int i = 0;  i < 5;  ++i )
 		{
 		pthread_mutex_lock( &frontierLock );
 		while ( urlFrontier.empty( ) )
@@ -98,16 +99,18 @@ void *worker( void *args )
 		// I know that it's not safe to use robotsCache here
 		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
 		// lock the cache for the entire time we're crawling the URL.
-		int errorCode = fakeCrawl( toCrawl, result, robotsCache );
+		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
+		// int errorCode = fakeCrawl( toCrawl, result, robotsCache );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 )
 			{
-			dex::string html = result;
+			dex::string html = toCrawl.completeUrl( ) + "\n" + result;
 			dex::saveHtml( toCrawl, html );
+			dex::HTMLparser parser( html );
 			
-			dex::vector < dex::Url > links = fakeParseForLinks( html );
+			dex::vector < dex::Url > links = parser.ReturnLinks( );
 			for ( auto it = links.cbegin( );  it != links.cend( );  ++it )
 				{
 				// Fix link using our redirects cache
@@ -196,11 +199,7 @@ int main( )
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
 
-	for ( int i = 0;  i < numWorkers;  ++i )
-		{
-		urlFrontier.putUrl( ( "https://www.bonescape.bomb/" + dex::toString( i ) ).cStr( ) );
-		}
-	
+	urlFrontier.putUrl( "http://man7.org/" );
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
 		workerStruct a = { i };
