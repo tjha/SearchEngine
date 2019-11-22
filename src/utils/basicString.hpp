@@ -12,6 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-11-13: Add stripWhitespace function: combsc
 // 2019-11-04: Use typeTraits.hpp: jasina
 // 2019-10-31: Make +operator a friend function: combsc
 // 2019-10-30: Add +operator, improve insert and append for single characters: combsc
@@ -972,6 +973,17 @@ namespace dex
 			int compare( size_t position, size_t length, const charT *other, size_t n ) const
 				{
 				return dex::lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length, other, other + n );
+				}
+
+			basicString < charT > stripWhitespace( ) const
+				{
+				const charT * whitespace = " \v\f\t\r\n";
+				basicString < charT > stripped = basicString( *this );
+				size_t frontStripped = stripped.findFirstNotOf( whitespace );
+				size_t backStripped = stripped.findLastNotOf( whitespace);
+				if ( frontStripped == npos || backStripped == npos )
+					return "";
+				return stripped.substr( frontStripped, backStripped - frontStripped + 1);
 				}
 
 			friend basicString < charT > operator+( const basicString < charT > &lhs, const charT *rhs )
