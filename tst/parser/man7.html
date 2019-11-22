@@ -1,414 +1,139 @@
-
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+man7.org
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<link rel="stylesheet" type="text/css" href="../../../style.css" title="style" />
-<link rel="stylesheet" type="text/css" href="../style.css" title="style" />
-<meta http-equiv="content-type" content="text/html;charset=utf-8" />
 
-<title>fopen.3p - Linux manual page</title>
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css" title="style" />
+    <link rel="icon" type="image/png" href="koru-icon.png" />
+    <title>Michael Kerrisk - man7.org</title>
+<style type="text/css">
+<!--
+a:link, a:visited    	{ 
+                          color: #008000 
+                        }
+a:hover, a:active	{ 
+//   			  text-decoration: underline;
+                          color: #903090;
+                          background-color: #ffe0ff; 
+                        }
+h1        		{ 
+                          font-weight: normal; 
+                          font-size: 28px;
+                          margin-top: 5px;
+                          margin-bottom: 3px;
+                        }
+-->
+</style>
 </head>
+
+
 
 <body>
 
-<div class="page-top"><a id="top_of_page"></a></div>
-<!--%%%TOP_BAR%%%-->
-<div class="nav-bar">
-<table class="nav-table">
-	 <tr>
-		  <td class="nav-cell">
-				<p class="nav-text">
-					 <a href="../../../index.html">man7.org</a> &gt; Linux &gt; <a href="../index.html">man-pages</a>
-				</p>
-		  </td>
-		  <td class="training-cell">
-				<p class="training-text"><a class="training-link" href="http://man7.org/training/">Linux/UNIX system programming training</a></p>
-		  </td>
-	 </tr>
+<p> </p>
+
+<table style="width: 100%;">
+
+    <tr>
+        <td style="vertical-align: top; width: 35%">
+            <table style="width: 100%; margin-right: 0px;"
+                     border="0" cellspacing="0" cellpadding="10">
+                <tr>
+                    <td style="text-align: right; vertical-align: top;">
+                        <h1 style="color:#404040">Michael Kerrisk<br />man7.org</h1>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right; vertical-align: top;">
+<img src="photos/mtk_ks_250.jpg" height="180" align="right" style="padding:20px;" alt="Michael Kerrisk" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right; vertical-align: top;">
+<a href="tlpi/index.html"><img src="tlpi/cover/TLPI-front-cover-small-256.png" border="0" height="195" align="right" style="padding:20px;" alt="TLPI front cover (small)" /></a>
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td style="width: 1px;
+            background-color: #808080;">
+        </td>
+        <td>
+            <table style="text-align: left; " border="0"
+                cellspacing="0" cellpadding="10">
+                <tr>
+                     <td>
+                         <h1><a href="training/index.html">Training courses</a></h1>
+                     </td>
+                </tr>
+                <tr>
+                     <td>
+                         <h1><a href="tlpi/index.html"><em>The Linux Programming Interface</em></a></h1>
+                     </td>
+                </tr>
+                <tr>
+                     <td>
+                         <h1><a href="http://blog.man7.org/">Blog</a></h1>
+                     </td>
+                </tr>
+                <tr>
+                     <td>
+                         <h1><a href="articles/index.html">Articles</a></h1>
+                     </td>
+                </tr>
+                <tr>
+                     <td>
+                         <h1><a href="conf/index.html">Conference presentations</a></h1>
+                     </td>
+                </tr>
+                <tr>
+                     <td>
+                         <h1><a href="http://www.kernel.org/doc/man-pages/">The <em>man-pages</em> project</a></h1>
+                     </td>
+                </tr>
+                <tr>
+                     <td>
+                         <h1><a href="linux/man-pages/index.html">Online manual pages</a></h1>
+                     </td>
+                </tr>
+                <tr>
+                     <td>
+                         <h1><a href="mtk/index.html">About</a></h1>
+                     </td>
+                </tr>
+                <tr>
+                     <td>
+                         <h1><a href="mtk/contact.html">Contact and Impressum</a></h1>
+                     </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
 </table>
-</div>
-
-<hr class="nav-end" />
-
-<!--%%%PAGE_START%%%-->
-
-
-<table class="sec-table">
-<tr>
-<td>
-<p class="section-dir">
-<a href="#PROLOG">PROLOG</a> | <a href="#NAME">NAME</a> | <a href="#SYNOPSIS">SYNOPSIS</a> | <a href="#DESCRIPTION">DESCRIPTION</a> | <a href="#RETURN_VALUE">RETURN&nbsp;VALUE</a> | <a href="#ERRORS">ERRORS</a> | <a href="#EXAMPLES">EXAMPLES</a> | <a href="#APPLICATION_USAGE">APPLICATION&nbsp;USAGE</a> | <a href="#RATIONALE">RATIONALE</a> | <a href="#FUTURE_DIRECTIONS">FUTURE&nbsp;DIRECTIONS</a> | <a href="#SEE_ALSO">SEE&nbsp;ALSO</a> | <a href="#COPYRIGHT">COPYRIGHT</a>
-</p>
-</td>
-<td class="search-box">
-<div class="man-search-box">
-
-	 <form method="get" action="http://www.google.com/search">
-		  <fieldset class="man-search">
-				<input type="text" name="q" size="10" maxlength="255" value="" />
-				<input type="hidden" name="sitesearch" value="man7.org/linux/man-pages" />
-				<input type="submit" name="sa" value="Search online pages" />
-		  </fieldset>
-	 </form>
-
-</div>
-</td>
-<td> </td>
-</tr>
-</table>
-
-<pre>
-<span class="headline">FOPEN(3P)                 POSIX Programmer's Manual                FOPEN(3P)</span>
-</pre>
-<h2><a id="PROLOG" href="#PROLOG"></a>PROLOG  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-This manual page is part of the POSIX Programmer's Manual.  The Linux
-implementation of this interface may differ (consult the
-corresponding Linux manual page for details of Linux behavior), or
-the interface may not be implemented on Linux.
-</pre>
-<h2><a id="NAME" href="#NAME"></a>NAME  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-fopen — open a stream
-</pre>
-<h2><a id="SYNOPSIS" href="#SYNOPSIS"></a>SYNOPSIS  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-#include &lt;stdio.h&gt;
-
-FILE *fopen(const char *restrict <i>pathname</i>, const char *restrict <i>mode</i>);
-</pre>
-<h2><a id="DESCRIPTION" href="#DESCRIPTION"></a>DESCRIPTION  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-The functionality described on this reference page is aligned with
-the ISO C standard. Any conflict between the requirements described
-here and the ISO C standard is unintentional. This volume of
-POSIX.1‐2008 defers to the ISO C standard.
-
-The <i>fopen</i>() function shall open the file whose pathname is the string
-pointed to by <i>pathname</i>, and associates a stream with it.
-
-The <i>mode</i> argument points to a string. If the string is one of the
-following, the file shall be opened in the indicated mode. Otherwise,
-the behavior is undefined.
-
-<i>r</i> or <i>rb</i>       Open file for reading.
-
-<i>w</i> or <i>wb</i>       Truncate to zero length or create file for writing.
-
-<i>a</i> or <i>ab</i>       Append; open or create file for writing at end-of-file.
-
-<i>r+</i> or <i>rb+</i> or <i>r+b</i>
-				 Open file for update (reading and writing).
-
-<i>w+</i> or <i>wb+</i> or <i>w+b</i>
-				 Truncate to zero length or create file for update.
-
-<i>a+</i> or <i>ab+</i> or <i>a+b</i>
-				 Append; open or create file for update, writing at end-
-				 of-file.
-
-The character <b>'b' </b>shall have no effect, but is allowed for ISO C
-standard conformance.  Opening a file with read mode (<i>r</i> as the first
-character in the <i>mode</i> argument) shall fail if the file does not exist
-or cannot be read.
-
-Opening a file with append mode (<i>a</i> as the first character in the <i>mode</i>
-argument) shall cause all subsequent writes to the file to be forced
-to the then current end-of-file, regardless of intervening calls to
-<i>fseek</i>().
-
-When a file is opened with update mode (<b>'+' </b>as the second or third
-character in the <i>mode</i> argument), both input and output may be
-performed on the associated stream. However, the application shall
-ensure that output is not directly followed by input without an
-intervening call to <i>fflush</i>() or to a file positioning function
-(<i>fseek</i>(), <i>fsetpos</i>(), or <i>rewind</i>()), and input is not directly followed
-by output without an intervening call to a file positioning function,
-unless the input operation encounters end-of-file.
-
-When opened, a stream is fully buffered if and only if it can be
-determined not to refer to an interactive device. The error and end-
-of-file indicators for the stream shall be cleared.
-
-If <i>mode</i> is <i>w</i>, <i>wb</i>, <i>a</i>, <i>ab</i>, <i>w</i>+, <i>wb</i>+, <i>w</i>+<i>b</i>, <i>a</i>+, <i>ab</i>+, or <i>a</i>+<i>b</i>, and the file
-did not previously exist, upon successful completion, <i>fopen</i>() shall
-mark for update the last data access, last data modification, and
-last file status change timestamps of the file and the last file
-status change and last data modification timestamps of the parent
-directory.
-
-If <i>mode</i> is <i>w</i>, <i>wb</i>, <i>a</i>, <i>ab</i>, <i>w</i>+, <i>wb</i>+, <i>w</i>+<i>b</i>, <i>a</i>+, <i>ab</i>+, or <i>a</i>+<i>b</i>, and the file
-did not previously exist, the <i>fopen</i>() function shall create a file as
-if it called the <i>creat</i>() function with a value appropriate for the
-<i>path</i> argument interpreted from <i>pathname</i> and a value of S_IRUSR |
-S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH for the <i>mode</i>
-argument.
-
-If <i>mode</i> is <i>w</i>, <i>wb</i>, <i>w</i>+, <i>wb</i>+, or <i>w</i>+<i>b</i>, and the file did previously exist,
-upon successful completion, <i>fopen</i>() shall mark for update the last
-data modification and last file status change timestamps of the file.
-
-After a successful call to the <i>fopen</i>() function, the orientation of
-the stream shall be cleared, the encoding rule shall be cleared, and
-the associated <b>mbstate_t </b>object shall be set to describe an initial
-conversion state.
-
-The file descriptor associated with the opened stream shall be
-allocated and opened as if by a call to <i>open</i>() with the following
-flags:
-
-			 ┌─────────────────┬───────────────────────────┐
-			 │  <i>fopen</i><b>() Mode   </b>│       <i>open</i><b>() Flags        </b>│
-			 ├─────────────────┼───────────────────────────┤
-			 │<i>r</i> or <i>rb</i>          │ O_RDONLY                  │
-			 │<i>w</i> or <i>wb</i>          │ O_WRONLY|O_CREAT|O_TRUNC  │
-			 │<i>a</i> or <i>ab</i>          │ O_WRONLY|O_CREAT|O_APPEND │
-			 │<i>r+</i> or <i>rb+</i> or <i>r+b</i> │ O_RDWR                    │
-			 │<i>w+</i> or <i>wb+</i> or <i>w+b</i> │ O_RDWR|O_CREAT|O_TRUNC    │
-			 │<i>a+</i> or <i>ab+</i> or <i>a+b</i> │ O_RDWR|O_CREAT|O_APPEND   │
-			 └─────────────────┴───────────────────────────┘
-</pre>
-<h2><a id="RETURN_VALUE" href="#RETURN_VALUE"></a>RETURN VALUE  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-Upon successful completion, <i>fopen</i>() shall return a pointer to the
-object controlling the stream. Otherwise, a null pointer shall be
-returned, and <i><a href="../man3/errno.3.html">errno</a></i> shall be set to indicate the error.
-</pre>
-<h2><a id="ERRORS" href="#ERRORS"></a>ERRORS  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-The <i>fopen</i>() function shall fail if:
-
-<b>EACCES </b>Search permission is denied on a component of the path prefix,
-		or the file exists and the permissions specified by <i>mode</i> are
-		denied, or the file does not exist and write permission is
-		denied for the parent directory of the file to be created.
-
-<b>EINTR  </b>A signal was caught during <i>fopen</i>().
-
-<b>EISDIR </b>The named file is a directory and <i>mode</i> requires write access.
-
-<b>ELOOP  </b>A loop exists in symbolic links encountered during resolution
-		of the <i>path</i> argument.
-
-<b>EMFILE </b>All file descriptors available to the process are currently
-		open.
-
-<b>EMFILE </b>{STREAM_MAX} streams are currently open in the calling
-		process.
-
-<b>ENAMETOOLONG</b>
-		The length of a pathname exceeds {PATH_MAX}, or pathname
-		resolution of a symbolic link produced an intermediate result
-		with a length that exceeds {PATH_MAX}.
-
-<b>ENFILE </b>The maximum allowable number of files is currently open in the
-		system.
-
-<b>ENOENT </b>The <i>mode</i> string begins with <b>'r' </b>and a component of <i>pathname</i>
-		does not name an existing file, or <i>mode</i> begins with <b>'w' </b>or <b>'a'</b>
-		and a component of the path prefix of <i>pathname</i> does not name
-		an existing file, or <i>pathname</i> is an empty string.
-
-<b>ENOENT </b>or <b>ENOTDIR</b>
-		The <i>pathname</i> argument contains at least one non-&lt;slash&gt;
-		character and ends with one or more trailing &lt;slash&gt;
-		characters. If <i>pathname</i> names an existing file, an <b>[ENOENT]</b>
-		error shall not occur.
-
-<b>ENOSPC </b>The directory or file system that would contain the new file
-		cannot be expanded, the file does not exist, and the file was
-		to be created.
-
-<b>ENOTDIR</b>
-		A component of the path prefix names an existing file that is
-		neither a directory nor a symbolic link to a directory, or the
-		<i>pathname</i> argument contains at least one non-&lt;slash&gt; character
-		and ends with one or more trailing &lt;slash&gt; characters and the
-		last pathname component names an existing file that is neither
-		a directory nor a symbolic link to a directory.
-
-<b>ENXIO  </b>The named file is a character special or block special file,
-		and the device associated with this special file does not
-		exist.
-
-<b>EOVERFLOW</b>
-		The named file is a regular file and the size of the file
-		cannot be represented correctly in an object of type <b>off_t</b>.
-
-<b>EROFS  </b>The named file resides on a read-only file system and <i>mode</i>
-		requires write access.
-
-The <i>fopen</i>() function may fail if:
-
-<b>EINVAL </b>The value of the <i>mode</i> argument is not valid.
-
-<b>ELOOP  </b>More than {SYMLOOP_MAX} symbolic links were encountered during
-		resolution of the <i>path</i> argument.
-
-<b>EMFILE </b>{FOPEN_MAX} streams are currently open in the calling process.
-
-<b>ENAMETOOLONG</b>
-		The length of a component of a pathname is longer than
-		{NAME_MAX}.
-
-<b>ENOMEM </b>Insufficient storage space is available.
-
-<b>ETXTBSY</b>
-		The file is a pure procedure (shared text) file that is being
-		executed and <i>mode</i> requires write access.
-
-<i>The following sections are informative.</i>
-</pre>
-<h2><a id="EXAMPLES" href="#EXAMPLES"></a>EXAMPLES  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-<b>Opening a File</b>
-The following example tries to open the file named <b>file </b>for reading.
-The <i>fopen</i>() function returns a file pointer that is used in
-subsequent <i>fgets</i>() and <i>fclose</i>() calls. If the program cannot open the
-file, it just ignores it.
-
-	<b>#include &lt;stdio.h&gt;</b>
-	<b>...</b>
-	<b>FILE *fp;</b>
-	<b>...</b>
-	<b>void rgrep(const char *file)</b>
-	<b>{</b>
-	<b>...</b>
-		 <b>if ((fp = fopen(file, "r")) == NULL)</b>
-			  <b>return;</b>
-	<b>...</b>
-	<b>}</b>
-</pre>
-<h2><a id="APPLICATION_USAGE" href="#APPLICATION_USAGE"></a>APPLICATION USAGE  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-None.
-</pre>
-<h2><a id="RATIONALE" href="#RATIONALE"></a>RATIONALE  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-None.
-</pre>
-<h2><a id="FUTURE_DIRECTIONS" href="#FUTURE_DIRECTIONS"></a>FUTURE DIRECTIONS  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-None.
-</pre>
-<h2><a id="SEE_ALSO" href="#SEE_ALSO"></a>SEE ALSO  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-<i>Section 2.5</i>, <i>Standard I/O Streams</i>, <a href="../man3/creat.3p.html">creat(3p)</a>, <a href="../man3/fclose.3p.html">fclose(3p)</a>, <a href="../man3/fdopen.3p.html">fdopen(3p)</a>,
-<a href="../man3/fmemopen.3p.html">fmemopen(3p)</a>, <a href="../man3/freopen.3p.html">freopen(3p)</a>, <a href="../man3/open_memstream.3p.html">open_memstream(3p)</a>
-
-The Base Definitions volume of POSIX.1‐2008, <a href="../man0/stdio.h.0p.html">stdio.h(0p)</a>
-</pre>
-<h2><a id="COPYRIGHT" href="#COPYRIGHT"></a>COPYRIGHT  &nbsp; &nbsp; &nbsp; &nbsp; <a href="#top_of_page"><span class="top-link">top</span></a></h2><pre>
-Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information
-Technology -- Portable Operating System Interface (POSIX), The Open
-Group Base Specifications Issue 7, Copyright (C) 2013 by the
-Institute of Electrical and Electronics Engineers, Inc and The Open
-Group.  (This is POSIX.1-2008 with the 2013 Technical Corrigendum 1
-applied.) In the event of any discrepancy between this version and
-the original IEEE and The Open Group Standard, the original IEEE and
-The Open Group Standard is the referee document. The original
-Standard can be obtained online at <a href="http://www.unix.org/online.html">http://www.unix.org/online.html</a> .
-
-Any typographical or formatting errors that appear in this page are
-most likely to have been introduced during the conversion of the
-source files to man page format. To report such errors, see
-<a href="https://www.kernel.org/doc/man-pages/reporting_bugs.html">https://www.kernel.org/doc/man-pages/reporting_bugs.html</a> .
-
-<span class="footline">IEEE/The Open Group                 2013                           FOPEN(3P)</span>
-</pre>
-
-<hr class="end-man-text" />
-<p>Pages that refer to this page: 
-<a href="../man0/stdio.h.0p.html">stdio.h(0p)</a>,&nbsp; 
-<a href="../man3/close.3p.html">close(3p)</a>,&nbsp; 
-<a href="../man3/fclose.3p.html">fclose(3p)</a>,&nbsp; 
-<a href="../man3/fdopen.3p.html">fdopen(3p)</a>,&nbsp; 
-<a href="../man3/feof.3p.html">feof(3p)</a>,&nbsp; 
-<a href="../man3/ferror.3p.html">ferror(3p)</a>,&nbsp; 
-<a href="../man3/fgetpos.3p.html">fgetpos(3p)</a>,&nbsp; 
-<a href="../man3/fgets.3p.html">fgets(3p)</a>,&nbsp; 
-<a href="../man3/fgetwc.3p.html">fgetwc(3p)</a>,&nbsp; 
-<a href="../man3/fgetws.3p.html">fgetws(3p)</a>,&nbsp; 
-<a href="../man3/fileno.3p.html">fileno(3p)</a>,&nbsp; 
-<a href="../man3/fmemopen.3p.html">fmemopen(3p)</a>,&nbsp; 
-<a href="../man3/fputc.3p.html">fputc(3p)</a>,&nbsp; 
-<a href="../man3/fputs.3p.html">fputs(3p)</a>,&nbsp; 
-<a href="../man3/fputwc.3p.html">fputwc(3p)</a>,&nbsp; 
-<a href="../man3/fputws.3p.html">fputws(3p)</a>,&nbsp; 
-<a href="../man3/fread.3p.html">fread(3p)</a>,&nbsp; 
-<a href="../man3/freopen.3p.html">freopen(3p)</a>,&nbsp; 
-<a href="../man3/fseek.3p.html">fseek(3p)</a>,&nbsp; 
-<a href="../man3/fsetpos.3p.html">fsetpos(3p)</a>,&nbsp; 
-<a href="../man3/ftell.3p.html">ftell(3p)</a>,&nbsp; 
-<a href="../man3/fwrite.3p.html">fwrite(3p)</a>,&nbsp; 
-<a href="../man3/lockf.3p.html">lockf(3p)</a>,&nbsp; 
-<a href="../man3/open_memstream.3p.html">open_memstream(3p)</a>,&nbsp; 
-<a href="../man3/puts.3p.html">puts(3p)</a>,&nbsp; 
-<a href="../man3/setbuf.3p.html">setbuf(3p)</a>,&nbsp; 
-<a href="../man3/setvbuf.3p.html">setvbuf(3p)</a>,&nbsp; 
-<a href="../man3/stdin.3p.html">stdin(3p)</a>,&nbsp; 
-<a href="../man3/tempnam.3p.html">tempnam(3p)</a>,&nbsp; 
-<a href="../man3/tmpfile.3p.html">tmpfile(3p)</a>,&nbsp; 
-<a href="../man3/tmpnam.3p.html">tmpnam(3p)</a>
-</p>
-<hr/>
-
-
-<hr class="start-footer" />
-
-<div class="footer"> 
-
-<table class="colophon-table">
-<tr>
-<td class="pub-info">
-<p>
-	 HTML rendering created 2019-11-19
-	 by <a href="http://man7.org/mtk/index.html">Michael Kerrisk</a>, 
-	 author of 
-	 <a href="http://man7.org/tlpi/"><em>The Linux Programming Interface</em></a>, 
-	 maintainer of the 
-	 <a href="https://www.kernel.org/doc/man-pages/">Linux <em>man-pages</em> project</a>.
-</p>
-<p>
-	 For details of in-depth
-	 <strong>Linux/UNIX system programming training courses</strong>
-	 that I teach, look <a href="http://man7.org/training/">here</a>.
-</p>
-<p>
-	 Hosting by <a href="http://www.jambit.com/index_en.html">jambit GmbH</a>.
-</p>
-<p>
-	 <a href="http://validator.w3.org/check?uri=referer">
-	 <img src="http://www.w3.org/Icons/valid-xhtml11"
-		  alt="Valid XHTML 1.1" height="31" width="88" />
-	 </a>
-</p>
-</td>
-<td class="colophon-divider">
-</td>
-<td class="tlpi-cover">
-<a href="http://man7.org/tlpi/"><img src="http://man7.org/tlpi/cover/TLPI-front-cover-vsmall.png" alt="Cover of TLPI" /></a>
-</td>
-</tr>
-</table>
-
-</div>
-
-<hr class="end-footer" />
-
 
 
 <!--BEGIN-SITETRACKING-->
-<!-- SITETRACKING.man7.org_linux_man-pages -->
+
+<!-- SITETRACKING.man7.org -->
 
 <!-- Start of StatCounter Code (xhtml) -->
 
 <script type="text/javascript">
 //<![CDATA[
-var sc_project=7422636; 
+var sc_project=6129341; 
 var sc_invisible=1; 
-var sc_security="9b6714ff"; 
+var sc_security="1192a2fb"; 
 //]]>
 </script>
 <script type="text/javascript"
 src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
-<noscript><div class="statcounter"><a title="website
-statistics" href="http://statcounter.com/"
-class="statcounter"><img class="statcounter"
-src="http://c.statcounter.com/7422636/0/9b6714ff/1/"
-alt="website statistics" /></a></div></noscript>
+<noscript><div class="statcounter"><a title="click tracking"
+href="http://statcounter.com/" class="statcounter"><img
+class="statcounter"
+src="http://c.statcounter.com/6129341/0/1192a2fb/1/"
+alt="click tracking" /></a></div></noscript>
 
 <!-- End of StatCounter Code -->
 
@@ -417,19 +142,20 @@ alt="website statistics" /></a></div></noscript>
 
 <script type="text/javascript">
 
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', 'UA-9830363-8']);
-_gaq.push(['_trackPageview']);
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-9830363-2']);
+  _gaq.push(['_trackPageview']);
 
-(function() {
-var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-})();
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
 
 </script>
 
 <!-- End of Google Analytics Code -->
+
 
 <!--END-SITETRACKING-->
 
