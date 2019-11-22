@@ -1,7 +1,13 @@
 
+#ifndef DEX_URL_HPP
+#define DEX_URL_HPP
+
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
 #include "../utils/exception.hpp"
+#include "../utils/functional.hpp"
+// 2019-11-21: Fixed fragment/query bug: combsc
+// 2019-11-20: Add =operator, hash: combsc
 // 2019-11-10: made parts of url private, have to call get and set
 //             to ensure we don't mess up the url in the future: combsc
 // 2019-10-31: Copy constructor for robots: jhirsh
@@ -27,6 +33,9 @@ namespace dex
 			// fragment should not include #
 			string fragment;
 		public:
+			Url( )
+				{
+				}
 			Url( const char *url )
 				{
 				// Assumes url points to static text but
@@ -109,7 +118,7 @@ namespace dex
 				// If a fragment exists ( the end of the query is NOT the end of the Url )
 				if ( endQuery < int( totalUrl.size( ) ) )
 					{
-					int beginFragment = endQuery + 1;
+					int beginFragment = endQuery;
 					int endFragment = int( totalUrl.size( ) );
 					fragment = totalUrl.substr( beginFragment, endFragment - beginFragment );
 					}
@@ -136,7 +145,7 @@ namespace dex
 				return *this;
 				}
 			
-			string completeUrl( )
+			string completeUrl( ) const
 				{
 				string completeUrl = service + "://" + host;
 				if ( port != "" && port != "443" && port != "80" )
@@ -149,11 +158,11 @@ namespace dex
 					}
 				if ( query != "" )
 					{
-					completeUrl += "?" + query;
+					completeUrl += query;
 					}
 				if ( fragment != "" )
 					{
-					completeUrl += "#" + fragment;
+					completeUrl += fragment;
 					}
 				return completeUrl;
 				}
@@ -236,5 +245,20 @@ namespace dex
 				{
 				fragment = f;
 				}
+		
+		};
+
+	bool operator==( const dex::Url &lhs, const dex::Url &rhs )
+		{
+		return lhs.completeUrl( ) == rhs.completeUrl( );
+		}
+	template < >
+	struct hash < dex::Url >
+		{
+		unsigned long operator()( const dex::Url &url ) const
+			{
+			return dex::hash< dex::string >{} ( url.completeUrl( ) );
+			}
 		};
 	}
+#endif
