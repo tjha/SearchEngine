@@ -118,7 +118,7 @@ namespace dex
 				// If a fragment exists ( the end of the query is NOT the end of the Url )
 				if ( endQuery < int( totalUrl.size( ) ) )
 					{
-					int beginFragment = endQuery + 1;
+					int beginFragment = endQuery;
 					int endFragment = int( totalUrl.size( ) );
 					fragment = totalUrl.substr( beginFragment, endFragment - beginFragment );
 					}

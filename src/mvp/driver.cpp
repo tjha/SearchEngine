@@ -67,25 +67,11 @@ bool isUrlInDomain( const dex::Url &url )
 	return true;
 	}
 
-dex::vector < dex::Url > fakeParseForLinks( dex::string html )
-	{
-	dex::vector < dex::Url > toReturn;
-	toReturn.pushBack( dex::Url( "https://www.runescape.com/fun" ) );
-	toReturn.pushBack( dex::Url( "https://www.maplestory.com/fun" ) );
-	html += 'b';
-	return toReturn;
-	}
-
-int fakeCrawl( dex::Url url, dex::string &result, dex::unorderedMap < dex::string, dex::RobotTxt > &robots )
-	{
-	return 0;
-	}
-
 void *worker( void *args )
 	{
 	workerStruct a = *static_cast <workerStruct*>(args);
 	dex::string name = dex::toString( a.id );
-	for ( int i = 0;  i < 5;  ++i )
+	for ( int i = 0;  i < 100;  ++i )
 		{
 		pthread_mutex_lock( &frontierLock );
 		while ( urlFrontier.empty( ) )
@@ -95,14 +81,14 @@ void *worker( void *args )
 		dex::Url toCrawl = urlFrontier.getUrl( );
 		pthread_mutex_unlock( &frontierLock );
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
-		dex::string result = "html\n";
+		dex::string result = "";
 		// I know that it's not safe to use robotsCache here
 		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
 		// lock the cache for the entire time we're crawling the URL.
+		std::cout << toCrawl.completeUrl( ) << std::endl;
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
-		// int errorCode = fakeCrawl( toCrawl, result, robotsCache );
+		std::cout << errorCode << std::endl;
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
-
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 )
 			{
@@ -199,7 +185,9 @@ int main( )
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
 
-	urlFrontier.putUrl( "http://man7.org/" );
+	
+	//urlFrontier.putUrl( "https://en.wikipedia.org/wiki/Google" );
+	urlFrontier.putUrl( "http://man7.org/tlpi/errata/errata_by_print_run.html#pr10_fixes" );
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
 		workerStruct a = { i };
