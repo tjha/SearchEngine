@@ -5,7 +5,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -g
 SRC_PATH = src
 TEST_PATH = tst
 BUILD_PATH = build
-INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(TEST_PATH) #TODO: add more src folders here as needed
+INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/spinarak -I $(TEST_PATH) #TODO: add more src folders here as needed
 
 TEST_SOURCES := $(wildcard $(TEST_PATH)/*/*.cpp)
 TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(TEST_SOURCES))

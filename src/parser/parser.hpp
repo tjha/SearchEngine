@@ -1,6 +1,9 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
-//
+// 
+// 2019-11-22:  Added include guards, merged with changes by combsc that convert
+//              links to vector of url types instead of string, modified
+//              handling of relative links to always append '/' correctly: tjha
 // 2019-11-21:  Modified BreakAnchors and RemovePunctuation to separate
 //              words between punctuations except dashes: tjha
 // 2019-11-20:  Modified constructor to take in format <url>\n<htnl_content>
@@ -17,9 +20,14 @@
 // 2019-11-04:  Fixed document style to match style guide: tjha
 // 2019-10-26:  Created get_links function to get urls from basic html:
 //              medhak, tjha
+
+#ifndef DEX_HTML_PARSER
+#define DEX_HTML_PARSER
+
 #include "algorithm.hpp"
 #include "basicString.hpp"
 #include "exception.hpp"
+#include "url.hpp"
 #include "utility.hpp"
 #include "vector.hpp"
 
@@ -43,7 +51,7 @@ namespace dex
    private:
       dex::string htmlFile;
       dex::string pageLink;
-      dex::vector< string > links;
+      dex::vector< dex::Url > links;
       dex::vector< string > words;
       //dex::vector< string > relativeLinks;
       dex::vector< anchorPos > anchorText;
@@ -84,7 +92,7 @@ namespace dex
       // static vector < string > BreakAnchorsOG ( const string anchor );
       void BreakAnchors ( string& anchor );
       // void GetAnchorText( );
-      vector < string > ReturnLinks ( );
+      vector < dex::Url > ReturnLinks ( );
       // vector < dex::pair <size_t, size_t > > ReturnAnchorText ( );
       vector < anchorPos > ReturnAnchorText ( );
       vector < string > ReturnWords ( );
@@ -101,11 +109,15 @@ namespace dex
       {
       std::size_t linkEnd = html.findFirstOf( '\n' );
       pageLink = html.substr( 0, linkEnd );
+      if ( pageLink.back( ) == '/' )
+         {
+         pageLink.popBack( );
+         }
       htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
-      GetLinks();
+      GetLinks( );
       }
 
-   vector < string > HTMLparser::ReturnLinks ( )
+   vector < dex::Url > HTMLparser::ReturnLinks ( )
       {
       return links;
       }
@@ -250,20 +262,27 @@ namespace dex
                }
             else
                {
-               url = url.substr( qPos+1, url.find( "\"", qPos+1 ) - qPos - 1 );
-               std::cout << url << std::endl;
+               url = url.substr( qPos + 1, url.find( "\"", qPos + 1 ) - qPos - 1 );
+               //std::cout << url << std::endl;
                }
             std::size_t linkIndex = 0;
             // PushBack absolute url
-            if ( url.find("https://", 0) == 0 ||
-                 url.findFirstOf("http://", 0) == 0 ) {
+            if ( url.find("https://", 0) != string::npos ||
+                 url.find("http://", 0) != string::npos ) {
                // url is already an absolute url
-               links.pushBack( url );     
+               links.pushBack( dex::Url( url.cStr( ) ) );     
             } else {
                // url is a relative url
-               links.pushBack( pageLink + url );
-               // TODO: Verify that appending url to pathLink works in 
-               //       possible edge cases
+               dex::string newLink = pageLink;
+               if ( url.front( ) == '/' )
+                  {
+                  newLink += url;
+                  }
+               else
+                  {
+                  newLink += '/' + url;
+                  }
+               links.pushBack( dex::Url( newLink.cStr( ) ) );
             }
             linkIndex = links.size( ) - 1;
 
@@ -293,4 +312,4 @@ namespace dex
       }   
 
 };
-
+#endif // DEX_HTML_PARSER
