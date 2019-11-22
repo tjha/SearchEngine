@@ -107,15 +107,15 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
       expectedLinks.pushBack(
          "http://www.provost.umich.edu/programs/thurnau/index.html" );
-      expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
-      expectedLinks.pushBack( "http://www.umich.edu/" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu" );
+      expectedLinks.pushBack( "http://www.umich.edu" );
       expectedLinks.pushBack( 
          "https://web.eecs.umich.edu/~pmchen/contact.html" );
       expectedLinks.pushBack( "http://web.eecs.umich.edu/virtual/" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/~pmchen/Rio" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/ssl" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/cse" );
-      expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu" );
       expectedLinks.pushBack( "https://web.eecs.umich.edu/~pmchen/papers/" );
       expectedLinks.pushBack( 
          "https://web.eecs.umich.edu/~pmchen/eecs482/" );
@@ -287,11 +287,12 @@ TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
          expectedLinks.pushBack( "http://man7.org/tlpi/index.html" );
          expectedLinks.pushBack( "http://blog.man7.org" );
          expectedLinks.pushBack( "http://man7.org/articles/index.html" );
+         expectedLinks.pushBack( "http://man7.org/conf/index.html" );
          expectedLinks.pushBack( "http://www.kernel.org/doc/man-pages/" );
          expectedLinks.pushBack( "http://man7.org/linux/man-pages/index.html" );
          expectedLinks.pushBack( "http://man7.org/mtk/index.html" );
          expectedLinks.pushBack( "http://man7.org/mtk/contact.html" );
-         expectedLinks.pushBack( "http://statcounter.com/" );
+         expectedLinks.pushBack( "http://statcounter.com" );
 
          // Validate correct number of links were extracted
          REQUIRE ( links.size( ) == expectedLinks.size( ) );

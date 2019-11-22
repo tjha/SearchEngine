@@ -1,6 +1,8 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
 // 
+// 2019-11-22:  Fixed bugs in GetLinks function to avoid over-geralization of
+//              the locations of 'a' in relation to 'href': tjha
 // 2019-11-22:  Added include guards, merged with changes by combsc that convert
 //              links to vector of url types instead of string, modified
 //              handling of relative links to always append '/' correctly: tjha
@@ -235,14 +237,13 @@ namespace dex
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
                }
-            std::size_t posA = htmlFile.find( "a", posOpenTag );
-            if ( posA >= posCloseTag || posA == string::npos )
+            std::size_t posHref = htmlFile.find( "href", posOpenTag );
+            if ( posHref >= posCloseTag || posHref == string::npos )
                {
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
                }
-            std::size_t posHref = htmlFile.find( "href", posA );
-            if ( posHref >= posCloseTag || posHref == string::npos )
+            if ( htmlFile.find( "a", posOpenTag ) >= posHref ) 
                {
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
@@ -263,7 +264,6 @@ namespace dex
             else
                {
                url = url.substr( qPos + 1, url.find( "\"", qPos + 1 ) - qPos - 1 );
-               //std::cout << url << std::endl;
                }
             std::size_t linkIndex = 0;
             // PushBack absolute url
