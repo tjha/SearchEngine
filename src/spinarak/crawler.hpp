@@ -246,7 +246,7 @@ namespace dex
 			// Function used for crawling URLs. bePolite should ALWAYS be on, only turned off for testing.
 			static int crawlUrl( Url url, dex::string &result, dex::unorderedMap < dex::string, dex::RobotTxt > &robots, bool bePolite = true )
 				{
-				int protocol = ( url.getService( ) == "http" ) ? HTTP : HTTPS;
+				int protocol = ( url.getService( ) == "https" ) ? HTTPS : HTTP;
 
 				if ( !bePolite )
 					{
