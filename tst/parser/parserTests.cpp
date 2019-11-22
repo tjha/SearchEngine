@@ -262,3 +262,48 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
          {
          }
    }
+
+TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
+   {
+      string filename = "tst/parser/man7.html";
+      string htmlDoc;
+      htmlDoc = readFromFile( filename.cStr( ) );
+      HTMLparser testParser( htmlDoc );
+
+      SECTION( "Expected Links" )
+         {
+         vector< dex::Url > links = testParser.ReturnLinks( );
+
+         // Validate correct number of links were extracted
+         REQUIRE ( links.size() == 11 );
+
+         // Create vector with expected links on page
+         vector < string > expectedLinks;
+
+         expectedLinks.pushBack( "http://man7.org/tlpi/index.html" );
+         expectedLinks.pushBack( "http://man7.org/training/index.html" );
+         expectedLinks.pushBack( "http://man7.org/tlpi/index.html" );
+         expectedLinks.pushBack( "http://blog.man7.org" );
+         expectedLinks.pushBack( "http://man7.org/articles/index.html" );
+         expectedLinks.pushBack( "http://www.kernel.org/doc/man-pages/" );
+         expectedLinks.pushBack( "http://man7.org/linux/man-pages/index.html" );
+         expectedLinks.pushBack( "http://man7.org/mtk/index.html" );
+         expectedLinks.pushBack( "http://man7.org/mtk/contact.html" );
+         expectedLinks.pushBack( "http://statcounter.com/" );
+
+         // Verify parsed links match expected page links
+         for ( size_t i = 0; i < links.size(); i++ )
+            {
+            //REQUIRE ( links[ i ].completeUrl( ) == expectedLinks[ i ] );
+            }
+         }
+      
+      SECTION ( "Expected Anchor Text" )
+         {
+         }
+      
+      SECTION( "Expected Words" )
+         {
+         }
+   }
+

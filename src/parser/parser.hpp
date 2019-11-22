@@ -223,13 +223,14 @@ namespace dex
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
                }
-            std::size_t posHref = htmlFile.find( "href", posOpenTag );
-            if ( posHref >= posCloseTag || posHref == string::npos )
+            std::size_t posA = htmlFile.find( "a", posOpenTag );
+            if ( posA >= posCloseTag || posA == string::npos )
                {
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
                }
-            if ( htmlFile.find( "a", posOpenTag ) >= posHref ) 
+            std::size_t posHref = htmlFile.find( "href", posA );
+            if ( posHref >= posCloseTag || posHref == string::npos )
                {
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
@@ -250,16 +251,9 @@ namespace dex
             else
                {
                url = url.substr( qPos+1, url.find( "\"", qPos+1 ) - qPos - 1 );
+               std::cout << url << std::endl;
                }
             std::size_t linkIndex = 0;
-            /*
-            if ( url.front( ) == '.' || url.front( ) == '\\' )
-               {
-               relativeLinks.pushBack( url );
-               linkIndex = relativeLinks.size( ) - 1;
-               }
-            else {
-            */
             // PushBack absolute url
             if ( url.find("https://", 0) == 0 ||
                  url.findFirstOf("http://", 0) == 0 ) {
