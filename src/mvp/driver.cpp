@@ -11,11 +11,6 @@
 #include "redirectCache.hpp"
 #include "../parser/parser.hpp"
 
-struct workerStruct
-	{
-	int id;
-	};
-
 
 dex::string loggingFileName;
 pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
@@ -27,8 +22,8 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 // not put links that aren't our responsibility into our frontier
 dex::frontier urlFrontier;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t frontierCV;
-#define numWorkers 1
+pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
+#define numWorkers 2
 pthread_t workers [ numWorkers ];
 
 dex::unorderedMap < dex::string, dex::RobotTxt > robotsCache{ 1000 };
@@ -69,9 +64,10 @@ bool isUrlInDomain( const dex::Url &url )
 
 void *worker( void *args )
 	{
-	workerStruct a = *static_cast <workerStruct*>(args);
-	dex::string name = dex::toString( a.id );
-	for ( int i = 0;  i < 100;  ++i )
+	int a = *((int *) args);
+	dex::string name = dex::toString( a );
+	std::cout << "Start thread " << name << std::endl;
+	for ( int i = 0;  i < 10;  ++i )
 		{
 		pthread_mutex_lock( &frontierLock );
 		while ( urlFrontier.empty( ) )
@@ -80,11 +76,17 @@ void *worker( void *args )
 			}
 		dex::Url toCrawl = urlFrontier.getUrl( );
 		pthread_mutex_unlock( &frontierLock );
+
+		// Fix link using our redirects cache
+		pthread_mutex_lock( &redirectsLock );
+		toCrawl = redirects.getEndpoint( toCrawl );
+		pthread_mutex_unlock( &redirectsLock );
+		
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
 		dex::string result = "";
 		// I know that it's not safe to use robotsCache here
 		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
-		// lock the cache for the entire time we're crawling the URL.
+		// lock the cache for the entire time we're crawling the URL
 		std::cout << toCrawl.completeUrl( ) << std::endl;
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
 		std::cout << errorCode << std::endl;
@@ -114,6 +116,7 @@ void *worker( void *args )
 						{
 						pthread_mutex_lock( &frontierLock );
 						urlFrontier.putUrl( endpoint );
+						pthread_cond_signal( &frontierCV );
 						pthread_mutex_unlock( &frontierLock );
 						}
 					// If we're not in charge of this link, send it off to be shipped
@@ -187,11 +190,11 @@ int main( )
 
 	
 	//urlFrontier.putUrl( "https://en.wikipedia.org/wiki/Google" );
-	urlFrontier.putUrl( "http://man7.org/tlpi/errata/errata_by_print_run.html#pr10_fixes" );
+	urlFrontier.putUrl( "http://man7.org" );
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
-		workerStruct a = { i };
-		pthread_create( &workers[ i ], nullptr, worker, static_cast < void * > ( &a ) );
+		int arg = i;
+		pthread_create( &workers[ i ], nullptr, worker, &arg );
 		}
 
 	for ( size_t i = 0;  i < numWorkers; ++i )
