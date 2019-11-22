@@ -103,6 +103,10 @@ namespace dex
       {
       std::size_t linkEnd = html.findFirstOf( '\n' );
       pageLink = html.substr( 0, linkEnd );
+      if ( pageLink.back( ) == '/' )
+         {
+         pageLink.popBack( );
+         }
       htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
       GetLinks();
       }
@@ -264,12 +268,20 @@ namespace dex
             */
             // PushBack absolute url
             if ( url.find("https://", 0) != string::npos ||
-                 url.findFirstOf("http://", 0) != string::npos ) {
+                 url.find("http://", 0) != string::npos ) {
                // url is already an absolute url
                links.pushBack( dex::Url( url.cStr( ) ) );     
             } else {
                // url is a relative url
-               dex::string newLink = pageLink + "/" + url;
+               dex::string newLink = pageLink;
+               if ( url.front( ) == '/' )
+                  {
+                  newLink += url;
+                  }
+               else
+                  {
+                  newLink += '/' + url;
+                  }
                links.pushBack( dex::Url( newLink.cStr( ) ) );
                // TODO: Verify that appending url to pathLink works in 
                //       possible edge cases
