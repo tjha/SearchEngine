@@ -1,8 +1,9 @@
 // parserTests.cpp
 // Basic testing of Parser functionality
 //
+// 2019-11-23: Added Enneagraminstitute links tests: tjha
 // 2019-11-22: Modified test case to utilize dex::Url during comparisions to
-//             ensure isolation from Url implementation
+//             ensure isolation from Url implementation: tjha
 // 2019-11-22: Added man7 test case and merged with changes by combsc that
 //             convert links to vector of url types instead of strigs: tjha
 // 2019-11-21: Created basic link and anchor text tests for amazon.html: tjha
@@ -28,7 +29,7 @@
 
 #include <cstddef>
 
-//#include <iostream>
+#include <iostream>
 
 using dex::anchorPos;
 using dex::HTMLparser;
@@ -48,15 +49,14 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 	SECTION( "parsed simple html document with one link" )
       {
       string htmlDoc = 
-         "https://web.eecs.umich.edu/~pmchen\n\
-         <html>\n\
-            <title>Title</title>\n\
-            <body>\n\
-            <a href=\"software\">Software</a>\n\
-            </body>\n\
-         </html>";
+			 "https://web.eecs.umich.edu/~pmchen\n\
+			  <html>\n\
+				  <title>Title</title>\n\
+				  <body>\n\
+				  <a href=\"software\">Software</a>\n\
+				  </body>\n\
+			  </html>";
       HTMLparser testParser( htmlDoc );
-      // testParser.GetLinks();
       vector< dex::Url > links = testParser.ReturnLinks( );
       string expectedLink = "https://web.eecs.umich.edu/~pmchen/software";
       REQUIRE( links.size( ) == 1 );
@@ -76,7 +76,6 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
             </body>\n\
          </html>";
       HTMLparser testParser( htmlDoc );
-      // testParser.GetLinks();
       vector< dex::Url > links = testParser.ReturnLinks( );
       string expectedLink1 = "https://web.eecs.umich.edu/~pmchen/software1";
       string expectedLink2 = "https://web.eecs.umich.edu/~pmchen/software2";
@@ -295,6 +294,89 @@ TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
          expectedLinks.pushBack( "http://man7.org/mtk/index.html" );
          expectedLinks.pushBack( "http://man7.org/mtk/contact.html" );
          expectedLinks.pushBack( "http://statcounter.com" );
+
+         // Validate correct number of links were extracted
+         REQUIRE ( links.size( ) == expectedLinks.size( ) );
+
+         // Verify parsed links match expected page links
+         for ( size_t i = 0; i < links.size(); i++ )
+            {
+            REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
+            }
+         }
+      
+      SECTION ( "Expected Anchor Text" )
+         {
+         }
+      
+      SECTION( "Expected Words" )
+         {
+         }
+   }
+
+TEST_CASE( "enneagraminstitute.com: simple page using Squarespace" )
+   {
+      string filename = "tst/parser/enneagraminstitute.html";
+      string htmlDoc;
+      htmlDoc = readFromFile( filename.cStr( ) );
+      HTMLparser testParser( htmlDoc );
+
+      SECTION( "Expected Links" )
+         {
+         vector< dex::Url > links = testParser.ReturnLinks( );
+
+         // Create vector with expected links on page
+         vector < string > expectedLinks;
+			
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/how-the-enneagram-system-works" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/type-descriptions" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/the-enneagram-type-combinations" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/misidentifications-of-enneagram-personality-types" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/the-traditional-enneagram" );
+         expectedLinks.pushBack( "https://subscriptions.enneagraminstitute.com" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/events" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/course-offerings" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/workshops" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/store" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/about" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/contact" );
+         expectedLinks.pushBack( "https://tests.enneagraminstitute.com" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/rheti" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/ivq" );
+         expectedLinks.pushBack( "https://tests.enneagraminstitute.com/business-login" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/business-accounts" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/how-the-enneagram-system-works" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/type-descriptions" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/the-enneagram-type-combinations" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/misidentifications-of-enneagram-personality-types" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/the-traditional-enneagram" );
+         expectedLinks.pushBack( "https://subscriptions.enneagraminstitute.com" );
+
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/events" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/course-offerings" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/workshops" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/store" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/about" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/contact" );
+         expectedLinks.pushBack( "https://tests.enneagraminstitute.com" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/rheti" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/ivq" );
+         expectedLinks.pushBack( "https://tests.enneagraminstitute.com/business-login" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/business-accounts" );
+
+
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/#" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/#" );
+         expectedLinks.pushBack( "http://tests.enneagraminstitute.com/" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/type-descriptions" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/events" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/#" );
+
+         expectedLinks.pushBack( "https://www.facebook.com/EnneagramInstitute" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/contact" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/privacy-policy" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/terms-of-use" );
 
          // Validate correct number of links were extracted
          REQUIRE ( links.size( ) == expectedLinks.size( ) );
