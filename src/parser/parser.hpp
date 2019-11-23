@@ -1,7 +1,7 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
 // 
-// 2019-11-22:  Fixed bugs in GetLinks function to avoid over-geralization of
+// 2019-11-23:  Fixed bugs in GetLinks function to avoid over-geralization of
 //              the locations of 'a' in relation to 'href': tjha
 // 2019-11-22:  Added include guards, merged with changes by combsc that convert
 //              links to vector of url types instead of string, modified
@@ -210,6 +210,40 @@ namespace dex
       return word;      
       }
 
+	std::size_t spaceDelimitedTargetPosition( dex::string target,
+											  				dex::vector< dex::string >& query,
+															dex::string& str)
+		{
+		std::size_t pos = str.find( query[ 0 ], 0 );
+		std::size_t final_pos = ( query[ 0 ] == target ) ? pos : dex::string::npos;
+      for ( std::size_t i = 1; i < query.size( ); i++ )
+			{
+			if ( pos == dex::string::npos )
+				{
+				return dex::string::npos;
+				}
+			std::size_t next = str.find( query[ i ], pos );
+			if ( next == dex::string::npos )
+				{
+				return dex::string::npos;
+				}
+			pos += query[ i - 1 ].length( );
+			while ( pos < next )
+				{
+				if ( str[ pos ] != ' ' )
+					{
+					return dex::string::npos;
+					}
+				pos++;
+				}
+			pos = next;
+			if ( query[ i ] == target && final_pos == dex::string::npos )
+				{
+				final_pos = pos;
+				}
+			}
+		return final_pos;
+		}
 
    void HTMLparser::GetLinks( )
       {
@@ -237,23 +271,35 @@ namespace dex
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
                }
-            std::size_t posHref = htmlFile.find( "href", posOpenTag );
-            if ( posHref >= posCloseTag || posHref == string::npos )
-               {
+			
+				dex::string tagStr = htmlFile.substr( posOpenTag,
+																  posCloseTag - posOpenTag + 1 );
+				dex::vector< dex::string > query(2);
+				query[ 0 ] = "<";
+				query[ 1 ] = "a";
+
+				std::size_t posA = 
+						spaceDelimitedTargetPosition( "a", query, tagStr );
+
+				if ( posA == dex::string::npos )
+					{
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
-               }
-            if ( htmlFile.find( "a", posOpenTag ) >= posHref ) 
-               {
-               posOpenTag = htmlFile.find( "<", posCloseTag );   
-               continue;
-               }
-            std::size_t posEqual = htmlFile.find( "=", posHref );
+					}
+
+				query = dex::vector<string>(2);
+				query[ 0 ] = "href";
+				query[ 1 ] = "=";
+
+				std::size_t posEqual = 
+						spaceDelimitedTargetPosition( "=", query, tagStr );
+
             if ( posEqual == string::npos )
                {
                posOpenTag = htmlFile.find( "<", posCloseTag );   
                continue;
                }
+				posEqual = posOpenTag + posEqual;
             url = htmlFile.substr( posEqual + 1, posCloseTag-posEqual-1 );  
             std::size_t qPos = url.find( "\"" );
             if ( qPos == string::npos )

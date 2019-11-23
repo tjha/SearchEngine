@@ -42,7 +42,6 @@ using std::size_t;
 //using std::cout;
 //using std::endl;
 
-
 TEST_CASE( "basic get links with relative paths", "[parser]" )
    {
 
@@ -315,4 +314,3 @@ TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
          {
          }
    }
-
