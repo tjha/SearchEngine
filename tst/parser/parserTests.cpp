@@ -1,10 +1,12 @@
 // parserTests.cpp
 // Basic testing of Parser functionality
 //
-// 2018-11-22: Added man7 test case and merged with changes by combsc that
+// 2019-11-22: Modified test case to utilize dex::Url during comparisions to
+//             ensure isolation from Url implementation
+// 2019-11-22: Added man7 test case and merged with changes by combsc that
 //             convert links to vector of url types instead of strigs: tjha
-// 2018-11-21: Created basic link and anchor text tests for amazon.html: tjha
-// 2018-11-21: Created extensive checking of all anchor text words for
+// 2019-11-21: Created basic link and anchor text tests for amazon.html: tjha
+// 2019-11-21: Created extensive checking of all anchor text words for
 //             peter_chen.html: tjha
 // 2019-11-20: Modified basic test to ensure content is first parsed for url
 //             format: <url>\n<html_content>: tjha
@@ -33,6 +35,7 @@ using dex::HTMLparser;
 using dex::outOfRangeException;
 using dex::readFromFile;
 using dex::string;
+using dex::Url;
 using dex::vector;
 
 using std::size_t;
@@ -58,7 +61,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
       vector< dex::Url > links = testParser.ReturnLinks( );
       string expectedLink = "https://web.eecs.umich.edu/~pmchen/software";
       REQUIRE( links.size( ) == 1 );
-      REQUIRE( links[ 0 ].completeUrl( ) == expectedLink );
+      REQUIRE( links[ 0 ] == Url( expectedLink.cStr( ) ) );
       }
 
 	SECTION( "parsed simple html document with three links" )
@@ -80,9 +83,9 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
       string expectedLink2 = "https://web.eecs.umich.edu/~pmchen/software2";
       string expectedLink3 = "https://web.eecs.umich.edu/~pmchen/software3";
       REQUIRE( links.size( ) == 3 );
-      REQUIRE( links[ 0 ].completeUrl( ) == expectedLink1 );
-      REQUIRE( links[ 1 ].completeUrl( ) == expectedLink2 );
-      REQUIRE( links[ 2 ].completeUrl( ) == expectedLink3 );
+      REQUIRE( links[ 0 ] == Url( expectedLink1.cStr( ) ) );
+      REQUIRE( links[ 1 ] == Url( expectedLink2.cStr( ) ) );
+      REQUIRE( links[ 2 ] == Url( expectedLink3.cStr( ) ) );
 
       }
    }
@@ -130,7 +133,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
       // Verify parsed links match expected page links
       for (size_t i = 0; i < expectedLinks.size(); i++ )
          {
-         REQUIRE ( links[ i ].completeUrl( ) == expectedLinks[ i ] );
+         REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
          }
       }
 
@@ -233,7 +236,7 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
          // Verify parsed links match expected page links
          for ( size_t i = 0; i < expectedLinks.size(); i++ )
             {
-            REQUIRE ( links[ i ].completeUrl( ) == expectedLinks[ i ] );
+            REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
             }
          }
       
@@ -300,7 +303,7 @@ TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
          // Verify parsed links match expected page links
          for ( size_t i = 0; i < links.size(); i++ )
             {
-            //REQUIRE ( links[ i ].completeUrl( ) == expectedLinks[ i ] );
+            REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
             }
          }
       
