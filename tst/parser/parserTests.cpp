@@ -46,6 +46,34 @@ using std::size_t;
 TEST_CASE( "basic get links with relative paths", "[parser]" )
    {
 
+   SECTION( "working with .s " )
+      {
+      string filename = "tst/parser/man7_man_pages.html";
+      string htmlDoc;
+      htmlDoc = readFromFile( filename.cStr( ) );
+      HTMLparser testParser( htmlDoc );
+      vector< dex::Url > links = testParser.ReturnLinks( );
+      REQUIRE( links[0].completeUrl() == "https://www.kernel.org/doc/man-pages/contributing.html" );
+      REQUIRE( links[1].completeUrl() == "https://www.kernel.org/doc/man-pages/reporting_bugs.html" );
+      REQUIRE( links[2].completeUrl() == "https://www.kernel.org/doc/man-pages/patches.html" );
+      REQUIRE( links[3].completeUrl() == "https://www.kernel.org/doc/man-pages/download.html" );
+      
+      }
+   
+   SECTION( "working with ..s" )
+      {
+      string filename = "tst/parser/man7_index.html";
+      string htmlDoc;
+      htmlDoc = readFromFile( filename.cStr( ) );
+      HTMLparser testParser( htmlDoc );
+      vector< dex::Url > links = testParser.ReturnLinks( );
+
+      REQUIRE(links[0].completeUrl() == "http://man7.org/index.html" );
+      REQUIRE(links[3].completeUrl() == "http://man7.org/mtk/index.html" );
+      REQUIRE(links[6].completeUrl() == "http://man7.org/training/index.html");
+      
+      }
+
 	SECTION( "parsed simple html document with one link" )
       {
       string htmlDoc = 
