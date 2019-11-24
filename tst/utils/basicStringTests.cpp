@@ -1,6 +1,7 @@
 // basicStringTests.cpp
 // Testing for the basicString class
 //
+// 2019-11-23: Add toLower: combsc
 // 2019-11-20: Add replaceWhitespace and toString tests: combsc
 // 2019-11-13: Add stripWhitespace tests: combsc
 // 2019-10-27: Revamp swap tests: jasina
@@ -703,3 +704,8 @@ TEST_CASE( "toString", "[string]" )
 	REQUIRE( dex::toString( i ) == "0" );
 	}
 
+TEST_CASE( "toLower", "[string]" )
+	{
+	string a = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890!@#$%^&*(),./;'[]<>?:{}-=_+";
+	REQUIRE( dex::toLower( a ) == "qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnm1234567890!@#$%^&*(),./;'[]<>?:{}-=_+");
+	}

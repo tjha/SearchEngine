@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-11-23: Improved checkpointing: combsc
 // 2019-11-21: Add working redirect cache, fix overall logic of file, test multithreading: combsc
 // 2019-11-20: Add logging, add file structure for saving html: combsc
 // 2019-11-16: Init Commit: combsc
@@ -21,8 +22,13 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 // means we do not put broken links into our frontier and we do
 // not put links that aren't our responsibility into our frontier
 dex::frontier urlFrontier;
+size_t numCrawled = 0;
+size_t checkpoint = 1000;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
+
+
+
 #define numWorkers 5
 pthread_t workers [ numWorkers ];
 
@@ -84,6 +90,15 @@ void *worker( void *args )
 			pthread_cond_wait( &frontierCV, &frontierLock );
 			}
 		dex::Url toCrawl = urlFrontier.getUrl( );
+		++numCrawled;
+
+		if ( numCrawled % checkpoint == 0 )
+			{
+			print( "saving" );
+			dex::saveFrontier( "data/savedFrontier.txt", urlFrontier );
+			dex::saveBrokenLinks( "data/savedBrokenLinks.txt", brokenLinks );
+			print( "saved" );
+			}
 		pthread_mutex_unlock( &frontierLock );
 
 		// Fix link using our redirects cache
@@ -172,7 +187,7 @@ void *worker( void *args )
 				}
 			}
 		// This link doesn't lead anywhere, we need to add it to our broken links
-		if ( errorCode >= 400 )
+		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
 			{
 			pthread_mutex_lock( &brokenLinksLock );
 			brokenLinks.insert( toCrawl );
@@ -188,6 +203,7 @@ void *worker( void *args )
 int main( )
 	{
 	// setup logging file for this run
+	dex::makeDirectory( "data" );
 	dex::makeDirectory( "logs" );
 	loggingFileName = "logs/";
 	time_t now = time( nullptr );
@@ -196,10 +212,9 @@ int main( )
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
-
+	urlFrontier = dex::loadFrontier( "data/seedlist.txt" );
+	brokenLinks = dex::loadBrokenLinks( "data/brokenLinks.txt" );
 	
-	//urlFrontier.putUrl( "https://en.wikipedia.org/wiki/Google" );
-	urlFrontier.putUrl( "http://man7.org" );
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
 		int arg = i;

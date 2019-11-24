@@ -12,6 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-11-23: Add toLowerCase: combsc
 // 2019-11-20: Add replaceWhitespace and toString function: combsc
 // 2019-11-13: Add stripWhitespace function: combsc
 // 2019-11-04: Use typeTraits.hpp: jasina
@@ -1158,6 +1159,21 @@ namespace dex
 		if ( isNegative )
 			toReturn += '-';
 		return string( toReturn.rbegin( ), toReturn.rend( ) );
+		}
+
+	// To be used for case insensitive finding
+	string toLower( string s )
+		{
+		string toReturn;
+		toReturn.reserve( s.size( ) );
+		for ( auto it = s.cbegin( );  it != s.cend( );  ++it )
+			{
+			char c = *it;
+			if ( c >= 'A' && c <= 'Z' )
+				c += 32;
+			toReturn.pushBack( c );
+			}
+		return toReturn;
 		}
 
 	template < > struct hash < dex::string >

@@ -1,6 +1,7 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-11-23: Distinguish between politeness requests and disallowed paths, fixed parsing bug: combsc
 // 2019-11-18: Added expiration date: combsc
 // 2019-11-13: Added parsing for robots.txt files: combsc
 // 2019-11-04: fixed fixPath function, should NOT have / at the end: combsc
@@ -76,6 +77,13 @@ namespace dex
 						return true;
 					}
 
+				if ( disallowedPaths.count( path ) > 0 )
+					pathIsAllowed = false;
+
+				// If at any point our path is in allowed paths, we know that it's allowed and we can return true
+				if ( allowedPaths.count( path ) > 0 )
+					return true;
+
 				return pathIsAllowed;
 				}
 
@@ -87,7 +95,7 @@ namespace dex
 					fixedPath.insert( 0, "/" );
 				if ( fixedPath.back( ) != '/' )
 					fixedPath.append( "/" );
-				return fixedPath;
+				return dex::toLower( fixedPath );
 				}
 			
 
@@ -123,26 +131,27 @@ namespace dex
 				lastTimeVisited = allowedVisitTime - crawlDelay;
 				allowedVisitTime = time( nullptr );
 				expireTime = allowedVisitTime + defaultExpiration;
+				string toSearch = dex::toLower( robotTxtFile );
 				// see if user-agent matches our user-agent OR if it's *
-				int start = robotTxtFile.find( "User-agent: " + userAgent );
+				int start = toSearch.find( "user-agent: " + userAgent );
 				if ( start == -1 )
-					start = robotTxtFile.find( "User-agent: *" );
+					start = toSearch.find( "user-agent: *" );
 				if ( start != -1 )
 					{
-					int end = robotTxtFile.find( "User-agent:", start + 1 );
+					int end = toSearch.find( "user-agent:", start + 1 );
 					if ( end == -1 )
-						end = robotTxtFile.size( );
-					dex::string toParse = robotTxtFile.substr( start, end - start );
+						end = toSearch.size( );
+					dex::string toParse = toSearch.substr( start, end - start );
 
 					// find the crawling rate they'd prefer us to use.
 					int crawlStart, crawlEnd;
-					crawlStart = toParse.find( "Crawl-rate: " );
+					crawlStart = toParse.find( "crawl-rate: " );
 					if ( crawlStart != -1 )
 						{
 						crawlEnd = toParse.find( "\n", crawlStart + 1 );
 						crawlDelay = 1 / atoi( toParse.substr( crawlStart + 12, crawlEnd - crawlStart - 12 ).cStr( ) );
 						}
-					crawlStart = toParse.find( "Crawl-delay: " );
+					crawlStart = toParse.find( "crawl-delay: " );
 					if ( crawlStart != -1 )
 						{
 						crawlEnd = toParse.find( "\n", crawlStart + 1 );
@@ -151,15 +160,19 @@ namespace dex
 
 					// find all allowed paths
 					int allowStart, allowEnd;
-					for ( allowStart = toParse.find( "Allow: " );  allowStart != -1;  allowStart = toParse.find( "Allow: ", allowStart + 1) ) 
+					for ( allowStart = toParse.find( "allow: " );  allowStart != -1;  allowStart = toParse.find( "allow: ", allowStart + 1) ) 
 						{
-						allowEnd = toParse.find( "\n", allowStart + 1 );
-						addPathsAllowed( toParse.substr( allowStart + 7, allowEnd - allowStart - 7 ) );
+						string check = toParse.substr( allowStart - 3, 10 );
+						if ( allowStart > 2 && check.compare( "disallow: ") != 0 )
+							{
+							allowEnd = toParse.find( "\n", allowStart + 1 );
+							addPathsAllowed( toParse.substr( allowStart + 7, allowEnd - allowStart - 7 ) );
+							}
 						}
 
 					// find all disallowed paths
 					int disallowStart, disallowEnd;
-					for ( disallowStart = toParse.find( "Disallow: " );  disallowStart != -1;  disallowStart = toParse.find( "Disallow: ", disallowStart + 1 ) )
+					for ( disallowStart = toParse.find( "disallow: " );  disallowStart != -1;  disallowStart = toParse.find( "disallow: ", disallowStart + 1 ) )
 						{
 						disallowEnd = toParse.find( "\n", disallowStart + 1 );
 						addPathsDisallowed( toParse.substr( disallowStart + 10, disallowEnd - disallowStart - 10 ) );
@@ -263,13 +276,16 @@ namespace dex
 				}
 
 			// Checks for if you can perform HTTP request
-			bool canVisitPath( const dex::string &path )
+			// if you can visit return 0, if politeness error return 1, if disallowed return 2
+			int canVisitPath( const dex::string &path )
 				{
 				dex::string fixedPath = fixPath( path );
 				if ( !pathIsAllowed( fixedPath ) )
-					return false;
+					return 2;
 				
-				return time( nullptr ) >= allowedVisitTime; 
+				if ( time( nullptr ) < allowedVisitTime )
+					return 1;
+				return 0;
 				}
 
 			bool hasExpired( )

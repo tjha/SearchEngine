@@ -89,7 +89,14 @@ int main( int argc, char ** argv )
 
 		if ( errorCode == dex::POLITENESS_ERROR )
 			{
-			cout << "Mr. Robot says to be polite: " << it->cStr( ) << endl;
+			cout << "Mr. Robot says try again later: " << it->cStr( ) << endl;
+			cout << result << endl;
+			++it;
+			}
+
+		if ( errorCode == dex::DISALLOWED_ERROR )
+			{
+			cout << "Mr. Robot says path not allowed: " << it->cStr( ) << endl;
 			cout << result << endl;
 			++it;
 			}

@@ -44,7 +44,7 @@ void testHttps( )
 	assert( errorCode == 0 );
 
 	errorCode = dex::crawler::crawlUrl( "https://www.fb.com/", res, robots );
-	assert( errorCode == -5 );
+	assert( errorCode == -12 );
 	}
 
 void testHttp( )
@@ -71,8 +71,19 @@ void testHttp( )
 	assert( errorCode == -1 );
 	}
 
+void testOther( )
+	{
+	unorderedMap < string, RobotTxt > robots{ 10 };
+	string res;
+
+	
+	int errorCode = dex::crawler::crawlUrl( "https://www.nytimes.com/", res, robots );
+	cout << errorCode << endl;
+	}
+
 int main( )
 	{
+	testOther( );
    testHttp( );
 	testHttps( );
 	}

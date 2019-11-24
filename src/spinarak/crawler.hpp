@@ -14,6 +14,7 @@
 #include "url.hpp"
 #include <iostream>
 
+// 2019-11-23: Differentiate between path disallow and timeout: combsc
 // 2019-11-21: increased robustness to failure: combsc, jhirsh
 // 2019-11-18: removed isError function, receive input correctly, let robots expire: combsc
 // 2019-11-13: fixed isError function, generalized User-agent: combsc
@@ -53,7 +54,8 @@ namespace dex
 		SOCKET_CONNECTION_ERROR = -8,
 		PROTOCOL_ERROR = -9,
 		TLS_CONFIG_ERROR = -10,
-		RESPONSE_ERROR = -11
+		RESPONSE_ERROR = -11,
+		DISALLOWED_ERROR = -12
 		};
 	
 	enum httpProtocol
@@ -285,6 +287,7 @@ namespace dex
 						robotUrl.setPath( "/robots.txt" );
 
 						dex::string urlToVisit = robotUrl.completeUrl( );
+						
 						int errorCode = 300;
 						int numRedirectsFollowed = 0;
 						for ( ;  numRedirectsFollowed < 10 && errorCode / 100 == 3;  ++numRedirectsFollowed )
@@ -315,10 +318,16 @@ namespace dex
 						{
 						robot = robots[ url.getHost( ) ];
 						}
-					if ( !robot.canVisitPath( url.getPath( ) ) )
+					int visitPath = robot.canVisitPath( url.getPath( ) );
+					if ( visitPath == 1 )
 						{
-						result = "Cannot visit path due to robots object";
+						result = "Not ready to visit domain";
 						return POLITENESS_ERROR;
+						}
+					if ( visitPath == 2 )
+						{
+						result = "path " + url.getPath( ) + " is disallowed";
+						return DISALLOWED_ERROR;
 						}
 					
 					robot.updateLastVisited( );

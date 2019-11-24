@@ -6,7 +6,7 @@ CPPFLAGS := -I/usr/local/opt/libressl/include
 INCLUDE := -I$(SRC_PATH)/utils/
 
 driver: driver.cpp
-	$(CXX) $(CXXFLAGS) driver.cpp $(LDFLAGS) $(CPPFLAGS) $(INCLUDE) -ltls -pthread -g -o driver.exe
+	$(CXX) $(CXXFLAGS) driver.cpp $(LDFLAGS) $(CPPFLAGS) $(INCLUDE) -ltls -pthread -o driver.exe
 
 .PHONY: clean
 

@@ -5,6 +5,7 @@
 #include "../utils/vector.hpp"
 #include "../utils/basicString.hpp"
 #include "../spinarak/url.hpp"
+#include <stdlib.h>
 
 namespace dex
 	{
@@ -16,8 +17,9 @@ namespace dex
 		public:
 			Url getUrl( )
 				{
-				Url toReturn = toVisit.front( );
-				toVisit.erase( 0 );
+				int location = rand( ) % toVisit.size( );
+				Url toReturn = toVisit[ location ];
+				toVisit.erase( location );
 				return toReturn;
 				}
 
@@ -29,6 +31,16 @@ namespace dex
 			bool empty( )
 				{
 				return toVisit.empty( );
+				}
+
+			dex::vector < Url > ::iterator begin( )
+				{
+				return toVisit.begin( );
+				}
+
+			dex::vector < Url > ::iterator end( )
+				{
+				return toVisit.end( );
 				}
 		};
 	}

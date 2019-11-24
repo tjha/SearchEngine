@@ -1,6 +1,7 @@
 // file.hpp
 // file for dealing with our fileIO
 //
+// 2019-11-23 Added fileExists: combsc
 // 2019-11-21: Added includeGuards: combsc
 // 2019-11-20: Added appendToFile, add offset, add create, add makeDirectory: combsc
 // 2019-11-4: Swapped out memcpy for dex::copy: combsc
@@ -25,6 +26,12 @@ namespace dex
 		struct stat fileInfo;
 		fstat( fd, &fileInfo );
 		return fileInfo.st_size;
+		}
+
+	bool fileExists( const char *filePath )
+		{
+			struct stat fileInfo;
+			return (stat (filePath, &fileInfo) == 0);
 		}
 
 	long getPageSize( )
