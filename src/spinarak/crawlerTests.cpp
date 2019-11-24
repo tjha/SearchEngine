@@ -77,13 +77,13 @@ void testOther( )
 	string res;
 
 	
-	int errorCode = dex::crawler::crawlUrl( "https://www.nytimes.com/", res, robots );
+	int errorCode = dex::crawler::crawlUrl( "https://blog.jasper.es/", res, robots );
 	cout << errorCode << endl;
 	}
 
 int main( )
 	{
 	testOther( );
-   testHttp( );
+	testHttp( );
 	testHttps( );
 	}

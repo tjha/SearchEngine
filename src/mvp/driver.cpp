@@ -29,7 +29,7 @@ pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
 
 
-#define numWorkers 5
+#define numWorkers 20
 pthread_t workers [ numWorkers ];
 
 dex::unorderedMap < dex::string, dex::RobotTxt > robotsCache{ 1000 };

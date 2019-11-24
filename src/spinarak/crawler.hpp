@@ -96,6 +96,7 @@ namespace dex
 			static int parseResponse( dex::vector < char > response , dex::string &result )
 				{
 				dex::string toSearch( response.cbegin( ), response.cend( ) );
+				
 				int endHeader;
 				int startContent;
 				int location = toSearch.find( "HTTP/1.1 " );
@@ -261,6 +262,7 @@ namespace dex
 					{
 					return RESPONSE_ERROR;
 					}
+				
 				int errorCode = parseResponse( response, result );
 				return errorCode;
 				}
@@ -298,17 +300,21 @@ namespace dex
 							urlToVisit = result;
 							}
 						// If our error code is 404, the path does not exist and we create a default robots.txt object
-						if ( errorCode == 404 )
+						if ( errorCode >= 400 && errorCode < 500 )
 							{
 							// Create Default
 							dex::RobotTxt newRobot( url.getHost( ) );
 							robot = newRobot;
 							}
 						// If there was an error, we need to abort and return the error
-						if ( errorCode != 0 )
+						else
 							{
-							return errorCode;
+							if ( errorCode != 0 )
+								{
+								return errorCode;
+								}
 							}
+						
 						// Create new RobotsTxt
 						dex::string robotsTxtInformation = result;
 						dex::RobotTxt newRobot( url.getHost( ), robotsTxtInformation );
