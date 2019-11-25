@@ -6,6 +6,7 @@
 #include "../utils/unorderedSet.hpp"
 #include "../utils/exception.hpp"
 #include "../utils/functional.hpp"
+// 2019-11-24: Changed completeUrl: combsc
 // 2019-11-21: Fixed fragment/query bug: combsc
 // 2019-11-20: Add =operator, hash: combsc
 // 2019-11-10: made parts of url private, have to call get and set
@@ -152,18 +153,9 @@ namespace dex
 					{
 					completeUrl += ":" + port;
 					}
-				if ( path != "/" )
-					{
-					completeUrl += path;
-					}
-				if ( query != "" )
-					{
-					completeUrl += query;
-					}
-				if ( fragment != "" )
-					{
-					completeUrl += fragment;
-					}
+				completeUrl += path;
+				completeUrl += query;
+				completeUrl += fragment;
 				return completeUrl;
 				}
 			

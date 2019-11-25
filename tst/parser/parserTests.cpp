@@ -107,15 +107,15 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
       expectedLinks.pushBack(
          "http://www.provost.umich.edu/programs/thurnau/index.html" );
-      expectedLinks.pushBack( "http://www.eecs.umich.edu" );
-      expectedLinks.pushBack( "http://www.umich.edu" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
+      expectedLinks.pushBack( "http://www.umich.edu/" );
       expectedLinks.pushBack( 
          "https://web.eecs.umich.edu/~pmchen/contact.html" );
       expectedLinks.pushBack( "http://web.eecs.umich.edu/virtual/" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/~pmchen/Rio" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/ssl" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/cse" );
-      expectedLinks.pushBack( "http://www.eecs.umich.edu" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
       expectedLinks.pushBack( "https://web.eecs.umich.edu/~pmchen/papers/" );
       expectedLinks.pushBack( 
          "https://web.eecs.umich.edu/~pmchen/eecs482/" );
