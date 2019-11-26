@@ -2,7 +2,7 @@ language: cpp
 compiler: gcc
 
 script:
- - ./scripts/libressl-install.sh
+ - sudo ./scripts/libressl-install.sh
  - make all
  - make clean
 
