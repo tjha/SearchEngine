@@ -38,15 +38,15 @@ build:
 	@mkdir -vp $(addprefix $(BUILD_PATH)/tst/,$(TESTS_PATHS))
 
 $(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -ltls -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@ -ltls 
 	./$@
 	make clean
 
 $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
 	make build
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -ltls -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@ -ltls 
 
-print_os: ;@echo $(OSFLAG)
+print_os: ;@echo 'os = ' $(OSFLAG)
 
 # TODO: run_integration_tests #
 

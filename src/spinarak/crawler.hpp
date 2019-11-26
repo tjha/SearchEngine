@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <tls.h>
+#include <string.h>
 #include "robots.hpp"
 #include "../utils/exception.hpp"
 #include "../utils/unorderedMap.hpp"
