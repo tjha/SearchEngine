@@ -14,6 +14,7 @@
 #include "url.hpp"
 #include <iostream>
 
+// 2019-11-26: Differentiate between html and non-html when crawling: combsc
 // 2019-11-23: Differentiate between path disallow and timeout: combsc
 // 2019-11-21: increased robustness to failure: combsc, jhirsh
 // 2019-11-18: removed isError function, receive input correctly, let robots expire: combsc
@@ -55,7 +56,8 @@ namespace dex
 		PROTOCOL_ERROR = -9,
 		TLS_CONFIG_ERROR = -10,
 		RESPONSE_ERROR = -11,
-		DISALLOWED_ERROR = -12
+		DISALLOWED_ERROR = -12,
+		NOT_HTML = -13
 		};
 	
 	enum httpProtocol
@@ -72,6 +74,7 @@ namespace dex
 		private:
 			static dex::string makeGetMessage( const dex::string &path, const dex::string &host )
 				{
+				
 				return "GET " 
 					+ path
 					+ " HTTP/1.1\r\nHost: "
@@ -93,7 +96,7 @@ namespace dex
 					response.pushBack( buffer[ i ] );
 				}
 
-			static int parseResponse( dex::vector < char > response , dex::string &result )
+			static int parseResponse( dex::vector < char > response , dex::string &result, bool isRobot = false )
 				{
 				dex::string toSearch( response.cbegin( ), response.cend( ) );
 				
@@ -102,6 +105,7 @@ namespace dex
 				int location = toSearch.find( "HTTP/1.1 " );
 				if ( location != -1 )
 					{
+					int returnValue = 0;
 					char statusCode[ 4 ] = { toSearch[ location + 9 ], toSearch[ location + 10 ],
 							toSearch[ location + 11 ], '\0' };
 					int status = ( statusCode[ 0 ] - '0' ) * 100 +
@@ -110,15 +114,32 @@ namespace dex
 					// If the status code starts with 2, it's a valid response
 					if ( statusCode[ 0 ] == '2' )
 						{
+						
 						endHeader = toSearch.find( "\r\n\r\n" );
 						if ( endHeader == -1 )
 							{
 							result = toSearch;
 							return NO_HEADER_END_ERROR;
 							}
+						// If there is a Content-Type field in the header
+						if ( !isRobot )
+							{
+							int contentType = toSearch.find( "Content-Type:" );
+							if ( contentType < endHeader && contentType >= 0 )
+								{
+								int contentTypeStart = contentType + 14;
+								int contentTypeEnd = toSearch.find( "\n", contentTypeStart );
+								string content = toSearch.substr( contentTypeStart, contentTypeEnd - contentTypeStart );
+								if ( content.find( "text/html" ) == dex::string::npos ) 
+									{
+									returnValue = NOT_HTML;
+									}
+									
+								}
+							}
 						startContent = endHeader + 4;
 						result = toSearch.substr( startContent, toSearch.size( ) - startContent );
-						return 0;
+						return returnValue;
 						}
 					// If the status code starts with a 3, it's a redirect
 					else
@@ -150,7 +171,7 @@ namespace dex
 				return NO_RESPONSE_ERROR;
 				}
 
-			static int connectPage( Url url, dex::string &result, bool protocol )
+			static int connectPage( Url url, dex::string &result, bool protocol, bool isRobot = false )
 				{
 				int connectResult = 0;
 				struct addrinfo *address;
@@ -263,7 +284,7 @@ namespace dex
 					return RESPONSE_ERROR;
 					}
 				
-				int errorCode = parseResponse( response, result );
+				int errorCode = parseResponse( response, result, isRobot );
 				return errorCode;
 				}
 		
@@ -296,7 +317,7 @@ namespace dex
 							{
 							Url robotUrl( urlToVisit.cStr( ) );
 							protocol = ( robotUrl.getService( ) == "http" ) ? HTTP : HTTPS;
-							errorCode = connectPage( robotUrl, result, protocol );
+							errorCode = connectPage( robotUrl, result, protocol, true );
 							urlToVisit = result;
 							}
 						// If our error code is 404, the path does not exist and we create a default robots.txt object
@@ -342,13 +363,13 @@ namespace dex
 					}
 				result = "";
 				protocol = ( url.getService( ) == "http" ) ? HTTP : HTTPS;
-				int errorCode = connectPage( url, result, protocol );
+				int errorCode = connectPage( url, result, protocol, false );
 				return errorCode;
 				}
 			// Used for testing our connectPage function
 			static int testConnect( Url url, dex::string &result, bool protocol )
 				{
-				return connectPage( url, result, protocol );
+				return connectPage( url, result, protocol, false );
 				}
 		};
 	}

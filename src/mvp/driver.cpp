@@ -4,13 +4,17 @@
 // 2019-11-21: Add working redirect cache, fix overall logic of file, test multithreading: combsc
 // 2019-11-20: Add logging, add file structure for saving html: combsc
 // 2019-11-16: Init Commit: combsc
-#include "../spinarak/crawler.hpp"
-#include "../utils/basicString.hpp"
-#include "../utils/vector.hpp"
+#include "crawler.hpp"
+#include "basicString.hpp"
+#include "vector.hpp"
 #include "frontier.hpp"
 #include "checkpointing.hpp"
 #include "redirectCache.hpp"
-#include "../parser/parser.hpp"
+#include "parser.hpp"
+
+dex::string pathToHtml = "src/mvp/";
+dex::string pathToLogging = "src/mvp/";
+dex::string pathToData = "src/mvp/";
 
 
 dex::string loggingFileName;
@@ -30,7 +34,7 @@ pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
 
 
-#define numWorkers 20
+#define numWorkers 1
 pthread_t workers [ numWorkers ];
 
 dex::unorderedMap < dex::string, dex::RobotTxt > robotsCache{ 1000 };
@@ -75,6 +79,7 @@ int log( dex::string toWrite )
 // workers.
 bool isUrlInDomain( const dex::Url &url )
 	{
+	dex::string work = url.completeUrl( );
 	return true;
 	}
 
@@ -96,8 +101,8 @@ void *worker( void *args )
 		if ( numCrawled % checkpoint == 0 )
 			{
 			print( "saving" );
-			dex::saveFrontier( "data/savedFrontier.txt", urlFrontier );
-			dex::saveBrokenLinks( "data/savedBrokenLinks.txt", brokenLinks );
+			dex::saveFrontier( ( pathToData + "data/savedFrontier.txt" ).cStr( ), urlFrontier );
+			dex::saveBrokenLinks( ( pathToData + "data/savedBrokenLinks.txt" ).cStr( ), brokenLinks );
 			print( "saved" );
 			}
 		pthread_mutex_unlock( &frontierLock );
@@ -117,44 +122,50 @@ void *worker( void *args )
 		print( dex::toString( errorCode ) );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
-		if ( errorCode == 0 )
+		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
 			dex::string html = toCrawl.completeUrl( ) + "\n" + result;
-			dex::saveHtml( toCrawl, html );
-			dex::HTMLparser parser( html );
-			
-			dex::vector < dex::Url > links = parser.ReturnLinks( );
-			for ( auto it = links.cbegin( );  it != links.cend( );  ++it )
-				{
-				// Fix link using our redirects cache
-				pthread_mutex_lock( &redirectsLock );
-				dex::Url endpoint = redirects.getEndpoint( *it );
-				pthread_mutex_unlock( &redirectsLock );
+			dex::saveHtml( toCrawl, html, pathToHtml );
+			if ( errorCode == dex::NOT_HTML )
+				print( toCrawl.completeUrl( ) + " is not html " );
 
-				// Check to see if the endpoint we have is a known broken link
-				pthread_mutex_lock( &brokenLinksLock );
-				if ( brokenLinks.count( endpoint ) == 0 )
+			if ( errorCode == 0 )
+				{
+				dex::HTMLparser parser( html );
+			
+				dex::vector < dex::Url > links = parser.ReturnLinks( );
+				for ( auto it = links.cbegin( );  it != links.cend( );  ++it )
 					{
-					pthread_mutex_unlock( &brokenLinksLock );
-					// If we're in charge of this link, put it into our frontier
-					if ( isUrlInDomain( endpoint ) )
+					// Fix link using our redirects cache
+					pthread_mutex_lock( &redirectsLock );
+					dex::Url endpoint = redirects.getEndpoint( *it );
+					pthread_mutex_unlock( &redirectsLock );
+
+					// Check to see if the endpoint we have is a known broken link
+					pthread_mutex_lock( &brokenLinksLock );
+					if ( brokenLinks.count( endpoint ) == 0 )
 						{
-						pthread_mutex_lock( &frontierLock );
-						urlFrontier.putUrl( endpoint );
-						pthread_cond_signal( &frontierCV );
-						pthread_mutex_unlock( &frontierLock );
+						pthread_mutex_unlock( &brokenLinksLock );
+						// If we're in charge of this link, put it into our frontier
+						if ( isUrlInDomain( endpoint ) )
+							{
+							pthread_mutex_lock( &frontierLock );
+							urlFrontier.putUrl( endpoint );
+							pthread_cond_signal( &frontierCV );
+							pthread_mutex_unlock( &frontierLock );
+							}
+						// If we're not in charge of this link, send it off to be shipped
+						else
+							{
+							pthread_mutex_lock( &linksToShipLock );
+							linksToShip.pushBack( endpoint );
+							pthread_mutex_unlock( &linksToShipLock );
+							}
 						}
-					// If we're not in charge of this link, send it off to be shipped
 					else
 						{
-						pthread_mutex_lock( &linksToShipLock );
-						linksToShip.pushBack( endpoint );
-						pthread_mutex_unlock( &linksToShipLock );
+						pthread_mutex_unlock( &brokenLinksLock );
 						}
-					}
-				else
-					{
-					pthread_mutex_unlock( &brokenLinksLock );
 					}
 				}
 			}
@@ -204,17 +215,17 @@ void *worker( void *args )
 int main( )
 	{
 	// setup logging file for this run
-	dex::makeDirectory( "data" );
-	dex::makeDirectory( "logs" );
-	loggingFileName = "logs/";
+	dex::makeDirectory( ( pathToData + "data" ).cStr( ) );
+	dex::makeDirectory( ( pathToLogging + "logs" ).cStr( ) );
+	loggingFileName = pathToLogging + "logs/";
 	time_t now = time( nullptr );
 	loggingFileName += ctime( &now );
 	loggingFileName.popBack( );
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
-	urlFrontier = dex::loadFrontier( "data/seedlist.txt" );
-	brokenLinks = dex::loadBrokenLinks( "data/brokenLinks.txt" );
+	urlFrontier = dex::loadFrontier( ( pathToData + "data/seedlist.txt" ).cStr( ) );
+	brokenLinks = dex::loadBrokenLinks( ( pathToData + "data/brokenLinks.txt" ).cStr( ) );
 	
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{

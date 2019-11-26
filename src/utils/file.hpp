@@ -1,6 +1,7 @@
 // file.hpp
 // file for dealing with our fileIO
 //
+// 2019-11-26: Silence warning: combsc
 // 2019-11-23 Added fileExists: combsc
 // 2019-11-21: Added includeGuards: combsc
 // 2019-11-20: Added appendToFile, add offset, add create, add makeDirectory: combsc
@@ -48,7 +49,7 @@ namespace dex
 
 	int makeDirectory( const char *directoryName )
 		{
-		struct stat st = { 0 };
+		struct stat st { };
 		if ( stat( directoryName, &st ) == -1 )
 			return mkdir( directoryName, 0700 );
 		return 0;
