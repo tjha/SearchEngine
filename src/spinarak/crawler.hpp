@@ -345,6 +345,11 @@ namespace dex
 				int errorCode = connectPage( url, result, protocol );
 				return errorCode;
 				}
+			// Used for testing our connectPage function
+			static int testConnect( Url url, dex::string &result, bool protocol )
+				{
+				return connectPage( url, result, protocol );
+				}
 		};
 	}
 

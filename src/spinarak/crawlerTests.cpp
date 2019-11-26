@@ -77,8 +77,11 @@ void testOther( )
 	string res;
 
 	
-	int errorCode = dex::crawler::crawlUrl( "https://blog.jasper.es/", res, robots );
-	cout << errorCode << endl;
+	//int errorCode = dex::crawler::crawlUrl( "https://www.twitter.com/", res, robots );
+
+	//cout << errorCode << endl;
+	dex::crawler::testConnect( "https://www.kernel.org/doc/man-pages/contributing.html", res, dex::HTTPS );
+	cout << res << endl;
 	}
 
 int main( )

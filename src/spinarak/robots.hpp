@@ -299,7 +299,7 @@ namespace dex
 			dex::string compress( )
 				{
 				return "Domain:\t\t\t" + domain + "\n" +
-							"Crawl-Delay:\t\t" + int( crawlDelay ) + "\n" +
+							"Crawl-Delay:\t\t" + dex::toString( crawlDelay ) + "\n" +
 							"Allowed-Visit-Time:\t" + ctime( &allowedVisitTime ) +
 							"Last-Visit:\t\t" + ctime( &lastTimeVisited ) + "\n" +
 							"Expire Time:\t\t" + ctime( &expireTime ) + "\n" + 

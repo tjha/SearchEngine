@@ -21,6 +21,7 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 // and lead to a legitimate endpoint, or must be unknown. This
 // means we do not put broken links into our frontier and we do
 // not put links that aren't our responsibility into our frontier
+
 dex::frontier urlFrontier;
 size_t numCrawled = 0;
 size_t checkpoint = 1000;
