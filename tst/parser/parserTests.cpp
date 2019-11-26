@@ -1,9 +1,13 @@
 // parserTests.cpp
 // Basic testing of Parser functionality
 //
-// 2018-11-21: Created basic link and anchor text tests for amazon.html: tjha
-//             Updated to use URLs instead of strings: combsc
-// 2018-11-21: Created extensive checking of all anchor text words for
+// 2019-11-23: Added Enneagraminstitute links tests: tjha
+// 2019-11-22: Modified test case to utilize dex::Url during comparisions to
+//             ensure isolation from Url implementation: tjha
+// 2019-11-22: Added man7 test case and merged with changes by combsc that
+//             convert links to vector of url types instead of strigs: tjha
+// 2019-11-21: Created basic link and anchor text tests for amazon.html: tjha
+// 2019-11-21: Created extensive checking of all anchor text words for
 //             peter_chen.html: tjha
 // 2019-11-20: Modified basic test to ensure content is first parsed for url
 //             format: <url>\n<html_content>: tjha
@@ -19,8 +23,9 @@
 #include "basicString.hpp"
 #include "catch.hpp"
 #include "exception.hpp"
-#include "parser.hpp"
 #include "file.hpp"
+#include "parser.hpp"
+#include "url.hpp"
 
 #include <cstddef>
 
@@ -31,32 +36,59 @@ using dex::HTMLparser;
 using dex::outOfRangeException;
 using dex::readFromFile;
 using dex::string;
+using dex::Url;
 using dex::vector;
 
 using std::size_t;
 using std::cout;
 using std::endl;
 
-
 TEST_CASE( "basic get links with relative paths", "[parser]" )
    {
+
+   SECTION( "working with .s " )
+      {
+      string filename = "tst/parser/man7_man_pages.html";
+      string htmlDoc;
+      htmlDoc = readFromFile( filename.cStr( ) );
+      HTMLparser testParser( htmlDoc );
+      vector< dex::Url > links = testParser.ReturnLinks( );
+      REQUIRE( links[0].completeUrl() == "https://www.kernel.org/doc/man-pages/contributing.html" );
+      REQUIRE( links[1].completeUrl() == "https://www.kernel.org/doc/man-pages/reporting_bugs.html" );
+      REQUIRE( links[2].completeUrl() == "https://www.kernel.org/doc/man-pages/patches.html" );
+      REQUIRE( links[3].completeUrl() == "https://www.kernel.org/doc/man-pages/download.html" );
+      
+      }
+   
+   SECTION( "working with ..s" )
+      {
+      string filename = "tst/parser/man7_index.html";
+      string htmlDoc;
+      htmlDoc = readFromFile( filename.cStr( ) );
+      HTMLparser testParser( htmlDoc );
+      vector< dex::Url > links = testParser.ReturnLinks( );
+
+      REQUIRE(links[0].completeUrl() == "http://man7.org/index.html" );
+      REQUIRE(links[3].completeUrl() == "http://man7.org/mtk/index.html" );
+      REQUIRE(links[6].completeUrl() == "http://man7.org/training/index.html");
+      
+      }
 
 	SECTION( "parsed simple html document with one link" )
       {
       string htmlDoc = 
-         "https://web.eecs.umich.edu/~pmchen/\n\
-         <html>\n\
-            <title>Title</title>\n\
-            <body>\n\
-            <a href=\"software\">Software</a>\n\
-            </body>\n\
-         </html>";
+			 "https://web.eecs.umich.edu/~pmchen\n\
+			  <html>\n\
+				  <title>Title</title>\n\
+				  <body>\n\
+				  <a href=\"software\">Software</a>\n\
+				  </body>\n\
+			  </html>";
       HTMLparser testParser( htmlDoc );
-      // testParser.GetLinks();
       vector< dex::Url > links = testParser.ReturnLinks( );
       string expectedLink = "https://web.eecs.umich.edu/~pmchen/software";
-      REQUIRE( links.size() == 1 );
-      REQUIRE( links[0].completeUrl( ) == expectedLink );
+      REQUIRE( links.size( ) == 1 );
+      REQUIRE( links[ 0 ] == Url( expectedLink.cStr( ) ) );
       }
 
 	SECTION( "parsed simple html document with three links" )
@@ -72,15 +104,14 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
             </body>\n\
          </html>";
       HTMLparser testParser( htmlDoc );
-      // testParser.GetLinks();
       vector< dex::Url > links = testParser.ReturnLinks( );
       string expectedLink1 = "https://web.eecs.umich.edu/~pmchen/software1";
       string expectedLink2 = "https://web.eecs.umich.edu/~pmchen/software2";
       string expectedLink3 = "https://web.eecs.umich.edu/~pmchen/software3";
-      REQUIRE( links.size() == 3 );
-      REQUIRE( links[0].completeUrl( ) == expectedLink1 );
-      REQUIRE( links[1].completeUrl( ) == expectedLink2 );
-      REQUIRE( links[2].completeUrl( ) == expectedLink3 );
+      REQUIRE( links.size( ) == 3 );
+      REQUIRE( links[ 0 ] == Url( expectedLink1.cStr( ) ) );
+      REQUIRE( links[ 1 ] == Url( expectedLink2.cStr( ) ) );
+      REQUIRE( links[ 2 ] == Url( expectedLink3.cStr( ) ) );
 
       }
    }
@@ -99,23 +130,21 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
       {
       vector< dex::Url > links = testParser.ReturnLinks( );
 
-      // Validate correct number of links were extracted
-      REQUIRE ( links.size() == 13 );
 
       // Create vector with expected links on page
       vector < string > expectedLinks;
 
       expectedLinks.pushBack(
          "http://www.provost.umich.edu/programs/thurnau/index.html" );
-      expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
-      expectedLinks.pushBack( "http://www.umich.edu/" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu" );
+      expectedLinks.pushBack( "http://www.umich.edu" );
       expectedLinks.pushBack( 
          "https://web.eecs.umich.edu/~pmchen/contact.html" );
       expectedLinks.pushBack( "http://web.eecs.umich.edu/virtual/" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/~pmchen/Rio" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/ssl" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/cse" );
-      expectedLinks.pushBack( "http://www.eecs.umich.edu/" );
+      expectedLinks.pushBack( "http://www.eecs.umich.edu" );
       expectedLinks.pushBack( "https://web.eecs.umich.edu/~pmchen/papers/" );
       expectedLinks.pushBack( 
          "https://web.eecs.umich.edu/~pmchen/eecs482/" );
@@ -124,10 +153,13 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
       expectedLinks.pushBack( 
          "https://web.eecs.umich.edu/~pmchen/software" );
 
+      // Validate correct number of links were extracted
+      REQUIRE ( links.size( ) == expectedLinks.size( ) );
+
       // Verify parsed links match expected page links
       for (size_t i = 0; i < expectedLinks.size(); i++ )
          {
-         REQUIRE ( links[ i ].completeUrl( ) == expectedLinks[ i ] );
+         REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
          }
       }
 
@@ -185,7 +217,8 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
       AnchorWords.pushBack( "Students" );
 
-      AnchorWords.pushBack( "Software" ); 
+      AnchorWords.pushBack( "Software" );
+
       REQUIRE( AnchorWords.size( ) == words.size( ) );
 
       size_t word_count = 0; 
@@ -215,9 +248,6 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
          {
          vector< dex::Url > links = testParser.ReturnLinks( );
 
-         // Validate correct number of links were extracted
-         REQUIRE ( links.size() == 2 );
-
          // Create vector with expected links on page
          vector < string > expectedLinks;
 
@@ -226,10 +256,13 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
          expectedLinks.pushBack( 
             "https://www.amazon.com/gp/help/customer/display.html/ref=footer_privacy?ie=UTF8&nodeId=468496" );
 
+         // Validate correct number of links were extracted
+         REQUIRE ( links.size( ) == expectedLinks.size( ) );
+
          // Verify parsed links match expected page links
          for ( size_t i = 0; i < expectedLinks.size(); i++ )
             {
-            REQUIRE ( links[ i ].completeUrl( ) == expectedLinks[ i ] );
+            REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
             }
          }
       
@@ -275,9 +308,6 @@ TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
          {
          vector< dex::Url > links = testParser.ReturnLinks( );
 
-         // Validate correct number of links were extracted
-         //REQUIRE ( links.size() == 10 );
-
          // Create vector with expected links on page
          vector < string > expectedLinks;
 
@@ -286,15 +316,103 @@ TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
          expectedLinks.pushBack( "http://man7.org/tlpi/index.html" );
          expectedLinks.pushBack( "http://blog.man7.org" );
          expectedLinks.pushBack( "http://man7.org/articles/index.html" );
+         expectedLinks.pushBack( "http://man7.org/conf/index.html" );
          expectedLinks.pushBack( "http://www.kernel.org/doc/man-pages/" );
          expectedLinks.pushBack( "http://man7.org/linux/man-pages/index.html" );
          expectedLinks.pushBack( "http://man7.org/mtk/index.html" );
          expectedLinks.pushBack( "http://man7.org/mtk/contact.html" );
+         expectedLinks.pushBack( "http://statcounter.com" );
+
+         // Validate correct number of links were extracted
+         REQUIRE ( links.size( ) == expectedLinks.size( ) );
 
          // Verify parsed links match expected page links
          for ( size_t i = 0; i < links.size(); i++ )
             {
-            //REQUIRE ( links[ i ].completeUrl( ) == expectedLinks[ i ] );
+            REQUIRE ( links[ i ].completeUrl( ) == Url( expectedLinks[ i ].cStr( ) ).completeUrl( ) );
+            }
+         }
+      
+      SECTION ( "Expected Anchor Text" )
+         {
+         }
+      
+      SECTION( "Expected Words" )
+         {
+         }
+   }
+
+TEST_CASE( "enneagraminstitute.com: simple page using Squarespace" )
+   {
+      string filename = "tst/parser/enneagraminstitute.html";
+      string htmlDoc;
+      htmlDoc = readFromFile( filename.cStr( ) );
+      HTMLparser testParser( htmlDoc );
+
+      SECTION( "Expected Links" )
+         {
+         vector< dex::Url > links = testParser.ReturnLinks( );
+
+         // Create vector with expected links on page
+         vector < string > expectedLinks;
+			
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/how-the-enneagram-system-works" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/type-descriptions" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/the-enneagram-type-combinations" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/misidentifications-of-enneagram-personality-types" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/the-traditional-enneagram" );
+         expectedLinks.pushBack( "https://subscriptions.enneagraminstitute.com" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/events" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/course-offerings" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/workshops" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/store" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/about" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/contact" );
+         expectedLinks.pushBack( "https://tests.enneagraminstitute.com" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/rheti" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/ivq" );
+         expectedLinks.pushBack( "https://tests.enneagraminstitute.com/business-login" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/business-accounts" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/how-the-enneagram-system-works" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/type-descriptions" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/the-enneagram-type-combinations" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/misidentifications-of-enneagram-personality-types" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/the-traditional-enneagram" );
+         expectedLinks.pushBack( "https://subscriptions.enneagraminstitute.com" );
+
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/events" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/course-offerings" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/workshops" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/store" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/about" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/contact" );
+         expectedLinks.pushBack( "https://tests.enneagraminstitute.com" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/rheti" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/ivq" );
+         expectedLinks.pushBack( "https://tests.enneagraminstitute.com/business-login" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/business-accounts" );
+
+
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/#" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/#" );
+         expectedLinks.pushBack( "http://tests.enneagraminstitute.com/" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/type-descriptions" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/events" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/#" );
+
+         expectedLinks.pushBack( "https://www.facebook.com/EnneagramInstitute" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/contact" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/privacy-policy" );
+         expectedLinks.pushBack( "https://www.enneagraminstitute.com/terms-of-use" );
+
+         // Validate correct number of links were extracted
+         REQUIRE ( links.size( ) == expectedLinks.size( ) );
+
+         // Verify parsed links match expected page links
+         for ( size_t i = 0; i < links.size(); i++ )
+            {
+            REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
             }
          }
       
