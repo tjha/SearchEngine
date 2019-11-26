@@ -89,6 +89,29 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
       REQUIRE( links[ 2 ] == Url( expectedLink3.cStr( ) ) );
       }
 
+	SECTION( "edge case with links that start with ." )
+      {
+      string htmlDoc = 
+         "https://web.eecs.umich.edu/~pmchen/\n\
+         <html>\n\
+            <title>Title</title>\n\
+            <body>\n\
+            <a href=\".software1\">Software</a>\n\
+            <a href=\"../.software2\">Software</a>\n\
+            <a href=\"./.software3\">Software</a>\n\
+            </body>\n\
+         </html>";
+      HTMLparser testParser( htmlDoc );
+      vector< Url > links = testParser.ReturnLinks( );
+      string expectedLink1 = "https://web.eecs.umich.edu/~pmchen/.software1";
+      string expectedLink2 = "https://web.eecs.umich.edu/.software2";
+      string expectedLink3 = "https://web.eecs.umich.edu/~pmchen/.software3";
+      REQUIRE( links.size( ) == 3 );
+      REQUIRE( links[ 0 ] == Url( expectedLink1.cStr( ) ) );
+      REQUIRE( links[ 1 ] == Url( expectedLink2.cStr( ) ) );
+      REQUIRE( links[ 2 ] == Url( expectedLink3.cStr( ) ) );
+      }
+
    SECTION( "working with .s " )
       {
       string filename = "tst/parser/man7_man_pages.html";
