@@ -38,13 +38,13 @@ build:
 	@mkdir -vp $(addprefix $(BUILD_PATH)/tst/,$(TESTS_PATHS))
 
 $(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@ -ltls 
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@ -ltls -g
 	./$@
 	make clean
 
 $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
 	make build
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@ -ltls 
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@ -ltls -g
 
 print_os: ;@echo 'os = ' $(OSFLAG)
 

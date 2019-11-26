@@ -1,7 +1,7 @@
 #!/bin/bash
 # https://github.com/palkan/acli/blob/master/travis-install-libressl.sh
 # Install LibreSSL in linux environment
-set -e
+set +e
 
 INSTALL_PATH="/opt" # or $HOME/opt
 
@@ -17,6 +17,11 @@ if [ ! -d "$INSTALL_PATH/libressl/lib" ]; then
   echo "export CPPFLAGS=$INSTALL_PATH/libressl/include" >> ~/.bashrc
   make && make check
   sudo make install
+  sudo mkdir etc/ # cert.pem is not installed correctly
+  cd etc
+  sudo mkdir ssl/
+  cd ..
+  sudo cp apps/openssl/cert.pem etc/ssl
   echo "$INSTALL_PATH/libressl" | sudo tee /etc/ld.so.conf.d/libressl.conf
   sudo ldconfig
 else
