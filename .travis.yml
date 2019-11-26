@@ -3,8 +3,6 @@ compiler: gcc
 
 script:
  - ./scripts/libressl-install.sh
-
-script:
  - make all
  - make clean
 
