@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-11-26: Added relative paths, added compatability for pages that are not HTML: combsc
 // 2019-11-23: Improved checkpointing: combsc
 // 2019-11-21: Add working redirect cache, fix overall logic of file, test multithreading: combsc
 // 2019-11-20: Add logging, add file structure for saving html: combsc
