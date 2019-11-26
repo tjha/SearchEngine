@@ -1,7 +1,8 @@
 // parserTests.cpp
 // Basic testing of Parser functionality
 //
-// 2019-11-26: Added edge cases for .s and ..s: tjha
+// 2019-11-26: Added stress test case for getLinks using man7_all_pages: tjha
+// 2019-11-25: Added edge cases for .s and ..s: tjha
 // 2019-11-24: Added .s and ..s basic tests: medhak
 // 2019-11-23: Added Enneagraminstitute links tests: tjha
 // 2019-11-22: Modified test case to utilize dex::Url during comparisions to
@@ -489,5 +490,27 @@ TEST_CASE( "enneagraminstitute.com: simple page using Squarespace" )
       
       SECTION( "Expected Words" )
          {
+         }
+   }
+
+TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
+   {
+      string filename = "tst/parser/man7_all_pages.html";
+      string htmlDoc;
+      htmlDoc = readFromFile( filename.cStr( ) );
+      HTMLparser testParser( htmlDoc );
+
+      SECTION( "Expected Links" )
+         {
+         vector< dex::Url > links = testParser.ReturnLinks( );
+
+         // Create vector with expected links on page
+         vector < string > expectedLinks;
+	
+			//std::cout << links[ links.size( ) - 2 ].completeUrl( ) << std::endl;	
+        	
+         // Validate correct number of links were extracted
+         REQUIRE ( links.size( ) == 10813 ); // TODO: figure out why not 10812
+			
          }
    }
