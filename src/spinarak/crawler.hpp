@@ -206,37 +206,37 @@ namespace dex
 						return TLS_CONFIG_ERROR;
 						}
 					const char * error = tls_config_error( config );
-                    if ( error != NULL)
-                        {
-                        result = error;
-                        return TLS_CONFIG_ERROR;
-                        }
+					if ( error != NULL)
+						{
+						result = error;
+						return TLS_CONFIG_ERROR;
+						}
 					error = tls_error( ctx );
-                    if ( error != NULL)
-                        {
-                        result = error;
-                        return RESPONSE_ERROR;
-                        }
+					if ( error != NULL)
+						{
+						result = error;
+						return RESPONSE_ERROR;
+						}
 					// Connect to the host address
 					connectResult = tls_connect( ctx, url.getHost( ).cStr( ), !url.getPort( ).empty( ) ? url.getPort( ).cStr( ) : "443" );
-                    error = tls_config_error( config );
-                    if ( error != NULL)
-                        {
-                        result = error;
-                        return TLS_CONFIG_ERROR;
-                        }
-                    error = tls_error( ctx );
-                    if ( error != NULL)
-                        {
-                        result = error;
-                        return RESPONSE_ERROR;
-                        }
+					error = tls_config_error( config );
+					if ( error != NULL)
+						{
+						result = error;
+						return TLS_CONFIG_ERROR;
+						}
+					error = tls_error( ctx );
+					if ( error != NULL)
+						{
+						result = error;
+						return RESPONSE_ERROR;
+						}
 					}
 
 				if ( connectResult == -1 )
 					{
 					result = "Could not connect to " + url.getHost( ) + " on port " + url.getPort( ) + " using ";
-                    result += ( protocol == HTTP ? "http\n" : "https\n" );
+					result += ( protocol == HTTP ? "http\n" : "https\n" );
 					return CONNECTION_ERROR;
 					}
 
