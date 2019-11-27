@@ -1,11 +1,17 @@
 #!/bin/bash
 # https://github.com/palkan/acli/blob/master/travis-install-libressl.sh
-# Install LibreSSL in linux environment
+# Install dependencies for a linux machine
+## LibreSSL
+## tmux
+
 set +e
+
+sudo apt-get update
+sudo apt-get install tmux
 
 INSTALL_PATH="/opt" # or $HOME/opt
 
-# check if libressl is already installed
+# only install LibreSSL if it is not installed
 if [ ! -d "$INSTALL_PATH/libressl/lib" ]; then
 	cd "$INSTALL_PATH"
 	sudo git clone https://github.com/libressl-portable/portable libressl

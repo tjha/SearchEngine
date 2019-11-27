@@ -206,13 +206,13 @@ namespace dex
 						return TLS_CONFIG_ERROR;
 						}
 					const char * error = tls_config_error( config );
-					if ( error != NULL)
+					if ( error != NULL )
 						{
 						result = error;
 						return TLS_CONFIG_ERROR;
 						}
 					error = tls_error( ctx );
-					if ( error != NULL)
+					if ( error != NULL )
 						{
 						result = error;
 						return RESPONSE_ERROR;
@@ -220,13 +220,13 @@ namespace dex
 					// Connect to the host address
 					connectResult = tls_connect( ctx, url.getHost( ).cStr( ), !url.getPort( ).empty( ) ? url.getPort( ).cStr( ) : "443" );
 					error = tls_config_error( config );
-					if ( error != NULL)
+					if ( error != NULL )
 						{
 						result = error;
 						return TLS_CONFIG_ERROR;
 						}
 					error = tls_error( ctx );
-					if ( error != NULL)
+					if ( error != NULL )
 						{
 						result = error;
 						return RESPONSE_ERROR;
