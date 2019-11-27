@@ -76,12 +76,11 @@ void testOther( )
 	unorderedMap < string, RobotTxt > robots{ 10 };
 	string res;
 
-	
+	//cout << "hi" << endl;
 	//int errorCode = dex::crawler::crawlUrl( "https://www.twitter.com/", res, robots );
-
 	//cout << errorCode << endl;
-	dex::crawler::testConnect( "https://www.kernel.org/doc/man-pages/contributing.html", res, dex::HTTPS );
-	cout << res << endl;
+	dex::Url u( "https://advertising.amazon.fr?ref_=a20m_us_hnav_fr/" );
+	dex::crawler::testConnect( u, res, dex::HTTPS );
 	}
 
 int main( )

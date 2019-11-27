@@ -6,6 +6,7 @@
 #include "../utils/unorderedSet.hpp"
 #include "../utils/exception.hpp"
 #include "../utils/functional.hpp"
+// 2019-11-27: Fixed completeUrl if no path is given but ?# are: combsc
 // 2019-11-24: Changed completeUrl: combsc
 // 2019-11-21: Fixed fragment/query bug: combsc
 // 2019-11-20: Add =operator, hash: combsc
@@ -58,7 +59,7 @@ namespace dex
 					beginHost = endservice + 3;
 					}
 
-				int endHost = totalUrl.findFirstOf( "/:", beginHost );
+				int endHost = totalUrl.findFirstOf( "?#/:", beginHost );
 				// If there is no path or port, the end of the host is the end of the string.
 				if ( endHost == -1 )
 					endHost = totalUrl.size( );

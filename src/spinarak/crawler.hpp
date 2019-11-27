@@ -210,7 +210,6 @@ namespace dex
 						result = "Disallowed protocol\n";
 						return PROTOCOL_ERROR;
 						}
-
 					// setup libressl stuff
 					tls_init( );
 					tls_config * config = tls_config_new( );  
