@@ -345,7 +345,7 @@ namespace dex
 						{
 						robot = robots[ url.getHost( ) ];
 						}
-					int visitPath = robot.canVisitPath( url.getPath( ) );
+					int visitPath = robot.visitPathResult( url.getPath( ) );
 					if ( visitPath == 1 )
 						{
 						result = "Not ready to visit domain";

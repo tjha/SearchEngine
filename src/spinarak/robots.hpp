@@ -1,6 +1,8 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-11-27: Finished wildcard checking: combsc
+// 2019-11-26: Wildcard checking: combsc
 // 2019-11-23: Distinguish between politeness requests and disallowed paths, fixed parsing bug: combsc
 // 2019-11-18: Added expiration date: combsc
 // 2019-11-13: Added parsing for robots.txt files: combsc
@@ -27,6 +29,34 @@
 
 namespace dex
 	{
+	bool match( dex::string str, dex::string pattern )
+		{
+		size_t lastFound = 0;
+		size_t lastLocation = 0;
+		size_t asteriskLocation = pattern.find( "*", lastLocation );
+		for ( ;  asteriskLocation != dex::string::npos;  asteriskLocation = pattern.find( "*", lastLocation ) )
+			{
+			int size = asteriskLocation - lastLocation;
+			if ( size > 0 )
+				{
+				string toFind = pattern.substr( lastLocation, size );
+				lastFound = str.find( toFind, lastFound );
+				if ( lastFound == dex::string::npos )
+					return false;
+				lastFound += toFind.size( );
+				}
+			lastLocation = asteriskLocation + 1;
+			}
+		int size = pattern.size( ) - lastLocation;
+		if ( size > 0 )
+			{
+			string toFind = pattern.substr( lastLocation, pattern.size( ) - lastLocation );
+			lastFound = str.find( toFind, lastFound );
+			if ( lastFound == dex::string::npos )
+				return false;
+			}
+		return true;
+		}
 	// using this link to understand the protocol: 
 	// https://www.promptcloud.com/blog/how-to-read-and-respect-robots-file/
 	struct RobotTxt
@@ -48,10 +78,32 @@ namespace dex
 			// Paths that are exceptions to disallowed paths above. All extensions on the paths
 			// within this set are also allowed.
 			dex::unorderedSet < dex::string > allowedPaths { 10 };
+			// This datastructure is for checking wildcard paths
+			dex::vector < dex::string > allowedWildcards;
+			dex::vector < dex::string > disallowedWildcards;
+
+			
 
 			bool pathIsAllowed( dex::string path )
 				{
 				path = fixPath( path );
+				bool pathIsAllowed = true;
+				// check to see if the path is in any wildcard paths
+				for ( auto it = allowedWildcards.cbegin( );  it != allowedWildcards.cend( );  ++it )
+					{
+					if ( match( path, *it ) )
+						{
+						return true;
+						}
+					}
+				for ( auto it = disallowedWildcards.cbegin( );  it != disallowedWildcards.cend( );  ++it )
+					{
+					if ( match( path, *it ) )
+						{
+						pathIsAllowed = false;
+						}
+					}
+				
 				// if the path passed in is explicitly in disallowed paths, return false
 				if ( disallowedPaths.count( path ) > 0 )
 					return false;
@@ -60,7 +112,7 @@ namespace dex
 				if ( allowedPaths.count( path ) > 0 )
 					return true;
 
-				bool pathIsAllowed = true;
+				
 				// Parse the path to see if it is part of a disallowed path or allowed path
 				for ( size_t nextSlashLocation = path.find( "/" );  nextSlashLocation != dex::string::npos;
 						nextSlashLocation = path.find( "/", nextSlashLocation + 1 ) )
@@ -77,12 +129,6 @@ namespace dex
 						return true;
 					}
 
-				if ( disallowedPaths.count( path ) > 0 )
-					pathIsAllowed = false;
-
-				// If at any point our path is in allowed paths, we know that it's allowed and we can return true
-				if ( allowedPaths.count( path ) > 0 )
-					return true;
 
 				return pathIsAllowed;
 				}
@@ -228,7 +274,13 @@ namespace dex
 			void addPathsDisallowed( const InputIt &begin, const InputIt &end )
 				{
 				for ( InputIt it = begin;  it != end;  ++it )
-					disallowedPaths.insert( fixPath( *it ) );
+					{
+					if ( it->find( "*" ) == dex::string::npos )
+						disallowedPaths.insert( fixPath( *it ) );
+					else
+						disallowedWildcards.pushBack( *it );
+					}
+					
 				}
 			void addPathsDisallowed( const dex::unorderedSet < dex::string > &paths )
 				{
@@ -240,7 +292,13 @@ namespace dex
 				}
 			void addPathsDisallowed( const dex::string &str )
 				{
-				disallowedPaths.insert( fixPath( str ) );
+				if ( str.find( "*" ) == dex::string::npos )
+					disallowedPaths.insert( fixPath( str ) );
+				else
+					{
+					disallowedWildcards.pushBack( str );
+					}
+					
 				}
 
 			// Set the allowed paths for the domain
@@ -260,7 +318,13 @@ namespace dex
 			void addPathsAllowed( const InputIt &begin, const InputIt &end )
 				{
 				for ( InputIt it = begin;  it != end;  ++it )
-					allowedPaths.insert( fixPath( *it ) );
+					{
+					if ( it->find( "*" ) == dex::string::npos )
+						allowedPaths.insert( fixPath( *it ) );
+					else
+						allowedWildcards.pushBack( *it );
+					}
+					
 				}
 			void addPathsAllowed( const dex::unorderedSet < dex::string > &paths )
 				{
@@ -272,15 +336,20 @@ namespace dex
 				}
 			void addPathsAllowed( const dex::string &path )
 				{
-				allowedPaths.insert( fixPath( path) );
+				if ( path.find( "*" ) == dex::string::npos )
+					allowedPaths.insert( fixPath( path ) );
+				else
+					{
+					allowedWildcards.pushBack( path );
+					}
+					
 				}
 
 			// Checks for if you can perform HTTP request
 			// if you can visit return 0, if politeness error return 1, if disallowed return 2
-			int canVisitPath( const dex::string &path )
+			int visitPathResult( const dex::string &path )
 				{
-				dex::string fixedPath = fixPath( path );
-				if ( !pathIsAllowed( fixedPath ) )
+				if ( !pathIsAllowed( path ) )
 					return 2;
 				
 				if ( time( nullptr ) < allowedVisitTime )
