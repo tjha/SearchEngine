@@ -13,7 +13,7 @@
 #include "redirectCache.hpp"
 #include "parser.hpp"
 
-dex::string pathToHtml = "src/mvp/";
+dex::string pathToHtml = "data/html/";
 dex::string pathToLogging = "src/mvp/";
 
 

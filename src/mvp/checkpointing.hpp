@@ -30,18 +30,18 @@ namespace dex
 		unsigned long first = h & 0x000000FF;
 		unsigned long second = ( h & 0x0000FF00 ) >> 8;
 		unsigned long name = ( h & 0xFFFF0000 ) >> 16 ;
-		int err = dex::makeDirectory( ( folderPath + "html" ).cStr( ) );
+		int err = dex::makeDirectory( ( folderPath ).cStr( ) );
 		if ( err == -1 )
 			return err;
-		dex::string dirName = folderPath + "html/" + dex::toString( first );
+		dex::string dirName = folderPath + dex::toString( first );
 		err = dex::makeDirectory( dirName.cStr( ) );
 		if ( err == -1 )
 			return err;
-		dirName = folderPath + "html/" + dex::toString( first ) + "/" + dex::toString( second );
+		dirName = folderPath + dex::toString( first ) + "/" + dex::toString( second );
 		err = dex::makeDirectory( dirName.cStr( ) );
 		if ( err == -1 )
 			return err;
-		dex::string filename = folderPath + "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html";
+		dex::string filename = folderPath + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html";
 		err = dex::writeToFile( filename.cStr( ), html.cStr( ), html.size( ) );
 		return err;
 		}
