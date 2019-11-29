@@ -51,7 +51,7 @@ TEST_CASE( "Crawl", "[crawler]" )
 		REQUIRE( errorCode == 0 );
 
 		errorCode = dex::crawler::crawlUrl( "https://www.fb.com/", res, robots );
-		REQUIRE( errorCode == -5 );
+		REQUIRE( errorCode == -12 );
 		}
 	SECTION( "HTTP" )
 		{
@@ -74,5 +74,14 @@ TEST_CASE( "Crawl", "[crawler]" )
 
 		errorCode = dex::crawler::crawlUrl( "http://tlpi/index.html", res, robots );
 		REQUIRE( errorCode == -1 );
+		}
+
+	SECTION( "OTHER" )
+		{
+		unorderedMap < string, RobotTxt > robots{ 10 };
+		string res;
+
+		dex::Url u( "https://advertising.amazon.fr?ref_a20m_us_hnav_fr/" );
+		dex::crawler::testConnect( u, res, dex::HTTPS );
 		}
 	}
