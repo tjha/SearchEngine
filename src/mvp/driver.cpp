@@ -35,8 +35,9 @@ pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
 
 
-#define numWorkers 1
+#define numWorkers 10
 pthread_t workers [ numWorkers ];
+int ids[ numWorkers ];
 
 dex::unorderedMap < dex::string, dex::RobotTxt > robotsCache{ 1000 };
 pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
@@ -88,7 +89,7 @@ void *worker( void *args )
 	{
 	int a = * ( ( int * ) args );
 	dex::string name = dex::toString( a );
-	print( "Start thread " + name );
+	log( "Start thread " + name + "\n");
 	for ( int i = 0;  true ;  ++i )
 		{
 		pthread_mutex_lock( &frontierLock );
@@ -227,11 +228,13 @@ int main( )
 
 	urlFrontier = dex::loadFrontier( ( pathToData + "data/seedlist.txt" ).cStr( ) );
 	brokenLinks = dex::loadBrokenLinks( ( pathToData + "data/brokenLinks.txt" ).cStr( ) );
+
+	
 	
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
-		int arg = i;
-		pthread_create( &workers[ i ], nullptr, worker, &arg );
+		ids[ i ] = i;
+		pthread_create( &workers[ i ], nullptr, worker, &( ids[ i ] ) );
 		}
 
 	for ( size_t i = 0;  i < numWorkers; ++i )
