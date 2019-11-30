@@ -15,7 +15,6 @@
 
 dex::string pathToHtml = "src/mvp/";
 dex::string pathToLogging = "src/mvp/";
-dex::string pathToData = "src/mvp/";
 
 
 dex::string loggingFileName;
@@ -103,8 +102,8 @@ void *worker( void *args )
 		if ( numCrawled % checkpoint == 0 )
 			{
 			print( "saving" );
-			dex::saveFrontier( ( pathToData + "data/savedFrontier.txt" ).cStr( ), urlFrontier );
-			dex::saveBrokenLinks( ( pathToData + "data/savedBrokenLinks.txt" ).cStr( ), brokenLinks );
+			dex::saveFrontier( "data/tmp/savedFrontier.txt", urlFrontier );
+			dex::saveBrokenLinks( "data/tmp/savedBrokenLinks.txt", brokenLinks );
 			print( "saved" );
 			}
 		pthread_mutex_unlock( &frontierLock );
@@ -217,7 +216,6 @@ void *worker( void *args )
 int main( )
 	{
 	// setup logging file for this run
-	dex::makeDirectory( ( pathToData + "data" ).cStr( ) );
 	dex::makeDirectory( ( pathToLogging + "logs" ).cStr( ) );
 	loggingFileName = pathToLogging + "logs/";
 	time_t now = time( nullptr );
@@ -226,10 +224,8 @@ int main( )
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
-	urlFrontier = dex::loadFrontier( ( pathToData + "data/seedlist.txt" ).cStr( ) );
-	brokenLinks = dex::loadBrokenLinks( ( pathToData + "data/brokenLinks.txt" ).cStr( ) );
-
-	
+	urlFrontier = dex::loadFrontier( "data/seedlist.txt" );
+	brokenLinks = dex::loadBrokenLinks( "data/tmp/brokenLinks.txt" );
 	
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{

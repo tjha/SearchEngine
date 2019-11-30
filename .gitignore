@@ -13,4 +13,4 @@ Thumbs.db
 *.dSYM
 html/
 logs/
-data/
+data/tmp/
