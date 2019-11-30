@@ -1,6 +1,8 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
 // 
+// 2019-11-26:  Eliminated unnecesssary code duplication in fixDots, and
+// 			    addressed several edge cases: tjha
 // 2019-11-23:  Fixed bugs in GetLinks function to avoid over-geralization of
 //              the locations of 'a' in relation to 'href': tjha
 // 2019-11-22:  Added include guards, merged with changes by combsc that convert
@@ -35,9 +37,7 @@
 
 #include <cstddef>
 
-//#include <iostream>
-//using std::cout;
-//using std::endl;
+#include <iostream>
 
 namespace dex
 {
@@ -47,24 +47,29 @@ namespace dex
          std::size_t startPos;
          std::size_t endPos;
          };
+   struct Positions
+         {
+         std::size_t start;
+         std::size_t end;
+         };
 
    class HTMLparser
    {
+    
    private:
       dex::string htmlFile;
       dex::string pageLink;
       dex::vector< dex::Url > links;
       dex::vector< string > words;
+      std::size_t lenAnchors;
       //dex::vector< string > relativeLinks;
       dex::vector< anchorPos > anchorText;
+      
 
       void GetLinks( );
-
-      struct Positions
-         {
-         std::size_t start;
-         std::size_t end;
-         };
+      vector < Positions > findScripts( Positions body );
+      void GetWords( );
+      bool inAvoid(size_t pos, vector <Positions> avoidThis);
 
       Positions ParseTag( Positions &pos, string &startTag, string &endTag )
          {
@@ -73,8 +78,12 @@ namespace dex
          if ( newPos.start == string::npos )
             {
             // incorporate some form of error logging
-            std::cerr << "Error caught in ParseTag\n";
-            throw dex::outOfRangeException();
+            // std::cout<< startTag <<" " << endTag <<"\n";
+            newPos.start = string::npos;
+            newPos.end = string::npos;
+            return newPos;
+           std::cerr << "Error caught in ParseTag\n";
+            // throw dex::outOfRangeException();
             }
          newPos.end = htmlFile.find(endTag.cStr(), pos.start, pos.end - pos.start);
          if ( newPos.end == string::npos )
@@ -86,8 +95,10 @@ namespace dex
          newPos.end += endTag.length();
          return newPos;
          }
+      
 
    public:
+  
       HTMLparser( );
       HTMLparser( dex::string& html );
       void removePunctuation( string &word );
@@ -99,6 +110,8 @@ namespace dex
       vector < anchorPos > ReturnAnchorText ( );
       vector < string > ReturnWords ( );
       void fixDots (string &url);
+      
+
    };
 
    HTMLparser::HTMLparser( )
@@ -111,12 +124,28 @@ namespace dex
       {
       std::size_t linkEnd = html.findFirstOf( '\n' );
       pageLink = html.substr( 0, linkEnd );
+
+		std::size_t indexPos = pageLink.find( ".html", 0 );
+		while ( indexPos != dex::string::npos && pageLink[ indexPos ] != '/' )
+			{
+			indexPos--;
+			}
+		
+		if ( indexPos != dex::string::npos )
+			{
+			pageLink = pageLink.substr( 0, indexPos );
+			}
+
       if ( pageLink.back( ) == '/' )
          {
          pageLink.popBack( );
          }
       htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
       GetLinks( );
+      
+      lenAnchors = words.size();
+      
+      // GetWords();
       }
 
    vector < dex::Url > HTMLparser::ReturnLinks ( )
@@ -244,54 +273,100 @@ namespace dex
 		return final_pos;
 		}
 
+	// remove numBack entries from end of path
+	// If numBack is larger than number of path elements to remove, return '/'
+	dex::string parsePath( unsigned int numBack, dex::string path )
+		{
 
-   void HTMLparser::fixDots (string &url)
+		std::size_t pos = path.findLastOf( '/' );
+		if ( path.back( ) == '/' )
+			{
+			path.popBack( );
+			pos = path.findLastOf( '/' );
+			}
+
+		while( numBack-- && pos != dex::string::npos )
+			{
+			path = path.substr( 0, pos );
+			pos = path.findLastOf( '/' );
+			}
+
+		path = path + "/";
+		return path;
+		}
+
+	// NOTE: This method currently will not handle multiple './' repeated (very
+	// 		unlikely since such a relative link would be unnecessarily long
+   void HTMLparser::fixDots( dex::string& url )
       {
-      if( url.front( ) == '/' )
-         {
-         if( url[1] != '.' )
-            {
-            url = pageLink + url;
-            return;
-            }  
-         if ( url[2] != '.' )
-            {
-            url = pageLink + url.substr( 2, url.length() - 2 );
-            return;
-            }
-         size_t posFirst = pageLink.find('/');
-         posFirst = pageLink.find('/', posFirst + 1);
-         posFirst = pageLink.find('/', posFirst + 1);
-         if( posFirst == string::npos )
-            {
-            url = pageLink + url.substr( 3, url.length() - 3 );
-            return;
-            }
-         url = pageLink.substr( 0, posFirst ) + url.substr( 3, url.length() - 3 );
-         return;
-         }
-      else
-         {
-         if( url.front() != '.' )
-            {
-            url = pageLink + '/' + url;
-            return;
-            }
-         if ( url[1] != '.' )
-            {
-            url = pageLink + url.substr( 1, url.length() - 1 );
-            return;
-            }
-            size_t posFirst = pageLink.find('/');
-            posFirst = pageLink.find('/', posFirst + 1);
-            posFirst = pageLink.find('/', posFirst + 1);      
-            if( posFirst == string::npos )
-               {
-               url = pageLink + url.substr( 2, url.length() - 2 );
-               return;
-               }
-            url = pageLink.substr( 0, posFirst ) + url.substr( 2, url.length() - 2 );
-         }
+
+      if ( url.empty( ) )
+			{
+			url = pageLink;
+			return;
+			}
+             
+		if( url.front( ) != '/' )
+			{
+			url.insert( 0, '/' );
+			}
+
+		if ( url.back( ) == '.' && url[ url.length( ) - 2 ] == '.' )
+			{
+			url.pushBack( '/' );
+			} 
+
+
+		if( url[ 1 ] != '.' )
+			{
+			url = pageLink + url;
+			return;
+			}  
+
+		if ( url.length( ) >= 4 && url[ 2 ] == '/' )
+			{
+			url = pageLink + url.substr( 2, url.length( ) - 2 );
+			return;
+			}
+		else if ( url.length( ) < 4 )
+			{
+			return;
+			}
+		
+		if ( url[ 2 ] == '.' && url[ 3 ] == '/' )
+			{
+			size_t pos = 4; 
+			unsigned int numBack = 1;
+			while ( pos + 2 < url.length( ) && url[ pos ] == '.'
+						&& url[ pos + 1 ] == '.' && url[ pos + 2 ] == '/' )
+				{
+				numBack++;
+				pos += 3;
+				}
+
+			dex::Url linkBase( pageLink.cStr( ) );
+			std::size_t pathPos = pageLink.find( linkBase.getPath( ), 0 );
+		
+
+			dex::string newLinkBase = 
+				pageLink.substr( 0, pathPos )
+				+ parsePath( numBack, linkBase.getPath( ) );
+
+			if ( pos < url.length( ) )
+				{
+				url = newLinkBase + url.substr( pos, url.length( ) - pos );
+				}
+			else
+				{
+				url = newLinkBase;
+				}
+
+			}
+		else
+			{
+			url = pageLink + url;
+			}
+		return;
       }
 
 
@@ -364,24 +439,17 @@ namespace dex
             std::size_t linkIndex = 0;
             // PushBack absolute url
             if ( url.find("https://", 0) != string::npos ||
-                 url.find("http://", 0) != string::npos ) {
+                 url.find("http://", 0) != string::npos )
+					{
                // url is already an absolute url
-               links.pushBack( dex::Url( url.cStr( ) ) );     
-            } else {
-               // url is a relative url
-               // dex::string newLink = pageLink;
-               // if ( url.front( ) == '/' )
-               //    {
-               //    newLink += url;
-               //    }
-               // else
-               //    {
-               //    newLink += '/' + url;
-               //    }
-        
+               links.pushBack( dex::Url( url.cStr( ) ) );
+					}
+				else
+					{
                fixDots(url);
                links.pushBack( dex::Url( url.cStr( ) ) );
-            }
+            	}
+
             linkIndex = links.size( ) - 1;
 
             //finding anchor text - - i think this should just be one function.
@@ -416,7 +484,9 @@ namespace dex
    vector < Positions > HTMLparser::findScripts( Positions body )
       {
       vector <Positions> avoider;
-      Postions strt = ParseTag( body, "<script>", "</script>"), temp;
+      string s = "<script>";
+      string t = "</script>";
+      Positions strt = ParseTag( body, s, t), temp;
       temp.end = body.end; 
       while( strt.start < body.end && strt.start != string::npos )
          {
@@ -426,11 +496,12 @@ namespace dex
             }
          avoider.pushBack( strt );
          temp.start = strt.end + 1;
-         strt = ParseTag( temp, "<script>", "</script>" );
+         strt = ParseTag( temp, s, t );
          }
       temp.start = body.start;
-      strt = ParseTag( body, "<style>", "</style>");
-
+      s = "<style>";
+      t = "</style>";
+      strt = ParseTag( body, s, t);
       while( strt.start < body.end && strt.start != string::npos )
          {
          if (strt.end == string::npos)
@@ -439,7 +510,7 @@ namespace dex
             }
          avoider.pushBack( strt );
          temp.start = strt.end + 1;
-         strt = ParseTag( temp, "<script>", "</script>" );
+         strt = ParseTag( temp, s, t );
          }
       return avoider;
       }
@@ -451,19 +522,29 @@ namespace dex
       Positions body, start;
       start.start = 0;
       start.end = htmlFile.length( ) - 1;
-      body = ParseTag( start, "<body>", "<\body>" );
+      string s, t;
+      s = "<body>";
+      t = "</body>";
+      body = ParseTag( start, s, t );
+      std::cout << "Body : " << body.start << "  " << body.end << "\n";
       vector < Positions > avoidThis;
       avoidThis = findScripts( body );
+      std::cout << "Avoid This " << avoidThis.size() <<"\n";
+      for(size_t i = 0; i < avoidThis.size(); i++)
+         {
+         std::cout << avoidThis[i].start << "  " << avoidThis[i].end << "\n";
+         }
+      std::cout << "Done!\n";
       string text;
       std::size_t posClose = htmlFile.find( '<', body.start );
       std::size_t posOpen = htmlFile.find( '>', posClose );
       while ( posClose < body.end )
          {
-         if( posOpen >= body.start )
+         if( posOpen >= body.end )
             {
             break;
             }
-         if( inAvoid( posClose ) || inAvoid( posOpen ) )
+         if( inAvoid( posClose, avoidThis ) || inAvoid( posOpen, avoidThis ) )
             {
             posClose = htmlFile.find( '<', posClose + 1 );
             posOpen = htmlFile.find( '>', posClose );
@@ -478,7 +559,18 @@ namespace dex
             }
          BreakAnchors( text );
          }
+      }
 
+   bool HTMLparser::inAvoid(size_t pos, vector <Positions> avoidThis)
+      {
+      for(size_t i = 0; i< avoidThis.size(); i++)
+         {
+         if( pos >= avoidThis[i].start && pos <= avoidThis[i].end )
+            {
+            return true;
+            }
+         }
+      return false;
       }
 */
 };
