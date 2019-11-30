@@ -63,7 +63,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 
 	SECTION( "parsed simple html document with one link" )
       {
-      string htmlDoc = 
+      string htmlDoc =
 			 "https://web.eecs.umich.edu/~pmchen\n\
 			  <html>\n\
 				  <title>Title</title>\n\
@@ -80,7 +80,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 
 	SECTION( "parsed simple html document with three links" )
       {
-      string htmlDoc = 
+      string htmlDoc =
          "https://web.eecs.umich.edu/~pmchen/\n\
          <html>\n\
             <title>Title</title>\n\
@@ -103,7 +103,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 
 	SECTION( "edge case with links that start with ." )
       {
-      string htmlDoc = 
+      string htmlDoc =
          "https://web.eecs.umich.edu/~pmchen/\n\
          <html>\n\
             <title>Title</title>\n\
@@ -137,7 +137,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
       REQUIRE( links[ 2 ] == Url( "https://www.kernel.org/doc/man-pages/patches.html" ) );
       REQUIRE( links[ 3 ] == Url( "https://www.kernel.org/doc/man-pages/download.html" ) );
       }
-   
+
    SECTION( "working with ..s" )
       {
       string filename = "tst/parser/man7_index.html";
@@ -153,7 +153,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 
 	SECTION( "Edge cases while working with .s and ..s" )
       {
-      string htmlDoc = 
+      string htmlDoc =
          "https://web.eecs.umich.edu/~pmchen/subdir1/subdir2/\n\
          <html>\n\
             <title>Title</title>\n\
@@ -168,7 +168,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
             </body>\n\
          </html>";
 
-      string htmlDocWithIndex = 
+      string htmlDocWithIndex =
          "https://web.eecs.umich.edu/~pmchen/subdir1/subdir2/index.html\n\
          <html>\n\
             <title>Title</title>\n\
@@ -184,7 +184,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
          </html>";
 
 		vector< string > expectedLink;
-		expectedLink.pushBack( 
+		expectedLink.pushBack(
       	"https://web.eecs.umich.edu/~pmchen/subdir1/software1" );
 		expectedLink.pushBack(
       	"https://web.eecs.umich.edu/~pmchen/software2" );
@@ -226,7 +226,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
    string filename = "tst/parser/peter_chen.html";
    string htmlDoc;
    htmlDoc = readFromFile( filename.cStr( ) );
- 
+
    HTMLparser testParser( htmlDoc );
 
    SECTION( "Expected Links" )
@@ -241,7 +241,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
          "http://www.provost.umich.edu/programs/thurnau/index.html" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu" );
       expectedLinks.pushBack( "http://www.umich.edu" );
-      expectedLinks.pushBack( 
+      expectedLinks.pushBack(
          "https://web.eecs.umich.edu/~pmchen/contact.html" );
       expectedLinks.pushBack( "http://web.eecs.umich.edu/virtual/" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu/~pmchen/Rio" );
@@ -249,11 +249,11 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
       expectedLinks.pushBack( "http://www.eecs.umich.edu/cse" );
       expectedLinks.pushBack( "http://www.eecs.umich.edu" );
       expectedLinks.pushBack( "https://web.eecs.umich.edu/~pmchen/papers/" );
-      expectedLinks.pushBack( 
+      expectedLinks.pushBack(
          "https://web.eecs.umich.edu/~pmchen/eecs482/" );
-      expectedLinks.pushBack( 
+      expectedLinks.pushBack(
          "https://web.eecs.umich.edu/~pmchen/students.html" );
-      expectedLinks.pushBack( 
+      expectedLinks.pushBack(
          "https://web.eecs.umich.edu/~pmchen/software" );
 
       // Validate correct number of links were extracted
@@ -310,7 +310,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
       AnchorWords.pushBack( "and" );
       AnchorWords.pushBack( "Engineering" );
       AnchorWords.pushBack( "Division" );
-    
+
       AnchorWords.pushBack( "EECS" );
 
       AnchorWords.pushBack( "Publications" );
@@ -324,7 +324,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
       REQUIRE( AnchorWords.size( ) == words.size( ) );
 
-      size_t word_count = 0; 
+      size_t word_count = 0;
       for ( size_t j = 0; j < anchors.size( ); j++ )
          {
          for ( size_t i = 0; i <= anchors[ j ].endPos - anchors[ j ].startPos; i++ )
@@ -356,7 +356,7 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
 
          expectedLinks.pushBack(
             "https://www.amazon.com/gp/help/customer/display.html/ref=footer_cou?ie=UTF8&nodeId=508088" );
-         expectedLinks.pushBack( 
+         expectedLinks.pushBack(
             "https://www.amazon.com/gp/help/customer/display.html/ref=footer_privacy?ie=UTF8&nodeId=468496" );
 
          // Validate correct number of links were extracted
@@ -368,7 +368,7 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
             REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
             }
          }
-      
+
       SECTION ( "Expected Anchor Text" )
          {
          vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
@@ -382,10 +382,10 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
 
          AnchorWords.pushBack( "Privacy" );
          AnchorWords.pushBack( "Policy" );
- 
+
          REQUIRE( AnchorWords.size( ) == words.size( ) );
 
-         size_t word_count = 0; 
+         size_t word_count = 0;
          for ( size_t j = 0; j < anchors.size( ); j++ )
             {
             for ( size_t i = 0; i <= anchors[ j ].endPos - anchors[ j ].startPos; i++ )
@@ -394,7 +394,7 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
                }
             }
          }
-      
+
       SECTION( "Expected Words" )
          {
          }
@@ -435,11 +435,11 @@ TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
             REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
             }
          }
-      
+
       SECTION ( "Expected Anchor Text" )
          {
          }
-      
+
       SECTION( "Expected Words" )
          {
          }
@@ -458,7 +458,7 @@ TEST_CASE( "enneagraminstitute.com: simple page using Squarespace" )
 
          // Create vector with expected links on page
          vector < string > expectedLinks;
-			
+
          expectedLinks.pushBack( "https://www.enneagraminstitute.com/" );
          expectedLinks.pushBack( "https://www.enneagraminstitute.com/how-the-enneagram-system-works" );
          expectedLinks.pushBack( "https://www.enneagraminstitute.com/type-descriptions" );
@@ -518,15 +518,15 @@ TEST_CASE( "enneagraminstitute.com: simple page using Squarespace" )
             REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
             }
          }
-      
+
       SECTION ( "Expected Anchor Text" )
          {
          }
-      
+
       SECTION( "Expected Words" )
          {
          }
-      
+
    }
 
 TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
@@ -542,11 +542,33 @@ TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
 
          // Create vector with expected links on page
          vector < string > expectedLinks;
-	
-			//std::cout << links[ links.size( ) - 2 ].completeUrl( ) << std::endl;	
-        	
+
+			//std::cout << links[ links.size( ) - 2 ].completeUrl( ) << std::endl;
+
          // Validate correct number of links were extracted
          REQUIRE ( links.size( ) == 10813 ); // TODO: figure out why not 10812
-			
+
+         }
+   }
+
+TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
+   {
+      string filename = "tst/parser/man7_all_pages.html";
+      string htmlDoc;
+      htmlDoc = readFromFile( filename.cStr( ) );
+      HTMLparser testParser( htmlDoc );
+
+      SECTION( "Expected Links" )
+         {
+         vector< dex::Url > links = testParser.ReturnLinks( );
+
+         // Create vector with expected links on page
+         vector < string > expectedLinks;
+
+			//std::cout << links[ links.size( ) - 2 ].completeUrl( ) << std::endl;
+
+         // Validate correct number of links were extracted
+         REQUIRE ( links.size( ) == 10813 ); // TODO: figure out why not 10812
+
          }
    }

@@ -1,6 +1,6 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
-// 
+//
 // 2019-11-26:  Eliminated unnecesssary code duplication in fixDots, and
 // 			    addressed several edge cases: tjha
 // 2019-11-23:  Fixed bugs in GetLinks function to avoid over-geralization of
@@ -18,7 +18,7 @@
 // 2019-11-11:  Implemented ParseTag function to aid in recursive parsing: tjha
 // 2019-11-06:  Fixed whitespace errors, changed to paired to <size_t vector <size_t>>, : medhak
 // 2019-11-05:  Implemented return functions, fixed errors in breakanchor.
-// 2019-11-04:  Created parser class, some basic functions - constructor, BreakAnchor. Merged GetAnchorText and 
+// 2019-11-04:  Created parser class, some basic functions - constructor, BreakAnchor. Merged GetAnchorText and
 //              GetLinks into GetLinks - makes it easier to build anchorText vector : medhak
 // 2019-11-04:  Added GetAnchorText function to get link anchor text: tjha
 // 2019-11-04:  Fixed document style to match style guide: tjha
@@ -55,7 +55,7 @@ namespace dex
 
    class HTMLparser
    {
-    
+
    private:
       dex::string htmlFile;
       dex::string pageLink;
@@ -64,7 +64,7 @@ namespace dex
       std::size_t lenAnchors;
       //dex::vector< string > relativeLinks;
       dex::vector< anchorPos > anchorText;
-      
+
 
       void GetLinks( );
       vector < Positions > findScripts( Positions body );
@@ -95,10 +95,10 @@ namespace dex
          newPos.end += endTag.length();
          return newPos;
          }
-      
+
 
    public:
-  
+
       HTMLparser( );
       HTMLparser( dex::string& html );
       void removePunctuation( string &word );
@@ -110,7 +110,7 @@ namespace dex
       vector < anchorPos > ReturnAnchorText ( );
       vector < string > ReturnWords ( );
       void fixDots (string &url);
-      
+
 
    };
 
@@ -130,7 +130,7 @@ namespace dex
 			{
 			indexPos--;
 			}
-		
+
 		if ( indexPos != dex::string::npos )
 			{
 			pageLink = pageLink.substr( 0, indexPos );
@@ -142,9 +142,9 @@ namespace dex
          }
       htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
       GetLinks( );
-      
+
       lenAnchors = words.size();
-      
+
       // GetWords();
       }
 
@@ -152,17 +152,17 @@ namespace dex
       {
       return links;
       }
-   
+
    vector < string > HTMLparser::ReturnWords ( )
       {
       return words;
       }
-  
+
    vector < anchorPos > HTMLparser::ReturnAnchorText ( )
       {
       return anchorText;
       }
-   
+
    void HTMLparser::BreakAnchors ( string& anchor )
       {
       static const char WHITESPACE[ ] = { ' ', '\t', '\n', '\r' };
@@ -190,7 +190,7 @@ namespace dex
             while ( spaceIdx != dex::string::npos && wordIdx != dex::string::npos )
                {
                if ( wordIdx < spaceIdx )
-                  { 
+                  {
                   words.pushBack( word.substr( wordIdx, spaceIdx - wordIdx ) );
                   wordIdx = word.findFirstNotOf ( ' ', spaceIdx );
                   }
@@ -200,7 +200,7 @@ namespace dex
                {
                words.pushBack( word.substr( wordIdx, word.length() - wordIdx ) );
                }
-            
+
          }
       if( indexNotOf == start )
          {
@@ -211,9 +211,9 @@ namespace dex
 
    void HTMLparser::removePunctuation( string &word )
       {
-      static const char DELIMITERS[ ] = { '\n', '\t', '\r', ',', '.', '?', '>', 
-                                          '<', '!', '[', ']', '{', '}', '|', 
-                                          '\\', '_', '=', '+', ')', '(', '*', 
+      static const char DELIMITERS[ ] = { '\n', '\t', '\r', ',', '.', '?', '>',
+                                          '<', '!', '[', ']', '{', '}', '|',
+                                          '\\', '_', '=', '+', ')', '(', '*',
                                           '&', '^', '%', '$', '#', '@', '~',
                                           '`', '\'', '\'', ';', ':', '/'};
 
@@ -305,7 +305,7 @@ namespace dex
 			url = pageLink;
 			return;
 			}
-             
+
 		if( url.front( ) != '/' )
 			{
 			url.insert( 0, '/' );
@@ -314,14 +314,14 @@ namespace dex
 		if ( url.back( ) == '.' && url[ url.length( ) - 2 ] == '.' )
 			{
 			url.pushBack( '/' );
-			} 
+			}
 
 
 		if( url[ 1 ] != '.' )
 			{
 			url = pageLink + url;
 			return;
-			}  
+			}
 
 		if ( url.length( ) >= 4 && url[ 2 ] == '/' )
 			{
@@ -332,10 +332,10 @@ namespace dex
 			{
 			return;
 			}
-		
+
 		if ( url[ 2 ] == '.' && url[ 3 ] == '/' )
 			{
-			size_t pos = 4; 
+			size_t pos = 4;
 			unsigned int numBack = 1;
 			while ( pos + 2 < url.length( ) && url[ pos ] == '.'
 						&& url[ pos + 1 ] == '.' && url[ pos + 2 ] == '/' )
@@ -346,9 +346,9 @@ namespace dex
 
 			dex::Url linkBase( pageLink.cStr( ) );
 			std::size_t pathPos = pageLink.find( linkBase.getPath( ), 0 );
-		
 
-			dex::string newLinkBase = 
+
+			dex::string newLinkBase =
 				pageLink.substr( 0, pathPos )
 				+ parsePath( numBack, linkBase.getPath( ) );
 
@@ -379,7 +379,7 @@ namespace dex
       while ( posOpenTag != string::npos )
          {
          posCloseTag = htmlFile.find( ">", posOpenTag );
-         if ( htmlFile[ posOpenTag + 1 ] == '!' && htmlFile[ posOpenTag + 2 ] == '-' 
+         if ( htmlFile[ posOpenTag + 1 ] == '!' && htmlFile[ posOpenTag + 2 ] == '-'
                && htmlFile[ posOpenTag + 3 ] == '-' )
             {
             posCloseTag = htmlFile.find( "-->", posOpenTag ) + 3;
@@ -393,22 +393,22 @@ namespace dex
                   {
                   posOpenTag = string::npos;
                   }
-               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               posOpenTag = htmlFile.find( "<", posCloseTag );
                continue;
                }
-			
+
 				dex::string tagStr = htmlFile.substr( posOpenTag,
 																  posCloseTag - posOpenTag + 1 );
 				dex::vector< dex::string > query(2);
 				query[ 0 ] = "<";
 				query[ 1 ] = "a";
 
-				std::size_t posA = 
+				std::size_t posA =
 						spaceDelimitedTargetPosition( "a", query, tagStr );
 
 				if ( posA == dex::string::npos )
 					{
-               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               posOpenTag = htmlFile.find( "<", posCloseTag );
                continue;
 					}
 
@@ -416,20 +416,20 @@ namespace dex
 				query[ 0 ] = "href";
 				query[ 1 ] = "=";
 
-				std::size_t posEqual = 
+				std::size_t posEqual =
 						spaceDelimitedTargetPosition( "=", query, tagStr );
 
             if ( posEqual == string::npos )
                {
-               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               posOpenTag = htmlFile.find( "<", posCloseTag );
                continue;
                }
 				posEqual = posOpenTag + posEqual;
-            url = htmlFile.substr( posEqual + 1, posCloseTag-posEqual-1 );  
+            url = htmlFile.substr( posEqual + 1, posCloseTag-posEqual-1 );
             std::size_t qPos = url.find( "\"" );
             if ( qPos == string::npos )
                {
-               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               posOpenTag = htmlFile.find( "<", posCloseTag );
                continue;
                }
             else
@@ -456,7 +456,7 @@ namespace dex
             posOpenTag = htmlFile.find ( "<", posCloseTag );
             if ( posOpenTag == string::npos )
                {
-               posOpenTag = htmlFile.find( "<", posCloseTag );   
+               posOpenTag = htmlFile.find( "<", posCloseTag );
                continue;
                }
             if ( posOpenTag < htmlFile.length( ) - 2
@@ -464,7 +464,7 @@ namespace dex
                   && htmlFile[ posOpenTag + 2 ] == 'a' )
                {
                anchor = htmlFile.substr( posCloseTag + 1, posOpenTag - posCloseTag - 1 );
-               
+
                anchorPos anchorIndex;
                anchorIndex.linkInd = linkIndex;
                anchorIndex.startPos = words.size( );
@@ -473,9 +473,9 @@ namespace dex
                anchorText.pushBack( anchorIndex );
                }
             }
-         posOpenTag = htmlFile.find( "<", posCloseTag );   
+         posOpenTag = htmlFile.find( "<", posCloseTag );
          }
-      }   
+      }
 
    //OLD STUFF ENDS;
 // WORKING ON WORDS BELOW
@@ -487,7 +487,7 @@ namespace dex
       string s = "<script>";
       string t = "</script>";
       Positions strt = ParseTag( body, s, t), temp;
-      temp.end = body.end; 
+      temp.end = body.end;
       while( strt.start < body.end && strt.start != string::npos )
          {
          if (strt.end == string::npos)
@@ -548,7 +548,7 @@ namespace dex
             {
             posClose = htmlFile.find( '<', posClose + 1 );
             posOpen = htmlFile.find( '>', posClose );
-            continue;               
+            continue;
             }
          text = htmlFile.substr(posClose + 1, posOpen - posClose - 1);
          if( text.findFirstNotOf(WHITESPACE) == string::npos)
