@@ -8,9 +8,9 @@
 #define ROBOTS_MAP_HPP
 
 #include "robots.hpp"
-#include "../utils/unorderedMap.hpp"
-#include "../utils/sharedReaderLock.hpp"
-#include "../utils/utility.hpp"
+#include "unorderedMap.hpp"
+#include "sharedReaderLock.hpp"
+#include "utility.hpp"
 
 namespace dex
 	{
