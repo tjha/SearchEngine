@@ -8,13 +8,14 @@
 #include <netdb.h>
 #include <tls.h>
 #include <string.h>
-#include "robots.hpp"
+#include "robotsMap.hpp"
 #include "../utils/exception.hpp"
 #include "../utils/unorderedMap.hpp"
 #include "../utils/file.hpp"
 #include "url.hpp"
 #include <iostream>
 
+// 2019-11-30: Make robotsMap threadsafe: combsc
 // 2019-11-26: Differentiate between html and non-html when crawling: combsc
 // 2019-11-23: Differentiate between path disallow and timeout: combsc
 // 2019-11-21: increased robustness to failure: combsc, jhirsh
@@ -58,7 +59,9 @@ namespace dex
 		TLS_CONFIG_ERROR = -10,
 		RESPONSE_ERROR = -11,
 		DISALLOWED_ERROR = -12,
-		NOT_HTML = -13
+		NOT_HTML = -13,
+		PUT_BACK_IN_FRONTIER = -14,
+		LOCKING_ERROR = -15
 		};
 	
 	enum httpProtocol
@@ -314,7 +317,7 @@ namespace dex
 		
 		public:
 			// Function used for crawling URLs. bePolite should ALWAYS be on, only turned off for testing.
-			static int crawlUrl( Url url, dex::string &result, dex::unorderedMap < dex::string, dex::RobotTxt > &robots, bool bePolite = true )
+			static int crawlUrl( Url url, dex::string &result, dex::robotsMap &robotsCache, bool bePolite = true )
 				{
 				int protocol = ( url.getService( ) == "https" ) ? HTTPS : HTTP;
 
@@ -324,9 +327,27 @@ namespace dex
 					}
 				else
 					{
-					dex::RobotTxt robot;
 					// Check to see if we have a robot object for the domain we're crawling
-					if ( robots.count( url.getHost( ) ) < 1 || ( robots.count( url.getHost( ) ) >= 1 && robots[ url.getHost( ) ].hasExpired( ) ) )
+
+					int startResult = robotsCache.startRobotCreation( url.getHost( ), url.getPath( ) );
+					if ( startResult == -2 )
+						{
+						result = "Different thread making the robots object for " + url.getHost( );
+						return PUT_BACK_IN_FRONTIER;
+						}
+					if ( startResult == 1 )
+						{
+						result = "Not ready to visit " + url.getHost( );
+						return POLITENESS_ERROR;
+						}
+					if ( startResult == 2 )
+						{
+						result = "path " + url.getPath( ) + " is disallowed for domain " + url.getHost( );
+						return DISALLOWED_ERROR;
+						}
+
+					// Robots.txt does not exist for this domain yet
+					if ( startResult == -1 )
 						{
 						// visit robots.txt until we no longer receieve a redirect or until we've
 						// gone too long and we need to kill this redirect chain.
@@ -345,45 +366,45 @@ namespace dex
 							urlToVisit = result;
 							}
 						// If our error code is 404, the path does not exist and we create a default robots.txt object
+						dex::RobotTxt robot;
 						if ( errorCode >= 400 && errorCode < 500 )
 							{
 							// Create Default
-							dex::RobotTxt newRobot( url.getHost( ) );
-							robot = newRobot;
+							robot = dex::RobotTxt( url.getHost( ) );
 							}
 						// If there was an error, we need to abort and return the error
 						else
 							{
 							if ( errorCode != 0 )
 								{
+								int err = robotsCache.writeUnlock( url.getHost( ) );
+								if ( err != 0 )
+									return dex::LOCKING_ERROR;
 								return errorCode;
 								}
+							// Create new RobotsTxt
+							if ( errorCode == 0 )
+								{
+								dex::string robotsTxtInformation = result;
+								robot = dex::RobotTxt( url.getHost( ), robotsTxtInformation );
+								}
 							}
-						
-						// Create new RobotsTxt
-						dex::string robotsTxtInformation = result;
-						dex::RobotTxt newRobot( url.getHost( ), robotsTxtInformation );
-						robot = newRobot;
+						int pathResult = robot.visitPathResult( url.getPath( ) );
+						robot.updateLastVisited( );
+						int err = robotsCache.finishRobotCreation( url.getHost( ), robot );
+						if ( err != 0 )
+							return dex::LOCKING_ERROR;
+						if ( pathResult == 1 )
+							{
+							result = "Not ready to visit " + url.getHost( );
+							return POLITENESS_ERROR;
+							}
+						if ( pathResult == 2 )
+							{
+							result = "path " + url.getPath( ) + " is disallowed for domain " + url.getHost( );
+							return DISALLOWED_ERROR;
+							}
 						}
-					else
-						{
-						robot = robots[ url.getHost( ) ];
-						}
-					int visitPath = robot.visitPathResult( url.getPath( ) );
-					if ( visitPath == 1 )
-						{
-						result = "Not ready to visit domain";
-						return POLITENESS_ERROR;
-						}
-					if ( visitPath == 2 )
-						{
-						result = "path " + url.getPath( ) + " is disallowed";
-						return DISALLOWED_ERROR;
-						}
-					
-					robot.updateLastVisited( );
-					// Update the robot in our cache
-					robots[ url.getHost( ) ] = robot;
 					}
 				result = "";
 				protocol = ( url.getService( ) == "http" ) ? HTTP : HTTPS;

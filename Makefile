@@ -33,6 +33,9 @@ all: print_os $(TESTS)
 driver: src/mvp/driver.cpp
 	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -pthread -o driver.exe
 
+multithreadingTest: src/mvp/multithreadingTest.cpp
+	$(CXX) $(CXXFLAGS) src/mvp/multithreadingTest.cpp $(INCLUDES) -ltls -pthread -o multithreadingTest.exe
+
 cleanDriver:
 	rm -r driver.exe*
 	rm -r src/mvp/html

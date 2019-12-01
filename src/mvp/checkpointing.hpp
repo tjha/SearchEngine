@@ -9,10 +9,12 @@
 #ifndef CHECKPOINTING_HPP
 #define CHECKPOINTING_HPP
 
+#include <dirent.h>
 #include "../utils/file.hpp"
 #include "../utils/basicString.hpp"
 #include "../spinarak/url.hpp"
 #include "frontier.hpp"
+#include "file.hpp"
 
 namespace dex
 	{
@@ -23,6 +25,40 @@ namespace dex
 	// bytes 2 determines the second folder
 	// bytes 3-4 determine the name of the files
 	// This gives us 4,294,967,296 possible locations for html
+	size_t HTMLChunkSize = 100000000; // 16 MB files for htm
+	int currentFileNumber = 0;
+	int currentFileDescriptor = -1;
+	int saveHtml ( dex::string html )
+		{
+		if ( dex::fileSize( currentFileDescriptor ) > HTMLChunkSize )
+			{
+			close( currentFileDescriptor ); // close filled chunk
+			++currentFileNumber;
+			dex::string fileName( "data/html/" + dex::toString( currentFileNumber ) + ".html" );
+			currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
+			}
+		std::cout << "size = " << dex::fileSize( currentFileDescriptor ) << std::endl;
+		return write( currentFileDescriptor, html.cStr( ), html.size( ) );
+		}
+
+	void getCurrentFileDescriptor( dex::string folderPath )
+		{
+		DIR * dir = opendir( folderPath.cStr( ) );
+		dirent * entry = readdir( dir );
+		while ( entry != NULL )
+			{
+			++currentFileNumber;
+			entry = readdir( dir );
+			}
+		dex::string fileName( "data/html/" + dex::toString( currentFileNumber ) + ".html" );
+		currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
+		}
+	
+	void closeHtmlFile( )
+		{
+		close( currentFileDescriptor );
+		}
+
 	int saveHtml ( dex::Url url, dex::string html, dex::string folderPath )
 		{
 		dex::hash < dex::string > hasher;
