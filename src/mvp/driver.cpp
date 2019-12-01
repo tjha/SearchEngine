@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-11-30: Made crawlUrl threadsafe: combsc
 // 2019-11-26: Added relative paths, added compatability for pages that are not HTML: combsc
 // 2019-11-23: Improved checkpointing: combsc
 // 2019-11-21: Add working redirect cache, fix overall logic of file, test multithreading: combsc
@@ -14,6 +15,7 @@
 #include "parser.hpp"
 
 dex::string pathToHtml = "src/mvp/";
+dex::string pathToData = "src/mvp/";
 dex::string pathToLogging = "src/mvp/";
 
 
@@ -28,7 +30,7 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 
 dex::frontier urlFrontier;
 size_t numCrawled = 0;
-size_t checkpoint = 1000;
+size_t checkpoint = 100;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
@@ -38,7 +40,7 @@ pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
-dex::unorderedMap < dex::string, dex::RobotTxt > robotsCache{ 1000 };
+dex::robotsMap robotsCache;
 pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 
 // This set contains all known links in our domain that error out
@@ -102,8 +104,8 @@ void *worker( void *args )
 		if ( numCrawled % checkpoint == 0 )
 			{
 			print( "saving" );
-			dex::saveFrontier( "data/tmp/savedFrontier.txt", urlFrontier );
-			dex::saveBrokenLinks( "data/tmp/savedBrokenLinks.txt", brokenLinks );
+			dex::saveFrontier( ( pathToData + "data/tmp/savedFrontier.txt" ).cStr( ), urlFrontier );
+			dex::saveBrokenLinks( ( pathToData + "data/tmp/savedBrokenLinks.txt" ).cStr( ), brokenLinks );
 			print( "saved" );
 			}
 		pthread_mutex_unlock( &frontierLock );
@@ -171,7 +173,7 @@ void *worker( void *args )
 				}
 			}
 		// If we get a politness error for this URL, we put it back into the frontier
-		if ( errorCode == dex::POLITENESS_ERROR )
+		if ( errorCode == dex::POLITENESS_ERROR || errorCode == dex::PUT_BACK_IN_FRONTIER )
 			{
 			pthread_mutex_lock( &frontierLock );
 			urlFrontier.putUrl( toCrawl );
@@ -216,7 +218,9 @@ void *worker( void *args )
 int main( )
 	{
 	// setup logging file for this run
-	dex::makeDirectory( ( pathToLogging + "logs" ).cStr( ) );
+	int result = dex::makeDirectory( ( pathToLogging + "logs" ).cStr( ) );
+	result = dex::makeDirectory( ( pathToData + "data/tmp" ).cStr( ) );
+
 	loggingFileName = pathToLogging + "logs/";
 	time_t now = time( nullptr );
 	loggingFileName += ctime( &now );
@@ -224,8 +228,8 @@ int main( )
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
-	urlFrontier = dex::loadFrontier( "data/seedlist.txt" );
-	brokenLinks = dex::loadBrokenLinks( "data/tmp/brokenLinks.txt" );
+	urlFrontier = dex::loadFrontier( ( pathToData + "data/seedlist.txt" ).cStr( ) );
+	brokenLinks = dex::loadBrokenLinks( ( pathToData + "data/tmp/brokenLinks.txt" ).cStr( ) );
 	
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{

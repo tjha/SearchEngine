@@ -1,6 +1,7 @@
 // crawlerTests.cpp
 // Testing for our crawler class
 //
+// 2019-11-30: threadsafe version: combsc
 // 2019-11-21: add test cases for malformed urls: combsc
 // 2019-11-21: converted to catch: jhirsh
 // 2019-11-18: fixed broken tests (fb.com doens't let robots crawl): combsc
@@ -12,13 +13,14 @@
 
 #include "catch.hpp"
 #include "../src/spinarak/crawler.hpp"
-#include "../src/spinarak/robots.hpp"
+#include "../src/spinarak/robotsMap.hpp"
 #include "exception.hpp"
 #include "unorderedMap.hpp"
 #include "unorderedSet.hpp"
 
 using dex::string;
 using dex::RobotTxt;
+using dex::robotsMap;
 using dex::unorderedMap;
 using std::cout;
 using std::endl;
@@ -28,7 +30,7 @@ TEST_CASE( "Crawl", "[crawler]" )
 	{
 	SECTION( "HTTPS" )
 		{
-		unorderedMap < string, RobotTxt > robots{ 10 };
+		robotsMap robots;
 		string res;
 		
 		int errorCode = dex::crawler::crawlUrl( "https://www.runescape.com", res, robots );
@@ -55,7 +57,7 @@ TEST_CASE( "Crawl", "[crawler]" )
 		}
 	SECTION( "HTTP" )
 		{
-		unorderedMap < string, RobotTxt > robots{ 10 };
+		robotsMap robots;
 		string res;
 
 		int errorCode = dex::crawler::crawlUrl( "http://www.runescape.com/splash", res, robots );
@@ -78,10 +80,11 @@ TEST_CASE( "Crawl", "[crawler]" )
 
 	SECTION( "OTHER" )
 		{
-		unorderedMap < string, RobotTxt > robots{ 10 };
+		robotsMap robots;
 		string res;
 
 		dex::Url u( "https://advertising.amazon.fr?ref_a20m_us_hnav_fr/" );
 		dex::crawler::testConnect( u, res, dex::HTTPS );
+		dex::crawler::crawlUrl( "https://www.latimes.com/entertainment-arts/books/los-angeles-times-book-club", res, robots );
 		}
 	}

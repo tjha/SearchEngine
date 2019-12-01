@@ -2,6 +2,7 @@
 //
 // Perform tests on unordered map implementation
 //
+// 2019-11-30: Added insertionWillRehash tests: combsc
 // 2019-10-26: file created, constructors, assignment, element access, element removal: jasina
 
 #include "catch.hpp"
@@ -169,6 +170,21 @@ TEST_CASE( "element access", "[unorderedMap]" )
 		REQUIRE( map.find( "beta" )->second == 1 );
 		map.erase( map.find( "beta" ) );
 		REQUIRE( map.find( "beta" ) == map.cend( ) );
+		}
+	
+	SECTION( "insertionWillRehash" )
+		{
+		unorderedMap < string, unsigned > map( 2 );
+		map[ "beta" ] = 1;
+		REQUIRE( map.insertionWillRehash( "gamma" ) );
+		REQUIRE( !map.insertionWillRehash( "beta" ) );
+		map[ "gamma" ] = 2;
+		REQUIRE( !map.insertionWillRehash( "gamma" ) );
+		REQUIRE( !map.insertionWillRehash( "beta" ) );
+		REQUIRE( map.insertionWillRehash( "alpha" ) );
+		REQUIRE( map.insertionWillRehash( "delta" ) );
+		map[ "delta" ] = 3;
+		REQUIRE( !map.insertionWillRehash( "alpha" ) );
 		}
 	}
 
