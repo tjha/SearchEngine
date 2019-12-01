@@ -2,10 +2,10 @@
 #ifndef DEX_URL_HPP
 #define DEX_URL_HPP
 
-#include "../utils/basicString.hpp"
-#include "../utils/unorderedSet.hpp"
-#include "../utils/exception.hpp"
-#include "../utils/functional.hpp"
+#include "basicString.hpp"
+#include "unorderedSet.hpp"
+#include "exception.hpp"
+#include "functional.hpp"
 // 2019-11-27: Fixed completeUrl if no path is given but ?# are: combsc
 // 2019-11-24: Changed completeUrl: combsc
 // 2019-11-21: Fixed fragment/query bug: combsc

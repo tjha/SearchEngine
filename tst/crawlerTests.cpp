@@ -28,6 +28,20 @@ using std::endl;
 
 TEST_CASE( "Crawl", "[crawler]" )
 	{
+	SECTION( "OTHER" )
+		{
+		robotsMap robots;
+		string res;
+
+		dex::Url u( "https://advertising.amazon.fr?ref_a20m_us_hnav_fr/" );
+		dex::crawler::testConnect( u, res, dex::HTTPS );
+		dex::crawler::crawlUrl( "https://www.latimes.com/entertainment-arts/books/los-angeles-times-book-club", res, robots );
+		cout << "here" << endl;
+		dex::crawler::crawlUrl( "https://nytcnapps.oss-cn-hongkong.aliyuncs.com/latest.apk", res, robots );
+		cout << "here" << endl;
+		dex::crawler::crawlUrl( "http://www.tbrandstudio.com/", res, robots );
+		}
+	
 	SECTION( "HTTPS" )
 		{
 		robotsMap robots;
@@ -78,13 +92,5 @@ TEST_CASE( "Crawl", "[crawler]" )
 		REQUIRE( errorCode == -1 );
 		}
 
-	SECTION( "OTHER" )
-		{
-		robotsMap robots;
-		string res;
-
-		dex::Url u( "https://advertising.amazon.fr?ref_a20m_us_hnav_fr/" );
-		dex::crawler::testConnect( u, res, dex::HTTPS );
-		dex::crawler::crawlUrl( "https://www.latimes.com/entertainment-arts/books/los-angeles-times-book-club", res, robots );
-		}
+	
 	}

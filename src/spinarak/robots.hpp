@@ -21,11 +21,11 @@
 
 #include <time.h>
 #include <stdio.h>
-#include "../utils/basicString.hpp"
-#include "../utils/vector.hpp"
-#include "../utils/unorderedSet.hpp"
-#include "../utils/algorithm.hpp"
-#include "../utils/functional.hpp"
+#include "basicString.hpp"
+#include "vector.hpp"
+#include "unorderedSet.hpp"
+#include "algorithm.hpp"
+#include "functional.hpp"
 
 namespace dex
 	{

@@ -9,9 +9,8 @@
 #include <tls.h>
 #include <string.h>
 #include "robotsMap.hpp"
-#include "../utils/exception.hpp"
-#include "../utils/unorderedMap.hpp"
-#include "../utils/file.hpp"
+#include "exception.hpp"
+#include "file.hpp"
 #include "url.hpp"
 #include <iostream>
 
@@ -310,7 +309,6 @@ namespace dex
 					{
 					return RESPONSE_ERROR;
 					}
-				
 				int errorCode = parseResponse( response, result, isRobot );
 				return errorCode;
 				}
