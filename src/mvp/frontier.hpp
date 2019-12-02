@@ -33,6 +33,11 @@ namespace dex
 				return toVisit.empty( );
 				}
 
+			const dex::vector< Url > getFrontier( )
+				{
+				return toVisit;
+				}
+
 			dex::vector < Url > ::iterator begin( )
 				{
 				return toVisit.begin( );

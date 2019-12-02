@@ -15,6 +15,7 @@
 #include "../spinarak/url.hpp"
 #include "frontier.hpp"
 #include "file.hpp"
+#include "encode.hpp"
 #include <iostream>
 
 namespace dex
@@ -116,13 +117,15 @@ namespace dex
 	int saveFrontier ( const char * fileName, dex::frontier frontier )
 		{
 		std::cout << "Constructing save string" << std::endl;
-		string frontierData = "FRONTIER\n";
+		dex::encode::encoder < dex::vector < dex::Url > > UrlEncoder;
+		dex::vector< unsigned char > encodedFrontier = UrlEncoder( frontier.getFrontier( ) );
+		/*string frontierData = "FRONTIER\n";
 		for ( auto it = frontier.begin( );  it != frontier.end( );  ++it )
 			{
 			frontierData += it->completeUrl( ) + "\n";
-			}
+			}*/
 		std::cout << "Writing to file" << std::endl;
-		return writeToFile( fileName, frontierData.cStr( ), frontierData.size( ) );
+		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
 		}
 
 	dex::unorderedSet < dex::Url > loadBrokenLinks ( const char * fileName )
