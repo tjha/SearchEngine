@@ -1,6 +1,7 @@
 // storageTests.cpp
 // Tests the encoding and decoding of the defined types for crawler
 //
+// 2019-12-01: Vector encode/decode tests: jhirsh
 // 2019-11-20: File created and testing integer encode: jhirsh
 
 #include "catch.hpp"
@@ -9,10 +10,11 @@
 #include "vector.hpp"
 #include "encode.hpp"
 #include "basicString.hpp"
+#include "url.hpp"
 #include <iostream>
 
 using namespace dex;
-using namespace dex::crawler;
+using namespace dex::encode;
 
 TEST_CASE( "encode", "[types]" )
 	{
@@ -83,6 +85,31 @@ TEST_CASE( "encode", "[types]" )
 		REQUIRE( magikarp == StringDecoder ( ( StringEncoder ( magikarp ) ).data( ) ) );
 		magikarp = "hello";
 		REQUIRE( magikarp == StringDecoder ( ( StringEncoder ( magikarp ) ).data( ) ) );
+		}
+	
+	SECTION( "url" )
+		{
+		Url amazon("https://www.amazon.com/");
+		Url apple("https://www.apple.com/");
+		encoder < Url > UrlEncoder;
+		decoder < Url > UrlDecoder;
+		REQUIRE( 4 + 23 == UrlEncoder( amazon ).size( ) );
+		vector< unsigned char > encoded = UrlEncoder( amazon );
+		string decoded = decoder< string >( )(encoded.data( ));
+		REQUIRE( amazon.completeUrl( ) == Url( decoded.cStr( ) ).completeUrl( ) );
+		Url a = UrlDecoder( UrlEncoder ( amazon ).data( ) );
+		REQUIRE( amazon.completeUrl( ) == UrlDecoder( UrlEncoder ( amazon ).data( ) ).completeUrl( ) );
+		REQUIRE( apple.completeUrl( ) == UrlDecoder( UrlEncoder ( apple ).data( ) ).completeUrl( ) );
+		vector < Url > urls;
+		urls.pushBack( amazon );
+		urls.pushBack( apple );
+		encoder < vector < Url > > VectorUrlEncoder;
+		decoder < vector < Url > > VectorUrlDecoder;
+		vector < Url > encodeDecodeVector = VectorUrlDecoder( VectorUrlEncoder ( urls ).data( ) );
+		for ( size_t i = 0;  i < urls.size( );  ++i )
+			{
+			REQUIRE( urls[ i ].completeUrl( ) == encodeDecodeVector[ i ].completeUrl( ) );
+			}
 		}
 	
 	SECTION( "vector" )

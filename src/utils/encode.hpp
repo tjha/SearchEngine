@@ -12,13 +12,14 @@
 #include "vector.hpp"
 #include "basicString.hpp"
 #include "../src/spinarak/robots.hpp"
+#include "../src/spinarak/url.hpp"
 
 namespace dex
 	{
 	// global definition of byte should go in a definitions
 	typedef unsigned char byte;
 
-	namespace crawler
+	namespace encode
 		{
 
 		// Number types are stored as there maximum amount of bytes used
@@ -121,6 +122,39 @@ namespace dex
 					}
 			};
 
+		// encode a url object to just encoded the complete URL
+		template < >
+		class encoder < dex::Url >
+			{
+			public:
+				dex::vector< unsigned char > operator( )( const dex::Url & data ) const
+					{
+					return encoder < dex::basicString < char > >( )( data.completeUrl( ) );
+					}
+
+				template < class InputIt >
+				InputIt operator( )( const Url &data, InputIt it = nullptr ) const
+					{
+					encoder < dex::basicString < char > > TEncoder;
+					dex::vector < unsigned char > encodedUrl;
+
+					// if iterator is specificied, advance by return last iterator
+					bool advance = ( it ) ? true : false;
+
+					it = encodedUrl.begin( );
+
+					it = TEncoder( data.completeUrl( ) );
+
+					if ( advance )
+						{
+						return it;
+						}
+
+					return encodedUrl.cbegin( );
+					}
+			};
+
+		// Encode a vector of type T
 		template < class T >
 		class encoder < dex::vector < T > >
 			{
@@ -245,7 +279,6 @@ namespace dex
 						{
 						*advancedEncoding = encoding;
 						}
-					//std::cout << "decoded : " << +decodedValue;
 					return +decodedValue;
 					}
 			};
@@ -266,6 +299,21 @@ namespace dex
 						decodedData.pushBack( TDecoder( * localAdvancedEncoding, localAdvancedEncoding ) );
 						}
 
+					if ( advancedEncoding )
+						*advancedEncoding = *localAdvancedEncoding;
+
+					return decodedData;
+					}
+			};
+
+		template < class InputIt >
+		class decoder < dex::Url, InputIt >
+			{
+			public:
+				dex::Url operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
+					{
+					InputIt *localAdvancedEncoding = &encoding;
+					dex::Url decodedData( decoder < dex::basicString < char >, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding ) );
 					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;
 

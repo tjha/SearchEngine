@@ -126,6 +126,10 @@ namespace dex
 					}
 				}
 
+			Url( string url )	: Url( url.cStr( ) )
+				{
+				}
+
 			Url( const Url &other )
 				{
 				service = other.service;
