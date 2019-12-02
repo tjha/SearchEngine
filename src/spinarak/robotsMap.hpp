@@ -1,6 +1,7 @@
 // robotsMap.hpp
 // Object for organizing robots.txt objects for websites
 //
+// 2019-12-01: Added politeToVisit: combsc
 // 2019-11-30: Continued working: combsc
 // 2019-11-29: Init Commit: combsc
 
@@ -92,7 +93,28 @@ namespace dex
 				return 0;
 				}
 
-			// return 0 on success, -1 on fail.
+			bool politeToVisit( const dex::string &domain, const dex::string &path )
+				{
+				mapLock.readLock( );
+				if ( !existsNoLock( domain ) )
+					{
+					mapLock.releaseReadLock( );
+					return true;
+					}
+				mainMap[ domain ].second->readLock( );
+				if ( !mainMap[ domain ].first )
+					{
+					mainMap[ domain ].second->releaseReadLock( );
+					mapLock.releaseReadLock( );
+					return false;
+					}
+				bool toReturn = mainMap[ domain ].first->visitPathResult( path ) == 0;
+				mainMap[ domain ].second->releaseReadLock( );
+				mapLock.releaseReadLock( );
+				return toReturn;
+				}
+
+			// return 0 on success, -1 on fail
 			int writeUnlock( const dex::string &domain )
 				{
 				mapLock.writeLock( );
