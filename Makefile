@@ -31,15 +31,14 @@ MODULE_TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,
 all: print_os $(TESTS)
 
 driver: src/mvp/driver.cpp
-	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -pthread -o driver.exe
+	make build
+	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -pthread -o $(BUILD_PATH)/driver.exe
 
 multithreadingTest: src/mvp/multithreadingTest.cpp
-	$(CXX) $(CXXFLAGS) src/mvp/multithreadingTest.cpp $(INCLUDES) -ltls -pthread -o multithreadingTest.exe
+	$(CXX) $(CXXFLAGS) src/mvp/multithreadingTest.cpp $(INCLUDES) -ltls -pthread -o build/multithreadingTest.exe
 
 cleanDriver:
-	rm -r driver.exe*
-	rm -r src/mvp/html
-	rm -r src/mvp/logs
+	@rm -rf data/tmp/logs/
 
 test: $(BUILD_PATH)/tst/$(case)Tests.exe
 

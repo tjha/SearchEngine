@@ -7,7 +7,7 @@
 cd ~/Desktop/eecs398/SearchEngine
 tmux new-session -s eecs398 \; \
 	set-option remain-on-exit on \; \
-	split-window -h 'sleep 2; cd src/mvp/logs; ls -At | tail -f; exec bash' \; \
-	split-window -t 0 -v -l 13 'cd src/mvp; make clean; make; ./driver.exe; exec bash' \; \
-	split-window -t 2 -v -l 20 'htop' \;
+	split-window -h 'sleep 5; cd data/tmp/logs; a=$(ls -At | head -n 1); tail -f $a; exec bash' \; \
+	split-window -t 0 -v -l 13 'make clean; make cleanDriver; make driver; ./build/driver.exe; exec bash' \; \
+	split-window -t 2 -v -l 21 \;
 
