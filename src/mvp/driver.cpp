@@ -30,7 +30,7 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 
 dex::frontier urlFrontier;
 size_t numUrlsToPull = 10;
-size_t checkpoint = 1 * 60; // checkpoints every x seconds
+long checkpoint = 1 * 60; // checkpoints every x seconds
 time_t lastCheckpoint = time( NULL );
 bool saving = false;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
@@ -137,7 +137,7 @@ void *worker( void *args )
 			if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 				{
 				dex::string html = toCrawl.completeUrl( ) + "\n" + result;
-				dex::saveHtml( toCrawl, html, pathToHtml );
+				dex::saveHtml( html, savePath );
 				if ( errorCode == dex::NOT_HTML )
 					print( toCrawl.completeUrl( ) + " is not html " );
 
@@ -238,8 +238,8 @@ int main( )
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
-	urlFrontier = dex::loadFrontier( "src/mvp/data/seedlist.txt" );
-	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "brokenLinks.txt" ).cStr( ) );
+	urlFrontier = dex::loadFrontier( ( savePath + "seedlist.txt" ).cStr( ) );
+	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ) );
 	
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
