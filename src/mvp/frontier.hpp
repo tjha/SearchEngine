@@ -62,10 +62,33 @@ namespace dex
 		public:
 			Url getUrl( )
 				{
-				int location = rand( ) % toVisit.size( );
-				Url toReturn = toVisit[ location ];
-				toVisit.erase( location );
-				return toReturn;
+				int maxScore = -1;
+				size_t maxIndex = 0;
+				size_t poolSize = dex::min( size_t( 10 ), toVisit.size( ) );
+				dex::vector < dex::Url > pool( poolSize );
+				// Get the highest scoring URL out of 10
+				for ( size_t j = 0;  j < poolSize;  ++j )
+					{
+					int location = rand( ) % toVisit.size( );
+					pool[ j ] = toVisit[ location ];
+					toVisit.erase( location );
+					int score = scoreUrl( pool[ j ] );
+					if ( score > maxScore )
+						{
+						maxScore = score;
+						maxIndex = j;
+						}
+					
+					}
+				// Put the others back
+				for ( size_t j = 0;  j < poolSize;  ++j )
+					{
+					if ( j != maxIndex )
+						{
+						toVisit.pushBack( pool[ j ] );
+						}
+					}
+				return pool[ maxIndex ];
 				}
 
 			dex::vector < dex::Url > getUrls( int num = 10 )
@@ -81,7 +104,6 @@ namespace dex
 					for ( size_t j = 0;  j < poolSize;  ++j )
 						{
 						int location = rand( ) % toVisit.size( );
-						
 						pool[ j ] = toVisit[ location ];
 						toVisit.erase( location );
 						int score = scoreUrl( pool[ j ] );
