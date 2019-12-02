@@ -38,7 +38,7 @@ time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 10
+#define numWorkers 50
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -105,10 +105,10 @@ void *worker( void *args )
 	log( "Start thread " + name + "\n");
 	for ( int i = 0;  true ;  ++i )
 		{
-		/*if ( state == 'q' )
+		if ( state == 'q' )
 			{
 			return nullptr;
-			}*/
+			}
 
 		pthread_mutex_lock( &frontierLock );
 		while ( urlFrontier.empty( ) )
@@ -263,5 +263,6 @@ int main( )
 	for ( size_t i = 0;  i < numWorkers; ++i )
 		pthread_join( workers[ i ], nullptr );
 	
+	std::cout << "exiting safely...\n";
 	return 0;
 	}
