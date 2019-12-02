@@ -62,6 +62,7 @@ namespace dex
 			++currentFileNumber;
 			entry = readdir( dir );
 			}
+        closedir( dir );
 		dex::string fileName( folderPath + dex::toString( currentFileNumber ) + ".html" );
 		currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
 		return currentFileDescriptor;
@@ -96,7 +97,7 @@ namespace dex
 		}
 
 	dex::frontier loadFrontier ( const char * fileName )
-	{
+        {
 		dex::frontier frontier;
 		if ( !dex::fileExists( fileName ) )
 			return frontier;
@@ -123,7 +124,7 @@ namespace dex
 			}
 
 		return frontier;
-	}
+        }
 
 	int saveFrontier ( const char * fileName, dex::frontier frontier )
 		{

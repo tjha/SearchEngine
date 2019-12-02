@@ -230,6 +230,7 @@ namespace dex
 						{
 						return TLS_CONFIG_ERROR;
 						}
+                    tls_config_free( config );
 					const char * error = tls_config_error( config );
 					if ( error != NULL )
 						{
