@@ -40,7 +40,7 @@ time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 1000
+#define numWorkers 1
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -106,13 +106,8 @@ void *worker( void *args )
 	int a = * ( ( int * ) args );
 	dex::string name = dex::toString( a );
 	log( "Start thread " + name + "\n");
-	for ( int i = 0;  true ;  ++i )
+	for ( int i = 0;  i < 1;  ++i )
 		{
-		if ( state == 'q' )
-			{
-			return nullptr;
-			}
-
 		pthread_mutex_lock( &frontierLock );
 		while ( urlFrontier.empty( ) )
 			{
@@ -145,15 +140,18 @@ void *worker( void *args )
 			{
 			dex::string html = toCrawl.completeUrl( ) + "\n" + result;
 			pthread_mutex_lock( &saveHtmlLock );
+            print( "entering save" );
 			dex::saveHtml( html, savePath );
 			retrievedLinks.pushBack( toCrawl.completeUrl( ) );
+            print( "leaving save" );
 			pthread_mutex_unlock( &saveHtmlLock );
 
 			if ( errorCode == dex::NOT_HTML )
-				// print( toCrawl.completeUrl( ) + " is not html " );
+				print( toCrawl.completeUrl( ) + " is not html " );
 
 			if ( errorCode == 0 )
 				{
+                print( "start parsing" );
 				dex::HTMLparser parser( html );
 			
 				dex::vector < dex::Url > links = parser.ReturnLinks( );
@@ -190,6 +188,7 @@ void *worker( void *args )
 						pthread_mutex_unlock( &brokenLinksLock );
 						}
 					}
+                print( "end parsing" );
 				}
 			}
 		// If we get a politness error for this URL, we put it back into the frontier
@@ -199,6 +198,7 @@ void *worker( void *args )
 			urlFrontier.putUrl( toCrawl );
 			pthread_mutex_unlock( &frontierLock );
 			}
+        print( "past politeness" );
 		// If we get a redirect, we need to update the redirects cache and put the link
 		// into the frontier or should be shipped.
 		if ( errorCode >= 300 && errorCode < 400 )
@@ -221,6 +221,7 @@ void *worker( void *args )
 				pthread_mutex_unlock( &linksToShipLock );
 				}
 			}
+        print( "past redirect" );
 		// This link doesn't lead anywhere, we need to add it to our broken links
 		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
 			{
@@ -229,7 +230,7 @@ void *worker( void *args )
 			pthread_mutex_unlock( &brokenLinksLock );
 			// All links that redirect to this should also be categorized as broken.
 			}
-		
+        print( "past lead" );
 		}
 	return nullptr;
 	}
@@ -262,12 +263,6 @@ int main( )
 		{
 		ids[ i ] = i;
 		pthread_create( &workers[ i ], nullptr, worker, &( ids[ i ] ) );
-		}
-
-	while ( std::cin >> state )
-		{
-		if ( state == 'q' )
-			break;
 		}
 
 	for ( size_t i = 0;  i < numWorkers; ++i )
