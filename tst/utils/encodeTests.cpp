@@ -84,6 +84,35 @@ TEST_CASE( "encode", "[types]" )
 		magikarp = "hello";
 		REQUIRE( magikarp == StringDecoder ( ( StringEncoder ( magikarp ) ).data( ) ) );
 		}
+	
+	SECTION( "vector" )
+		{
+		string a = "abclkajsdf;lkjas;dlkfj";
+		string b = "curiousgeorgeandtheyellowbanana";
+		string c = "pokemonassemble";
+		vector < string > vec;
+		vec.pushBack( a );
+		vec.pushBack( b );
+		vec.pushBack( c );
+		encoder < vector < string > > VectorStringEncoder;
+		decoder < vector < string > > VectorStringDecoder;
+		vector < byte > encoded = VectorStringEncoder( vec );
+		REQUIRE( encoded.size( ) == sizeof( int ) * 4 + a.size( ) + b.size( ) + c.size( ) );
+		REQUIRE( vec == VectorStringDecoder( VectorStringEncoder( vec ).data( ) ) );
+
+		int one = 123;
+		int two = 666;
+		int three = 0xFFFFFF;
+		vector < int > integers;
+		integers.pushBack( one );
+		integers.pushBack( two );
+		integers.pushBack( three );
+		encoder < vector < int > > VectorIntegerEncoder;
+		decoder < vector < int > > VectorIntegerDecoder;
+		vector < byte > intsEncoded = VectorIntegerEncoder( integers );
+		REQUIRE( intsEncoded.size( ) == sizeof( int ) * ( 1 + 3 ) );
+		REQUIRE( integers == VectorIntegerDecoder( VectorIntegerEncoder( integers ).data( ) ) );
+		}
 
 	SECTION( "empty types" )
 		{

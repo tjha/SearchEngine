@@ -1,6 +1,8 @@
 // storage.hpp
 // Encode and Decode objects used in crawler
 //a
+// 2019-12-01: supports vectors: jhirsh
+// 2019-11-sometime: encodes and decodes strings and ints: jhirsh
 // 2019-11-20: File created and encoding integers: jhirsh
 
 #ifndef DEX_ENCODE
@@ -62,12 +64,12 @@ namespace dex
 						number = number >> 8;
 						}
 
-					if ( !advance )
+					if ( advance )
 						{
-						return encodedData.cbegin( );
+						return it;
 						}
 
-					return it;
+					return encodedData.cbegin( );
 					}
 			};
 
@@ -110,12 +112,54 @@ namespace dex
 						it = TEncoder( *dataIt, it );
 						}
 
-					if ( !advance )
+					if ( advance )
 						{
-						return encodedString.cbegin( );
+						return it;
 						}
 
-					return it;
+					return encodedString.cbegin( );
+					}
+			};
+
+		template < class T >
+		class encoder < dex::vector < T > >
+			{
+			public:
+				dex::vector< unsigned char > operator( )( const dex::vector < T > & data ) const
+					{
+					encoder < T > TEncoder;
+					encoder < int > IntegerEncoder;
+
+					int size = static_cast < int > ( data.size( ) );
+					dex::vector < unsigned char > encodedVector = IntegerEncoder( size );
+					for ( auto it = data.cbegin( );  it != data.cend( );  ++it )
+						{
+						dex::vector < unsigned char > encodedDatum = TEncoder( *it );
+						encodedVector.insert( encodedVector.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
+						}
+					return encodedVector;
+					}
+
+				template < class InputIt >
+				InputIt operator( )( const dex::vector< T > &data, InputIt it = nullptr ) const
+					{
+					encoder < T > TEncoder;
+					dex::vector < unsigned char > encodedVector = encoder < int >( )( data.size( ) );
+
+					bool advance = ( it ) ? true : false;
+					it = encodedVector.cbegin( );
+
+					for ( auto dataIt = data.cbegin( );  dataIt != data.cend( );  ++dataIt )
+						{
+						it = StringEncoder( *dataIt, it );
+						}
+
+					if ( advance )
+						{
+						return it;
+						}
+
+					return encodedVector.cbegin( );
 					}
 			};
 
@@ -221,9 +265,31 @@ namespace dex
 						{
 						decodedData.pushBack( TDecoder( * localAdvancedEncoding, localAdvancedEncoding ) );
 						}
-					std::cout << std::endl;
 
 					if ( advancedEncoding )
+						*advancedEncoding = *localAdvancedEncoding;
+
+					return decodedData;
+					}
+			};
+
+		template < class T, class InputIt >
+		class decoder < vector < T >, InputIt >
+			{
+			public:
+				dex::vector < T > operator ( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
+					{
+					InputIt * localAdvancedEncoding = &encoding;
+					decoder < T, InputIt > TDecoder;
+					dex::vector < T > decodedData;
+
+					size_t size = decoder < int, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
+						{
+						decodedData.pushBack( TDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
+						}
+
+					if ( advancedEncoding ) 
 						*advancedEncoding = *localAdvancedEncoding;
 
 					return decodedData;
