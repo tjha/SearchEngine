@@ -15,6 +15,7 @@
 #include "../spinarak/url.hpp"
 #include "frontier.hpp"
 #include "file.hpp"
+#include <iostream>
 
 namespace dex
 	{
@@ -28,13 +29,13 @@ namespace dex
 	size_t HTMLChunkSize = 100000000; // 16 MB files for htm
 	int currentFileNumber = 0;
 	int currentFileDescriptor = -1;
-	int saveHtml ( dex::string html )
+	int saveHtml ( dex::string html, dex::string folderPath )
 		{
 		if ( dex::fileSize( currentFileDescriptor ) > HTMLChunkSize )
 			{
 			close( currentFileDescriptor ); // close filled chunk
 			++currentFileNumber;
-			dex::string fileName( "data/html/" + dex::toString( currentFileNumber ) + ".html" );
+			dex::string fileName( folderPath + "html/" + dex::toString( currentFileNumber ) + ".html" );
 			currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
 			}
 		std::cout << "size = " << dex::fileSize( currentFileDescriptor ) << std::endl;
@@ -50,7 +51,7 @@ namespace dex
 			++currentFileNumber;
 			entry = readdir( dir );
 			}
-		dex::string fileName( "data/html/" + dex::toString( currentFileNumber ) + ".html" );
+		dex::string fileName( folderPath + "html/" + dex::toString( currentFileNumber ) + ".html" );
 		currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
 		}
 	
@@ -114,11 +115,13 @@ namespace dex
 
 	int saveFrontier ( const char * fileName, dex::frontier frontier )
 		{
+		std::cout << "Constructing save string" << std::endl;
 		string frontierData = "FRONTIER\n";
 		for ( auto it = frontier.begin( );  it != frontier.end( );  ++it )
 			{
 			frontierData += it->completeUrl( ) + "\n";
 			}
+		std::cout << "Writing to file" << std::endl;
 		return writeToFile( fileName, frontierData.cStr( ), frontierData.size( ) );
 		}
 

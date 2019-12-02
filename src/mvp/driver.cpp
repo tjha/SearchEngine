@@ -13,10 +13,10 @@
 #include "checkpointing.hpp"
 #include "redirectCache.hpp"
 #include "parser.hpp"
+#include <time.h>
 
-dex::string pathToHtml = "data/html/";
-dex::string pathToLogging = "src/mvp/";
-
+dex::string savePath = "data/";
+dex::string tmpPath = "data/tmp/";
 
 dex::string loggingFileName;
 pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
@@ -29,7 +29,9 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 
 dex::frontier urlFrontier;
 size_t numCrawled = 0;
-size_t checkpoint = 100;
+size_t checkpoint = 1 * 60; // checkpoints every x seconds
+time_t lastCheckpoint = time( NULL );
+bool saving = false;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
@@ -59,6 +61,7 @@ dex::redirectCache redirects;
 pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t saveHtmlLock = PTHREAD_MUTEX_INITIALIZER;
 
 void print( dex::string toPrint )
 	{
@@ -100,12 +103,14 @@ void *worker( void *args )
 		dex::Url toCrawl = urlFrontier.getUrl( );
 		++numCrawled;
 
-		if ( numCrawled % checkpoint == 0 )
+		if ( !saving && time( NULL ) - lastCheckpoint > checkpoint )
 			{
-			print( "saving" );
-			dex::saveFrontier( ( pathToData + "data/tmp/savedFrontier.txt" ).cStr( ), urlFrontier );
-			dex::saveBrokenLinks( ( pathToData + "data/tmp/savedBrokenLinks.txt" ).cStr( ), brokenLinks );
-			print( "saved" );
+			log( "saving" );
+			saving = true;
+			dex::saveFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), urlFrontier );
+			dex::saveBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ), brokenLinks );
+			saving = false;
+			log( "saved" );
 			}
 		pthread_mutex_unlock( &frontierLock );
 
@@ -121,18 +126,21 @@ void *worker( void *args )
 		// lock the cache for the entire time we're crawling the URL
 		print( toCrawl.completeUrl( ) );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
-		print( dex::toString( errorCode ) );
+		//print( dex::toString( errorCode ) );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
 			dex::string html = toCrawl.completeUrl( ) + "\n" + result;
-			dex::saveHtml( toCrawl );
 			if ( errorCode == dex::NOT_HTML )
 				print( toCrawl.completeUrl( ) + " is not html " );
 
 			if ( errorCode == 0 )
 				{
+				pthread_mutex_lock( &saveHtmlLock );
+				dex::saveHtml( html, savePath );
+				pthread_mutex_unlock( &saveHtmlLock );
+
 				dex::HTMLparser parser( html );
 			
 				dex::vector < dex::Url > links = parser.ReturnLinks( );
@@ -217,18 +225,18 @@ void *worker( void *args )
 int main( )
 	{
 	// setup logging file for this run
-	int result = dex::makeDirectory( ( pathToLogging + "logs" ).cStr( ) );
-	result = dex::makeDirectory( ( pathToData + "data/tmp" ).cStr( ) );
+	int result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
+	result = dex::makeDirectory( tmpPath.cStr( ) );
 
-	loggingFileName = pathToLogging + "logs/";
+	loggingFileName = tmpPath + "logs/";
 	time_t now = time( nullptr );
 	loggingFileName += ctime( &now );
 	loggingFileName.popBack( );
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
-	urlFrontier = dex::loadFrontier( ( pathToData + "data/seedlist.txt" ).cStr( ) );
-	brokenLinks = dex::loadBrokenLinks( ( pathToData + "data/tmp/brokenLinks.txt" ).cStr( ) );
+	urlFrontier = dex::loadFrontier( "src/mvp/data/seedlist.txt" );
+	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "brokenLinks.txt" ).cStr( ) );
 	
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
