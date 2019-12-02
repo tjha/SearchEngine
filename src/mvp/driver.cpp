@@ -136,9 +136,9 @@ void *worker( void *args )
 		// I know that it's not safe to use robotsCache here
 		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
 		// lock the cache for the entire time we're crawling the URL
-		print( toCrawl.completeUrl( ) );
+		// print( toCrawl.completeUrl( ) );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
-		print( dex::toString( errorCode ) );
+		// print( dex::toString( errorCode ) );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
@@ -150,7 +150,7 @@ void *worker( void *args )
 			pthread_mutex_unlock( &saveHtmlLock );
 
 			if ( errorCode == dex::NOT_HTML )
-				print( toCrawl.completeUrl( ) + " is not html " );
+				// print( toCrawl.completeUrl( ) + " is not html " );
 
 			if ( errorCode == 0 )
 				{
@@ -251,7 +251,13 @@ int main( )
 
 	urlFrontier = dex::loadFrontier( ( savePath + "seedlist.txt" ).cStr( ) );
 	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ) );
-	
+
+	if ( dex::getCurrentFileDescriptor( savePath + "html" ) == 0 )
+		{
+		std::cerr << "Could not get current file" << std::endl;
+		return -1;
+		}
+
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
 		ids[ i ] = i;

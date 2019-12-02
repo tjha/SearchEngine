@@ -29,20 +29,32 @@ namespace dex
 	size_t HTMLChunkSize = 100000000; // 16 MB files for htm
 	int currentFileNumber = 0;
 	int currentFileDescriptor = -1;
-	int saveHtml ( dex::string html, dex::string folderPath )
+	int saveHtml ( dex::string html, dex::string folderPath ) //, dex::string &currentSaveFile )
 		{
+		int err = dex::makeDirectory( folderPath.cStr( ) );
+		if ( err == -1 )
+			return -1;
+
 		if ( dex::fileSize( currentFileDescriptor ) > HTMLChunkSize )
 			{
 			close( currentFileDescriptor ); // close filled chunk
 			++currentFileNumber;
 			dex::string fileName( folderPath + "html/" + dex::toString( currentFileNumber ) + ".html" );
+			std::cout << "switching to file " << fileName << std::endl;
 			currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
 			}
 		return write( currentFileDescriptor, html.cStr( ), html.size( ) );
 		}
 
-	void getCurrentFileDescriptor( dex::string folderPath )
+	int getCurrentFileDescriptor( dex::string folderPath )
 		{
+		int err = dex::makeDirectory( folderPath.cStr( ) );
+		if ( err == -1 )
+			{
+			std::cerr << "could not make directory" << std::endl;
+			return -1;
+			}
+
 		DIR * dir = opendir( folderPath.cStr( ) );
 		dirent * entry = readdir( dir );
 		while ( entry != NULL )
@@ -50,8 +62,9 @@ namespace dex
 			++currentFileNumber;
 			entry = readdir( dir );
 			}
-		dex::string fileName( folderPath + "html/" + dex::toString( currentFileNumber ) + ".html" );
+		dex::string fileName( folderPath + dex::toString( currentFileNumber ) + ".html" );
 		currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
+		return currentFileDescriptor;
 		}
 	
 	void closeHtmlFile( )
@@ -118,6 +131,11 @@ namespace dex
 		dex::vector< unsigned char > encodedFrontier = UrlEncoder( frontier.getFrontier( ) );
 		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
 		}
+	
+	/*dex::frontier loadFrontier( const char * filename )
+		{
+		dex::frontier;
+		}*/
 
 	int saveVisitedLinks ( const char * fileName, dex::vector< dex::string > links )
 		{
