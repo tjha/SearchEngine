@@ -141,6 +141,24 @@ TEST_CASE( "encode", "[types]" )
 		REQUIRE( integers == VectorIntegerDecoder( VectorIntegerEncoder( integers ).data( ) ) );
 		}
 
+	SECTION( "unorderedSet" )
+		{
+		unorderedSet < dex::Url > links;
+		links.insert( Url("https://www.amazon.com/") );
+		links.insert( Url("https://www.apple.com/") );
+		links.insert( Url("https://www.nytimes.com/") );
+		encoder < unorderedSet < Url > > SetEncoder;
+		decoder < unorderedSet < Url > > SetDecoder;
+		unorderedSet< Url > decoded = SetDecoder( SetEncoder( links ).data( ) );
+		auto itDec = decoded.cbegin( );
+		for ( auto it = links.begin( );  it != links.cend( );  ++it )
+			{
+			REQUIRE( it->completeUrl( ).size( ) == itDec->completeUrl( ).size( ) );
+			REQUIRE( it->completeUrl( ) == itDec->completeUrl( ) );
+			++itDec;
+			}
+		}
+
 	SECTION( "empty types" )
 		{
 		int i = 0;

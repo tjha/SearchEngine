@@ -16,7 +16,6 @@
 #include "frontier.hpp"
 #include "file.hpp"
 #include "encode.hpp"
-#include <iostream>
 
 namespace dex
 	{
@@ -39,7 +38,6 @@ namespace dex
 			dex::string fileName( folderPath + "html/" + dex::toString( currentFileNumber ) + ".html" );
 			currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
 			}
-		std::cout << "size = " << dex::fileSize( currentFileDescriptor ) << std::endl;
 		return write( currentFileDescriptor, html.cStr( ), html.size( ) );
 		}
 
@@ -116,15 +114,15 @@ namespace dex
 
 	int saveFrontier ( const char * fileName, dex::frontier frontier )
 		{
-		std::cout << "Constructing save string" << std::endl;
 		dex::encode::encoder < dex::vector < dex::Url > > UrlEncoder;
 		dex::vector< unsigned char > encodedFrontier = UrlEncoder( frontier.getFrontier( ) );
-		/*string frontierData = "FRONTIER\n";
-		for ( auto it = frontier.begin( );  it != frontier.end( );  ++it )
-			{
-			frontierData += it->completeUrl( ) + "\n";
-			}*/
-		std::cout << "Writing to file" << std::endl;
+		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
+		}
+
+	int saveVisitedLinks ( const char * fileName, dex::vector< dex::string > links )
+		{
+		dex::encode::encoder < dex::vector < dex::string > > VectorStringEncoder;
+		dex::vector< unsigned char > encodedFrontier = VectorStringEncoder( links );
 		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
 		}
 

@@ -14,6 +14,7 @@
 #include "redirectCache.hpp"
 #include "parser.hpp"
 #include <time.h>
+#include <iostream>
 
 dex::string savePath = "data/";
 dex::string tmpPath = "data/tmp/";
@@ -28,14 +29,14 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 // not put links that aren't our responsibility into our frontier
 
 dex::frontier urlFrontier;
-size_t numCrawled = 0;
-size_t checkpoint = 1 * 60; // checkpoints every x seconds
-time_t lastCheckpoint = time( NULL );
-bool saving = false;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
+dex::vector < dex::string > retrievedLinks;
+long checkpoint = 1 * 3600; // checkpoints every x seconds
+time_t lastCheckpoint = time( NULL );
 
+char state = 0;
 
 #define numWorkers 10
 pthread_t workers [ numWorkers ];
@@ -88,6 +89,15 @@ bool isUrlInDomain( const dex::Url &url )
 	return true;
 	}
 
+// Call checkpointing functions after time alotted or user input
+void saveWork( )
+	{
+	dex::saveFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), urlFrontier );
+	//dex::saveBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ), brokenLinks );
+	dex::saveVisitedLinks( ( savePath + "crawledLinks.txt" ).cStr( ), retrievedLinks );
+	lastCheckpoint = time(NULL);
+	}
+
 void *worker( void *args )
 	{
 	int a = * ( ( int * ) args );
@@ -95,22 +105,22 @@ void *worker( void *args )
 	log( "Start thread " + name + "\n");
 	for ( int i = 0;  true ;  ++i )
 		{
+		/*if ( state == 'q' )
+			{
+			return nullptr;
+			}*/
+
 		pthread_mutex_lock( &frontierLock );
 		while ( urlFrontier.empty( ) )
 			{
 			pthread_cond_wait( &frontierCV, &frontierLock );
 			}
 		dex::Url toCrawl = urlFrontier.getUrl( );
-		++numCrawled;
 
-		if ( !saving && time( NULL ) - lastCheckpoint > checkpoint )
+		if ( time( NULL ) - lastCheckpoint > checkpoint || state == 's' )
 			{
-			log( "saving" );
-			saving = true;
-			dex::saveFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), urlFrontier );
-			dex::saveBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ), brokenLinks );
-			saving = false;
-			log( "saved" );
+			saveWork( );
+			state = 0;
 			}
 		pthread_mutex_unlock( &frontierLock );
 
@@ -124,7 +134,6 @@ void *worker( void *args )
 		// I know that it's not safe to use robotsCache here
 		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
 		// lock the cache for the entire time we're crawling the URL
-		print( toCrawl.completeUrl( ) );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
 		//print( dex::toString( errorCode ) );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
@@ -133,11 +142,12 @@ void *worker( void *args )
 			{
 			dex::string html = toCrawl.completeUrl( ) + "\n" + result;
 			if ( errorCode == dex::NOT_HTML )
-				print( toCrawl.completeUrl( ) + " is not html " );
+				log( toCrawl.completeUrl( ) + " is not html " );
 
 			if ( errorCode == 0 )
 				{
 				pthread_mutex_lock( &saveHtmlLock );
+				retrievedLinks.pushBack( toCrawl.completeUrl( ) + "\n" );
 				dex::saveHtml( html, savePath );
 				pthread_mutex_unlock( &saveHtmlLock );
 
@@ -242,6 +252,12 @@ int main( )
 		{
 		ids[ i ] = i;
 		pthread_create( &workers[ i ], nullptr, worker, &( ids[ i ] ) );
+		}
+
+	while ( std::cin >> state )
+		{
+		if ( state == 'q' )
+			break;
 		}
 
 	for ( size_t i = 0;  i < numWorkers; ++i )
