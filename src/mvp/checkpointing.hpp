@@ -9,10 +9,14 @@
 #ifndef CHECKPOINTING_HPP
 #define CHECKPOINTING_HPP
 
+#include <dirent.h>
 #include "../utils/file.hpp"
 #include "../utils/basicString.hpp"
 #include "../spinarak/url.hpp"
 #include "frontier.hpp"
+#include "file.hpp"
+#include "encode.hpp"
+#include <iostream>
 
 namespace dex
 	{
@@ -23,6 +27,40 @@ namespace dex
 	// bytes 2 determines the second folder
 	// bytes 3-4 determine the name of the files
 	// This gives us 4,294,967,296 possible locations for html
+	size_t HTMLChunkSize = 100000000; // 16 MB files for htm
+	int currentFileNumber = 0;
+	int currentFileDescriptor = -1;
+	int saveHtml ( dex::string html, dex::string folderPath )
+		{
+		if ( dex::fileSize( currentFileDescriptor ) > HTMLChunkSize )
+			{
+			close( currentFileDescriptor ); // close filled chunk
+			++currentFileNumber;
+			dex::string fileName( folderPath + "html/" + dex::toString( currentFileNumber ) + ".html" );
+			currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
+			}
+		std::cout << "size = " << dex::fileSize( currentFileDescriptor ) << std::endl;
+		return write( currentFileDescriptor, html.cStr( ), html.size( ) );
+		}
+
+	void getCurrentFileDescriptor( dex::string folderPath )
+		{
+		DIR * dir = opendir( folderPath.cStr( ) );
+		dirent * entry = readdir( dir );
+		while ( entry != NULL )
+			{
+			++currentFileNumber;
+			entry = readdir( dir );
+			}
+		dex::string fileName( folderPath + "html/" + dex::toString( currentFileNumber ) + ".html" );
+		currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
+		}
+	
+	void closeHtmlFile( )
+		{
+		close( currentFileDescriptor );
+		}
+
 	int saveHtml ( dex::Url url, dex::string html, dex::string folderPath )
 		{
 		dex::hash < dex::string > hasher;
@@ -30,18 +68,18 @@ namespace dex
 		unsigned long first = h & 0x000000FF;
 		unsigned long second = ( h & 0x0000FF00 ) >> 8;
 		unsigned long name = ( h & 0xFFFF0000 ) >> 16 ;
-		int err = dex::makeDirectory( ( folderPath + "html" ).cStr( ) );
+		int err = dex::makeDirectory( ( folderPath ).cStr( ) );
 		if ( err == -1 )
 			return err;
-		dex::string dirName = folderPath + "html/" + dex::toString( first );
+		dex::string dirName = folderPath + dex::toString( first );
 		err = dex::makeDirectory( dirName.cStr( ) );
 		if ( err == -1 )
 			return err;
-		dirName = folderPath + "html/" + dex::toString( first ) + "/" + dex::toString( second );
+		dirName = folderPath + dex::toString( first ) + "/" + dex::toString( second );
 		err = dex::makeDirectory( dirName.cStr( ) );
 		if ( err == -1 )
 			return err;
-		dex::string filename = folderPath + "html/" + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html";
+		dex::string filename = folderPath + dex::toString( first ) + "/" + dex::toString( second ) + "/" + dex::toString( name ) + ".html";
 		err = dex::writeToFile( filename.cStr( ), html.cStr( ), html.size( ) );
 		return err;
 		}
@@ -78,12 +116,16 @@ namespace dex
 
 	int saveFrontier ( const char * fileName, dex::frontier frontier )
 		{
-		string frontierData = "FRONTIER\n";
+		std::cout << "Constructing save string" << std::endl;
+		dex::encode::encoder < dex::vector < dex::Url > > UrlEncoder;
+		dex::vector< unsigned char > encodedFrontier = UrlEncoder( frontier.getFrontier( ) );
+		/*string frontierData = "FRONTIER\n";
 		for ( auto it = frontier.begin( );  it != frontier.end( );  ++it )
 			{
 			frontierData += it->completeUrl( ) + "\n";
-			}
-		return writeToFile( fileName, frontierData.cStr( ), frontierData.size( ) );
+			}*/
+		std::cout << "Writing to file" << std::endl;
+		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
 		}
 
 	dex::unorderedSet < dex::Url > loadBrokenLinks ( const char * fileName )

@@ -78,6 +78,28 @@ namespace dex
 		return 0;
 		}
 
+	int writeToFile( const char *filePath, unsigned char *toWrite, size_t length )
+		{
+		int fd = open( filePath, O_RDWR | O_CREAT| O_TRUNC, S_IRWXU );
+		if ( fd == -1 )
+			return -1;
+		int result = lseek( fd, length - 1, SEEK_SET );
+		if ( result == -1 )
+			{
+			close( fd );
+			return -1;
+			}
+			
+		
+		result = write( fd, " ", 1 );
+
+		char *map = ( char * ) mmap( nullptr, length, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0 );
+		copy( toWrite, toWrite + length, map );
+
+		close( fd );
+		return 0;
+		}
+
 	// Appends to the file name specified. Will not overwrite whatever was there before.
 	int appendToFile( const char *filePath, const char *toWrite, size_t length )
 		{
