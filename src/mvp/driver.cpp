@@ -40,7 +40,7 @@ time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 1000
+#define numWorkers 10
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -106,12 +106,10 @@ void *worker( void *args )
 	int a = * ( ( int * ) args );
 	dex::string name = dex::toString( a );
 	log( "Start thread " + name + "\n");
-	for ( int i = 0;  true ;  ++i )
+	for ( int i = 0;  true;  ++i )
 		{
-		if ( state == 'q' )
-			{
-			return nullptr;
-			}
+        if ( state == 'q' )
+            return nullptr;
 
 		pthread_mutex_lock( &frontierLock );
 		while ( urlFrontier.empty( ) )
@@ -136,9 +134,7 @@ void *worker( void *args )
 		// I know that it's not safe to use robotsCache here
 		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
 		// lock the cache for the entire time we're crawling the URL
-		// print( toCrawl.completeUrl( ) );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
-		// print( dex::toString( errorCode ) );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
@@ -150,7 +146,7 @@ void *worker( void *args )
 			pthread_mutex_unlock( &saveHtmlLock );
 
 			if ( errorCode == dex::NOT_HTML )
-				// print( toCrawl.completeUrl( ) + " is not html " );
+				print( toCrawl.completeUrl( ) + " is not html " );
 
 			if ( errorCode == 0 )
 				{
@@ -199,6 +195,7 @@ void *worker( void *args )
 			urlFrontier.putUrl( toCrawl );
 			pthread_mutex_unlock( &frontierLock );
 			}
+        //print( "past politeness" );
 		// If we get a redirect, we need to update the redirects cache and put the link
 		// into the frontier or should be shipped.
 		if ( errorCode >= 300 && errorCode < 400 )
@@ -221,6 +218,7 @@ void *worker( void *args )
 				pthread_mutex_unlock( &linksToShipLock );
 				}
 			}
+        //print( "past redirect" );
 		// This link doesn't lead anywhere, we need to add it to our broken links
 		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
 			{
@@ -229,7 +227,7 @@ void *worker( void *args )
 			pthread_mutex_unlock( &brokenLinksLock );
 			// All links that redirect to this should also be categorized as broken.
 			}
-		
+        //print( "past lead" );
 		}
 	return nullptr;
 	}
@@ -239,8 +237,9 @@ void *worker( void *args )
 int main( )
 	{
 	// setup logging file for this run
-	int result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
+	int result = dex::makeDirectory( savePath.cStr( ) );
 	result = dex::makeDirectory( tmpPath.cStr( ) );
+    result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
 
 	loggingFileName = tmpPath + "logs/";
 	time_t now = time( nullptr );
@@ -264,15 +263,16 @@ int main( )
 		pthread_create( &workers[ i ], nullptr, worker, &( ids[ i ] ) );
 		}
 
-	while ( std::cin >> state )
-		{
-		if ( state == 'q' )
-			break;
-		}
+    while ( std::cin >> state )
+        {
+        if ( state == 'q' )
+            break;
+        }
 
 	for ( size_t i = 0;  i < numWorkers; ++i )
 		pthread_join( workers[ i ], nullptr );
 	
+    dex::closeHtmlFile( );
 	std::cout << "exiting safely...\n";
 	return 0;
 	}

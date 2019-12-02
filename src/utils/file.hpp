@@ -78,6 +78,20 @@ namespace dex
 		return 0;
 		}
 
+    /*int openFile( const char *filePath )
+        {
+		int fd = open( filePath, O_RDWR | O_CREAT| O_TRUNC, S_IRWXU );
+		if ( fd == -1 )
+			return -1;
+		int result = lseek( fd, length - 1, SEEK_SET );
+		if ( result == -1 )
+			{
+			close( fd );
+			return -1;
+			}
+        return fd;
+        }*/
+
 	int writeToFile( const char *filePath, unsigned char *toWrite, size_t length )
 		{
 		int fd = open( filePath, O_RDWR | O_CREAT| O_TRUNC, S_IRWXU );
