@@ -42,7 +42,7 @@ time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 20
+#define numWorkers 100
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -100,7 +100,7 @@ void saveWork( )
 	print( "saving" );
 	dex::saveFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), urlFrontier );
 	//dex::saveBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ), brokenLinks );
-	dex::saveVisitedLinks( ( savePath + "crawledLinks.txt" ).cStr( ), retrievedLinks );
+	//dex::saveVisitedLinks( "data/crawledLinks.txt", retrievedLinks );
 	lastCheckpoint = time(NULL);
 	}
 
@@ -143,17 +143,18 @@ void *worker( void *args )
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
 			dex::string html = "NEW URL: " + toCrawl.completeUrl( ) + "\n" + result + "\n";
-			pthread_mutex_lock( &saveHtmlLock );
-			dex::saveHtml( html, savePath );
-			//dex::saveHtml( html, savePath );
-			retrievedLinks.pushBack( toCrawl.completeUrl( ) );
-			pthread_mutex_unlock( &saveHtmlLock );
 
 			if ( errorCode == dex::NOT_HTML )
 				print( toCrawl.completeUrl( ) + " is not html " );
 
 			if ( errorCode == 0 )
 				{
+				// if valid html -> save
+				pthread_mutex_lock( &saveHtmlLock );
+				dex::saveHtml( toCrawl, html, savePath );
+				retrievedLinks.pushBack( toCrawl.completeUrl( ) );
+				pthread_mutex_unlock( &saveHtmlLock );
+
 				dex::HTMLparser parser( result );
 			
 				dex::vector < dex::Url > links = parser.ReturnLinks( );
@@ -258,7 +259,7 @@ int main( )
 	urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize );
 	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ) );
 
-	if ( dex::getCurrentFileDescriptor( savePath + "html/" ) == 0 )
+	if ( dex::getCurrentFileDescriptor( savePath + "html/" ) == -1 )
 		{
 		std::cerr << "Could not get current file" << std::endl;
 		return -1;
