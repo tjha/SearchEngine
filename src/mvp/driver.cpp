@@ -38,7 +38,7 @@ pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
 
-long checkpoint = 60; // checkpoints every x seconds
+long checkpoint = 5*60; // checkpoints every x seconds
 time_t lastCheckpoint = time( NULL );
 
 char state = 0;
@@ -47,7 +47,8 @@ char state = 0;
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
-dex::robotsMap robotsCache;
+size_t robotsMapSize = 500;
+dex::robotsMap robotsCache( robotsMapSize );
 pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 
 // This set contains all known links in our domain that error out
@@ -58,13 +59,14 @@ pthread_mutex_t brokenLinksLock = PTHREAD_MUTEX_INITIALIZER;
 // This vector contains all known links that are NOT in our domain
 // and need to be given to other instances. Think of this as a frontier
 // but for the other workers.
-const size_t numInstances = 3;
+const size_t numInstances = 1;
 const size_t instanceId = 0;
 dex::vector < dex::Url > linksToShip [ numInstances ];
 pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
 
 // This is the redirect cache. Used for handling known redirects on our
 // side without having to actually visit the sites.
+const size_t redirectsSize = 5000;
 dex::redirectCache redirects;
 pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -134,6 +136,8 @@ void *worker( void *args )
 		// Fix link using our redirects cache
 		pthread_mutex_lock( &redirectsLock );
 		toCrawl = redirects.getEndpoint( toCrawl );
+		if ( redirects.size( ) > redirectsSize )
+			redirects.reset( );
 		pthread_mutex_unlock( &redirectsLock );
 		
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
@@ -141,6 +145,8 @@ void *worker( void *args )
 		// I know that it's not safe to use robotsCache here
 		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
 		// lock the cache for the entire time we're crawling the URL
+		if ( robotsCache.purge( ) == 1 )
+			print( "Purged" );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.

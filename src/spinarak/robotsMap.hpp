@@ -1,6 +1,7 @@
 // robotsMap.hpp
 // Object for organizing robots.txt objects for websites
 //
+// 2019-12-02: Set maximum size
 // 2019-12-01: Added politeToVisit: combsc
 // 2019-11-30: Continued working: combsc
 // 2019-11-29: Init Commit: combsc
@@ -21,6 +22,7 @@ namespace dex
 			// Takes in a domain, returns a robotTxt* and the lock pointer associated with it.
 			dex::unorderedMap < dex::string, dex::pair < dex::RobotTxt*, dex::sharedReaderLock* > > mainMap{ 1000 };
 			dex::sharedReaderLock mapLock;
+			size_t maximumSize;
 
 			bool existsNoLock( dex::string str )
 				{
@@ -159,9 +161,32 @@ namespace dex
 					{
 					mapLock.writeLock( );
 					if ( existsNoLock( str ) ) 
+						{
+						if ( mainMap[ str ].first )
+							delete mainMap[ str ].first;
+						if ( mainMap[ str ].second )
+							delete mainMap[ str ].second;
 						mainMap.erase( str );
+						}
+						
 					mapLock.releaseWriteLock( );
 					}
+				}
+
+			int purge( )
+				{
+				if ( mainMap.size( ) > maximumSize )
+					{
+					size_t i = 0;
+					for ( auto it = mainMap.cbegin( );  it != mainMap.cend( );  ++it )
+						{
+						if ( i % 5 == 0 )
+							erase( it->first );
+						i++;
+						}
+					return 1;
+					}
+				return 0;
 				}
 
 			dex::pair < dex::RobotTxt*, dex::sharedReaderLock* > getPair( const dex::string &str )
@@ -202,6 +227,11 @@ namespace dex
 					}
 				mapLock.releaseReadLock( );
 				return toReturn;
+				}
+
+			robotsMap( int max )
+				{
+				maximumSize = max;
 				}
 
 			~robotsMap( )

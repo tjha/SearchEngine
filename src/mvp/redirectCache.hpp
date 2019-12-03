@@ -31,7 +31,6 @@ namespace dex
 				dex::pair < dex::Url, time_t > next = pair < dex::Url, time_t > ( url, time( nullptr ) );
 				while ( endpoints.count( current.first ) > 0 )
 					{
-					
 					next = endpoints[ current.first ];
 					if ( time( nullptr ) >= next.second )
 						{
@@ -52,6 +51,16 @@ namespace dex
 				dex::pair < dex::Url, time_t > p = pair < dex::Url, time_t > ( value, time( nullptr ) + expireTime );
 				endpoints[ key ] = p;
 				return 0;
+				}
+
+			void reset( )
+				{
+				endpoints.clear( );
+				}
+
+			size_t size( ) const
+				{
+				return endpoints.size( );
 				}
 		};
 	}
