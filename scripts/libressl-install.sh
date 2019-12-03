@@ -8,6 +8,10 @@ set +e
 
 sudo apt-get update
 sudo apt-get install tmux
+sudo yum install update
+sudo yum upgrade
+sudo yum install tmux
+sudo yum group install "Development Tools"
 
 INSTALL_PATH="/opt" # or $HOME/opt
 

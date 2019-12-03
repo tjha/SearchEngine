@@ -4,7 +4,7 @@
 # run the script using source ( . ~/dotfiles/eecs398_env.sh )
 # jhirsh
 
-cd ~/Desktop/eecs398/SearchEngine
+#cd ~/Desktop/eecs398/SearchEngine
 tmux new-session -s eecs398 \; \
 	set-option remain-on-exit on \; \
 	split-window -h 'sleep 5; cd data/tmp/logs; a=$(ls -At | head -n 1); tail -f $a; exec bash' \; \
