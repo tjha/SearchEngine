@@ -16,6 +16,7 @@
 #include "redirectCache.hpp"
 #include "parser.hpp"
 #include <time.h>
+#include <signal.h>
 #include <iostream>
 
 dex::string savePath = "data/";
@@ -40,7 +41,7 @@ time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 20
+#define numWorkers 2000
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 

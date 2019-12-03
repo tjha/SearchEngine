@@ -6,6 +6,8 @@
 #ifndef SHARED_READER_LOCK_HPP
 #define SHARED_READER_LOCK_HPP
 
+#include <pthread.h>
+
 namespace dex
 	{
 	class sharedReaderLock
