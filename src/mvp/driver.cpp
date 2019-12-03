@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-12-03: Uses frontier to start if it exists, otherwise uses seedlist: combsc
 // 2019-12-02: Set maximum size for frontier, add hashing for distribution of URLs: combsc
 // 2019-12-01: Improve frontier: combsc
 // 2019-11-30: Made crawlUrl threadsafe: combsc
@@ -293,7 +294,15 @@ int main( )
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
-	urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize );
+	urlFrontier = dex::loadFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), frontierSize, true );
+	if ( urlFrontier.size( ) == 0 )
+		{
+		urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize );
+		}
+	for ( auto it = urlFrontier.begin( );  it != urlFrontier.end( );  ++it )
+		{
+		print( it->completeUrl( ) );
+		}
 	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ) );
 
 	if ( dex::getCurrentFileDescriptor( savePath + "html/" ) == -1 )

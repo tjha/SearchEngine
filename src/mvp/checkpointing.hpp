@@ -102,35 +102,48 @@ namespace dex
 		close( htmlFileDescriptor );
 		}
 
-	dex::frontier loadFrontier ( const char * fileName, size_t size )
+	dex::frontier loadFrontier ( const char * fileName, size_t size, bool encoded = false )
 		{
 		dex::frontier frontier( size );
 		if ( !dex::fileExists( fileName ) )
 			return frontier;
-		// read in the frontier file
-		string frontierList( readFromFile( fileName ) );
-		
-		string delimiter = "\n";
-		size_t found = frontierList.find( delimiter, 0 );
-		size_t start = found + delimiter.size( );
-		// Parse the frontier_file and add it to list of urls
-		while ( start >= 0 && start < frontierList.size( ) )
+
+		if ( !encoded )
 			{
-			found = frontierList.find( delimiter, start );
-			if ( found < frontierList.npos )
+			// read in the frontier file
+			string frontierList( readFromFile( fileName ) );
+			
+			string delimiter = "\n";
+			size_t found = frontierList.find( delimiter, 0 );
+			size_t start = found + delimiter.size( );
+			// Parse the frontier_file and add it to list of urls
+			while ( start >= 0 && start < frontierList.size( ) )
 				{
-				string url( frontierList.begin( ) + start, frontierList.begin( ) + found );
-				frontier.putUrl( url.cStr( ) );
-				start = found + delimiter.size( );
-				}
-			else
-				{
-				break;
+				found = frontierList.find( delimiter, start );
+				if ( found < frontierList.npos )
+					{
+					string url( frontierList.begin( ) + start, frontierList.begin( ) + found );
+					frontier.putUrl( url.cStr( ) );
+					start = found + delimiter.size( );
+					}
+				else
+					{
+					break;
+					}
 				}
 			}
-
+		else
+			{
+			dex::encode::decoder < dex::vector < dex::Url > > UrlDecoder;
+			unsigned char *frontierPtr = ( unsigned char * )readFromFile( fileName );
+			dex::vector < dex::Url > out = UrlDecoder( frontierPtr );
+			for ( auto it = out.cbegin( );  it != out.cend( );  ++it )
+				{
+				frontier.putUrl( *it );
+				}
+			}
 		return frontier;
-        }
+		}
 
 	int saveFrontier ( const char * fileName, dex::frontier frontier )
 		{
