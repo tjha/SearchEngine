@@ -1,6 +1,6 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
-//
+// 2019-12-03:  Added GetWords,inAvoid,findScripts. Edited Parsetags.
 // 2019-11-26:  Eliminated unnecesssary code duplication in fixDots, and
 // 			    addressed several edge cases: tjha
 // 2019-11-23:  Fixed bugs in GetLinks function to avoid over-geralization of
@@ -91,13 +91,17 @@ namespace dex
 			if ( newPos.start == string::npos )
 				{
 				// incorporate some form of error logging
-				string newtag = editTag()
-				newPos.start = string::npos;
-				newPos.end = string::npos;
-				return newPos;
-				// throw dex::outOfRangeException();
+				string temp = startTag.substr(1, startTag.size() - 1);
+				temp = "< " + temp;
+				newPos.start = htmlFile.find( temp.cStr( ), pos.start );
+				if ( newPos.start == string::npos )
+					{
+					newPos.start = string::npos;
+					newPos.end = string::npos;
+					return newPos;
+					}
 				}
-			newPos.end = htmlFile.find(endTag.cStr(), pos.start );
+			newPos.end = htmlFile.find(endTag.cStr(), newPos.start );
 			if ( newPos.end == string::npos )
 				{
 				string temp = endTag.substr(2, endTag.size() - 3);
@@ -105,8 +109,8 @@ namespace dex
 				size_t i = 0;
 				while ( i < possibleVars.size( ) )
 					{
-					newPos.end = htmlFile.find(possibleVars[ i ].cStr(), pos.start );
-					if ( newPos.end != sting::npos )
+					newPos.end = htmlFile.find(possibleVars[ i ].cStr(), newPos.start );
+					if ( newPos.end != string::npos )
 						{
 						newPos.end += possibleVars[ i ].length();
 						return newPos;
