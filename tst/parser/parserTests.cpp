@@ -48,18 +48,34 @@ using std::size_t;
 
 TEST_CASE( "basic get links with relative paths", "[parser]" )
    {
-      /* SECTION(" Words testS :")
+      SECTION(" Words testS :")
          {
-         string filename = "tst/parser/man7_man_pages.html";
+       
+         // string filename = "tst/parser/man7_man_pages.html";
+         string filename = "tst/parser/hamiltoncshell.html";
          string htmlDoc;
          htmlDoc = readFromFile( filename.cStr() );
          HTMLparser testParser( htmlDoc );
+         size_t len = testParser.ReturnAnchorTextLength( );
          vector<string> words = testParser.ReturnWords();
-         for (size_t i = 0; i < words.size(); i++)
+         vector <string> firstTen;
+         firstTen.pushBack( "hamilton" );
+         firstTen.pushBack( "c" );
+         firstTen.pushBack( "shell" );
+         firstTen.pushBack( "from" );
+         firstTen.pushBack( "wikipedia" );
+         firstTen.pushBack( "the" );
+         firstTen.pushBack( "free" );
+         firstTen.pushBack( "encyclopedia" );
+         firstTen.pushBack( "jump" );
+         firstTen.pushBack( "to" );
+         firstTen.pushBack( "navigation" );
+         // std::cout << "inParserTests\n";
+         for ( size_t i = 0; i < 11; i++ )
             {
-            std::cout << words[i] <<"\n";
+            REQUIRE( firstTen[ i ] == words[ len+i ] );
             }
-         }*/
+         }
 
 	SECTION( "parsed simple html document with one link" )
       {
@@ -270,25 +286,26 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
       {
       vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
       vector < dex::string > words = testParser.ReturnWords();
+      size_t lenAnchors = testParser.ReturnAnchorTextLength( );
       vector < dex::string > AnchorWords;
 
       // push back anchor words for each link
-      AnchorWords.pushBack( "Arthur" );
-      AnchorWords.pushBack( "F" );
-      AnchorWords.pushBack( "Thurnau" );
-      AnchorWords.pushBack( "Professor" );
+      AnchorWords.pushBack( "arthur" );
+      AnchorWords.pushBack( "f" );
+      AnchorWords.pushBack( "thurnau" );
+      AnchorWords.pushBack( "professor" );
 
-      AnchorWords.pushBack( "EECS" );
-      AnchorWords.pushBack( "Department" );
+      AnchorWords.pushBack( "eecs" );
+      AnchorWords.pushBack( "department" );
 
-      AnchorWords.pushBack( "University" );
+      AnchorWords.pushBack( "university" );
       AnchorWords.pushBack( "of" );
-      AnchorWords.pushBack( "Michigan" );
+      AnchorWords.pushBack( "michigan" );
 
-      AnchorWords.pushBack( "Contact" );
+      AnchorWords.pushBack( "contact" );
       AnchorWords.pushBack( "information" );
 
-      AnchorWords.pushBack( "Adding" );
+      AnchorWords.pushBack( "adding" );
       AnchorWords.pushBack( "security" );
       AnchorWords.pushBack( "services" );
       AnchorWords.pushBack( "through" );
@@ -296,33 +313,36 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
       AnchorWords.pushBack( "machines" );
 
 
-      AnchorWords.pushBack( "Rio" );
-      AnchorWords.pushBack( "RAM" );
-      AnchorWords.pushBack( "I" );
-      AnchorWords.pushBack( "O" );
+      AnchorWords.pushBack( "rio" );
+      AnchorWords.pushBack( "ram" );
+      AnchorWords.pushBack( "i" );
+      AnchorWords.pushBack( "o" );
 
-      AnchorWords.pushBack( "Software" );
-      AnchorWords.pushBack( "Systems" );
-      AnchorWords.pushBack( "Lab" );
+      AnchorWords.pushBack( "software" );
+      AnchorWords.pushBack( "systems" );
+      AnchorWords.pushBack( "lab" );
 
-      AnchorWords.pushBack( "Computer" );
-      AnchorWords.pushBack( "Science" );
+      AnchorWords.pushBack( "computer" );
+      AnchorWords.pushBack( "science" );
       AnchorWords.pushBack( "and" );
-      AnchorWords.pushBack( "Engineering" );
-      AnchorWords.pushBack( "Division" );
+      AnchorWords.pushBack( "engineering" );
+      AnchorWords.pushBack( "division" );
 
-      AnchorWords.pushBack( "EECS" );
+      AnchorWords.pushBack( "eecs" );
 
-      AnchorWords.pushBack( "Publications" );
+      AnchorWords.pushBack( "publications" );
 
-      AnchorWords.pushBack( "EECS" );
-      AnchorWords.pushBack( "482" );
+      AnchorWords.pushBack( "eecs" );
+      // AnchorWords.pushBack( "482" ); - - because we don't want numbers anymore.
 
-      AnchorWords.pushBack( "Students" );
+      AnchorWords.pushBack( "students" );
 
-      AnchorWords.pushBack( "Software" );
+      AnchorWords.pushBack( "software" );
 
-      REQUIRE( AnchorWords.size( ) == words.size( ) );
+
+      REQUIRE( AnchorWords.size( ) == lenAnchors );
+
+      
 
       size_t word_count = 0;
       for ( size_t j = 0; j < anchors.size( ); j++ )
@@ -374,16 +394,17 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
          vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
          vector < dex::string > words = testParser.ReturnWords();
          vector < dex::string > AnchorWords;
+         size_t lenAnchors = testParser.ReturnAnchorTextLength();
 
          // push back anchor words for each link
-         AnchorWords.pushBack( "Conditions" );
+         AnchorWords.pushBack( "conditions" );
          AnchorWords.pushBack( "of" );
-         AnchorWords.pushBack( "Use" );
+         AnchorWords.pushBack( "use" );
 
-         AnchorWords.pushBack( "Privacy" );
-         AnchorWords.pushBack( "Policy" );
+         AnchorWords.pushBack( "privacy" );
+         AnchorWords.pushBack( "policy" );
 
-         REQUIRE( AnchorWords.size( ) == words.size( ) );
+         REQUIRE( AnchorWords.size( ) == lenAnchors );
 
          size_t word_count = 0;
          for ( size_t j = 0; j < anchors.size( ); j++ )
@@ -550,7 +571,7 @@ TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
 
          }
    }
-
+/*
 TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
    {
       string filename = "tst/parser/man7_all_pages.html";
@@ -571,4 +592,4 @@ TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
          REQUIRE ( links.size( ) == 10813 ); // TODO: figure out why not 10812
 
          }
-   }
+   }*/
