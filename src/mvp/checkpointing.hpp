@@ -30,11 +30,14 @@ namespace dex
 	int filenumber = 0;
 	int urlsFileDescriptor = -1;
 	int htmlFileDescriptor = -1;
+	int currentDocumentCount = 0;
 	int saveHtml ( dex::Url url, dex::string html, dex::string folderPath )
 		{
 		int err = dex::makeDirectory( folderPath.cStr( ) );
 		if ( err == -1 )
 			return -1;
+
+		++currentDocumentCount;
 
 		// when chunk is filled, close and move onto next file
 		if ( dex::fileSize( htmlFileDescriptor ) > HTMLChunkSize )
@@ -44,13 +47,16 @@ namespace dex
 			++filenumber;
 			dex::string urlsFilename( folderPath + "html/" + dex::toString( filenumber ) + ".urls" );
 			dex::string htmlFilename( folderPath + "html/" + dex::toString( filenumber ) + "_html" );
+			std::cout << "crawled " << currentDocumentCount << " sites." << std::endl;
 			std::cout << "switching to file " << htmlFilename << std::endl;
 
 			urlsFileDescriptor = open( urlsFilename.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
 			htmlFileDescriptor = open( htmlFilename.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
+
+			currentDocumentCount = 0;
 			}
 
-		err = write( urlsFileDescriptor, url.completeUrl( ).cStr( ), url.completeUrl( ).size( ) );
+		err = write( urlsFileDescriptor, ( url.completeUrl( ) + "\n" ).cStr( ), url.completeUrl( ).size( ) );
 		if ( err == -1 )
 			{
 			std::cerr << "Writing saved Urls failed.\n";

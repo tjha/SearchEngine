@@ -25,18 +25,28 @@ namespace dex
 					{
 					score += 10;
 					}
-				if ( url.getHost( ).find( ".org" ) != dex::string::npos )
+				else
 					{
-					score += 10;
+					if ( url.getHost( ).find( ".org" ) != dex::string::npos )
+						{
+						score += 10;
+						}
+					else
+						{
+						if ( url.getHost( ).find( ".gov" ) != dex::string::npos )
+							{
+							score += 10;
+							}
+						else
+							{
+							if ( url.getHost( ).find( ".edu" ) != dex::string::npos )
+								{
+								score += 10;
+								}
+							}
+						}
 					}
-				if ( url.getHost( ).find( ".gov" ) != dex::string::npos )
-					{
-					score += 10;
-					}
-				if ( url.getHost( ).find( ".edu" ) != dex::string::npos )
-					{
-					score += 10;
-					}
+
 				// Promote short URLs
 				// max of this should not give more than a good TLD
 				// completeUrls of size 25 or lower get maximum score ( of 9 ).
@@ -55,7 +65,7 @@ namespace dex
 					}
 				score -= numSlashes * 2;
 				// Promote no queries or fragments
-				if ( url.getFragment( ) != "" || url.getQuery( ) != "" )
+				if ( !url.getFragment( ).empty( ) || !url.getQuery( ).empty( ) )
 					score -= 5;
 
 				return score;
@@ -75,30 +85,22 @@ namespace dex
 				int maxScore = -1;
 				size_t maxIndex = 0;
 				size_t poolSize = dex::min( size_t( 10 ), toVisit.size( ) );
-				dex::vector < dex::Url > pool( poolSize );
+				dex::Url best;
 				// Get the highest scoring URL out of 10
 				for ( size_t j = 0;  j < poolSize;  ++j )
 					{
 					int location = rand( ) % toVisit.size( );
-					pool[ j ] = toVisit[ location ];
-					toVisit.erase( location );
-					int score = scoreUrl( pool[ j ] );
+					int score = scoreUrl( toVisit[ location ] );
 					if ( score > maxScore )
 						{
 						maxScore = score;
-						maxIndex = j;
+						maxIndex = location;
+						best = toVisit[ location ];
 						}
 					
 					}
-				// Put the others back
-				for ( size_t j = 0;  j < poolSize;  ++j )
-					{
-					if ( j != maxIndex )
-						{
-						toVisit.pushBack( pool[ j ] );
-						}
-					}
-				return pool[ maxIndex ];
+				toVisit.erase( maxIndex );
+				return best;
 				}
 
 			dex::vector < dex::Url > getUrls( int num = 10 )
@@ -109,43 +111,33 @@ namespace dex
 					int maxScore = -1;
 					size_t maxIndex = 0;
 					size_t poolSize = dex::min( size_t( 10 ), toVisit.size( ) );
-					dex::vector < dex::Url > pool( poolSize );
+					dex::Url best;
 					// Get the highest scoring URL out of 10
 					for ( size_t j = 0;  j < poolSize;  ++j )
 						{
 						int location = rand( ) % toVisit.size( );
-						pool[ j ] = toVisit[ location ];
-						toVisit.erase( location );
-						int score = scoreUrl( pool[ j ] );
+						int score = scoreUrl( toVisit[ location ] );
 						if ( score > maxScore )
 							{
 							maxScore = score;
 							maxIndex = j;
+							best = toVisit[ location ];
 							}
 						
 						}
-					// Put the others back
-					for ( size_t j = 0;  j < poolSize;  ++j )
-						{
-						if ( j != maxIndex )
-							{
-							toVisit.pushBack( pool[ j ] );
-							}
-						}
-					toReturn.pushBack( pool[ maxIndex ] );
+					toReturn.pushBack( best );
 					}
 				return toReturn;
 				}
 
 			void putUrl( const Url &url)
 				{
-				toVisit.pushBack( url );
 				if ( toVisit.size( ) > maximumSize )
 					{
 					int minScore = 1000;
 					size_t minIndex = 0;
-					size_t poolSize = dex::min( size_t( 10 ), toVisit.size( ) );
-					// Get the highest scoring URL out of 10
+					size_t poolSize = dex::min( size_t( 2 ), toVisit.size( ) );
+					// Get the worst scoring Url out of 5
 					for ( size_t j = 0;  j < poolSize;  ++j )
 						{
 						int location = rand( ) % toVisit.size( );
@@ -157,7 +149,11 @@ namespace dex
 							}
 						
 						}
-					toVisit.erase( minIndex );
+					toVisit[ minIndex ] = url;
+					}
+				else 
+					{
+					toVisit.pushBack( url );
 					}
 				}
 

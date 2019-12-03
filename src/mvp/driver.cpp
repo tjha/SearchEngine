@@ -32,7 +32,7 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 // and lead to a legitimate endpoint, or must be unknown. This
 // means we do not put broken links into our frontier and we do
 // not put links that aren't our responsibility into our frontier
-size_t frontierSize = 50000;
+size_t frontierSize = 5000;
 dex::frontier urlFrontier( frontierSize );
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
@@ -47,7 +47,7 @@ char state = 0;
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
-size_t robotsMapSize = 500;
+size_t robotsMapSize = 1000;
 dex::robotsMap robotsCache( robotsMapSize );
 pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -121,6 +121,7 @@ void *worker( void *args )
 			return nullptr;
 
 		pthread_mutex_lock( &frontierLock );
+		log( "frontier lock" );
 		while ( urlFrontier.empty( ) )
 			{
 			pthread_cond_wait( &frontierCV, &frontierLock );
@@ -131,14 +132,15 @@ void *worker( void *args )
 			saveWork( );
 			state = 0;
 			}
+		log( "leaving frontier lock" );
 		pthread_mutex_unlock( &frontierLock );
 
 		// Fix link using our redirects cache
-		pthread_mutex_lock( &redirectsLock );
+		/*pthread_mutex_lock( &redirectsLock );
 		toCrawl = redirects.getEndpoint( toCrawl );
 		if ( redirects.size( ) > redirectsSize )
 			redirects.reset( );
-		pthread_mutex_unlock( &redirectsLock );
+		pthread_mutex_unlock( &redirectsLock );*/
 		
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
 		dex::string result = "";
@@ -161,8 +163,10 @@ void *worker( void *args )
 				{
 				// if valid html -> save
 				pthread_mutex_lock( &saveHtmlLock );
+				log( "save lock" );
 				dex::saveHtml( toCrawl, html, savePath );
-				retrievedLinks.pushBack( toCrawl.completeUrl( ) );
+				//retrievedLinks.pushBack( toCrawl.completeUrl( ) );
+				log( "leaving save lock" );
 				pthread_mutex_unlock( &saveHtmlLock );
 
 				dex::HTMLparser parser( result );
@@ -171,37 +175,44 @@ void *worker( void *args )
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
 					// Fix link using our redirects cache
-					pthread_mutex_lock( &redirectsLock );
+					/*pthread_mutex_lock( &redirectsLock );
 					it->setFragment( "" );
 					dex::Url endpoint = redirects.getEndpoint( *it );
-					pthread_mutex_unlock( &redirectsLock );
+					pthread_mutex_unlock( &redirectsLock );*/
 
 					// Check to see if the endpoint we have is a known broken link
-					pthread_mutex_lock( &brokenLinksLock );
-					if ( brokenLinks.count( endpoint ) == 0 )
+					//dex::Url endpoint = *it;
+					//pthread_mutex_lock( &brokenLinksLock );
+					/*log( "brokenLinksLock" );
+					if ( brokenLinks.count( *it ) == 0 )
 						{
-						pthread_mutex_unlock( &brokenLinksLock );
+						log( "leaving brokenLinksLock" );
+						pthread_mutex_unlock( &brokenLinksLock );*/
 						// If we're in charge of this link, put it into our frontier
-						size_t urlId = getUrlInstance( endpoint );
-						if ( urlId == instanceId )
-							{
-							pthread_mutex_lock( &frontierLock );
-							urlFrontier.putUrl( endpoint );
-							pthread_cond_signal( &frontierCV );
-							pthread_mutex_unlock( &frontierLock );
-							}
-						// If we're not in charge of this link, send it off to be shipped
-						else
-							{
-							pthread_mutex_lock( &linksToShipLock );
-							linksToShip[ urlId ].pushBack( endpoint );
-							pthread_mutex_unlock( &linksToShipLock );
-							}
+					size_t urlId = getUrlInstance( *it );
+					if ( urlId == instanceId )
+						{
+						pthread_mutex_lock( &frontierLock );
+						log( "put lock" );
+						urlFrontier.putUrl( *it );
+						pthread_cond_signal( &frontierCV );
+						log( "leave put lock" );
+						pthread_mutex_unlock( &frontierLock );
 						}
+					// If we're not in charge of this link, send it off to be shipped
+					else
+						{
+						pthread_mutex_lock( &linksToShipLock );
+						log( "put ship Lock" );
+						linksToShip[ urlId ].pushBack( *it );
+						log( "leaving put ship Lock" );
+						pthread_mutex_unlock( &linksToShipLock );
+						}
+						/*}
 					else
 						{
 						pthread_mutex_unlock( &brokenLinksLock );
-						}
+						}*/
 					}
 				}
 			}
@@ -209,7 +220,9 @@ void *worker( void *args )
 		if ( errorCode == dex::POLITENESS_ERROR || errorCode == dex::PUT_BACK_IN_FRONTIER )
 			{
 			pthread_mutex_lock( &frontierLock );
+			log( "politeness put lock" );
 			urlFrontier.putUrl( toCrawl );
+			log( "leaving politeness put lock" );
 			pthread_mutex_unlock( &frontierLock );
 			}
         //print( "past politeness" );
@@ -218,33 +231,37 @@ void *worker( void *args )
 		if ( errorCode >= 300 && errorCode < 400 )
 			{
 			dex::Url location = dex::Url( result.cStr( ) );
-			pthread_mutex_lock( &redirectsLock );
+			/*pthread_mutex_lock( &redirectsLock );
 			redirects.updateUrl( toCrawl, location );
-			pthread_mutex_unlock( &redirectsLock );
+			pthread_mutex_unlock( &redirectsLock );*/
 			size_t urlId = getUrlInstance( location );
 			if ( urlId == instanceId )
 				{
 				pthread_mutex_lock( &frontierLock );
+				log( "redirect lock" );
 				urlFrontier.putUrl( location );
+				log( "leaving redirect lock" );
 				pthread_mutex_unlock( &frontierLock );
 				}
 			else
 				{
 				pthread_mutex_lock( &linksToShipLock );
+				log( "ship redirect lock" );
 				linksToShip[ urlId ].pushBack( dex::Url( result.cStr( ) ) );
+				log( "leaving ship redirect lock" );
 				pthread_mutex_unlock( &linksToShipLock );
 				}
 			}
-        //print( "past redirect" );
 		// This link doesn't lead anywhere, we need to add it to our broken links
-		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
+		/*if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
 			{
 			pthread_mutex_lock( &brokenLinksLock );
+			log( "broken links lock" );
 			brokenLinks.insert( toCrawl );
+			log( "leaving broken links lock" );
 			pthread_mutex_unlock( &brokenLinksLock );
 			// All links that redirect to this should also be categorized as broken.
-			}
-        //print( "past lead" );
+			}*/
 		}
 	return nullptr;
 	}
@@ -277,6 +294,7 @@ int main( )
 		return -1;
 		}
 
+	std::cout << "Starting crawl with frontier size " << urlFrontier.size( ) << std::endl;
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
 		ids[ i ] = i;
