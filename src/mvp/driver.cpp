@@ -29,18 +29,18 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 // and lead to a legitimate endpoint, or must be unknown. This
 // means we do not put broken links into our frontier and we do
 // not put links that aren't our responsibility into our frontier
-size_t frontierSize = 100000;
+size_t frontierSize = 50000;
 dex::frontier urlFrontier( frontierSize );
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
 
-long checkpoint = 1 * 3600; // checkpoints every x seconds
+long checkpoint = 5 * 60; // checkpoints every x seconds
 time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 10
+#define numWorkers 20
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -64,8 +64,6 @@ dex::redirectCache redirects;
 pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
-dex::string html;
-size_t htmlNum = 1;
 pthread_mutex_t saveHtmlLock = PTHREAD_MUTEX_INITIALIZER;
 dex::vector < dex::string > retrievedLinks;
 
@@ -97,6 +95,7 @@ bool isUrlInDomain( const dex::Url &url )
 // Call checkpointing functions after time alotted or user input
 void saveWork( )
 	{
+	print( "saving" );
 	dex::saveFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), urlFrontier );
 	//dex::saveBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ), brokenLinks );
 	dex::saveVisitedLinks( ( savePath + "crawledLinks.txt" ).cStr( ), retrievedLinks );
@@ -121,9 +120,6 @@ void *worker( void *args )
 		dex::Url toCrawl = urlFrontier.getUrl( );
 		if ( time( NULL ) - lastCheckpoint > checkpoint || state == 's' )
 			{
-			dex::writeToFile( ( savePath + dex::toString( htmlNum ) + "new.html" ).cStr( ), html.cStr( ), html.size( ) );
-			htmlNum++;
-			html = "";
 			saveWork( );
 			state = 0;
 			}
@@ -144,9 +140,9 @@ void *worker( void *args )
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
-			dex::string toAdd = "NEW URL: " + toCrawl.completeUrl( ) + "\n" + result + "\n";
+			dex::string html = "NEW URL: " + toCrawl.completeUrl( ) + "\n" + result + "\n";
 			pthread_mutex_lock( &saveHtmlLock );
-			html += toAdd;
+			dex::saveHtml( html, savePath );
 			//dex::saveHtml( html, savePath );
 			retrievedLinks.pushBack( toCrawl.completeUrl( ) );
 			pthread_mutex_unlock( &saveHtmlLock );
@@ -244,9 +240,11 @@ void *worker( void *args )
 int main( )
 	{
 	// setup logging file for this run
+	// goodbye error code 13
+	signal(SIGPIPE, SIG_IGN);
 	int result = dex::makeDirectory( savePath.cStr( ) );
 	result = dex::makeDirectory( tmpPath.cStr( ) );
-    result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
+	result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
 
 	loggingFileName = tmpPath + "logs/";
 	time_t now = time( nullptr );
@@ -258,7 +256,7 @@ int main( )
 	urlFrontier = dex::loadFrontier( ( savePath + "seedlist.txt" ).cStr( ), frontierSize );
 	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ) );
 
-	if ( dex::getCurrentFileDescriptor( savePath + "html" ) == 0 )
+	if ( dex::getCurrentFileDescriptor( savePath + "html/" ) == 0 )
 		{
 		std::cerr << "Could not get current file" << std::endl;
 		return -1;

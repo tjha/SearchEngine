@@ -62,7 +62,7 @@ namespace dex
 			++currentFileNumber;
 			entry = readdir( dir );
 			}
-        closedir( dir );
+		closedir( dir );
 		dex::string fileName( folderPath + dex::toString( currentFileNumber ) + ".html" );
 		currentFileDescriptor = open( fileName.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
 		return currentFileDescriptor;
