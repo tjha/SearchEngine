@@ -30,9 +30,8 @@ namespace dex
 			// path ALWAYS begins with '/'. Port should NOT end with
 			// '/', since this is a URL and therefore an endpoint.
 			string path;
-			// query should not include ?
+
 			string query;
-			// fragment should not include #
 			string fragment;
 		public:
 			Url( )

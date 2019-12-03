@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-12-02: Set maximum size for data structures: combsc
 // 2019-12-01: Improve frontier: combsc
 // 2019-11-30: Made crawlUrl threadsafe: combsc
 // 2019-11-26: Added relative paths, added compatability for pages that are not HTML: combsc
@@ -28,9 +29,8 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 // and lead to a legitimate endpoint, or must be unknown. This
 // means we do not put broken links into our frontier and we do
 // not put links that aren't our responsibility into our frontier
-
-dex::frontier urlFrontier;
-size_t numUrlsToPull = 10;
+size_t frontierSize = 100000;
+dex::frontier urlFrontier( frontierSize );
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
@@ -64,6 +64,8 @@ dex::redirectCache redirects;
 pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
+dex::string html;
+size_t htmlNum = 1;
 pthread_mutex_t saveHtmlLock = PTHREAD_MUTEX_INITIALIZER;
 dex::vector < dex::string > retrievedLinks;
 
@@ -108,8 +110,8 @@ void *worker( void *args )
 	log( "Start thread " + name + "\n");
 	for ( int i = 0;  true;  ++i )
 		{
-        if ( state == 'q' )
-            return nullptr;
+		if ( state == 'q' )
+			return nullptr;
 
 		pthread_mutex_lock( &frontierLock );
 		while ( urlFrontier.empty( ) )
@@ -119,6 +121,9 @@ void *worker( void *args )
 		dex::Url toCrawl = urlFrontier.getUrl( );
 		if ( time( NULL ) - lastCheckpoint > checkpoint || state == 's' )
 			{
+			dex::writeToFile( ( savePath + dex::toString( htmlNum ) + "new.html" ).cStr( ), html.cStr( ), html.size( ) );
+			htmlNum++;
+			html = "";
 			saveWork( );
 			state = 0;
 			}
@@ -139,9 +144,10 @@ void *worker( void *args )
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
-			dex::string html = toCrawl.completeUrl( ) + "\n" + result;
+			dex::string toAdd = "NEW URL: " + toCrawl.completeUrl( ) + "\n" + result + "\n";
 			pthread_mutex_lock( &saveHtmlLock );
-			dex::saveHtml( html, savePath );
+			html += toAdd;
+			//dex::saveHtml( html, savePath );
 			retrievedLinks.pushBack( toCrawl.completeUrl( ) );
 			pthread_mutex_unlock( &saveHtmlLock );
 
@@ -150,13 +156,14 @@ void *worker( void *args )
 
 			if ( errorCode == 0 )
 				{
-				dex::HTMLparser parser( html );
+				dex::HTMLparser parser( result );
 			
 				dex::vector < dex::Url > links = parser.ReturnLinks( );
-				for ( auto it = links.cbegin( );  it != links.cend( );  ++it )
+				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
 					// Fix link using our redirects cache
 					pthread_mutex_lock( &redirectsLock );
+					it->setFragment( "" );
 					dex::Url endpoint = redirects.getEndpoint( *it );
 					pthread_mutex_unlock( &redirectsLock );
 
@@ -248,7 +255,7 @@ int main( )
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
-	urlFrontier = dex::loadFrontier( ( savePath + "seedlist.txt" ).cStr( ) );
+	urlFrontier = dex::loadFrontier( ( savePath + "seedlist.txt" ).cStr( ), frontierSize );
 	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ) );
 
 	if ( dex::getCurrentFileDescriptor( savePath + "html" ) == 0 )
@@ -263,16 +270,16 @@ int main( )
 		pthread_create( &workers[ i ], nullptr, worker, &( ids[ i ] ) );
 		}
 
-    while ( std::cin >> state )
-        {
-        if ( state == 'q' )
-            break;
-        }
+	while ( std::cin >> state )
+		{
+		if ( state == 'q' )
+			break;
+		}
 
 	for ( size_t i = 0;  i < numWorkers; ++i )
 		pthread_join( workers[ i ], nullptr );
 	
-    dex::closeHtmlFile( );
+	dex::closeHtmlFile( );
 	std::cout << "exiting safely...\n";
 	return 0;
 	}

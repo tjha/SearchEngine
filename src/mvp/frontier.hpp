@@ -1,4 +1,5 @@
 // frontier.hpp
+// 2019-12-02: Implement maximumSize: combsc
 // 2019-12-01: Implement scoreUrl, getUrls: combsc
 // 2019-11-15: Init Commit, not meant to be efficient: combsc
 #ifndef DEX_FRONTIER_HPP
@@ -14,6 +15,7 @@ namespace dex
 		{
 		private:
 			vector < Url > toVisit;
+			size_t maximumSize;
 
 			double scoreUrl( dex::Url url )
 				{
@@ -60,6 +62,14 @@ namespace dex
 				}
 
 		public:
+			frontier( size_t maxSize )
+				{
+				maximumSize = maxSize;
+				}
+			size_t size( )
+				{
+				return toVisit.size( );
+				}
 			Url getUrl( )
 				{
 				int maxScore = -1;
@@ -130,6 +140,25 @@ namespace dex
 			void putUrl( const Url &url)
 				{
 				toVisit.pushBack( url );
+				if ( toVisit.size( ) > maximumSize )
+					{
+					int minScore = 1000;
+					size_t minIndex = 0;
+					size_t poolSize = dex::min( size_t( 10 ), toVisit.size( ) );
+					// Get the highest scoring URL out of 10
+					for ( size_t j = 0;  j < poolSize;  ++j )
+						{
+						int location = rand( ) % toVisit.size( );
+						int score = scoreUrl( toVisit[ location ] );
+						if ( score < minScore )
+							{
+							minScore = score;
+							minIndex = location;
+							}
+						
+						}
+					toVisit.erase( minIndex );
+					}
 				}
 
 			bool empty( )

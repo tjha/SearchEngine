@@ -96,9 +96,9 @@ namespace dex
 		return err;
 		}
 
-	dex::frontier loadFrontier ( const char * fileName )
-        {
-		dex::frontier frontier;
+	dex::frontier loadFrontier ( const char * fileName, size_t size )
+		{
+		dex::frontier frontier( size );
 		if ( !dex::fileExists( fileName ) )
 			return frontier;
 		// read in the frontier file

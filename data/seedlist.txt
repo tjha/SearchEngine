@@ -1,5 +1,4 @@
 FRONTIER
-https://www.google.com/
 https://www.amazon.com/
 https://www.apple.com/
 https://www.nytimes.com/
@@ -27,4 +26,3 @@ https://gizmodo.com/
 https://engadget.com/
 https://www.apple.com/itunes/podcasts/discover/
 https://www.bloomberg.com/
-
