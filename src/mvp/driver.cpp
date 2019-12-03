@@ -1,6 +1,6 @@
 // Implementation of basic mercator architecture
 
-// 2019-12-03: Uses frontier to start if it exists, otherwise uses seedlist: combsc
+// 2019-12-03: Uses frontier to start if it exists, otherwise uses seedlist, no duplicates in frontier: combsc
 // 2019-12-02: Set maximum size for frontier, add hashing for distribution of URLs: combsc
 // 2019-12-01: Improve frontier: combsc
 // 2019-11-30: Made crawlUrl threadsafe: combsc
@@ -33,18 +33,18 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 // and lead to a legitimate endpoint, or must be unknown. This
 // means we do not put broken links into our frontier and we do
 // not put links that aren't our responsibility into our frontier
-size_t frontierSize = 5000;
+size_t frontierSize = 10000;
 dex::frontier urlFrontier( frontierSize );
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
 
-long checkpoint = 5*60; // checkpoints every x seconds
+long checkpoint = 10 * 60; // checkpoints every x seconds
 time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 20
+#define numWorkers 100
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -300,9 +300,7 @@ int main( )
 		urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize );
 		}
 	for ( auto it = urlFrontier.begin( );  it != urlFrontier.end( );  ++it )
-		{
 		print( it->completeUrl( ) );
-		}
 	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ) );
 
 	if ( dex::getCurrentFileDescriptor( savePath + "html/" ) == -1 )
