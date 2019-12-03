@@ -6,6 +6,7 @@
 #include "unorderedSet.hpp"
 #include "exception.hpp"
 #include "functional.hpp"
+// 2019-12-02: Added const to respective functions
 // 2019-11-27: Fixed completeUrl if no path is given but ?# are: combsc
 // 2019-11-24: Changed completeUrl: combsc
 // 2019-11-21: Fixed fragment/query bug: combsc
@@ -163,7 +164,7 @@ namespace dex
 				return completeUrl;
 				}
 			
-			string getService( )
+			string getService( ) const
 				{
 				return service;
 				}
@@ -177,7 +178,7 @@ namespace dex
 					}
 				}
 
-			string getHost( )
+			string getHost( ) const
 				{
 				return host;
 				}
@@ -186,7 +187,7 @@ namespace dex
 				host = h;
 				}
 
-			string getPort( )
+			string getPort( ) const
 				{
 				return port;
 				}
@@ -208,7 +209,7 @@ namespace dex
 					}
 				}
 
-			string getPath( )
+			string getPath( ) const
 				{
 				return path;
 				}
@@ -222,7 +223,7 @@ namespace dex
 					path.popBack( );
 				}
 
-			string getQuery( )
+			string getQuery( ) const
 				{
 				return query;
 				}
@@ -232,7 +233,7 @@ namespace dex
 				query = q;
 				}
 
-			string getFragment( )
+			string getFragment( ) const
 				{
 				return fragment;
 				}

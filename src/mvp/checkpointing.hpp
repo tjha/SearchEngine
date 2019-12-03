@@ -184,6 +184,22 @@ namespace dex
 		return writeToFile( fileName, brokenLinksData.cStr( ), brokenLinksData.size( ) );
 		}
 
+	int saveLinksToShip( const char * folderPath, dex::vector < dex::Url > *linksToShip, int len )
+		{
+		
+		for ( int i = 0;  i < len;  ++i )
+			{
+			string linksToShipData = "LINKS FOR " + dex::toString( i ) + "\n";
+			for ( auto it = linksToShip[ i ].begin( );  it != linksToShip[ i ].end( );  ++it )
+				{
+				linksToShipData += it->completeUrl( ) + "\n";
+				}
+			writeToFile( ( dex::string( folderPath ) + "linksFor" + dex::toString( i ) ).cStr( ), linksToShipData.cStr( ), linksToShipData.size( ) );
+			}
+		
+		return 0;
+		}
+
 	
 	
 	}

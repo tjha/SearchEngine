@@ -16,4 +16,5 @@ logs/
 data/tmp/
 data/html/
 data/crawledLinks.txt
+data/toShip/
 src/mvp/data/tmp/
