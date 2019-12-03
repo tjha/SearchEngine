@@ -43,7 +43,7 @@ time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 100
+#define numWorkers 20
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -154,7 +154,7 @@ void *worker( void *args )
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
-			dex::string html = "NEW URL: " + toCrawl.completeUrl( ) + "\n" + result + "\n";
+			dex::string html = toCrawl.completeUrl( ) + "\n" + result + "\n";
 
 			if ( errorCode == dex::NOT_HTML )
 				print( toCrawl.completeUrl( ) + " is not html " );
@@ -168,10 +168,18 @@ void *worker( void *args )
 				//retrievedLinks.pushBack( toCrawl.completeUrl( ) );
 				log( "leaving save lock" );
 				pthread_mutex_unlock( &saveHtmlLock );
+				dex::vector < dex::Url > links;
+				try
+					{
+					dex::HTMLparser parser( html );
+					links = parser.ReturnLinks( );
+					}
+				catch( dex::outOfRangeException e )
+					{
+					print( "Caught Exception" );
+					}
 
-				dex::HTMLparser parser( result );
-			
-				dex::vector < dex::Url > links = parser.ReturnLinks( );
+
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
 					// Fix link using our redirects cache

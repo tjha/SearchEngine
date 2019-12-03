@@ -1,4 +1,5 @@
 // frontier.hpp
+// 2019-12-03: Change getUrl to reduce number of pageFault: combsc + jhirsh
 // 2019-12-02: Implement maximumSize: combsc
 // 2019-12-01: Implement scoreUrl, getUrls: combsc
 // 2019-11-15: Init Commit, not meant to be efficient: combsc
@@ -87,17 +88,22 @@ namespace dex
 				size_t poolSize = dex::min( size_t( 10 ), toVisit.size( ) );
 				dex::Url best;
 				// Get the highest scoring URL out of 10
+				int location = rand( ) % toVisit.size( );
 				for ( size_t j = 0;  j < poolSize;  ++j )
 					{
-					int location = rand( ) % toVisit.size( );
-					int score = scoreUrl( toVisit[ location ] );
+					int offset = ( rand( ) % 200 ) - 100;
+					size_t arrayLocation = size_t ( location + offset );
+					if ( arrayLocation >= toVisit.size( ) )
+						{
+						arrayLocation = location;
+						}
+					int score = scoreUrl( toVisit[ arrayLocation ] );
 					if ( score > maxScore )
 						{
 						maxScore = score;
-						maxIndex = location;
-						best = toVisit[ location ];
+						maxIndex = arrayLocation;
+						best = toVisit[ arrayLocation ];
 						}
-					
 					}
 				toVisit.erase( maxIndex );
 				return best;
