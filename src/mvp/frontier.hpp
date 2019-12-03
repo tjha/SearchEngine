@@ -1,7 +1,7 @@
 // frontier.hpp
 // 2019-12-03: Change getUrl to reduce number of pageFault: combsc + jhirsh
 // 2019-12-02: Implement maximumSize: combsc
-// 2019-12-01: Implement scoreUrl, getUrls: combsc
+// 2019-12-01: Implement scoreUrl, getUrls: combsc 
 // 2019-11-15: Init Commit, not meant to be efficient: combsc
 #ifndef DEX_FRONTIER_HPP
 #define DEX_FRONTIER_HPP
