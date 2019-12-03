@@ -1,6 +1,6 @@
 // Implementation of basic mercator architecture
 
-// 2019-12-02: Set maximum size for data structures: combsc
+// 2019-12-02: Set maximum size for frontier, add hashing for distribution of URLs: combsc
 // 2019-12-01: Improve frontier: combsc
 // 2019-11-30: Made crawlUrl threadsafe: combsc
 // 2019-11-26: Added relative paths, added compatability for pages that are not HTML: combsc
@@ -22,6 +22,7 @@
 dex::string savePath = "../socket-html/";
 /* dex::string savePath = \"../socket-html/\"; */ // local
 dex::string tmpPath = "data/tmp/";
+dex::string toShipPath = "data/toShip/";
 
 dex::string loggingFileName;
 pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
@@ -37,7 +38,7 @@ pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
 
-long checkpoint = 5 * 60; // checkpoints every x seconds
+long checkpoint = 60; // checkpoints every x seconds
 time_t lastCheckpoint = time( NULL );
 
 char state = 0;
@@ -57,7 +58,9 @@ pthread_mutex_t brokenLinksLock = PTHREAD_MUTEX_INITIALIZER;
 // This vector contains all known links that are NOT in our domain
 // and need to be given to other instances. Think of this as a frontier
 // but for the other workers.
-dex::vector < dex::Url > linksToShip;
+const size_t numInstances = 3;
+const size_t instanceId = 0;
+dex::vector < dex::Url > linksToShip [ numInstances ];
 pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
 
 // This is the redirect cache. Used for handling known redirects on our
@@ -85,13 +88,14 @@ int log( dex::string toWrite )
 	}
 
 // We should have a function for checking URLs to see if they're in our
-// domain or not. If it's in our domain, put it back into our frontier.
-// if it's not in our domain, we need to send it to the other crawler
+// instance or not. If it's in our instance put it back into our frontier.
+// if it's not in our instance we need to send it to the other crawler
 // workers.
-bool isUrlInDomain( const dex::Url &url )
+size_t getUrlInstance( const dex::Url &url )
 	{
-	dex::string work = url.completeUrl( );
-	return true;
+	dex::hash < dex::string > hasher;
+	unsigned long h = hasher( url.getHost( ) );
+	return h % numInstances;
 	}
 
 // Call checkpointing functions after time alotted or user input
@@ -172,7 +176,8 @@ void *worker( void *args )
 						{
 						pthread_mutex_unlock( &brokenLinksLock );
 						// If we're in charge of this link, put it into our frontier
-						if ( isUrlInDomain( endpoint ) )
+						size_t urlId = getUrlInstance( endpoint );
+						if ( urlId == instanceId )
 							{
 							pthread_mutex_lock( &frontierLock );
 							urlFrontier.putUrl( endpoint );
@@ -183,7 +188,7 @@ void *worker( void *args )
 						else
 							{
 							pthread_mutex_lock( &linksToShipLock );
-							linksToShip.pushBack( endpoint );
+							linksToShip[ urlId ].pushBack( endpoint );
 							pthread_mutex_unlock( &linksToShipLock );
 							}
 						}
@@ -210,8 +215,8 @@ void *worker( void *args )
 			pthread_mutex_lock( &redirectsLock );
 			redirects.updateUrl( toCrawl, location );
 			pthread_mutex_unlock( &redirectsLock );
-
-			if ( isUrlInDomain( location ) )
+			size_t urlId = getUrlInstance( location );
+			if ( urlId == instanceId )
 				{
 				pthread_mutex_lock( &frontierLock );
 				urlFrontier.putUrl( location );
@@ -220,7 +225,7 @@ void *worker( void *args )
 			else
 				{
 				pthread_mutex_lock( &linksToShipLock );
-				linksToShip.pushBack( dex::Url( result.cStr( ) ) );
+				linksToShip[ urlId ].pushBack( dex::Url( result.cStr( ) ) );
 				pthread_mutex_unlock( &linksToShipLock );
 				}
 			}
@@ -248,6 +253,7 @@ int main( )
 	int result = dex::makeDirectory( savePath.cStr( ) );
 	result = dex::makeDirectory( tmpPath.cStr( ) );
 	result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
+	result = dex::makeDirectory( toShipPath.cStr( ) );
 
 	loggingFileName = tmpPath + "logs/";
 	time_t now = time( nullptr );
