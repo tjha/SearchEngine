@@ -12,6 +12,8 @@ sudo yum install update
 sudo yum upgrade
 sudo yum install tmux
 sudo yum group install "Development Tools"
+sudo amazon-linux-extras install epel
+sudo yum install s3fs-fuse
 
 INSTALL_PATH="/opt" # or $HOME/opt
 

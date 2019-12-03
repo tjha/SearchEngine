@@ -18,3 +18,5 @@ data/html/
 data/crawledLinks.txt
 data/toShip/
 src/mvp/data/tmp/
+certificate.pem
+key.pem
