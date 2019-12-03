@@ -1,0 +1,56 @@
+Go to EC2
+Launch Instance
+Amazon Linux 2 AMI 64 bit x86
+t2.micro
+Configure instance details
+Create IAM role
+Subnet -> us-east-1e
+	
+Next add storage
+Security: 	select existing and pick default
+		default security group setting needs to have inbound ssh tcp port range 22, source: 0.0.0.0/0 to allow anyone to ssh into it with the key
+
+Review and launch
+Get new key
+Name it something memorable
+Chmod 600 keyName
+
+
+ssh -i .chris-search-engine-key.pem ec2-user@ec2-18-215-160-246.compute-1.amazonaws.com
+
+ssh -i keyName ec2-user@publicDNS
+
+
+Sudo yum install git
+checkout dev/mvp
+Run libre script
+
+
+
+SETUP S3 BUCKET
+
+Create user "name-spinarak" logheadisbeast
+Attach existing pollicies: vpc, ec2, s3, iam, config all FULL ACCESS
+
+
+TMUX CONTROLS 
+From command line:
+tmux 				enter new tmux session
+tmux list-sessions		list all open session
+tmux attach-session -t <id>	joint session with <id>
+
+From tmux session:
+C - Control
+
+C-b 				is prefix for tmux mode
+C-b + 				arrow get around windows
+C-b % 				split window horizontally
+C-b " 				split window vertically
+C-b :detach 			exits but keeps window running in background
+C-b :kill-session 		kill session
+
+In home directory, mkdir socket-html
+
+s3fs <bucket-name> socket-html/ -o iam_role="EMR_EC2_DefaultRole"
+
+To test your s3 mounting, cd socket-html/; echo hurray > test.txt

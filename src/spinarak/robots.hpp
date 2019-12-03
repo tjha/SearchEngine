@@ -1,6 +1,7 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-12-03: default delay 1 second:combsc
 // 2019-11-27: Finished wildcard checking: combsc
 // 2019-11-26: Wildcard checking: combsc
 // 2019-11-23: Distinguish between politeness requests and disallowed paths, fixed parsing bug: combsc
@@ -146,7 +147,7 @@ namespace dex
 			
 
 		public:
-			static const unsigned defaultDelay = 10;
+			static const unsigned defaultDelay = 1;
 			static const unsigned defaultExpiration = 60 * 60 * 24;
 			static const dex::string userAgent;
 
