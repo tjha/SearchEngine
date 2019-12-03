@@ -27,6 +27,7 @@
 #include "catch.hpp"
 #include "exception.hpp"
 #include "file.hpp"
+#include <fstream>
 #include "parser.hpp"
 #include "url.hpp"
 
@@ -38,6 +39,7 @@ using dex::anchorPos;
 using dex::HTMLparser;
 using dex::outOfRangeException;
 using dex::readFromFile;
+
 using dex::string;
 using dex::Url;
 using dex::vector;
@@ -51,13 +53,13 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 	SECTION(" Words testS :")
 		{
 		
-		// string filename = "tst/parser/man7_man_pages.html";
 		string filename = "tst/parser/hamiltoncshell.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr() );
 		HTMLparser testParser( htmlDoc );
 		size_t len = testParser.ReturnAnchorTextLength( );
 		vector<string> words = testParser.ReturnWords();
+	
 		vector <string> firstTen;
 		firstTen.pushBack( "hamilton" );
 		firstTen.pushBack( "c" );
@@ -71,11 +73,12 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 		firstTen.pushBack( "to" );
 		firstTen.pushBack( "navigation" );
 		// std::cout << "inParserTests\n";
-		std::cout << "file: " << filename << "\thas length: " << words.size( ) << "\n";
-		for ( auto it = words.cbegin( );  it != words.cend( );  it++ )
-			{
-			std::cout << *it << "\n";
-			}
+		// std::cout << "file: " << filename << "\thas length: " << words.size( ) << "\n";
+		// for ( auto it = words.cbegin( );  it != words.cend( );  it++ )
+		// 	{
+		// 	std::cout << *it << "\n";
+		// 	}
+		
 		for ( size_t i = 0; i < 11; i++ )
 			{
 			REQUIRE( firstTen[ i ] == words[ len+i ] );

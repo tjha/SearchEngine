@@ -71,29 +71,52 @@ namespace dex
 		void GetWords( );
 		bool inAvoid(size_t pos, vector <Positions> avoidThis);
 
+		vector<string> tagger (string temp)
+			{
+			vector<string> result;
+			result.pushBack("</ " + temp + ">");
+			result.pushBack("< /" + temp + ">");
+			result.pushBack("< / " + temp + ">");
+			result.pushBack("</ " + temp + " >");
+			result.pushBack("< /" + temp + " >");
+			result.pushBack("< / " + temp + " >");
+			result.pushBack("</" + temp + " >");
+			return result;
+			}
+
 		Positions ParseTag( Positions &pos, string &startTag, string &endTag )
 			{
 			Positions newPos;
-			newPos.start = htmlFile.find( startTag.cStr( ), pos.start );//, pos.end - pos.start );
+			newPos.start = htmlFile.find( startTag.cStr( ), pos.start );
 			if ( newPos.start == string::npos )
 				{
 				// incorporate some form of error logging
-
+				string newtag = editTag()
 				newPos.start = string::npos;
 				newPos.end = string::npos;
 				return newPos;
-			  std::cerr << "Error caught in ParseTag\n";
 				// throw dex::outOfRangeException();
 				}
-			newPos.end = htmlFile.find(endTag.cStr(), pos.start );//, pos.end - pos.start);
+			newPos.end = htmlFile.find(endTag.cStr(), pos.start );
 			if ( newPos.end == string::npos )
 				{
-				std::cerr << "Error caught in ParseTag\n";
-				// incorporate some form of error logging
+				string temp = endTag.substr(2, endTag.size() - 3);
+				vector <string> possibleVars = tagger(temp);
+				size_t i = 0;
+				while ( i < possibleVars.size( ) )
+					{
+					newPos.end = htmlFile.find(possibleVars[ i ].cStr(), pos.start );
+					if ( newPos.end != sting::npos )
+						{
+						newPos.end += possibleVars[ i ].length();
+						return newPos;
+						}
+					i++;
+					}
+				// if we still don't find the damn thing.
 				throw dex::outOfRangeException();
 				}
 			newPos.end += endTag.length();
-	 
 			return newPos;
 			}
 
