@@ -19,7 +19,8 @@
 #include <signal.h>
 #include <iostream>
 
-dex::string savePath = "data/";
+dex::string savePath = "../socket-html/";
+/* dex::string savePath = \"../socket-html/\"; */ // local
 dex::string tmpPath = "data/tmp/";
 
 dex::string loggingFileName;
@@ -41,7 +42,7 @@ time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 2000
+#define numWorkers 20
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -254,7 +255,7 @@ int main( )
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
 
-	urlFrontier = dex::loadFrontier( ( savePath + "seedlist.txt" ).cStr( ), frontierSize );
+	urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize );
 	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ) );
 
 	if ( dex::getCurrentFileDescriptor( savePath + "html/" ) == 0 )
