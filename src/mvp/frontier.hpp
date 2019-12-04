@@ -145,6 +145,7 @@ namespace dex
 						}
 					toCheck.erase( worst );
 					toVisit[ minIndex ] = url;
+					toCheck.insert( url );
 					}
 				else 
 					{
