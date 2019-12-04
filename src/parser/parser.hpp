@@ -103,7 +103,7 @@ namespace dex
 
 		HTMLparser( );
 		HTMLparser( dex::string& html );
-		HTMLparser( dex::string& html, dex::string& url );
+		HTMLparser( dex::string& html, dex::Url& url );
 		void removePunctuation( string &word );
 		// static vector < string > BreakAnchorsOG ( const string anchor );
 		void BreakAnchors ( string& anchor );
@@ -150,7 +150,7 @@ namespace dex
 		GetWords();
 		}
 
-	HTMLparser::HTMLparser( dex::string& html, dex::string& url ) : htmlFile( html ), pageLink( url )
+	HTMLparser::HTMLparser( dex::string& html, dex::Url& url ) : htmlFile( html ), pageLink( url.completeUrl( ) )
 		{
 		GetLinks( );
 		lenAnchors = words.size();
