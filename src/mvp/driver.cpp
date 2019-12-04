@@ -34,10 +34,10 @@ dex::string performanceName;
 
 // Sizes of our data structures
 size_t frontierSize = 5000;
-size_t crawledLinksSize = 2000;
-size_t robotsMapSize = 1000;
-const size_t brokenLinksSize = 2000;
-const size_t redirectsSize = 5000;
+size_t crawledLinksSize = 10000;
+size_t robotsMapSize = 500;
+const size_t brokenLinksSize = 1000;
+const size_t redirectsSize = 1000;
 
 // All urls in the frontier must be known to be in our domain
 // and lead to a legitimate endpoint, or must be unknown. This
@@ -82,7 +82,7 @@ pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
 
 // This is the redirect cache. Used for handling known redirects on our
 // side without having to actually visit the sites.
-dex::redirectCache redirects;
+dex::redirectCache redirects( redirectsSize );
 pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;

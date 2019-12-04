@@ -84,6 +84,7 @@ namespace dex
 			frontier( size_t maxSize )
 				{
 				maximumSize = maxSize;
+				toCheck.rehash( maximumSize * 4 );
 				}
 			size_t size( )
 				{
@@ -160,6 +161,10 @@ namespace dex
 					{
 					toVisit.pushBack( url );
 					toCheck.insert( url );
+					}
+				if ( toCheck.bucketCount( ) > maximumSize * 8 )
+					{
+					toCheck.rehash( maximumSize * 4 );
 					}
 				}
 

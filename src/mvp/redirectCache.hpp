@@ -15,8 +15,9 @@ namespace dex
 	class redirectCache
 		{
 		private:
-			dex::unorderedMap < dex::Url, dex::pair < dex::Url, time_t > > endpoints { 1000 };
+			dex::unorderedMap < dex::Url, dex::pair < dex::Url, time_t > > endpoints;
 			static const time_t defaultExpireTime = 60 * 60 * 24;
+			size_t maxSize;
 
 
 		public:
@@ -45,6 +46,10 @@ namespace dex
 			// If updating the URL creates a loop, return -1. Otherwise, return 0
 			int updateUrl( const dex::Url &key, const dex::Url &value, const time_t expireTime = defaultExpireTime )
 				{
+				if ( endpoints.bucketCount( ) > 8 * maxSize )
+					{
+					endpoints.rehash( maxSize * 4 );
+					}
 				dex::Url check = getEndpoint( value );
 				if ( check.completeUrl( ) == key.completeUrl( ) )
 					return -1;
@@ -65,6 +70,12 @@ namespace dex
 			size_t capacity( ) const
 				{
 				return endpoints.bucketCount( );
+				}
+
+			redirectCache( size_t max )
+				{
+				maxSize = max;
+				endpoints.rehash( max * 4 );
 				}
 		};
 	}

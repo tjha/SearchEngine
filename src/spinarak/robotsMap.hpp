@@ -20,7 +20,7 @@ namespace dex
 		{
 		private:
 			// Takes in a domain, returns a robotTxt* and the lock pointer associated with it.
-			dex::unorderedMap < dex::string, dex::pair < dex::RobotTxt*, dex::sharedReaderLock* > > mainMap{ 1000 };
+			dex::unorderedMap < dex::string, dex::pair < dex::RobotTxt*, dex::sharedReaderLock* > > mainMap;
 			dex::sharedReaderLock mapLock;
 			size_t maximumSize;
 
@@ -200,6 +200,9 @@ namespace dex
 							erase( it->first );
 						i++;
 						}
+					mapLock.writeLock( );
+					mainMap.rehash( maximumSize * 4 );
+					mapLock.releaseWriteLock( );
 					return 1;
 					}
 				return 0;
@@ -248,6 +251,7 @@ namespace dex
 			robotsMap( int max )
 				{
 				maximumSize = max;
+				mainMap.rehash( max * 4 );
 				}
 
 			~robotsMap( )
