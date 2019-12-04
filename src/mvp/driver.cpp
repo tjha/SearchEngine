@@ -271,7 +271,7 @@ void *worker( void *args )
 				dex::vector < dex::Url > links;
 				try
 					{
-					dex::HTMLparser parser( html );
+					dex::HTMLparser parser( result, toCrawl );
 					links = parser.ReturnLinks( );
 					}
 				catch( dex::outOfRangeException e )

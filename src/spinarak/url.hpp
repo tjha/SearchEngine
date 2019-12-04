@@ -34,6 +34,7 @@ namespace dex
 
 			string query;
 			string fragment;
+			string complete;
 		public:
 			Url( )
 				{
@@ -151,6 +152,21 @@ namespace dex
 				return *this;
 				}
 			
+			string computeFullUrl( )
+				{
+				string completeUrl = service + "://" + host;
+				if ( port != "" && port != "443" && port != "80" )
+					{
+					completeUrl += ":" + port;
+					}
+				completeUrl += path;
+				completeUrl += query;
+				completeUrl += fragment;
+				return completeUrl;
+				}
+
+			// TODO only compute this when you need to which should be
+			// 	at url creation and when you set Url
 			string completeUrl( ) const
 				{
 				string completeUrl = service + "://" + host;
@@ -163,7 +179,7 @@ namespace dex
 				completeUrl += fragment;
 				return completeUrl;
 				}
-			
+
 			string getService( ) const
 				{
 				return service;
