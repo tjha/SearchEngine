@@ -1,29 +1,142 @@
 // stemming.hpp
 // Library implementing the Porter stemmer. See http://snowball.tartarus.org/algorithms/porter/stemmer.html
 //
+// 2019-12-04: Move const strings to an anonymous namespace
 // 2019-11-04: File created
 
 #ifndef DEX_STEMMING
 #define DEX_STEMMING
 
 #include <cstddef>
-#include "../utils/basicString.hpp"
-#include "../utils/vector.hpp"
+#include "basicString.hpp"
+#include "vector.hpp"
 
 namespace dex
 	{
+	namespace
+		{
+		const string step1aTruncations[ ] = {
+			"sses",
+			"ies",
+			"ss",
+			"s"
+		};
+		const string step1aAppendations[ ] = {
+			"ss",
+			"i",
+			"ss",
+			""
+		};
+		const string step2Truncations[ ] = {
+			"ational",
+			"tional",
+			"enci",
+			"anci",
+			"izer",
+			"abli",
+			"alli",
+			"entli",
+			"eli",
+			"ousli",
+			"ization",
+			"ation",
+			"ator",
+			"alism",
+			"iveness",
+			"fulness",
+			"ousness",
+			"aliti",
+			"iviti",
+			"biliti"
+		};
+		const string step2Appendations[ ] = {
+			"ate",
+			"tion",
+			"ence",
+			"ance",
+			"ize",
+			"able",
+			"al",
+			"ent",
+			"e",
+			"ous",
+			"ize",
+			"ate",
+			"ate",
+			"al",
+			"ive",
+			"ful",
+			"ous",
+			"al",
+			"ive",
+			"ble"
+		};
+		const string step3Truncations[ ] {
+			"icate",
+			"ative",
+			"alize",
+			"iciti",
+			"ical",
+			"ful",
+			"ness"
+		};
+		const string step3Appendations[ ] {
+			"ic",
+			"",
+			"al",
+			"ic",
+			"ic",
+			"",
+			""
+		};
+		const string step4Truncations[ ] {
+			"al",
+			"ance",
+			"ence",
+			"er",
+			"ic",
+			"able",
+			"ible",
+			"ant",
+			"ement",
+			"ment",
+			"ent",
+			"sion",
+			"tion",
+			"ou",
+			"ism",
+			"ate",
+			"iti",
+			"ous",
+			"ive",
+			"ize"
+		};
+		const string step4Appendations[ ] {
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"s",
+			"t",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		};
+		}
 	class porterStemmer
 		{
 		private:
-			static const string step1aTruncations[ ];
-			static const string step1aAppendations[ ];
-			static const string step2Truncations[ ];
-			static const string step2Appendations[ ];
-			static const string step3Truncations[ ];
-			static const string step3Appendations[ ];
-			static const string step4Truncations[ ];
-			static const string step4Appendations[ ];
-
 			// struct representing a word when split into alternating consonant and vowel parts
 			struct wordForm
 				{
@@ -304,125 +417,6 @@ namespace dex
 
 				return form.word;
 				}
-		};
-
-		const string porterStemmer::step1aTruncations[ ] = {
-			"sses",
-			"ies",
-			"ss",
-			"s"
-		};
-		const string porterStemmer::step1aAppendations[ ] = {
-			"ss",
-			"i",
-			"ss",
-			""
-		};
-		const string porterStemmer::step2Truncations[ ] = {
-			"ational",
-			"tional",
-			"enci",
-			"anci",
-			"izer",
-			"abli",
-			"alli",
-			"entli",
-			"eli",
-			"ousli",
-			"ization",
-			"ation",
-			"ator",
-			"alism",
-			"iveness",
-			"fulness",
-			"ousness",
-			"aliti",
-			"iviti",
-			"biliti"
-		};
-		const string porterStemmer::step2Appendations[ ] = {
-			"ate",
-			"tion",
-			"ence",
-			"ance",
-			"ize",
-			"able",
-			"al",
-			"ent",
-			"e",
-			"ous",
-			"ize",
-			"ate",
-			"ate",
-			"al",
-			"ive",
-			"ful",
-			"ous",
-			"al",
-			"ive",
-			"ble"
-		};
-		const string porterStemmer::step3Truncations[ ] {
-			"icate",
-			"ative",
-			"alize",
-			"iciti",
-			"ical",
-			"ful",
-			"ness"
-		};
-		const string porterStemmer::step3Appendations[ ] {
-			"ic",
-			"",
-			"al",
-			"ic",
-			"ic",
-			"",
-			""
-		};
-		const string porterStemmer::step4Truncations[ ] {
-			"al",
-			"ance",
-			"ence",
-			"er",
-			"ic",
-			"able",
-			"ible",
-			"ant",
-			"ement",
-			"ment",
-			"ent",
-			"sion",
-			"tion",
-			"ou",
-			"ism",
-			"ate",
-			"iti",
-			"ous",
-			"ive",
-			"ize"
-		};
-		const string porterStemmer::step4Appendations[ ] {
-			"",
-			"",
-			"",
-			"",
-			"",
-			"",
-			"",
-			"",
-			"",
-			"",
-			"",
-			"s",
-			"t",
-			"",
-			"",
-			"",
-			"",
-			"",
-			"",
-			""
 		};
 	}
 

@@ -31,6 +31,7 @@ namespace dex
 				public:
 				};
 
+		public: // TODO: this is only public for testing
 			class indexChunk
 				{
 				private:
@@ -45,6 +46,8 @@ namespace dex
 					class postsChunk
 						{
 						private:
+							friend class indexChunk;
+
 							// Posting list is size 2^16 for now.
 							static const size_t postsChunkSize = 1 << 16;
 							byte posts[ postsChunkSize ];
@@ -101,7 +104,7 @@ namespace dex
 						size_t numberUniqueWords;
 						dex::string url;
 						dex::string title;
-						unsigned numberIncomingLinks;
+						size_t numberIncomingLinks;
 
 						template < class T, class InputIt >
 						friend class dex::utf::decoder;
@@ -119,7 +122,7 @@ namespace dex
 					static const size_t postsMetadataArraySize = 1L << 24;
 
 					// TODO: Double check these very carefully.
-					static const size_t endOfDocumentMetadataTypeMemorySize = 2 * sizeof( size_t ) + ( 7 + maxUrlLength ) +
+					static const size_t endOfDocumentMetadataTypeMemorySize = 2 * sizeof( size_t ) + ( 7 + maxURLLength ) +
 							( 7 + maxTitleLength ) + sizeof( unsigned );
 					static const size_t urlsToOffsetsMemorySize = 7 + maxURLCount * ( 7 + maxURLLength );
 					static const size_t offsetsToPostMetadatasMemorySize =
@@ -183,8 +186,8 @@ namespace dex
 								// Add a new postsMetaData.
 								// TODO: make this sensitive to non-BODY types. Idea: use enums ad pass those in instead of a
 								// deocrator string.
-								wordMetadata = &postsMetadataArray[ dictionary.size( ) + newWords.size( ) ]
-								*wordMetadata = postsMetadata( *postsChunkCount, postsMetadata::BODY, nullptr );
+								wordMetadata = &postsMetadataArray[ dictionary.size( ) + newWords.size( ) ];
+								*wordMetadata = postsMetadata( *postsChunkCount, postsMetadata::BODY );
 
 								// Add a new postsChunk
 								postsChunkArray[ *postsChunkCount++ ] = postsChunk( 0 );
@@ -192,7 +195,7 @@ namespace dex
 								newWords[ wordToAdd ] = dictionary.size( ) + newWords.size( );
 								}
 							else
-								wordMetadata = &postsMetadataArray[ dictionary[ wordToAdd ] ]
+								wordMetadata = &postsMetadataArray[ dictionary[ wordToAdd ] ];
 
 							// Note: this loop executes its body at most once, unless things have gone impossibly, horribly,
 							// terribly wrong somehow.
@@ -201,19 +204,20 @@ namespace dex
 								if ( *postsChunkCount == postsChunkArraySize )
 									return false;
 
-								postsChunkArray[ wordMetadata->lastPostsChunkOffset ].nextPostsChunkOffset = postChunkCount;
+								postsChunkArray[ wordMetadata->lastPostsChunkOffset ].nextPostsChunkOffset = *postsChunkCount;
 								postsChunkArray[ *postsChunkCount ] = postsChunk( wordMetadata->lastPostsChunkOffset );
-								wordMetadata->lastPostsChunkOffset = postChunkCount++;
+								wordMetadata->lastPostsChunkOffset = ( *postsChunkCount )++;
 								}
 
 							unsigned long long &synchronizationPoint =
-									wordMetadata.synchronizationPoints[ *newLocation >> ( sizeof( size_t ) - 8 ) ];
+									wordMetadata->synchronizationPoints[ newLocation >> ( sizeof( size_t ) - 8 ) ];
 							if ( !synchronizationPoint )
 								synchronizationPoint = wordMetadata->lastPostsChunkOffset;
 							}
 
 						// Copy over newWords into dict.
-						for ( const dex::unorderedMap::constIterator &it : newWords )
+						for ( dex::unorderedMap < dex::string, size_t >::constIterator it = newWords.cbegin( );
+								it != newWords.cend( );  ++it )
 							dictionary.insert( *it );
 
 						*location = newLocation;
@@ -222,8 +226,9 @@ namespace dex
 						}
 
 				public:
-					bool addDocument( const dex::string &url, const dex::vector < dex::string > &title,
-							const dex::vector < dex::string > &body );
+					bool addDocument( const dex::string &url, const dex::vector < dex::string > &anchorText,
+						const dex::vector < dex::string > &title, const dex::string &titleString,
+						const dex::vector < dex::string > &body );
 				};
 
 		public:
@@ -259,6 +264,7 @@ namespace dex
 					}
 			};
 
+		template < >
 		class encoder < dex::index::indexChunk::endOfDocumentMetadataType >
 			{
 			public:

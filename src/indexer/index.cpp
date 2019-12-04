@@ -4,6 +4,7 @@
 // 2019-11-21: File created
 
 #include <cstddef>
+#include <cstring>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -16,8 +17,7 @@
 #include "../utils/vector.hpp"
 
 // postsChunk
-
-dex::index::indexChunk::postsChunk::postsChunk( size_t previousPostsChunkOffset = 0 ) :
+dex::index::indexChunk::postsChunk::postsChunk( size_t previousPostsChunkOffset ) :
 	previousPostsChunkOffset( previousPostsChunkOffset ), nextPostsChunkOffset( 0 ),
 	currentPostOffset( 0 ) { }
 
@@ -36,8 +36,7 @@ bool dex::index::indexChunk::postsChunk::append( size_t delta )
 	}
 
 // postMetadata
-
-dex::index::indexChunk::postsMetadata::postsMetadata( size_t chunkOffset = 0, const byte typeOfToken = BODY ) :
+dex::index::indexChunk::postsMetadata::postsMetadata( size_t chunkOffset, const byte typeOfToken ) :
 		occurenceCount( 0 ), documentCount( 0 ), postType( typeOfToken ),
 		firstPostsChunkOffset( chunkOffset ), lastPostsChunkOffset( chunkOffset ),
 		lastPostIndex( 0 )
@@ -66,15 +65,17 @@ bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk 
 	}
 
 // indexChunk
-
-dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize = true )
+dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	{
+	// TOOO: Add some sort of magic number
+
 	postsChunkCount = static_cast < size_t * >( mmap( nullptr, sizeof( size_t ),
 			PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, 0 ) );
 
 	location = static_cast < size_t * >( mmap( nullptr, sizeof( size_t ),
 			PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, sizeof( size_t ) ) );
 
+	// TODO: Make sure that this always points to valid data (maybe add logic for when initialize == true)
 	encodedURLsToOffsets = static_cast < byte * >( mmap( nullptr, urlsToOffsetsMemorySize,
 			PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, urlsToOffsetsMemoryOffset ) );
 
@@ -100,11 +101,11 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize = true )
 
 	if ( initialize )
 		{
-		*postsChunkCount = 0;
+		*postsChunkCount = 1;
 		*location = 0;
 
-		// TODO: Add end of document metadata
-		// postsMetadataArray[ 0 ] = postsMetadata( 0, postsMetadata::END_OF_DOCUMENT,  )
+		postsChunkArray[ 0 ] = postsChunk( );
+		postsMetadataArray[ 0 ] = postsMetadata( 0, postsMetadata::END_OF_DOCUMENT );
 		}
 	}
 
@@ -117,28 +118,32 @@ dex::index::indexChunk::~indexChunk( )
 	dex::utf::encoder < dex::unorderedMap < dex::string, size_t > >( )( dictionary, encodedDictionary );
 	}
 
-bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vector < dex::string > &title,
+bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vector < dex::string > &anchorText,
+		const dex::vector < dex::string > &title, const dex::string &titleString,
 		const dex::vector < dex::string > &body )
 	{
-	size_t documentOffset = location;
-	if ( !append( body.cbegin( ), body.cend( ) ) || !append( title.cbegin( ), title.cend( ), "#" ) )
+	size_t documentOffset = *location;
+	if ( !append( body.cbegin( ), body.cend( ) ) || !append( title.cbegin( ), title.cend( ), "#" )
+			|| !append( anchorText.cbegin( ), anchorText.cend( ), "@" ) )
 		return false;
 
 	urlsToOffsets[ url ] = documentOffset;
 
 	// TODO: Maybe make a function to count the number of unique words in a bunch of vectors?
 	dex::unorderedSet < const dex::string > uniqueWords;
-	for ( const dex::string &word : body )
-		uniqueWords.insert( dex::porterStemmer( word ) );
-	for ( const dex::string &word : title )
-		uniqueWords.insert( dex::porterStemmer( word ) );
+	for ( dex::vector < dex::string >::constIterator it = body.cbegin( );  it != body.cend( );  ++it )
+		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
+	for ( dex::vector < dex::string >::constIterator it = title.cbegin( );  it != title.cend( );  ++it )
+		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
 
 	offsetsToPostMetadatas[ documentOffset ] = endOfDocumentMetadataType
 		{
 		title.size( ) + body.size( ),
 		uniqueWords.size( ),
 		url,
-		title,
+		titleString,
 		1 // TODO: how do we update this?
 		};
+
+	return true;
 	}
