@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-12-04: added wrapper functions for perf, added limits for all data structures: combsc
 // 2019-12-03: Uses frontier to start if it exists, otherwise uses seedlist, no duplicates in frontier: combsc
 // 2019-12-02: Set maximum size for frontier, add hashing for distribution of URLs: combsc
 // 2019-12-01: Improve frontier: combsc
@@ -28,34 +29,45 @@ dex::string toShipPath = "data/toShip/";
 dex::string loggingFileName;
 pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 
+dex::string performanceName;
+
+
+// Sizes of our data structures
+size_t frontierSize = 5000;
+size_t crawledLinksSize = 2000;
+size_t robotsMapSize = 1000;
+const size_t brokenLinksSize = 2000;
+const size_t redirectsSize = 5000;
 
 // All urls in the frontier must be known to be in our domain
 // and lead to a legitimate endpoint, or must be unknown. This
 // means we do not put broken links into our frontier and we do
 // not put links that aren't our responsibility into our frontier
-size_t frontierSize = 5000;
+
 dex::frontier urlFrontier( frontierSize );
+size_t numCrawledLinks = 0;
+
+dex::unorderedSet < dex::string > crawledLinks;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
-
-long checkpoint = 10 * 60; // checkpoints every x seconds
+long checkpoint = 15; // checkpoints every x seconds
 time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 50
+#define numWorkers 10
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
-size_t robotsMapSize = 1000;
 dex::robotsMap robotsCache( robotsMapSize );
 pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 
 // This set contains all known links in our domain that error out
 // when visited.
-dex::unorderedSet < dex::Url > brokenLinks{ 2000 };
-pthread_mutex_t brokenLinksLock = PTHREAD_MUTEX_INITIALIZER;
+
+dex::unorderedSet < dex::Url > brokenLinks{ brokenLinksSize };
+dex::sharedReaderLock brokenLinksLock;
 
 // This vector contains all known links that are NOT in our domain
 // and need to be given to other instances. Think of this as a frontier
@@ -67,13 +79,12 @@ pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
 
 // This is the redirect cache. Used for handling known redirects on our
 // side without having to actually visit the sites.
-const size_t redirectsSize = 5000;
 dex::redirectCache redirects;
 pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t saveHtmlLock = PTHREAD_MUTEX_INITIALIZER;
-dex::vector < dex::string > retrievedLinks;
+
 
 void print( dex::string toPrint )
 	{
@@ -90,6 +101,12 @@ int log( dex::string toWrite )
 	return error;
 	}
 
+int writePerformance( dex::string toWrite )
+	{
+	int error = dex::appendToFile( performanceName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
+	return error;
+	}
+
 // We should have a function for checking URLs to see if they're in our
 // instance or not. If it's in our instance put it back into our frontier.
 // if it's not in our instance we need to send it to the other crawler
@@ -101,13 +118,74 @@ size_t getUrlInstance( const dex::Url &url )
 	return h % numInstances;
 	}
 
+void fixRedirect( dex::Url &toCrawl )
+	{
+	pthread_mutex_lock( &redirectsLock );
+	toCrawl = redirects.getEndpoint( toCrawl );
+	if ( redirects.size( ) > redirectsSize )
+		redirects.reset( );
+	pthread_mutex_unlock( &redirectsLock );
+	}
+
+void updateRedirect( const dex::Url &toCrawl, const dex::Url &location)
+	{
+	pthread_mutex_lock( &redirectsLock );
+	redirects.updateUrl( toCrawl, location );
+	pthread_mutex_unlock( &redirectsLock );
+	}
+
+bool isBroken( const dex::Url &toCrawl )
+	{
+	bool toRet;
+	brokenLinksLock.readLock( );
+	log( "brokenLinksLock" );
+	toRet = brokenLinks.count( toCrawl ) > 0;
+	log( "leaving brokenLinksLock" );
+	brokenLinksLock.releaseReadLock( );
+	return toRet;
+	}
+
+void addToBroken( const dex::Url &broken )
+	{
+	brokenLinksLock.writeLock( );
+	log( "broken links lock" );
+	brokenLinks.insert( broken );
+	if ( brokenLinks.size( ) > brokenLinksSize )
+		{
+		brokenLinks.clear( );
+		print( "Broken links purged" );
+		}
+	log( "leaving broken links lock" );
+	brokenLinksLock.releaseWriteLock( );
+	}
+
+bool alreadyCrawled( const dex::Url &toCrawl )
+	{
+	return crawledLinks.count( toCrawl.completeUrl( ) ) > 0;
+	}
+
+void addToCrawled( const dex::Url &toCrawl )
+	{
+	if ( crawledLinks.size( ) > crawledLinksSize )
+		{
+		crawledLinks.clear( );
+		print( "Purged crawledLinks" );
+		}
+	crawledLinks.insert( toCrawl.completeUrl( ) );
+	}
+
 // Call checkpointing functions after time alotted or user input
 void saveWork( )
 	{
 	print( "saving" );
 	dex::saveFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), urlFrontier );
-	//dex::saveBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ), brokenLinks );
-	//dex::saveVisitedLinks( "data/crawledLinks.txt", retrievedLinks );
+	brokenLinksLock.readLock( );
+	dex::saveBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ), brokenLinks );
+	brokenLinksLock.releaseReadLock( );
+	dex::saveCrawledLinks( "data/crawledLinks.txt", crawledLinks );
+	print( "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) );
+	writePerformance( "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) + "\n" );
+	numCrawledLinks = 0;
 	lastCheckpoint = time(NULL);
 	}
 
@@ -137,25 +215,18 @@ void *worker( void *args )
 		pthread_mutex_unlock( &frontierLock );
 
 		// Fix link using our redirects cache
-		/*pthread_mutex_lock( &redirectsLock );
-		toCrawl = redirects.getEndpoint( toCrawl );
-		if ( redirects.size( ) > redirectsSize )
-			redirects.reset( );
-		pthread_mutex_unlock( &redirectsLock );*/
+		fixRedirect( toCrawl );
 		
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
 		dex::string result = "";
-		// I know that it's not safe to use robotsCache here
-		// We need to rewrite crawlURL to use the robotsCache efficiently, don't want to
-		// lock the cache for the entire time we're crawling the URL
 		if ( robotsCache.purge( ) == 1 )
-			print( "Purged" );
+			print( "Purged Robot Cache" );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
-			//dex::string html( toCrawl.completeUrl( ) + "\n" + result + "\n" );
+			
 
 			if ( errorCode == dex::NOT_HTML )
 				print( toCrawl.completeUrl( ) + " is not html " );
@@ -165,8 +236,10 @@ void *worker( void *args )
 				// if valid html -> save
 				pthread_mutex_lock( &saveHtmlLock );
 				log( "save lock" );
-				dex::saveHtml( toCrawl, result, savePath );
-				//retrievedLinks.pushBack( toCrawl.completeUrl( ) );
+				dex::string html( toCrawl.completeUrl( ) + "\n" + result + "\n" );
+				dex::saveHtml( toCrawl, html, savePath );
+				numCrawledLinks++;
+				addToCrawled( toCrawl );
 				log( "leaving save lock" );
 				pthread_mutex_unlock( &saveHtmlLock );
 				dex::vector < dex::Url > links;
@@ -185,44 +258,29 @@ void *worker( void *args )
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
 					// Fix link using our redirects cache
-					/*pthread_mutex_lock( &redirectsLock );
-					it->setFragment( "" );
-					dex::Url endpoint = redirects.getEndpoint( *it );
-					pthread_mutex_unlock( &redirectsLock );*/
+					dex::Url current = *it;
+					current.setFragment( "" );
+					fixRedirect( current );
 
-					// Check to see if the endpoint we have is a known broken link
-					//dex::Url endpoint = *it;
-					//pthread_mutex_lock( &brokenLinksLock );
-					/*log( "brokenLinksLock" );
-					if ( brokenLinks.count( *it ) == 0 )
+					// Check to see if the endpoint we have is a known broken link or if we've already crawled
+					//if ( !isBroken( current ) && !alreadyCrawled( current) )
+					if ( !alreadyCrawled( current) )
 						{
-						log( "leaving brokenLinksLock" );
-						pthread_mutex_unlock( &brokenLinksLock );*/
-						// If we're in charge of this link, put it into our frontier
-					size_t urlId = getUrlInstance( *it );
-					if ( urlId == instanceId )
-						{
-						
-						
-						urlFrontier.putUrl( *it );
-						
-						
-						
+						size_t urlId = getUrlInstance( *it );
+						if ( urlId == instanceId )
+							{
+							urlFrontier.putUrl( *it );
+							}
+						// If we're not in charge of this link, send it off to be shipped
+						else
+							{
+							pthread_mutex_lock( &linksToShipLock );
+							log( "put ship Lock" );
+							linksToShip[ urlId ].pushBack( *it );
+							log( "leaving put ship Lock" );
+							pthread_mutex_unlock( &linksToShipLock );
+							}
 						}
-					// If we're not in charge of this link, send it off to be shipped
-					else
-						{
-						pthread_mutex_lock( &linksToShipLock );
-						log( "put ship Lock" );
-						linksToShip[ urlId ].pushBack( *it );
-						log( "leaving put ship Lock" );
-						pthread_mutex_unlock( &linksToShipLock );
-						}
-						/*}
-					else
-						{
-						pthread_mutex_unlock( &brokenLinksLock );
-						}*/
 					}
 				pthread_cond_signal( &frontierCV );
 				log( "leave put lock" );
@@ -244,9 +302,7 @@ void *worker( void *args )
 		if ( errorCode >= 300 && errorCode < 400 )
 			{
 			dex::Url location = dex::Url( result.cStr( ) );
-			/*pthread_mutex_lock( &redirectsLock );
-			redirects.updateUrl( toCrawl, location );
-			pthread_mutex_unlock( &redirectsLock );*/
+			updateRedirect( toCrawl, location );
 			size_t urlId = getUrlInstance( location );
 			if ( urlId == instanceId )
 				{
@@ -266,15 +322,10 @@ void *worker( void *args )
 				}
 			}
 		// This link doesn't lead anywhere, we need to add it to our broken links
-		/*if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
+		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
 			{
-			pthread_mutex_lock( &brokenLinksLock );
-			log( "broken links lock" );
-			brokenLinks.insert( toCrawl );
-			log( "leaving broken links lock" );
-			pthread_mutex_unlock( &brokenLinksLock );
-			// All links that redirect to this should also be categorized as broken.
-			}*/
+			//addToBroken( toCrawl );
+			}
 		}
 	return nullptr;
 	}
@@ -289,6 +340,7 @@ int main( )
 	int result = dex::makeDirectory( savePath.cStr( ) );
 	result = dex::makeDirectory( tmpPath.cStr( ) );
 	result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
+	result = dex::makeDirectory( ( tmpPath + "performance" ).cStr( ) );
 	result = dex::makeDirectory( toShipPath.cStr( ) );
 
 	loggingFileName = tmpPath + "logs/";
@@ -297,6 +349,11 @@ int main( )
 	loggingFileName.popBack( );
 	loggingFileName += ".log";
 	loggingFileName = loggingFileName.replaceWhitespace( "_" );
+
+	performanceName = tmpPath + "performance/" + ctime( &now );
+	performanceName.popBack( );
+	performanceName += ".txt";
+	performanceName = performanceName.replaceWhitespace( "_" );
 
 	urlFrontier = dex::loadFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), frontierSize, true );
 	if ( urlFrontier.size( ) == 0 )
