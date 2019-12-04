@@ -180,7 +180,8 @@ void *worker( void *args )
 					print( "Caught Exception" );
 					}
 
-
+				pthread_mutex_lock( &frontierLock );
+				log( "put lock" );
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
 					// Fix link using our redirects cache
@@ -201,12 +202,12 @@ void *worker( void *args )
 					size_t urlId = getUrlInstance( *it );
 					if ( urlId == instanceId )
 						{
-						pthread_mutex_lock( &frontierLock );
-						log( "put lock" );
+						
+						
 						urlFrontier.putUrl( *it );
-						pthread_cond_signal( &frontierCV );
-						log( "leave put lock" );
-						pthread_mutex_unlock( &frontierLock );
+						
+						
+						
 						}
 					// If we're not in charge of this link, send it off to be shipped
 					else
@@ -223,6 +224,9 @@ void *worker( void *args )
 						pthread_mutex_unlock( &brokenLinksLock );
 						}*/
 					}
+				pthread_cond_signal( &frontierCV );
+				log( "leave put lock" );
+				pthread_mutex_unlock( &frontierLock );
 				}
 			}
 		// If we get a politness error for this URL, we put it back into the frontier
