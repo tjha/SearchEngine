@@ -1,5 +1,6 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
+// 2019-12-04:	Changed anchorterxt return type; added title words. Added return functions for both.
 // 2019-12-03:  Added GetWords,inAvoid,findScripts. Edited Parsetags.
 // 2019-11-26:  Eliminated unnecesssary code duplication in fixDots, and
 // 			    addressed several edge cases: tjha
@@ -52,6 +53,11 @@ namespace dex
 			std::size_t start;
 			std::size_t end;
 			};
+		struct AncWord
+			{
+			string url;
+			vector<string> text;
+			};
 
 	class HTMLparser
 	{
@@ -61,6 +67,8 @@ namespace dex
 		dex::string pageLink;
 		dex::vector< dex::Url > links;
 		dex::vector< string > words;
+		dex::vector< string > title;
+		dex::vector< AncWord > anchors;
 		std::size_t lenAnchors;
 		//dex::vector< string > relativeLinks;
 		dex::vector< anchorPos > anchorText;
@@ -69,6 +77,7 @@ namespace dex
 		void GetLinks( );
 		vector < Positions > findScripts( Positions body );
 		void GetWords( );
+		void GetTitle( );
 		bool inAvoid(size_t pos, vector <Positions> avoidThis);
 
 		vector<string> tagger (string temp)
@@ -126,7 +135,7 @@ namespace dex
 
 
 	public:
-
+		
 		HTMLparser( );
 		HTMLparser( dex::string& html );
 		void removePunctuation( string &word );
@@ -135,13 +144,33 @@ namespace dex
 		// void GetAnchorText( );
 		vector < dex::Url > ReturnLinks ( );
 		// vector < dex::pair <size_t, size_t > > ReturnAnchorText ( );
-		vector < anchorPos > ReturnAnchorText ( );
+		vector < AncWord > ReturnAnchorText ( );
+		vector <string > ReturnTitle ( );
 		size_t ReturnAnchorTextLength( );
 		vector < string > ReturnWords ( );
 		void fixDots (string &url);
 		void changeToLowercase( string &word );
-
+		void buildAnchors( );
+		void buildTitle( );
 	};
+
+	void HTMLparser::buildAnchors( )
+		{
+		vector< string > temp;
+		for( size_t i = 0; i < anchorText.size( ); i++ )
+			{
+			for ( size_t j = anchorText[ i ].startPos ; j < anchorText[ i ].endPos + 1 ; j++ )
+				{
+					temp.pushBack( words[ j ] );
+				}
+			AncWord push;
+			push.url = (links[ anchorText[ i ].linkInd ]).completeUrl( ) ;
+			push.text = temp;
+			anchors.pushBack( push );
+			temp.clear();
+			}
+		words.clear();
+		}
 
 	HTMLparser::HTMLparser( )
 		{
@@ -172,6 +201,11 @@ namespace dex
 		htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
 		GetLinks( );
 		lenAnchors = words.size();
+		buildAnchors();
+		
+		GetTitle();
+		buildTitle();
+		
 		GetWords();
 		}
 
@@ -190,11 +224,14 @@ namespace dex
 		return words;
 		}
 
-	vector < anchorPos > HTMLparser::ReturnAnchorText ( )
+	vector < AncWord > HTMLparser::ReturnAnchorText ( )
 		{
-		return anchorText;
+		return anchors;
 		}
-
+	vector < string > HTMLparser::ReturnTitle ( )
+		{
+		return title ;
+		}
 	void HTMLparser::BreakAnchors ( string& anchor )
 		{
 		static const char WHITESPACE[ ] = { ' ', '\t', '\n', '\r' };
@@ -615,6 +652,12 @@ namespace dex
 		s = "<body";
 		t = "</body>";
 		body = ParseTag( start, s, t );
+
+
+		if( body.start == string::npos )
+			{
+			return;
+			}
 	
 		vector < Positions > avoidThis;
 		avoidThis = findScripts( body );
@@ -669,6 +712,68 @@ namespace dex
 			}
 		return false;
 		}
+
+
+
+	void HTMLparser::GetTitle( )
+		{
+		static const char WHITESPACE [ ] = { ' ', '\t', '\n', '\r' };
+		static const char ALPHABET [ ] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+														'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+														'w', 'x', 'y','z' };
+		Positions title, start;
+		start.start = 0;
+		start.end = htmlFile.length( ) - 1;
+		
+		string s, t;
+		s = "<title";
+		t = "</title>";
+		title = ParseTag( start, s, t );
+	
+		if( title.start == string::npos )
+			{
+			return;
+			}
+		string text;
+		std::size_t posClose = htmlFile.find( '>', title.start );
+		std::size_t posOpen = htmlFile.find( '<', posClose );
+
+		while ( posClose < title.end )
+			{
+			if( posOpen >= title.end )
+				{
+				break;
+				}
+	 
+			text = htmlFile.substr(posClose + 1, posOpen - posClose - 1);
+	 
+			if( text.findFirstNotOf(WHITESPACE) == string::npos)
+				{
+				if( text.find( ALPHABET ) != string::npos )
+					{
+					BreakAnchors( text );
+					}
+				posClose = htmlFile.find( '>', posOpen );
+				posOpen = htmlFile.find( '<', posClose );
+				continue;
+				}
+
+			BreakAnchors( text );
+  
+			posClose = htmlFile.find( '>', posOpen );
+			posOpen = htmlFile.find( '<', posClose );
+			}
+		}
+
+	void HTMLparser::buildTitle()
+		{
+		for(size_t i = 0; i < words.size(); i++ )
+			{
+			title.pushBack( words[ i ] );
+			}
+		words.clear();
+		}
+
 
 };
 #endif // DEX_HTML_PARSER

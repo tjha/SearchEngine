@@ -57,9 +57,9 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr() );
 		HTMLparser testParser( htmlDoc );
-		size_t len = testParser.ReturnAnchorTextLength( );
-		vector<string> words = testParser.ReturnWords();
 	
+		vector<string> words = testParser.ReturnWords();
+		vector<string> titleWords = testParser.ReturnTitle();
 		vector <string> firstTen;
 		firstTen.pushBack( "hamilton" );
 		firstTen.pushBack( "c" );
@@ -81,8 +81,21 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 		
 		for ( size_t i = 0; i < 11; i++ )
 			{
-			REQUIRE( firstTen[ i ] == words[ len+i ] );
+			REQUIRE( firstTen[ i ] == words[ i ] );
 			}
+		vector<string> title;
+		title.pushBack("hamilton");
+		title.pushBack("c");
+		title.pushBack("shell");
+		title.pushBack("wikipedia");
+
+		REQUIRE( titleWords.size( ) == title.size( ) );
+
+		for( size_t i = 0; i < titleWords.size(); i++ )
+			{
+			REQUIRE( titleWords[ i ] == title[ i ] );
+			}
+
 		}
 
 	SECTION(" Parse words from many docs test :")
@@ -327,8 +340,8 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
 	SECTION( "Expected Anchor Text" )
 		{
-		vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
-		vector < dex::string > words = testParser.ReturnWords();
+		// vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
+		vector < dex::AncWord > anchors = testParser.ReturnAnchorText();
 		size_t lenAnchors = testParser.ReturnAnchorTextLength( );
 		vector < dex::string > AnchorWords;
 
@@ -390,9 +403,9 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 		size_t word_count = 0;
 		for ( size_t j = 0; j < anchors.size( ); j++ )
 			{
-			for ( size_t i = 0; i <= anchors[ j ].endPos - anchors[ j ].startPos; i++ )
+			for ( size_t i = 0; i < anchors[ j ].text.size() ; i++ )
 				{
-				REQUIRE( AnchorWords[ word_count++ ] == words[ anchors[ j ].startPos + i ] );
+				REQUIRE( AnchorWords[ word_count++ ] == anchors[ j ].text[ i ] );
 				}
 			}
 		}
@@ -434,8 +447,8 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
 
 		SECTION ( "Expected Anchor Text" )
 			{
-			vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
-			vector < dex::string > words = testParser.ReturnWords();
+			vector < dex::AncWord > anchors = testParser.ReturnAnchorText();
+			// vector < dex::string > words = testParser.ReturnWords();
 			vector < dex::string > AnchorWords;
 			size_t lenAnchors = testParser.ReturnAnchorTextLength();
 
@@ -452,9 +465,9 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
 			size_t word_count = 0;
 			for ( size_t j = 0; j < anchors.size( ); j++ )
 				{
-				for ( size_t i = 0; i <= anchors[ j ].endPos - anchors[ j ].startPos; i++ )
+				for ( size_t i = 0; i < anchors[ j ].text.size( ); i++ )
 					{
-					REQUIRE( AnchorWords[ word_count++ ] == words[ anchors[ j ].startPos + i ] );
+					REQUIRE( AnchorWords[ word_count++ ] == anchors[ j ].text[ i ] );
 					}
 				}
 			}
