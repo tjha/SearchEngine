@@ -35,6 +35,22 @@ namespace dex
 			// with only a reader lock as long as we know the map will not grow.
 		public:
 
+			size_t size( )
+				{
+				mapLock.readLock( );
+				size_t s = mainMap.size( );
+				mapLock.releaseReadLock( );
+				return s;
+				}
+
+			size_t capacity( )
+				{
+				mapLock.readLock( );
+				size_t s = mainMap.bucketCount( );
+				mapLock.releaseReadLock( );
+				return s;
+				}
+
 			bool robotExists( dex::string str )
 				{
 				mapLock.readLock( );

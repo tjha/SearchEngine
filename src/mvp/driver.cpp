@@ -52,7 +52,10 @@ pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
 long checkpoint = 15; // checkpoints every x seconds
+long testTime = 40;
 time_t lastCheckpoint = time( NULL );
+time_t startTime = time( NULL );
+bool testing = false;
 
 char state = 0;
 
@@ -184,7 +187,24 @@ void saveWork( )
 	brokenLinksLock.releaseReadLock( );
 	dex::saveCrawledLinks( "data/crawledLinks.txt", crawledLinks );
 	print( "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) );
-	writePerformance( "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) + "\n" );
+	dex::string toWrite = "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) + "\n";
+	toWrite += "Size of frontier: " + dex::toString( urlFrontier.size( ) ) + "\n";
+	toWrite += "Capacity of frontier: " + dex::toString( urlFrontier.capacity( ) ) + "\n";
+	toWrite += "Size of crawledLinks " + dex::toString( crawledLinks.size( ) ) + "\n";
+	toWrite += "Capacity of crawledLinks " + dex::toString( crawledLinks.bucketCount( ) ) + "\n";
+	toWrite += "Size of robotsMap " + dex::toString( robotsCache.size( ) ) + "\n";
+	toWrite += "Capacity of robotsMap " + dex::toString( robotsCache.capacity( ) ) + "\n";
+	brokenLinksLock.readLock( );
+	toWrite += "Size of broken " + dex::toString( brokenLinks.size( ) ) + "\n";
+	toWrite += "Capacity of broken " + dex::toString( brokenLinks.bucketCount( ) ) + "\n";
+	brokenLinksLock.releaseReadLock( );
+	pthread_mutex_lock( &redirectsLock );
+	toWrite += "Size of redirects " + dex::toString( redirects.size( ) ) + "\n";
+	toWrite += "Capacity of redirects " + dex::toString( redirects.capacity( ) ) + "\n";
+	pthread_mutex_unlock( &redirectsLock );
+	writePerformance( toWrite );
+	print( toWrite );
+
 	numCrawledLinks = 0;
 	lastCheckpoint = time(NULL);
 	}
@@ -210,6 +230,12 @@ void *worker( void *args )
 			{
 			saveWork( );
 			state = 0;
+			}
+		if ( testing && time( NULL ) - startTime > testTime )
+			{
+			log( "leaving frontier lock" );
+			pthread_mutex_unlock( &frontierLock );
+			exit( 0 );
 			}
 		log( "leaving frontier lock" );
 		pthread_mutex_unlock( &frontierLock );
@@ -263,8 +289,8 @@ void *worker( void *args )
 					fixRedirect( current );
 
 					// Check to see if the endpoint we have is a known broken link or if we've already crawled
-					//if ( !isBroken( current ) && !alreadyCrawled( current) )
-					if ( !alreadyCrawled( current) )
+					if ( !isBroken( current ) && !alreadyCrawled( current) )
+					//if ( !alreadyCrawled( current) )
 						{
 						size_t urlId = getUrlInstance( *it );
 						if ( urlId == instanceId )
@@ -324,7 +350,7 @@ void *worker( void *args )
 		// This link doesn't lead anywhere, we need to add it to our broken links
 		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
 			{
-			//addToBroken( toCrawl );
+			addToBroken( toCrawl );
 			}
 		}
 	return nullptr;
@@ -371,21 +397,20 @@ int main( )
 		}
 
 	std::cout << "Starting crawl with frontier size " << urlFrontier.size( ) << std::endl;
+	if ( testing )
+	{
+	print( "YOU ARE TESTING, IT WILL END AFTER " + dex::toString( testTime ) + " seconds" );
+	}
 	for ( int i = 0;  i < numWorkers;  ++i )
 		{
 		ids[ i ] = i;
 		pthread_create( &workers[ i ], nullptr, worker, &( ids[ i ] ) );
 		}
 
-	while ( std::cin >> state )
-		{
-		if ( state == 'q' )
-			break;
-		}
-
 	for ( size_t i = 0;  i < numWorkers; ++i )
 		pthread_join( workers[ i ], nullptr );
 	
+	std::cout << "HERE";
 	dex::closeHtmlFile( );
 	std::cout << "exiting safely...\n";
 	return 0;

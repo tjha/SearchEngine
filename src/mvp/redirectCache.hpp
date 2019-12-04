@@ -62,6 +62,10 @@ namespace dex
 				{
 				return endpoints.size( );
 				}
+			size_t capacity( ) const
+				{
+				return endpoints.bucketCount( );
+				}
 		};
 	}
 

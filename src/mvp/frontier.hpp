@@ -89,6 +89,10 @@ namespace dex
 				{
 				return toVisit.size( );
 				}
+			size_t capacity( )
+				{
+				return toCheck.bucketCount( );
+				}
 			Url getUrl( )
 				{
 				int maxScore = -1;
