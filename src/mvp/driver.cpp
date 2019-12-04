@@ -116,7 +116,7 @@ void *worker( void *args )
 	int a = * ( ( int * ) args );
 	dex::string name = dex::toString( a );
 	log( "Start thread " + name + "\n");
-	for ( int i = 0;  true;  ++i )
+	for ( int i = 0;  i < 10;  ++i )
 		{
 		if ( state == 'q' )
 			return nullptr;
@@ -155,7 +155,7 @@ void *worker( void *args )
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
-			dex::string html = toCrawl.completeUrl( ) + "\n" + result + "\n";
+			//dex::string html( toCrawl.completeUrl( ) + "\n" + result + "\n" );
 
 			if ( errorCode == dex::NOT_HTML )
 				print( toCrawl.completeUrl( ) + " is not html " );
@@ -165,14 +165,14 @@ void *worker( void *args )
 				// if valid html -> save
 				pthread_mutex_lock( &saveHtmlLock );
 				log( "save lock" );
-				dex::saveHtml( toCrawl, html, savePath );
+				dex::saveHtml( toCrawl, result, savePath );
 				//retrievedLinks.pushBack( toCrawl.completeUrl( ) );
 				log( "leaving save lock" );
 				pthread_mutex_unlock( &saveHtmlLock );
 				dex::vector < dex::Url > links;
 				try
 					{
-					dex::HTMLparser parser( html );
+					dex::HTMLparser parser( result );
 					links = parser.ReturnLinks( );
 					}
 				catch( dex::outOfRangeException e )

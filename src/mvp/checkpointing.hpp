@@ -31,7 +31,7 @@ namespace dex
 	int urlsFileDescriptor = -1;
 	int htmlFileDescriptor = -1;
 	int currentDocumentCount = 0;
-	int saveHtml ( dex::Url url, dex::string html, dex::string folderPath )
+	int saveHtml ( dex::Url &url, dex::string &html, dex::string &folderPath )
 		{
 		int err = dex::makeDirectory( folderPath.cStr( ) );
 		if ( err == -1 )
@@ -56,14 +56,28 @@ namespace dex
 			currentDocumentCount = 0;
 			}
 
-		err = write( urlsFileDescriptor, ( url.completeUrl( ) + "\n" ).cStr( ), url.completeUrl( ).size( ) );
+		err = write( urlsFileDescriptor, ( url.completeUrl( ) + "\n" ).cStr( ), url.completeUrl( ).size( ) + 1 );
 		if ( err == -1 )
 			{
 			std::cerr << "Writing saved Urls failed.\n";
 			return -1;
 			}
 
-		return write( htmlFileDescriptor, html.cStr( ), html.size( ) );
+        err = write( htmlFileDescriptor, ( url.completeUrl( ) + "\n" ).cStr( ), url.completeUrl( ).size( ) + 1 );
+		if ( err == -1 )
+			{
+			std::cerr << "Writing url failed.\n";
+			return -1;
+			}
+
+        err = write( htmlFileDescriptor, html.cStr( ), html.size( ) );
+		if ( err == -1 )
+			{
+			std::cerr << "Writing html failed.\n";
+			return -1;
+			}
+
+        return write( htmlFileDescriptor, "\n", 1 );
 		}
 
 	int getCurrentFileDescriptor( dex::string folderPath )
