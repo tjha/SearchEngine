@@ -39,6 +39,7 @@ multithreadingTest: src/mvp/multithreadingTest.cpp
 
 cleanDriver:
 	@rm -rf data/tmp/logs/
+	@rm -rf data/tmp/performance/
 
 test: $(BUILD_PATH)/tst/$(case)Tests.exe
 

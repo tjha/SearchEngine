@@ -178,6 +178,16 @@ namespace dex
 		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
 		}
 
+	int saveCrawledLinks( const char * fileName, dex::unorderedSet < dex::string > crawled )
+		{
+		string crawledData = "CRAWLED LINKS\n";
+		for ( auto it = crawled.begin( );  it != crawled.end( );  ++it )
+			{
+			crawledData += *it + "\n";
+			}
+		return writeToFile( fileName, crawledData.cStr( ), crawledData.size( ) );
+		}
+
 	dex::unorderedSet < dex::Url > loadBrokenLinks ( const char * fileName )
 		{
 		dex::unorderedSet < dex::Url > brokenLinks;
