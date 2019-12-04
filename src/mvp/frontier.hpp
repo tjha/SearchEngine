@@ -1,4 +1,5 @@
 // frontier.hpp
+// 2019-12-04: Made scoreUrl less aggressive: combsc
 // 2019-12-03: Change getUrl to reduce number of pageFault: combsc + jhirsh
 // 2019-12-02: Implement maximumSize: combsc
 // 2019-12-01: Implement scoreUrl, getUrls: combsc 
@@ -53,21 +54,25 @@ namespace dex
 
 				// Promote short URLs
 				// max of this should not give more than a good TLD
-				// completeUrls of size 25 or lower get maximum score ( of 9 ).
+				// completeUrls of size 45 or lower get maximum score ( of 9 ).
 				// decay after that
 				dex::string completeUrl = url.completeUrl( );
-				int urlSize = dex::max( size_t( 26 ), completeUrl.size( ) + 1 );
-				score += 9 * 26 / urlSize;
+				int urlSize = dex::max( size_t( 45 ), completeUrl.size( ) );
+				score += 9 * 45 / urlSize;
 
 				// Promote not a ton of /'s
-				// take off points for every / you have
+				// take off points for every / you have over 6 ( take off 3 for the slashes in every url )
 				int numSlashes = 0;
 				for ( size_t i = 0;  i < completeUrl.size( );  ++i )
 					{
 					if ( completeUrl[ i ] == '/' )
 						++numSlashes;
 					}
-				score -= numSlashes * 2;
+				numSlahes -= 6;
+				if ( numSlashes > 0 )
+					{
+					score -= numSlashes * 2;
+					}
 				// Promote no queries or fragments
 				if ( !url.getFragment( ).empty( ) || !url.getQuery( ).empty( ) )
 					score -= 5;
