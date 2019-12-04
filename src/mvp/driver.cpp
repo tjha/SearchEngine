@@ -33,7 +33,7 @@ pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
 // and lead to a legitimate endpoint, or must be unknown. This
 // means we do not put broken links into our frontier and we do
 // not put links that aren't our responsibility into our frontier
-size_t frontierSize = 10000;
+size_t frontierSize = 5000;
 dex::frontier urlFrontier( frontierSize );
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
@@ -44,7 +44,7 @@ time_t lastCheckpoint = time( NULL );
 
 char state = 0;
 
-#define numWorkers 100
+#define numWorkers 50
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
