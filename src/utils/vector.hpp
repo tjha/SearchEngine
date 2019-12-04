@@ -1,7 +1,8 @@
 // vector.hpp
 // Vector class. We don't implement emplace.
 //
-// 2019-11-04: Use typeTraits.hpp: jasina
+// 2019-12-04 - Add initializer list constructor
+// 2019-11-04 - Use typeTraits.hpp: jasina
 // 2019-10-27 - Fix dex::swap: jasina
 // 2019-10-26 - Changed delete array to delete [] array in reserve: medhak, tjha
 //            - Rewrite iterators to not duplicate code: jasina
@@ -23,6 +24,7 @@
 #define DEX_VECTOR
 
 #include <cstddef>
+#include <initializer_list>
 #include "algorithm.hpp"
 #include "exception.hpp"
 #include "typeTraits.hpp"
@@ -53,6 +55,8 @@ namespace dex
 				}
 			vector( const vector < T > &other );
 			vector( vector < T > &&other );
+			vector( std::initializer_list < T > l );
+
 			~vector( );
 			vector < T > operator=( const vector < T > &v );
 			vector < T > operator=( vector < T > &&v );
@@ -216,6 +220,16 @@ namespace dex
 		other.vectorSize = 0;
 		other.arraySize = 0;
 		other.array = nullptr;
+		}
+
+	// Initializer List Constructor
+	template < class T >
+	vector < T >::vector( std::initializer_list < T > l )
+		{
+		array = new T[ l.size( ) ];
+		arraySize = l.size( );
+		vectorSize = l.size( );
+		dex::copy( l.begin( ), l.end( ), begin( ) );
 		}
 
 	// Assignment Operator
