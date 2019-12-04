@@ -289,8 +289,8 @@ void *worker( void *args )
 					fixRedirect( current );
 
 					// Check to see if the endpoint we have is a known broken link or if we've already crawled
-					if ( !isBroken( current ) && !alreadyCrawled( current) )
-					//if ( !alreadyCrawled( current) )
+					//if ( !isBroken( current ) && !alreadyCrawled( current) )
+					if ( !alreadyCrawled( current) )
 						{
 						size_t urlId = getUrlInstance( *it );
 						if ( urlId == instanceId )
@@ -350,7 +350,8 @@ void *worker( void *args )
 		// This link doesn't lead anywhere, we need to add it to our broken links
 		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
 			{
-			addToBroken( toCrawl );
+			//addToBroken( toCrawl );
+			addToCrawled( toCrawl );
 			}
 		}
 	return nullptr;
