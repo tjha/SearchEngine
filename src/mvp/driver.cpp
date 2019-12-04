@@ -116,7 +116,7 @@ void *worker( void *args )
 	int a = * ( ( int * ) args );
 	dex::string name = dex::toString( a );
 	log( "Start thread " + name + "\n");
-	for ( int i = 0;  i < 10;  ++i )
+	for ( int i = 0;  true;  ++i )
 		{
 		if ( state == 'q' )
 			return nullptr;
