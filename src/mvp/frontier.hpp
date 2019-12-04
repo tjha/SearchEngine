@@ -68,7 +68,7 @@ namespace dex
 					if ( completeUrl[ i ] == '/' )
 						++numSlashes;
 					}
-				numSlahes -= 6;
+				numSlashes -= 6;
 				if ( numSlashes > 0 )
 					{
 					score -= numSlashes * 2;
