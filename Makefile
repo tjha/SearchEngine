@@ -32,7 +32,7 @@ all: print_os $(TESTS)
 
 driver: src/mvp/driver.cpp
 	make build
-	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -o $(BUILD_PATH)/driver.exe
+	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/driver.exe
 
 driverFinal: src/mvp/driver.cpp
 	make build
