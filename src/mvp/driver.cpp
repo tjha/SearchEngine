@@ -90,14 +90,14 @@ pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t saveHtmlLock = PTHREAD_MUTEX_INITIALIZER;
 
 
-void print( dex::string toPrint )
+void print( dex::string &toPrint )
 	{
 	pthread_mutex_lock( &printLock );
 	std::cout << toPrint << std::endl;
 	pthread_mutex_unlock( &printLock );
 	}
 
-int log( dex::string toWrite )
+int log( dex::string &toWrite )
 	{
 	pthread_mutex_lock( &loggingLock );
 	int error = dex::appendToFile( loggingFileName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
@@ -105,7 +105,7 @@ int log( dex::string toWrite )
 	return error;
 	}
 
-int writePerformance( dex::string toWrite )
+int writePerformance( dex::string &toWrite )
 	{
 	int error = dex::appendToFile( performanceName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
 	return error;
@@ -188,7 +188,9 @@ void saveWork( )
 	brokenLinksLock.releaseReadLock( );
 	dex::saveCrawledLinks( "data/crawledLinks.txt", crawledLinks );
 	print( "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) );
-	dex::string toWrite = "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) + "\n";
+	dex::string toWrite;
+	toWrite.reserve( 1000 );
+	toWrite += "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) + "\n";
 	toWrite += "Size of frontier: " + dex::toString( urlFrontier.size( ) ) + "\n";
 	toWrite += "Capacity of frontier: " + dex::toString( urlFrontier.capacity( ) ) + "\n";
 	toWrite += "Size of crawledLinks " + dex::toString( crawledLinks.size( ) ) + "\n";
@@ -245,7 +247,8 @@ void *worker( void *args )
 		fixRedirect( toCrawl );
 		
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
-		dex::string result = "";
+		dex::string result;
+		result.reserve( 2000000 );
 		if ( robotsCache.purge( ) == 1 )
 			print( "Purged Robot Cache" );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
@@ -263,8 +266,7 @@ void *worker( void *args )
 				// if valid html -> save
 				pthread_mutex_lock( &saveHtmlLock );
 				log( "save lock" );
-				dex::string html( toCrawl.completeUrl( ) + "\n" + result + "\n" );
-				dex::saveHtml( toCrawl, html, savePath );
+				dex::saveHtml( toCrawl, result, savePath );
 				numCrawledLinks++;
 				addToCrawled( toCrawl );
 				log( "leaving save lock" );

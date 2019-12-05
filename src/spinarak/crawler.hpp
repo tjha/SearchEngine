@@ -94,12 +94,11 @@ namespace dex
 			//		the URL we're being redirected to will be contained within res.
 			static void receive( const char *buffer, unsigned bytes, dex::vector < char > &response )
 				{
-				response.reserve( response.size( ) + bytes );
 				for ( unsigned i = 0;  i < bytes;  ++i )
 					response.pushBack( buffer[ i ] );
 				}
 
-			static int parseResponse( dex::vector < char > response , dex::string &result, bool isRobot = false )
+			static int parseResponse( dex::vector < char > &response , dex::string &result, bool isRobot = false )
 				{
 				dex::string toSearch( response.cbegin( ), response.cend( ) );
 				
@@ -286,7 +285,7 @@ namespace dex
 				
 				char buffer[ 10240 ];
 				int bytes;
-				dex::vector < char > response;
+				dex::vector < char > response( 2000000 );
 				// TODO receive all of the data, then POST PROCESS it
 				if ( protocol == HTTP )
 					{
@@ -316,7 +315,7 @@ namespace dex
 		
 		public:
 			// Function used for crawling URLs. bePolite should ALWAYS be on, only turned off for testing.
-			static int crawlUrl( Url url, dex::string &result, dex::robotsMap &robotsCache, bool bePolite = true )
+			static int crawlUrl( Url &url, dex::string &result, dex::robotsMap &robotsCache, bool bePolite = true )
 				{
 				int protocol = ( url.getService( ) == "https" ) ? HTTPS : HTTP;
 
