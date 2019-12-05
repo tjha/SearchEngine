@@ -34,10 +34,10 @@ dex::string performanceName;
 
 
 // Sizes of our data structures
-size_t frontierSize = 5000;
-size_t crawledLinksSize = 10000;
-size_t robotsMapSize = 500;
-const size_t redirectsSize = 1000;
+size_t frontierSize = 20000;
+size_t crawledLinksSize = 20000;
+size_t robotsMapSize = 1000;
+const size_t redirectsSize = 5000;
 
 // All urls in the frontier must be known to be in our domain
 // and lead to a legitimate endpoint, or must be unknown. This
@@ -58,7 +58,7 @@ char state = 0;
 size_t numCrawledLinks = 0;
 pthread_mutex_t crawledLinksLock = PTHREAD_MUTEX_INITIALIZER;
 
-#define numWorkers 10
+#define numWorkers 100
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
