@@ -30,21 +30,24 @@ TEST_CASE( "Crawl", "[crawler]" )
 	{
 	SECTION( "OTHER" )
 		{
-		robotsMap robots;
+		robotsMap robots( 100 );
 		string res;
-
-		dex::Url u( "https://advertising.amazon.fr?ref_a20m_us_hnav_fr/" );
-		dex::crawler::testConnect( u, res, dex::HTTPS );
+		
+		cout << "start long boi" << endl;
+		dex::crawler::crawlUrl( "http://www.tbrandstudio.com/", res, robots );
+		cout << "end connection" << endl;
+		int r = dex::crawler::crawlUrl( dex::string( "https://nytcnapps.oss-cn-hongkong.aliyuncs.com/latest.apk" ), res, robots );
+		cout << r << endl;
+		
 		dex::crawler::crawlUrl( "https://www.latimes.com/entertainment-arts/books/los-angeles-times-book-club", res, robots );
 		cout << "here" << endl;
-		dex::crawler::crawlUrl( "https://nytcnapps.oss-cn-hongkong.aliyuncs.com/latest.apk", res, robots );
-		cout << "here" << endl;
-		dex::crawler::crawlUrl( "http://www.tbrandstudio.com/", res, robots );
+		
+		
 		}
 	
 	SECTION( "HTTPS" )
 		{
-		robotsMap robots;
+		robotsMap robots( 100 );
 		string res;
 		
 		int errorCode = dex::crawler::crawlUrl( "https://www.runescape.com", res, robots );
@@ -71,7 +74,7 @@ TEST_CASE( "Crawl", "[crawler]" )
 		}
 	SECTION( "HTTP" )
 		{
-		robotsMap robots;
+		robotsMap robots( 100 );
 		string res;
 
 		int errorCode = dex::crawler::crawlUrl( "http://www.runescape.com/splash", res, robots );

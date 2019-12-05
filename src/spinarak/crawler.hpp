@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <tls.h>
+#include <sys/time.h>
 #include <string.h>
 #include "robotsMap.hpp"
 #include "exception.hpp"
@@ -14,6 +15,7 @@
 #include "url.hpp"
 #include <iostream>
 
+// 2019-12-04: Kill connection if page is greater than 5 MB or if recv takes longer than 5 seconds: combsc
 // 2019-11-30: Make robotsMap threadsafe: combsc
 // 2019-11-26: Differentiate between html and non-html when crawling: combsc
 // 2019-11-23: Differentiate between path disallow and timeout: combsc
@@ -60,7 +62,8 @@ namespace dex
 		DISALLOWED_ERROR = -12,
 		NOT_HTML = -13,
 		PUT_BACK_IN_FRONTIER = -14,
-		LOCKING_ERROR = -15
+		LOCKING_ERROR = -15,
+		RESPONSE_TOO_LARGE = -16
 		};
 	
 	enum httpProtocol
@@ -75,6 +78,7 @@ namespace dex
 		// We're keeping it a class so that we can make the interface clear when
 		// you're using it.
 		private:
+			const static size_t maxPageSize = 5000000;
 			static dex::string makeGetMessage( const dex::string &path, const dex::string &host )
 				{
 				
@@ -98,7 +102,7 @@ namespace dex
 					response.pushBack( buffer[ i ] );
 				}
 
-			static int parseResponse( dex::vector < char > &response , dex::string &result, bool isRobot = false )
+			static int parseResponse( dex::vector < char > &response, dex::string &result, bool isRobot = false )
 				{
 				dex::string toSearch( response.cbegin( ), response.cend( ) );
 				
@@ -201,6 +205,12 @@ namespace dex
 						result = "Could not connect to socket\n";
 						return SOCKET_CONNECTION_ERROR;
 						}
+					
+					// set timeout on recv
+					struct timeval tv;
+					tv.tv_sec = 5;
+					tv.tv_usec = 0;
+					int option = setsockopt( socketFD, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv );
 
 					// Connect the socket to the host address.
 					connectResult = connect( socketFD, address->ai_addr, address->ai_addrlen);
@@ -285,12 +295,21 @@ namespace dex
 				
 				char buffer[ 10240 ];
 				int bytes;
-				dex::vector < char > response( 2000000 );
+				size_t totalBytes = 0;
+				dex::vector < char > response( maxPageSize );
 				// TODO receive all of the data, then POST PROCESS it
 				if ( protocol == HTTP )
 					{
 					while ( ( bytes = recv( socketFD, buffer, sizeof( buffer ), 0 ) ) > 0 )
+						{
+						totalBytes += bytes;
+						if ( totalBytes > maxPageSize )
+							{
+							return RESPONSE_TOO_LARGE;
+							}
 						receive( buffer, bytes, response );
+						}
+						
 
 					// Close the socket and free the address info structure.
 					close( socketFD );
@@ -299,7 +318,15 @@ namespace dex
 				else
 					{
 					while ( ( bytes = tls_read( ctx, buffer, sizeof( buffer ) ) ) > 0 )
+						{
+						totalBytes += bytes;
+						if ( totalBytes > maxPageSize )
+							{
+							return RESPONSE_TOO_LARGE;
+							}
 						receive( buffer, bytes, response );
+						}
+						
 					
 					// Close SSL connection
 					tls_close( ctx );
@@ -315,7 +342,7 @@ namespace dex
 		
 		public:
 			// Function used for crawling URLs. bePolite should ALWAYS be on, only turned off for testing.
-			static int crawlUrl( Url &url, dex::string &result, dex::robotsMap &robotsCache, bool bePolite = true )
+			static int crawlUrl( const Url &url, dex::string &result, dex::robotsMap &robotsCache, bool bePolite = true )
 				{
 				int protocol = ( url.getService( ) == "https" ) ? HTTPS : HTTP;
 

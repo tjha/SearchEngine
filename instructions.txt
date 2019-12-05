@@ -18,13 +18,18 @@ Chmod 600 keyName
 
 ssh -i .chris-search-engine-key.pem ec2-user@ec2-18-215-160-246.compute-1.amazonaws.com
 
+
+	
+
 ssh -i keyName ec2-user@publicDNS
 
 
 Sudo yum install git
 checkout dev/mvp
-Run libre script
+sudo ./scripts/librescript
 
+If you get an error like error while loading shared libraries: libtls.so.20: cannot open shared object file: No such file or directory
+Run your bashrc and it should be fixed
 
 
 SETUP S3 BUCKET

@@ -338,7 +338,7 @@ void *worker( void *args )
 				}
 			}
 		// This link doesn't lead anywhere, we need to add it to our broken links
-		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
+		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR || errorCode == dex::RESPONSE_TOO_LARGE )
 			{
 			addToCrawled( toCrawl );
 			}
