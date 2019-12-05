@@ -62,8 +62,8 @@ namespace dex
 	class HTMLparser
 	{
 
-	private:
-		dex::string htmlFile;
+	public:
+		//dex::string htmlFile;
 		dex::string pageLink;
 		dex::vector< dex::Url > links;
 		dex::vector< string > words;
@@ -74,10 +74,10 @@ namespace dex
 		dex::vector< anchorPos > anchorText;
 
 
-		void GetLinks( );
-		vector < Positions > findScripts( Positions body );
-		void GetWords( );
-		void GetTitle( );
+		void GetLinks( dex::string &htmlFile, bool isIndex );
+		vector < Positions > findScripts( Positions body, dex::string &htmlFile );
+		void GetWords( dex::string &htmlFile );
+		void GetTitle( dex::string &htmlFile );
 		bool inAvoid(size_t pos, vector <Positions> avoidThis);
 
 		vector<string> tagger (string temp)
@@ -93,7 +93,7 @@ namespace dex
 			return result;
 			}
 
-		Positions ParseTag( Positions &pos, string &startTag, string &endTag )
+		Positions ParseTag( Positions &pos, string &startTag, string &endTag, string &htmlFile )
 			{
 			Positions newPos;
 			newPos.start = htmlFile.find( startTag.cStr( ), pos.start );
@@ -133,11 +133,8 @@ namespace dex
 			return newPos;
 			}
 
-
-	public:
-		
 		HTMLparser( );
-		HTMLparser( dex::string& html );
+		HTMLparser( dex::Url &url, dex::string& html, bool isIndex );
 		void removePunctuation( string &word );
 		// static vector < string > BreakAnchorsOG ( const string anchor );
 		void BreakAnchors ( string& anchor );
@@ -174,15 +171,18 @@ namespace dex
 
 	HTMLparser::HTMLparser( )
 		{
-		htmlFile = "";
+		//htmlFile = "";
 		pageLink = "";
 		}
 
-	HTMLparser::HTMLparser( dex::string& html )
+	HTMLparser::HTMLparser( dex::Url &url, dex::string& html, bool isIndex )
 		{
+      /*
 		std::size_t linkEnd = html.findFirstOf( '\n' );
 		pageLink = html.substr( 0, linkEnd );
+      */
 
+      pageLink = url.completeUrl( );
 		std::size_t indexPos = pageLink.find( ".html", 0 );
 		while ( indexPos != dex::string::npos && pageLink[ indexPos ] != '/' )
 			{
@@ -198,15 +198,18 @@ namespace dex
 			{
 			pageLink.popBack( );
 			}
-		htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
-		GetLinks( );
-		lenAnchors = words.size();
-		buildAnchors();
-		
-		GetTitle();
-		buildTitle();
-		
-		GetWords();
+		//htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
+		GetLinks( html, isIndex );
+      if ( isIndex )
+         { 
+         lenAnchors = words.size();
+         buildAnchors();
+         
+         GetTitle( html );
+         buildTitle();
+         
+         GetWords( html );
+         }
 		}
 
 	
@@ -492,7 +495,7 @@ namespace dex
 		}
 
 
-	void HTMLparser::GetLinks( )
+	void HTMLparser::GetLinks( dex::string &htmlFile, bool isIndex )
 		{
 		std::size_t posOpenTag = htmlFile.find( "<", 0 ), posCloseTag = 0;
 		string url;
@@ -575,25 +578,28 @@ namespace dex
 				linkIndex = links.size( ) - 1;
 
 				//finding anchor text - - i think this should just be one function.
-				posOpenTag = htmlFile.find ( "<", posCloseTag );
-				if ( posOpenTag == string::npos )
-					{
-					posOpenTag = htmlFile.find( "<", posCloseTag );
-					continue;
-					}
-				if ( posOpenTag < htmlFile.length( ) - 2
-						&& htmlFile[ posOpenTag + 1 ] == '/'
-						&& htmlFile[ posOpenTag + 2 ] == 'a' )
-					{
-					anchor = htmlFile.substr( posCloseTag + 1, posOpenTag - posCloseTag - 1 );
+				if ( isIndex )
+               {
+               posOpenTag = htmlFile.find ( "<", posCloseTag );
+               if ( posOpenTag == string::npos )
+                  {
+                  posOpenTag = htmlFile.find( "<", posCloseTag );
+                  continue;
+                  }
+               if ( posOpenTag < htmlFile.length( ) - 2
+                     && htmlFile[ posOpenTag + 1 ] == '/'
+                     && htmlFile[ posOpenTag + 2 ] == 'a' )
+                  {
+                  anchor = htmlFile.substr( posCloseTag + 1, posOpenTag - posCloseTag - 1 );
 
-					anchorPos anchorIndex;
-					anchorIndex.linkInd = linkIndex;
-					anchorIndex.startPos = words.size( );
-					BreakAnchors( anchor );
-					anchorIndex.endPos = words.size( ) - 1;
-					anchorText.pushBack( anchorIndex );
-					}
+                  anchorPos anchorIndex;
+                  anchorIndex.linkInd = linkIndex;
+                  anchorIndex.startPos = words.size( );
+                  BreakAnchors( anchor );
+                  anchorIndex.endPos = words.size( ) - 1;
+                  anchorText.pushBack( anchorIndex );
+                  }
+               }
 				}
 			posOpenTag = htmlFile.find( "<", posCloseTag );
 			}
@@ -603,12 +609,12 @@ namespace dex
 // WORKING ON WORDS BELOW
 
 
-	vector < Positions > HTMLparser::findScripts( Positions body )
+	vector < Positions > HTMLparser::findScripts( Positions body, string &htmlFile )
 		{
 		vector <Positions> avoider;
 		string s = "<script";
 		string t = "</script>";
-		Positions strt = ParseTag( body, s, t), temp;
+		Positions strt = ParseTag( body, s, t, htmlFile ), temp;
 		temp.end = body.end;
 		while( strt.start < body.end && strt.start != string::npos )
 			{
@@ -618,12 +624,12 @@ namespace dex
 				}
 			avoider.pushBack(strt);
 			temp.start = strt.end + 1;
-			strt = ParseTag( temp, s, t );
+			strt = ParseTag( temp, s, t, htmlFile );
 			}
 		temp.start = body.start;
 		s = "<style";
 		t = "</style>";
-		strt = ParseTag( body, s, t);
+		strt = ParseTag( body, s, t, htmlFile );
 		while( strt.start < body.end && strt.start != string::npos )
 			{
 			if (strt.end == string::npos)
@@ -632,13 +638,13 @@ namespace dex
 				}
 			avoider.pushBack(strt);
 			temp.start = strt.end + 1;
-			strt = ParseTag( temp, s, t );
+			strt = ParseTag( temp, s, t, htmlFile );
 			}
 		return avoider;
 		}
 
 
-	void HTMLparser::GetWords( )
+	void HTMLparser::GetWords( dex::string &htmlFile )
 		{
 		static const char WHITESPACE [ ] = { ' ', '\t', '\n', '\r' };
 		static const char ALPHABET [ ] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
@@ -651,7 +657,7 @@ namespace dex
 		string s, t;
 		s = "<body";
 		t = "</body>";
-		body = ParseTag( start, s, t );
+		body = ParseTag( start, s, t, htmlFile );
 
 
 		if( body.start == string::npos )
@@ -660,7 +666,7 @@ namespace dex
 			}
 	
 		vector < Positions > avoidThis;
-		avoidThis = findScripts( body );
+		avoidThis = findScripts( body, htmlFile );
 		
 		string text;
 		std::size_t posClose = htmlFile.find( '>', body.start + 6 );
@@ -715,7 +721,7 @@ namespace dex
 
 
 
-	void HTMLparser::GetTitle( )
+	void HTMLparser::GetTitle( dex::string &htmlFile )
 		{
 		static const char WHITESPACE [ ] = { ' ', '\t', '\n', '\r' };
 		static const char ALPHABET [ ] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
@@ -728,7 +734,7 @@ namespace dex
 		string s, t;
 		s = "<title";
 		t = "</title>";
-		title = ParseTag( start, s, t );
+		title = ParseTag( start, s, t, htmlFile );
 	
 		if( title.start == string::npos )
 			{
