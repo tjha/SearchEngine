@@ -36,6 +36,7 @@ if [ ! -d "$INSTALL_PATH/libressl/lib" ]; then
 	sudo cp apps/openssl/cert.pem etc/ssl
 	echo "$INSTALL_PATH/libressl" | sudo tee /etc/ld.so.conf.d/libressl.conf
 	sudo ldconfig
+	. ~/.bashrc
 else
 	echo 'Using cached directory.'
 fi
