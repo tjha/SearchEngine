@@ -37,7 +37,6 @@ dex::string performanceName;
 size_t frontierSize = 5000;
 size_t crawledLinksSize = 10000;
 size_t robotsMapSize = 500;
-const size_t brokenLinksSize = 1000;
 const size_t redirectsSize = 1000;
 
 // All urls in the frontier must be known to be in our domain
@@ -48,7 +47,6 @@ const size_t redirectsSize = 1000;
 dex::frontier urlFrontier( frontierSize );
 size_t numCrawledLinks = 0;
 
-dex::unorderedSet < dex::string > crawledLinks;
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
@@ -67,11 +65,8 @@ int ids[ numWorkers ];
 dex::robotsMap robotsCache( robotsMapSize );
 pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 
-// This set contains all known links in our domain that error out
-// when visited.
-
-dex::unorderedSet < dex::Url > brokenLinks{ brokenLinksSize };
-dex::sharedReaderLock brokenLinksLock;
+dex::unorderedSet < dex::string > crawledLinks;
+dex::sharedReaderLock crawledLock;
 
 // This vector contains all known links that are NOT in our domain
 // and need to be given to other instances. Think of this as a frontier
@@ -87,7 +82,6 @@ dex::redirectCache redirects( redirectsSize );
 pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t saveHtmlLock = PTHREAD_MUTEX_INITIALIZER;
 
 
 void print( dex::string &toPrint )
@@ -138,56 +132,35 @@ void updateRedirect( const dex::Url &toCrawl, const dex::Url &location)
 	pthread_mutex_unlock( &redirectsLock );
 	}
 
-bool isBroken( const dex::Url &toCrawl )
-	{
-	bool toRet;
-	brokenLinksLock.readLock( );
-	log( "brokenLinksLock" );
-	toRet = brokenLinks.count( toCrawl ) > 0;
-	log( "leaving brokenLinksLock" );
-	brokenLinksLock.releaseReadLock( );
-	return toRet;
-	}
-
-void addToBroken( const dex::Url &broken )
-	{
-	brokenLinksLock.writeLock( );
-	log( "broken links lock" );
-	brokenLinks.insert( broken );
-	if ( brokenLinks.size( ) > brokenLinksSize )
-		{
-		brokenLinks.clear( );
-		print( "Broken links purged" );
-		}
-	log( "leaving broken links lock" );
-	brokenLinksLock.releaseWriteLock( );
-	}
-
 bool alreadyCrawled( const dex::Url &toCrawl )
 	{
-	return crawledLinks.count( toCrawl.completeUrl( ) ) > 0;
+	bool ret;
+	crawledLock.readLock( );
+	ret = crawledLinks.count( toCrawl.completeUrl( ) ) > 0;
+	crawledLock.releaseReadLock( );
+	return ret;
 	}
 
 void addToCrawled( const dex::Url &toCrawl )
 	{
+	crawledLock.writeLock( );
 	if ( crawledLinks.size( ) > crawledLinksSize )
 		{
 		crawledLinks.clear( );
 		print( "Purged crawledLinks" );
 		}
 	crawledLinks.insert( toCrawl.completeUrl( ) );
+	crawledLock.releaseWriteLock( );
 	}
 
 // Call checkpointing functions after time alotted or user input
 void saveWork( )
 	{
 	print( "saving" );
+	
 	dex::saveFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), urlFrontier );
-	brokenLinksLock.readLock( );
-	dex::saveBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ), brokenLinks );
-	brokenLinksLock.releaseReadLock( );
+	crawledLock.readLock( );
 	dex::saveCrawledLinks( "data/crawledLinks.txt", crawledLinks );
-	print( "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) );
 	dex::string toWrite;
 	toWrite.reserve( 1000 );
 	toWrite += "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) + "\n";
@@ -195,12 +168,10 @@ void saveWork( )
 	toWrite += "Capacity of frontier: " + dex::toString( urlFrontier.capacity( ) ) + "\n";
 	toWrite += "Size of crawledLinks " + dex::toString( crawledLinks.size( ) ) + "\n";
 	toWrite += "Capacity of crawledLinks " + dex::toString( crawledLinks.bucketCount( ) ) + "\n";
+	crawledLock.releaseReadLock( );
 	toWrite += "Size of robotsMap " + dex::toString( robotsCache.size( ) ) + "\n";
 	toWrite += "Capacity of robotsMap " + dex::toString( robotsCache.capacity( ) ) + "\n";
-	brokenLinksLock.readLock( );
-	toWrite += "Size of broken " + dex::toString( brokenLinks.size( ) ) + "\n";
-	toWrite += "Capacity of broken " + dex::toString( brokenLinks.bucketCount( ) ) + "\n";
-	brokenLinksLock.releaseReadLock( );
+
 	pthread_mutex_lock( &redirectsLock );
 	toWrite += "Size of redirects " + dex::toString( redirects.size( ) ) + "\n";
 	toWrite += "Capacity of redirects " + dex::toString( redirects.capacity( ) ) + "\n";
@@ -216,6 +187,9 @@ void *worker( void *args )
 	{
 	int a = * ( ( int * ) args );
 	dex::string name = dex::toString( a );
+	dex::string folderPath = savePath + "/html/" + name + "/";
+	int currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
+	
 	log( "Start thread " + name + "\n");
 	for ( int i = 0;  true;  ++i )
 		{
@@ -263,14 +237,16 @@ void *worker( void *args )
 
 			if ( errorCode == 0 )
 				{
-				// if valid html -> save
-				pthread_mutex_lock( &saveHtmlLock );
-				log( "save lock" );
-				dex::saveHtml( toCrawl, result, savePath );
+				if ( dex::fileSize( currentFileDescriptor ) > dex::HTMLChunkSize )
+					{
+					close( currentFileDescriptor );
+					currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
+					}
+				dex::saveHtml( toCrawl.completeUrl( ), result, currentFileDescriptor );
+
 				numCrawledLinks++;
 				addToCrawled( toCrawl );
 				log( "leaving save lock" );
-				pthread_mutex_unlock( &saveHtmlLock );
 				dex::vector < dex::Url > links;
 				try
 					{
@@ -292,7 +268,6 @@ void *worker( void *args )
 					fixRedirect( current );
 
 					// Check to see if the endpoint we have is a known broken link or if we've already crawled
-					//if ( !isBroken( current ) && !alreadyCrawled( current) )
 					if ( !alreadyCrawled( current) )
 						{
 						size_t urlId = getUrlInstance( *it );
@@ -353,7 +328,6 @@ void *worker( void *args )
 		// This link doesn't lead anywhere, we need to add it to our broken links
 		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR )
 			{
-			//addToBroken( toCrawl );
 			addToCrawled( toCrawl );
 			}
 		}
@@ -368,6 +342,11 @@ int main( )
 	// goodbye error code 13
 	signal(SIGPIPE, SIG_IGN);
 	int result = dex::makeDirectory( savePath.cStr( ) );
+	result = dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
+	for ( size_t i = 0;  i < numWorkers;  ++i )
+		{
+		result = dex::makeDirectory( ( savePath + "/html/" + dex::toString( i ) ).cStr( ) );
+		}
 	result = dex::makeDirectory( tmpPath.cStr( ) );
 	result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
 	result = dex::makeDirectory( ( tmpPath + "performance" ).cStr( ) );
@@ -392,13 +371,6 @@ int main( )
 		}
 	for ( auto it = urlFrontier.begin( );  it != urlFrontier.end( );  ++it )
 		print( it->completeUrl( ) );
-	brokenLinks = dex::loadBrokenLinks( ( tmpPath + "savedBrokenLinks.txt" ).cStr( ) );
-
-	if ( dex::getCurrentFileDescriptor( savePath + "html/" ) == -1 )
-		{
-		std::cerr << "Could not get current file" << std::endl;
-		return -1;
-		}
 
 	std::cout << "Starting crawl with frontier size " << urlFrontier.size( ) << std::endl;
 	if ( testing )
@@ -414,8 +386,6 @@ int main( )
 	for ( size_t i = 0;  i < numWorkers; ++i )
 		pthread_join( workers[ i ], nullptr );
 	
-	std::cout << "HERE";
-	dex::closeHtmlFile( );
 	std::cout << "exiting safely...\n";
 	return 0;
 	}

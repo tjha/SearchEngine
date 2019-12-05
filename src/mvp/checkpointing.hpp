@@ -30,11 +30,11 @@ namespace dex
 	// bytes 3-4 determine the name of the files
 	// This gives us 4,294,967,296 possible locations for html
 	size_t HTMLChunkSize = 100000000; // 16 MB files for htm
-	int filenumber = 0;
-	int urlsFileDescriptor = -1;
-	int htmlFileDescriptor = -1;
-	int currentDocumentCount = 0;
-	int saveHtml ( dex::string &url, dex::string &html, dex::string &filename, size_t num )
+	// int filenumber = 0;
+	//int urlsFileDescriptor = -1;
+	//int htmlFileDescriptor = -1;
+	//int currentDocumentCount = 0;
+	int saveHtml ( dex::string &url, dex::string &html, int fileDescriptor)
 		{
 		int err = dex::makeDirectory( folderPath.cStr( ) );
 		if ( err == -1 )
@@ -48,6 +48,24 @@ namespace dex
 		write( filedescriptor, toStore, toStorePointer - toStore );
 		}
 
+	int getCurrentFileDescriptor( dex::string folderPath )
+		{
+		int filenumber = 0;
+		// see how many files are in the save directory
+		DIR * dir = opendir( folderPath.cStr( ) );
+		dirent * entry = readdir( dir );
+		while ( entry != NULL )
+			{
+			++filenumber;
+			entry = readdir( dir );
+			}
+		closedir( dir );
+
+		// calculate the correct file names for html save
+		dex::string htmlFilename( folderPath + dex::toString( filenumber ) + "_forIndexer" );
+		return open( htmlFilename.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
+		}
+	/*
 	int saveHtml ( dex::Url &url, dex::string &html, dex::string &folderPath )
 		{
 		int err = dex::makeDirectory( folderPath.cStr( ) );
@@ -96,43 +114,13 @@ namespace dex
 
         return write( htmlFileDescriptor, "\n", 1 );
 		}
-
-	int getCurrentFileDescriptor( dex::string folderPath )
-		{
-		int err = dex::makeDirectory( folderPath.cStr( ) );
-		if ( err == -1 )
-			{
-			std::cerr << "could not make directory" << std::endl;
-			return -1;
-			}
-
-		// see how many files are in the save directory
-		DIR * dir = opendir( folderPath.cStr( ) );
-		dirent * entry = readdir( dir );
-		while ( entry != NULL )
-			{
-			++filenumber;
-			entry = readdir( dir );
-			}
-		closedir( dir );
-
-		// calculate the correct file names for url and html saves
-		dex::string urlsFilename( folderPath + dex::toString( filenumber ) + ".urls" );
-		dex::string htmlFilename( folderPath + dex::toString( filenumber ) + "_html" );
-		// open up those files and set them to vars
-		urlsFileDescriptor = open( urlsFilename.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
-		htmlFileDescriptor = open( htmlFilename.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
-
-		// check errors
-		return ( urlsFileDescriptor == -1 || htmlFileDescriptor == -1 ) ? -1 : 0;
-		}
 	
 	void closeHtmlFile( )
 		{
 		close( urlsFileDescriptor );
 		close( htmlFileDescriptor );
 		}
-
+	*/
 	dex::frontier loadFrontier ( const char * fileName, size_t size, bool encoded = false )
 		{
 		dex::frontier frontier( size );
@@ -182,11 +170,6 @@ namespace dex
 		dex::vector< unsigned char > encodedFrontier = UrlEncoder( frontier.getFrontier( ) );
 		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
 		}
-	
-	/*dex::frontier loadFrontier( const char * filename )
-		{
-		dex::frontier;
-		}*/
 
 	int saveVisitedLinks ( const char * fileName, dex::vector< dex::string > links )
 		{
