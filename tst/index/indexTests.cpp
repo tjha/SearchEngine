@@ -4,6 +4,7 @@
 // 2019-12-04: File created: jasina, lougheem
 
 #include <fcntl.h>
+#include <unistd.h>
 #include "catch.hpp"
 #include "indexer/index.hpp"
 
@@ -12,7 +13,7 @@ using dex::index;
 TEST_CASE( "create index chunk" )
 	{
 	const char filePath[ ] = "hello.txt";
-	int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, S_IRWXU );
+	int fd = open( filePath, O_RDWR | O_CREAT );
 	index::indexChunk initializingIndexChunk = index::indexChunk( fd );
 
 	dex::string url = "hamiltoncshell.com";

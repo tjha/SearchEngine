@@ -122,12 +122,16 @@ namespace dex
 					static const size_t postsMetadataArraySize = 1L << 24;
 
 					// TODO: Double check these very carefully.
-					static const size_t endOfDocumentMetadataTypeMemorySize = 2 * sizeof( size_t ) + ( 7 + maxURLLength ) +
-							( 7 + maxTitleLength ) + sizeof( unsigned );
-					static const size_t urlsToOffsetsMemorySize = 7 + maxURLCount * ( 7 + maxURLLength );
+					// Note: these sizes should be such that they are block-aligned. The required offest for block alignment
+					// is surrounded by parentheses.
+					static const size_t endOfDocumentMetadataTypeMemorySize = 2 * sizeof( size_t )
+							+ ( 7 + maxURLLength + ( 1 ) )
+							+ ( 7 + maxTitleLength + ( 1 ) ) + sizeof( unsigned );
+					static const size_t urlsToOffsetsMemorySize = 7 + maxURLCount * ( 7 + maxURLLength + ( 1 ) ) + ( 1 );
 					static const size_t offsetsToPostMetadatasMemorySize =
-							7 + maxURLCount * endOfDocumentMetadataTypeMemorySize;
-					static const size_t dictionaryMemorySize = 7 + ( 7 + maxWordLength + 7 ) * postsMetadataArraySize;
+							7 + maxURLCount * endOfDocumentMetadataTypeMemorySize + ( 1 );
+					static const size_t dictionaryMemorySize = 7
+							+ ( 7 + maxWordLength + 7 + ( 2 ) ) * postsMetadataArraySize + ( 1 );
 					static const size_t postsMetadataArrayMemorySize = postsMetadataArraySize * sizeof( postsMetadata );
 					static const size_t postsChunkArrayMemorySize = postsChunkArraySize * sizeof( postsChunk );
 

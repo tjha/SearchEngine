@@ -69,35 +69,25 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	{
 	// TOOO: Add some sort of magic number
 
-	postsChunkCount = static_cast < size_t * >( mmap( nullptr, sizeof( size_t ),
-			PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, 0 ) );
+	struct stat fileInfo;
+	fstat( fileDescriptor, &fileInfo );
+	size_t fileSize = fileInfo.st_size;
 
-	location = static_cast < size_t * >( mmap( nullptr, sizeof( size_t ),
-			PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, sizeof( size_t ) ) );
+	byte *filePointer = static_cast < byte * >( mmap( nullptr, fileSize * 2,
+			PROT_READ | PROT_WRITE, MAP_PRIVATE, fileDescriptor, 0 ) );
 
-	// TODO: Make sure that this always points to valid data (maybe add logic for when initialize == true)
-	encodedURLsToOffsets = static_cast < byte * >( mmap( nullptr, urlsToOffsetsMemorySize,
-			PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, urlsToOffsetsMemoryOffset ) );
+	postsChunkCount = reinterpret_cast < size_t * >( filePointer );
+	location = postsChunkCount + 1;
 
-	urlsToOffsets = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )
-			( encodedURLsToOffsets );
+	encodedURLsToOffsets = filePointer + urlsToOffsetsMemoryOffset;
 
-	encodedOffsetsToPostMetadatas = static_cast < byte * >( mmap( nullptr, offsetsToPostMetadatasMemorySize,
-			PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, offsetsToPostMetadatasMemoryOffset ) );
+	encodedOffsetsToPostMetadatas = filePointer + offsetsToPostMetadatasMemoryOffset;
 
-	offsetsToPostMetadatas = dex::utf::decoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
-			( encodedOffsetsToPostMetadatas );
+	encodedDictionary = static_cast < byte * >( filePointer + dictionaryOffset);
 
-	encodedDictionary = static_cast < byte * >( mmap( nullptr, dictionaryMemorySize,
-			PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, dictionaryOffset) );
+	postsMetadataArray = reinterpret_cast < postsMetadata * >( filePointer + postsMetadataArrayMemoryOffset );
 
-	dictionary = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedDictionary );
-
-	postsMetadataArray = static_cast < postsMetadata * >( mmap( nullptr, postsMetadataArrayMemorySize,
-			PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, postsMetadataArrayMemoryOffset ) );
-
-	postsChunkArray = static_cast < postsChunk * >( mmap( nullptr, postsChunkArrayMemorySize,
-			PROT_READ || PROT_WRITE, MAP_PRIVATE, fileDescriptor, postsChunkArrayMemoryOffset ) );
+	postsChunkArray = reinterpret_cast < postsChunk * >( filePointer + postsChunkArrayMemoryOffset );
 
 	if ( initialize )
 		{
@@ -106,6 +96,14 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 		postsChunkArray[ 0 ] = postsChunk( );
 		postsMetadataArray[ 0 ] = postsMetadata( 0, postsMetadata::END_OF_DOCUMENT );
+		}
+	else
+		{
+			urlsToOffsets = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )
+					( encodedURLsToOffsets );
+			offsetsToPostMetadatas = dex::utf::decoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
+					( encodedOffsetsToPostMetadatas );
+			dictionary = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedDictionary );
 		}
 	}
 
