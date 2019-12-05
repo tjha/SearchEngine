@@ -11,7 +11,6 @@
 //              handling of relative links to always append '/' correctly: tjha
 // 2019-11-21:  Modified BreakAnchors and RemovePunctuation to separate
 //              words between punctuations except dashes: tjha
-//              Updated to use URLs instead of strings
 // 2019-11-20:  Modified constructor to take in format <url>\n<htnl_content>
 //              Modified GetLinks function to correctly handle relative links:
 //              tjha
@@ -211,13 +210,6 @@ namespace dex
          
          GetWords( html );
          }
-		}
-
-	HTMLparser::HTMLparser( dex::string& html, dex::Url& url ) : htmlFile( html ), pageLink( url.completeUrl( ) )
-		{
-		GetLinks( );
-		lenAnchors = words.size();
-		GetWords();
 		}
 
 	

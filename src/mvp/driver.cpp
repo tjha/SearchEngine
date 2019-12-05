@@ -245,6 +245,7 @@ void *worker( void *args )
 				if ( dex::fileSize( currentFileDescriptor ) > dex::HTMLChunkSize )
 					{
 					close( currentFileDescriptor );
+					print( "worker " + name + " switched html files" );
 					currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
 					}
 				// print( "saving" );
