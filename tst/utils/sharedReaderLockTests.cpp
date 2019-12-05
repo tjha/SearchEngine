@@ -7,6 +7,7 @@
 #include "sharedReaderLock.hpp"
 #include <unistd.h>
 #include <iostream>
+#include <pthread.h>
 
 const size_t length = 1000000;
 

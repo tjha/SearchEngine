@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -pthread
 
 # flags
 UNAME_S := $(shell uname -s)
@@ -32,10 +32,14 @@ all: print_os $(TESTS)
 
 driver: src/mvp/driver.cpp
 	make build
-	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -pthread -o $(BUILD_PATH)/driver.exe
+	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -o $(BUILD_PATH)/driver.exe
+
+driverFinal: src/mvp/driver.cpp
+	make build
+	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -o3 $(BUILD_PATH)/driver.exe
 
 multithreadingTest: src/mvp/multithreadingTest.cpp
-	$(CXX) $(CXXFLAGS) src/mvp/multithreadingTest.cpp $(INCLUDES) -ltls -pthread -o build/multithreadingTest.exe
+	$(CXX) $(CXXFLAGS) src/mvp/multithreadingTest.cpp $(INCLUDES) -ltls -o build/multithreadingTest.exe
 
 cleanDriver:
 	@rm -rf data/tmp/logs/

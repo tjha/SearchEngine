@@ -1,5 +1,5 @@
 // frontier.hpp
-// 2019-12-04: Made scoreUrl less aggressive: combsc
+// 2019-12-04: Made scoreUrl less aggressive, improved efficiency: combsc
 // 2019-12-03: Change getUrl to reduce number of pageFault: combsc + jhirsh
 // 2019-12-02: Implement maximumSize: combsc
 // 2019-12-01: Implement scoreUrl, getUrls: combsc 
@@ -26,31 +26,37 @@ namespace dex
 				{
 				double score = 0;
 				// Promote good tlds ( .com, .org, .gov )
-				if ( url.getHost( ).find( ".com" ) != dex::string::npos )
+				dex::string host = url.getHost( );
+				if ( host.size( ) > 4 )
 					{
-					score += 10;
-					}
-				else
-					{
-					if ( url.getHost( ).find( ".org" ) != dex::string::npos )
+					host = host.substr( host.size( ) - 4, 4);
+					if ( host == ".com" )
 						{
 						score += 10;
 						}
 					else
 						{
-						if ( url.getHost( ).find( ".gov" ) != dex::string::npos )
+						if ( host == ".org" )
 							{
 							score += 10;
 							}
 						else
 							{
-							if ( url.getHost( ).find( ".edu" ) != dex::string::npos )
+							if ( host == ".gov" )
 								{
 								score += 10;
+								}
+							else
+								{
+								if ( host == ".edu" )
+									{
+									score += 10;
+									}
 								}
 							}
 						}
 					}
+				
 
 				// Promote short URLs
 				// max of this should not give more than a good TLD
@@ -84,7 +90,7 @@ namespace dex
 			frontier( size_t maxSize )
 				{
 				maximumSize = maxSize;
-				toCheck.rehash( maximumSize * 4 );
+				toCheck = dex::unorderedSet < Url > ( maxSize );
 				}
 			size_t size( )
 				{
@@ -100,6 +106,7 @@ namespace dex
 				size_t maxIndex = 0;
 				size_t poolSize = dex::min( size_t( 10 ), toVisit.size( ) );
 				dex::Url best;
+				dex::Url *currentBest;
 				// Get the highest scoring URL out of 10
 				int location = rand( ) % toVisit.size( );
 				for ( size_t j = 0;  j < poolSize;  ++j )
@@ -115,11 +122,14 @@ namespace dex
 						{
 						maxScore = score;
 						maxIndex = arrayLocation;
-						best = toVisit[ arrayLocation ];
+						currentBest = &toVisit[ arrayLocation ];
 						}
 					}
-				toVisit.erase( maxIndex );
+				best = *currentBest;
 				toCheck.erase( best );
+				toVisit[ maxIndex ] = toVisit.end( );
+				toVisit.popBack( );
+				
 				return best;
 				}
 
@@ -135,6 +145,7 @@ namespace dex
 					size_t minIndex = 0;
 					size_t poolSize = dex::min( size_t( 5 ), toVisit.size( ) );
 					dex::Url worst;
+					dex::Url *currentWorst;
 					// Get the worst scoring Url out of 5
 					int location = rand( ) % toVisit.size( );
 					for ( size_t j = 0;  j < poolSize;  ++j )
@@ -150,9 +161,10 @@ namespace dex
 							{
 							minScore = score;
 							minIndex = arrayLocation;
-							worst = toVisit[ arrayLocation ];
+							currentWorst = &toVisit[ arrayLocation ];
 							}
 						}
+					worse = *currentWorst;
 					toCheck.erase( worst );
 					toVisit[ minIndex ] = url;
 					toCheck.insert( url );
@@ -162,7 +174,7 @@ namespace dex
 					toVisit.pushBack( url );
 					toCheck.insert( url );
 					}
-				if ( toCheck.bucketCount( ) > maximumSize * 8 )
+				if ( toCheck.bucketCount( ) > maximumSize * 4 )
 					{
 					toCheck.rehash( maximumSize * 4 );
 					}

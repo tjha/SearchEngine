@@ -20,6 +20,7 @@
 #include <time.h>
 #include <signal.h>
 #include <iostream>
+#include <pthread.h>
 
 dex::string savePath = "../socket-html/";
 /* dex::string savePath = \"../socket-html/\"; */ // local

@@ -1,6 +1,7 @@
 // checkpointing.hpp
 //
 // This file contains functions that deal with writing data to persistent storage
+// 2019-12-04: Change how we save HTML to disk: combsc
 // 2019-11-26: Added relative paths for saving: combsc
 // 2019-11-21: Fix html saving function, add includeGuards: combsc
 // 2019-11-20: Add saving for html: combsc
@@ -15,10 +16,12 @@
 #include "../spinarak/url.hpp"
 #include "frontier.hpp"
 #include "file.hpp"
+#include "utf.hpp"
 #include "encode.hpp"
 
 namespace dex
 	{
+
 	// Folder structure
 	// Hash the URL
 	// 2 layers of folders
@@ -31,6 +34,20 @@ namespace dex
 	int urlsFileDescriptor = -1;
 	int htmlFileDescriptor = -1;
 	int currentDocumentCount = 0;
+	int saveHtml ( dex::string &url, dex::string &html, dex::string &filename, size_t num )
+		{
+		int err = dex::makeDirectory( folderPath.cStr( ) );
+		if ( err == -1 )
+			return -1;
+		// allocate some data to store
+		unsigned char toStore[ url.size( ) + html.size( ) + 14 ];
+		unsigned char *toStorePointer = toStore;
+		dex::encoder < dex::string > stringEncoder;
+		toStorePointer = stringEncoder( url, toStorePointer );
+		toStorePointer = stringEncoder( html, toStorePointer );
+		write( filedescriptor, toStore, toStorePointer - toStore );
+		}
+
 	int saveHtml ( dex::Url &url, dex::string &html, dex::string &folderPath )
 		{
 		int err = dex::makeDirectory( folderPath.cStr( ) );
