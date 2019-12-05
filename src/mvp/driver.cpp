@@ -84,14 +84,21 @@ pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
 
 
-void print( dex::string &toPrint )
+void print( char *toPrint )
 	{
 	pthread_mutex_lock( &printLock );
 	std::cout << toPrint << std::endl;
 	pthread_mutex_unlock( &printLock );
 	}
 
-int log( dex::string &toWrite )
+void print( dex::string toPrint )
+	{
+	pthread_mutex_lock( &printLock );
+	std::cout << toPrint << std::endl;
+	pthread_mutex_unlock( &printLock );
+	}
+
+int log( dex::string toWrite )
 	{
 	pthread_mutex_lock( &loggingLock );
 	int error = dex::appendToFile( loggingFileName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
