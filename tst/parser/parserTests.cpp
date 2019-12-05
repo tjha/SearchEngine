@@ -50,6 +50,19 @@ using std::size_t;
 
 TEST_CASE( "basic get links with relative paths", "[parser]" )
 	{
+	SECTION("Testing for exceptions")
+		{
+		// string filename = "tst/parser/softaculous.html";
+		string filename = "tst/parser/ampps.html";
+		string htmlDoc = readFromFile( filename.cStr( ) );
+		// dex::Url url( "view-source:http://www.softaculous.com/demos/Lazarus" );
+		dex::Url url( "http://www.ampps.com/demos/OpenBiz_Cubi" );
+		HTMLparser testparser( url, htmlDoc, true );
+		vector<string> words = testparser.ReturnWords();
+	
+		REQUIRE(words.size() == 0);
+		}
+
 	SECTION(" Words testS :")
 		{
 		

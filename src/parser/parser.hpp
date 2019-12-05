@@ -658,13 +658,11 @@ namespace dex
 		s = "<body";
 		t = "</body>";
 		body = ParseTag( start, s, t, htmlFile );
-
-
-		if( body.start == string::npos )
+		if( body.start == string::npos || body.end == string::npos )
 			{
 			return;
 			}
-	
+
 		vector < Positions > avoidThis;
 		avoidThis = findScripts( body, htmlFile );
 		
