@@ -307,12 +307,10 @@ void *worker( void *args )
 
 				log( "leaving save lock" );
 				dex::vector < dex::Url > links;
-				bool success = false;
 				try
 					{
 					dex::HTMLparser parser( toCrawl, result, false );
 					links = parser.ReturnLinks( );
-					success == true;
 					pthread_mutex_lock( &frontierLock );
 					log( "put lock" );
 					for ( auto it = links.begin( );  it != links.end( );  ++it )
@@ -344,6 +342,7 @@ void *worker( void *args )
 						log( "leave put lock" );
 						pthread_mutex_unlock( &frontierLock );
 						}
+					}
 				catch( dex::outOfRangeException e )
 					{
 					print( toCrawl.completeUrl( ) + " Threw out of range exception" );
