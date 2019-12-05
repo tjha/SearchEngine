@@ -350,54 +350,69 @@ void *worker( void *args )
 
 int main( )
 	{
-	// setup logging file for this run
-	// goodbye error code 13
-	signal(SIGPIPE, SIG_IGN);
-	int result = dex::makeDirectory( savePath.cStr( ) );
-	result = dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
-	for ( size_t i = 0;  i < numWorkers;  ++i )
+	while( state != 'q' ) 
 		{
-		result = dex::makeDirectory( ( savePath + "/html/" + dex::toString( i ) ).cStr( ) );
+		try
+			{
+			// setup logging file for this run
+			// goodbye error code 13
+			signal(SIGPIPE, SIG_IGN);
+			int result = dex::makeDirectory( savePath.cStr( ) );
+			result = dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
+			for ( size_t i = 0;  i < numWorkers;  ++i )
+				{
+				result = dex::makeDirectory( ( savePath + "/html/" + dex::toString( i ) ).cStr( ) );
+				}
+			result = dex::makeDirectory( tmpPath.cStr( ) );
+			result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
+			result = dex::makeDirectory( ( tmpPath + "performance" ).cStr( ) );
+			result = dex::makeDirectory( toShipPath.cStr( ) );
+
+			loggingFileName = tmpPath + "logs/";
+			time_t now = time( nullptr );
+			loggingFileName += ctime( &now );
+			loggingFileName.popBack( );
+			loggingFileName += ".log";
+			loggingFileName = loggingFileName.replaceWhitespace( "_" );
+
+			performanceName = tmpPath + "performance/" + ctime( &now );
+			performanceName.popBack( );
+			performanceName += ".txt";
+			performanceName = performanceName.replaceWhitespace( "_" );
+
+			urlFrontier = dex::loadFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), frontierSize, true );
+			if ( urlFrontier.size( ) == 0 )
+				{
+				urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize );
+				}
+			for ( auto it = urlFrontier.begin( );  it != urlFrontier.end( );  ++it )
+				print( it->completeUrl( ) );
+
+			std::cout << "Starting crawl with frontier size " << urlFrontier.size( ) << std::endl;
+			if ( testing )
+			{
+			print( "YOU ARE TESTING, IT WILL END AFTER " + dex::toString( testTime ) + " seconds" );
+			}
+			for ( int i = 0;  i < numWorkers;  ++i )
+				{
+				ids[ i ] = i;
+				pthread_create( &workers[ i ], nullptr, worker, &( ids[ i ] ) );
+				}
+
+			for ( size_t i = 0;  i < numWorkers; ++i )
+				pthread_join( workers[ i ], nullptr );
+			
+			std::cout << "exiting safely...\n";
+			return 0;
+			}
+		catch ( const std::bad_alloc& )
+			{
+			std::cerr << "Invalid memory access or allocation" << std::endl;
+			robotsCache.purge( );
+			/*crawledLock.writeLock( );
+			crawledLinks.clear( );
+			crawledLock.releaseWriteLock( );*/
+			redirects.reset( );
+			}
 		}
-	result = dex::makeDirectory( tmpPath.cStr( ) );
-	result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
-	result = dex::makeDirectory( ( tmpPath + "performance" ).cStr( ) );
-	result = dex::makeDirectory( toShipPath.cStr( ) );
-
-	loggingFileName = tmpPath + "logs/";
-	time_t now = time( nullptr );
-	loggingFileName += ctime( &now );
-	loggingFileName.popBack( );
-	loggingFileName += ".log";
-	loggingFileName = loggingFileName.replaceWhitespace( "_" );
-
-	performanceName = tmpPath + "performance/" + ctime( &now );
-	performanceName.popBack( );
-	performanceName += ".txt";
-	performanceName = performanceName.replaceWhitespace( "_" );
-
-	urlFrontier = dex::loadFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), frontierSize, true );
-	if ( urlFrontier.size( ) == 0 )
-		{
-		urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize );
-		}
-	for ( auto it = urlFrontier.begin( );  it != urlFrontier.end( );  ++it )
-		print( it->completeUrl( ) );
-
-	std::cout << "Starting crawl with frontier size " << urlFrontier.size( ) << std::endl;
-	if ( testing )
-	{
-	print( "YOU ARE TESTING, IT WILL END AFTER " + dex::toString( testTime ) + " seconds" );
-	}
-	for ( int i = 0;  i < numWorkers;  ++i )
-		{
-		ids[ i ] = i;
-		pthread_create( &workers[ i ], nullptr, worker, &( ids[ i ] ) );
-		}
-
-	for ( size_t i = 0;  i < numWorkers; ++i )
-		pthread_join( workers[ i ], nullptr );
-	
-	std::cout << "exiting safely...\n";
-	return 0;
 	}
