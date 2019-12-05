@@ -27,6 +27,7 @@
 #include "catch.hpp"
 #include "exception.hpp"
 #include "file.hpp"
+#include <fstream>
 #include "parser.hpp"
 #include "url.hpp"
 
@@ -38,6 +39,7 @@ using dex::anchorPos;
 using dex::HTMLparser;
 using dex::outOfRangeException;
 using dex::readFromFile;
+
 using dex::string;
 using dex::Url;
 using dex::vector;
@@ -51,13 +53,14 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 	SECTION(" Words testS :")
 		{
 		
-		// string filename = "tst/parser/man7_man_pages.html";
 		string filename = "tst/parser/hamiltoncshell.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr() );
-		HTMLparser testParser( htmlDoc );
-		size_t len = testParser.ReturnAnchorTextLength( );
+      dex::Url url( "https://en.wikipedia.org/wiki/Hamilton_C_shell" );
+		HTMLparser testParser( url, htmlDoc, true );
+	
 		vector<string> words = testParser.ReturnWords();
+		vector<string> titleWords = testParser.ReturnTitle();
 		vector <string> firstTen;
 		firstTen.pushBack( "hamilton" );
 		firstTen.pushBack( "c" );
@@ -71,17 +74,32 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 		firstTen.pushBack( "to" );
 		firstTen.pushBack( "navigation" );
 		// std::cout << "inParserTests\n";
-		std::cout << "file: " << filename << "\thas length: " << words.size( ) << "\n";
-		for ( auto it = words.cbegin( );  it != words.cend( );  it++ )
-			{
-			std::cout << *it << "\n";
-			}
+		// std::cout << "file: " << filename << "\thas length: " << words.size( ) << "\n";
+		// for ( auto it = words.cbegin( );  it != words.cend( );  it++ )
+		// 	{
+		// 	std::cout << *it << "\n";
+		// 	}
+		
 		for ( size_t i = 0; i < 11; i++ )
 			{
-			REQUIRE( firstTen[ i ] == words[ len+i ] );
+			REQUIRE( firstTen[ i ] == words[ i ] );
 			}
+		vector<string> title;
+		title.pushBack("hamilton");
+		title.pushBack("c");
+		title.pushBack("shell");
+		title.pushBack("wikipedia");
+
+		REQUIRE( titleWords.size( ) == title.size( ) );
+
+		for( size_t i = 0; i < titleWords.size(); i++ )
+			{
+			REQUIRE( titleWords[ i ] == title[ i ] );
+			}
+
 		}
 
+/*
 	SECTION(" Parse words from many docs test :")
 		{
 		vector< string > filenames;
@@ -108,14 +126,9 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 			HTMLparser testParser( htmlDoc );
 			vector<string> words = testParser.ReturnWords();
 
-			/* std::cout << "file: " << filename << "\thas length: " << words.size( ) << "\n";
-			for ( auto it = words.cbegin( );  it != words.cend( );  it++ )
-				{
-				std::cout << *it << "\n";
-				}
-			*/
 			}
 		}
+*/
 
 	SECTION( "parsed simple html document with one link" )
 		{
@@ -127,7 +140,8 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 				  <a href=\"software\">Software</a>\n\
 				  </body>\n\
 			  </html>";
-		HTMLparser testParser( htmlDoc );
+      dex::Url url( "https://web.eecs.umich.edu/~pmchen" );
+		HTMLparser testParser( url, htmlDoc, false );
 		vector< Url > links = testParser.ReturnLinks( );
 		string expectedLink = "https://web.eecs.umich.edu/~pmchen/software";
 		REQUIRE( links.size( ) == 1 );
@@ -146,7 +160,8 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 				<a href=\"software3\">Software</a>\n\
 				</body>\n\
 			</html>";
-		HTMLparser testParser( htmlDoc );
+      dex::Url url( "https://web.eecs.umich.edu/~pmchen/" );
+		HTMLparser testParser( url, htmlDoc, false );
 		vector< Url > links = testParser.ReturnLinks( );
 		string expectedLink1 = "https://web.eecs.umich.edu/~pmchen/software1";
 		string expectedLink2 = "https://web.eecs.umich.edu/~pmchen/software2";
@@ -169,7 +184,8 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 				<a href=\"./.software3\">Software</a>\n\
 				</body>\n\
 			</html>";
-		HTMLparser testParser( htmlDoc );
+      dex::Url url( "https://web.eecs.umich.edu/~pmchen/" );
+		HTMLparser testParser( url, htmlDoc, false );
 		vector< Url > links = testParser.ReturnLinks( );
 		string expectedLink1 = "https://web.eecs.umich.edu/~pmchen/.software1";
 		string expectedLink2 = "https://web.eecs.umich.edu/.software2";
@@ -185,7 +201,8 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 		string filename = "tst/parser/man7_man_pages.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
-		HTMLparser testParser( htmlDoc );
+      dex::Url url( "https://www.kernel.org/doc/man-pages/" );
+		HTMLparser testParser( url, htmlDoc, false );
 		vector< Url > links = testParser.ReturnLinks( );
 
 		REQUIRE( links[ 0 ] == Url( "https://www.kernel.org/doc/man-pages/contributing.html" ) );
@@ -199,7 +216,8 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 		string filename = "tst/parser/man7_index.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
-		HTMLparser testParser( htmlDoc );
+      dex::Url url( "http://man7.org/tlpi/index.html" );
+		HTMLparser testParser( url, htmlDoc, false );
 		vector< dex::Url > links = testParser.ReturnLinks( );
 
 		REQUIRE(links[ 0 ] == Url( "http://man7.org/index.html" ) );
@@ -254,8 +272,9 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 			"https://web.eecs.umich.edu/~pmchen/" );
 		expectedLink.pushBack(
 			"https://web.eecs.umich.edu/" );
-
-		HTMLparser testParser( htmlDoc );
+      
+      dex::Url url( "https://web.eecs.umich.edu/~pmchen/subdir1/subdir2/" );
+		HTMLparser testParser( url, htmlDoc, false );
 		vector< Url > links = testParser.ReturnLinks( );
 
 		REQUIRE( links.size( ) == expectedLink.size( ) );
@@ -264,7 +283,8 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 			REQUIRE( links[ i ] == Url( expectedLink[ i ].cStr( ) ) );
 			}
 
-		HTMLparser testParser2( htmlDocWithIndex );
+      dex::Url url2( "https://web.eecs.umich.edu/~pmchen/subdir1/subdir2/index.html" );
+		HTMLparser testParser2( url2, htmlDocWithIndex, false );
 		links = testParser2.ReturnLinks( );
 
 		REQUIRE( links.size( ) == expectedLink.size( ) );
@@ -283,7 +303,8 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 	string htmlDoc;
 	htmlDoc = readFromFile( filename.cStr( ) );
 
-	HTMLparser testParser( htmlDoc );
+   dex::Url url( "https://web.eecs.umich.edu/~pmchen" );
+	HTMLparser testParser( url, htmlDoc, true );
 
 	SECTION( "Expected Links" )
 		{
@@ -324,8 +345,8 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
 	SECTION( "Expected Anchor Text" )
 		{
-		vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
-		vector < dex::string > words = testParser.ReturnWords();
+		// vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
+		vector < dex::AncWord > anchors = testParser.ReturnAnchorText();
 		size_t lenAnchors = testParser.ReturnAnchorTextLength( );
 		vector < dex::string > AnchorWords;
 
@@ -387,9 +408,9 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 		size_t word_count = 0;
 		for ( size_t j = 0; j < anchors.size( ); j++ )
 			{
-			for ( size_t i = 0; i <= anchors[ j ].endPos - anchors[ j ].startPos; i++ )
+			for ( size_t i = 0; i < anchors[ j ].text.size() ; i++ )
 				{
-				REQUIRE( AnchorWords[ word_count++ ] == words[ anchors[ j ].startPos + i ] );
+				REQUIRE( AnchorWords[ word_count++ ] == anchors[ j ].text[ i ] );
 				}
 			}
 		}
@@ -405,7 +426,8 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
 		string filename = "tst/parser/amazon.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
-		HTMLparser testParser( htmlDoc );
+      dex::Url url( "https://www.amazon.com/" );
+		HTMLparser testParser( url, htmlDoc, true );
 
 		SECTION( "Expected Links" )
 			{
@@ -431,8 +453,8 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
 
 		SECTION ( "Expected Anchor Text" )
 			{
-			vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
-			vector < dex::string > words = testParser.ReturnWords();
+			vector < dex::AncWord > anchors = testParser.ReturnAnchorText();
+			// vector < dex::string > words = testParser.ReturnWords();
 			vector < dex::string > AnchorWords;
 			size_t lenAnchors = testParser.ReturnAnchorTextLength();
 
@@ -449,9 +471,9 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
 			size_t word_count = 0;
 			for ( size_t j = 0; j < anchors.size( ); j++ )
 				{
-				for ( size_t i = 0; i <= anchors[ j ].endPos - anchors[ j ].startPos; i++ )
+				for ( size_t i = 0; i < anchors[ j ].text.size( ); i++ )
 					{
-					REQUIRE( AnchorWords[ word_count++ ] == words[ anchors[ j ].startPos + i ] );
+					REQUIRE( AnchorWords[ word_count++ ] == anchors[ j ].text[ i ] );
 					}
 				}
 			}
@@ -466,7 +488,8 @@ TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
 		string filename = "tst/parser/man7.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
-		HTMLparser testParser( htmlDoc );
+      dex::Url url( "http://man7.org" );
+		HTMLparser testParser( url, htmlDoc, false );
 
 		SECTION( "Expected Links" )
 			{
@@ -511,7 +534,8 @@ TEST_CASE( "enneagraminstitute.com: simple page using Squarespace" )
 		string filename = "tst/parser/enneagraminstitute.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
-		HTMLparser testParser( htmlDoc );
+      dex::Url url( "https://www.enneagraminstitute.com/" );
+		HTMLparser testParser( url, htmlDoc, false );
 
 		SECTION( "Expected Links" )
 			{
@@ -595,7 +619,8 @@ TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
 		string filename = "tst/parser/man7_all_pages.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
-		HTMLparser testParser( htmlDoc );
+      dex::Url url( "http://man7.org/linux/man-pages/dir_all_alphabetic.html" );
+		HTMLparser testParser( url, htmlDoc, false );
 
 		SECTION( "Expected Links" )
 			{
@@ -611,25 +636,3 @@ TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
 
 			}
 	}
-/*
-TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
-	{
-		string filename = "tst/parser/man7_all_pages.html";
-		string htmlDoc;
-		htmlDoc = readFromFile( filename.cStr( ) );
-		HTMLparser testParser( htmlDoc );
-
-		SECTION( "Expected Links" )
-			{
-			vector< dex::Url > links = testParser.ReturnLinks( );
-
-			// Create vector with expected links on page
-			vector < string > expectedLinks;
-
-			//std::cout << links[ links.size( ) - 2 ].completeUrl( ) << std::endl;
-
-			// Validate correct number of links were extracted
-			REQUIRE ( links.size( ) == 10813 ); // TODO: figure out why not 10812
-
-			}
-	}*/

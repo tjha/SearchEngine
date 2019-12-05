@@ -127,7 +127,7 @@ namespace dex
 					}
 				best = *currentBest;
 				toCheck.erase( best );
-				toVisit[ maxIndex ] = toVisit.end( );
+				toVisit[ maxIndex ] = toVisit.back( );
 				toVisit.popBack( );
 				
 				return best;
@@ -164,7 +164,7 @@ namespace dex
 							currentWorst = &toVisit[ arrayLocation ];
 							}
 						}
-					worse = *currentWorst;
+					worst = *currentWorst;
 					toCheck.erase( worst );
 					toVisit[ minIndex ] = url;
 					toCheck.insert( url );

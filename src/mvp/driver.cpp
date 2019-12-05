@@ -45,8 +45,6 @@ const size_t redirectsSize = 1000;
 // not put links that aren't our responsibility into our frontier
 
 dex::frontier urlFrontier( frontierSize );
-size_t numCrawledLinks = 0;
-
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
@@ -57,6 +55,8 @@ time_t startTime = time( NULL );
 bool testing = false;
 
 char state = 0;
+size_t numCrawledLinks = 0;
+pthread_mutex_t crawledLinksLock = PTHREAD_MUTEX_INITIALIZER;
 
 #define numWorkers 10
 pthread_t workers [ numWorkers ];
@@ -162,9 +162,7 @@ void addToCrawled( const dex::Url &toCrawl )
 
 // Call checkpointing functions after time alotted or user input
 void saveWork( )
-	{
-	print( "saving" );
-	
+	{	
 	dex::saveFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), urlFrontier );
 	crawledLock.readLock( );
 	dex::saveCrawledLinks( "data/crawledLinks.txt", crawledLinks );
@@ -249,20 +247,26 @@ void *worker( void *args )
 					close( currentFileDescriptor );
 					currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
 					}
+				// print( "saving" );
 				dex::saveHtml( toCrawl.completeUrl( ), result, currentFileDescriptor );
+				// print( "done saving" );
 
+				pthread_mutex_lock( &crawledLinksLock );
 				numCrawledLinks++;
+				pthread_mutex_unlock( &crawledLinksLock );
+
 				addToCrawled( toCrawl );
+
 				log( "leaving save lock" );
 				dex::vector < dex::Url > links;
 				try
 					{
-					dex::HTMLparser parser( result, toCrawl );
+					dex::HTMLparser parser( toCrawl, result, false );
 					links = parser.ReturnLinks( );
 					}
 				catch( dex::outOfRangeException e )
 					{
-					print( "Caught Exception" );
+					print( toCrawl.completeUrl( ) + " Threw out of range exception" );
 					}
 
 				pthread_mutex_lock( &frontierLock );

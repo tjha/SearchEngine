@@ -34,18 +34,17 @@ namespace dex
 	//int urlsFileDescriptor = -1;
 	//int htmlFileDescriptor = -1;
 	//int currentDocumentCount = 0;
-	int saveHtml ( dex::string &url, dex::string &html, int fileDescriptor)
+	int saveHtml ( const dex::string &url, const dex::string &html, int fileDescriptor)
 		{
-		int err = dex::makeDirectory( folderPath.cStr( ) );
-		if ( err == -1 )
-			return -1;
 		// allocate some data to store
-		unsigned char toStore[ url.size( ) + html.size( ) + 14 ];
+		unsigned char *toStore = new unsigned char[ url.size( ) + html.size( ) + 14 ];
 		unsigned char *toStorePointer = toStore;
-		dex::encoder < dex::string > stringEncoder;
+		dex::utf::encoder < dex::string > stringEncoder;
 		toStorePointer = stringEncoder( url, toStorePointer );
 		toStorePointer = stringEncoder( html, toStorePointer );
-		write( filedescriptor, toStore, toStorePointer - toStore );
+		int toReturn = write( fileDescriptor, toStore, toStorePointer - toStore );
+		delete[ ] toStore;
+		return toReturn;
 		}
 
 	int getCurrentFileDescriptor( dex::string folderPath )
