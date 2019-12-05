@@ -244,7 +244,8 @@ void *worker( void *args )
 		fixRedirect( toCrawl );
 		
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
-		dex::string result = "";
+		dex::string result;
+		result.reserve( 2000000 );
 		if ( robotsCache.purge( ) == 1 )
 			print( "Purged Robot Cache" );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
@@ -262,8 +263,7 @@ void *worker( void *args )
 				// if valid html -> save
 				pthread_mutex_lock( &saveHtmlLock );
 				log( "save lock" );
-				dex::string html( toCrawl.completeUrl( ) + "\n" + result + "\n" );
-				dex::saveHtml( toCrawl, html, savePath );
+				dex::saveHtml( toCrawl, result, savePath );
 				numCrawledLinks++;
 				addToCrawled( toCrawl );
 				log( "leaving save lock" );
