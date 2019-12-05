@@ -126,16 +126,32 @@ size_t getUrlInstance( const dex::Url &url )
 void fixRedirect( dex::Url &toCrawl )
 	{
 	pthread_mutex_lock( &redirectsLock );
-	toCrawl = redirects.getEndpoint( toCrawl );
-	if ( redirects.size( ) > redirectsSize )
-		redirects.reset( );
+	try 
+		{
+		toCrawl = redirects.getEndpoint( toCrawl );
+		if ( redirects.size( ) > redirectsSize )
+			redirects.reset( );
+		}
+	catch ( ... )
+		{
+		std::cerr << "ERROR fix redirect failed" << std::endl;
+		exit( 1 );
+		}
 	pthread_mutex_unlock( &redirectsLock );
 	}
 
 void updateRedirect( const dex::Url &toCrawl, const dex::Url &location)
 	{
 	pthread_mutex_lock( &redirectsLock );
-	redirects.updateUrl( toCrawl, location );
+	try
+		{
+		redirects.updateUrl( toCrawl, location );
+		}
+	catch ( ... )
+		{
+		std::cerr << "ERROR updating redirect" << std::endl;
+		exit( 1 );
+		}
 	pthread_mutex_unlock( &redirectsLock );
 	}
 
@@ -150,14 +166,22 @@ bool alreadyCrawled( const dex::Url &toCrawl )
 
 void addToCrawled( const dex::Url &toCrawl )
 	{
-	crawledLock.writeLock( );
-	if ( crawledLinks.size( ) > crawledLinksSize )
+	try
 		{
-		crawledLinks.clear( );
-		print( "Purged crawledLinks" );
+		crawledLock.writeLock( );
+		if ( crawledLinks.size( ) > crawledLinksSize )
+			{
+			crawledLinks.clear( );
+			print( "Purged crawledLinks" );
+			}
+		crawledLinks.insert( toCrawl.completeUrl( ) );
+		crawledLock.releaseWriteLock( );
 		}
-	crawledLinks.insert( toCrawl.completeUrl( ) );
-	crawledLock.releaseWriteLock( );
+	catch ( ... )
+		{
+		std::cerr << "ERROR add to crawled" << std::endl;
+		exit( 1 );
+		}
 	}
 
 // Call checkpointing functions after time alotted or user input
@@ -228,15 +252,30 @@ void *worker( void *args )
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
 		dex::string result;
 		result.reserve( 2000000 );
-		if ( robotsCache.purge( ) == 1 )
-			print( "Purged Robot Cache" );
-		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
+		try 
+			{
+			if ( robotsCache.purge( ) == 1 )
+				print( "Purged Robot Cache" );
+			}
+		catch ( ... )
+			{
+			print( "ERROR purging robots" );
+			exit( 1 );
+			}
+		int errorCode = -1;
+		try
+			{
+			errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
+			}
+		catch ( ... )
+			{
+			print( "ERROR crawlingUrl" );
+			exit( 1 );
+			}
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
-			
-
 			if ( errorCode == dex::NOT_HTML )
 				print( toCrawl.completeUrl( ) + " is not html " );
 
@@ -249,7 +288,15 @@ void *worker( void *args )
 					currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
 					}
 				// print( "saving" );
-				dex::saveHtml( toCrawl.completeUrl( ), result, currentFileDescriptor );
+				try
+					{
+					dex::saveHtml( toCrawl.completeUrl( ), result, currentFileDescriptor );
+					}
+				catch ( ... )
+					{
+					print( "ERROR failing saveHtml" );
+					exit( 1 );
+					}
 				// print( "done saving" );
 
 				pthread_mutex_lock( &crawledLinksLock );
@@ -260,47 +307,47 @@ void *worker( void *args )
 
 				log( "leaving save lock" );
 				dex::vector < dex::Url > links;
+				bool success = false;
 				try
 					{
 					dex::HTMLparser parser( toCrawl, result, false );
 					links = parser.ReturnLinks( );
-					}
+					success == true;
+					pthread_mutex_lock( &frontierLock );
+					log( "put lock" );
+					for ( auto it = links.begin( );  it != links.end( );  ++it )
+						{
+						// Fix link using our redirects cache
+						dex::Url current = *it;
+						current.setFragment( "" );
+						fixRedirect( current );
+
+						// Check to see if the endpoint we have is a known broken link or if we've already crawled
+						if ( !alreadyCrawled( current) )
+							{
+							size_t urlId = getUrlInstance( *it );
+							if ( urlId == instanceId )
+								{
+								urlFrontier.putUrl( *it );
+								}
+							// If we're not in charge of this link, send it off to be shipped
+							else
+								{
+								pthread_mutex_lock( &linksToShipLock );
+								log( "put ship Lock" );
+								linksToShip[ urlId ].pushBack( *it );
+								log( "leaving put ship Lock" );
+								pthread_mutex_unlock( &linksToShipLock );
+								}
+							}
+						pthread_cond_signal( &frontierCV );
+						log( "leave put lock" );
+						pthread_mutex_unlock( &frontierLock );
+						}
 				catch( dex::outOfRangeException e )
 					{
 					print( toCrawl.completeUrl( ) + " Threw out of range exception" );
 					}
-
-				pthread_mutex_lock( &frontierLock );
-				log( "put lock" );
-				for ( auto it = links.begin( );  it != links.end( );  ++it )
-					{
-					// Fix link using our redirects cache
-					dex::Url current = *it;
-					current.setFragment( "" );
-					fixRedirect( current );
-
-					// Check to see if the endpoint we have is a known broken link or if we've already crawled
-					if ( !alreadyCrawled( current) )
-						{
-						size_t urlId = getUrlInstance( *it );
-						if ( urlId == instanceId )
-							{
-							urlFrontier.putUrl( *it );
-							}
-						// If we're not in charge of this link, send it off to be shipped
-						else
-							{
-							pthread_mutex_lock( &linksToShipLock );
-							log( "put ship Lock" );
-							linksToShip[ urlId ].pushBack( *it );
-							log( "leaving put ship Lock" );
-							pthread_mutex_unlock( &linksToShipLock );
-							}
-						}
-					}
-				pthread_cond_signal( &frontierCV );
-				log( "leave put lock" );
-				pthread_mutex_unlock( &frontierLock );
 				}
 			}
 		// If we get a politness error for this URL, we put it back into the frontier
@@ -308,7 +355,15 @@ void *worker( void *args )
 			{
 			pthread_mutex_lock( &frontierLock );
 			log( "politeness put lock" );
-			urlFrontier.putUrl( toCrawl );
+			try
+				{
+				urlFrontier.putUrl( toCrawl );
+				}
+			catch ( ... )
+				{
+				print( "ERROR putting url in frontier" );
+				exit( 1 );
+				}
 			log( "leaving politeness put lock" );
 			pthread_mutex_unlock( &frontierLock );
 			}
@@ -324,7 +379,15 @@ void *worker( void *args )
 				{
 				pthread_mutex_lock( &frontierLock );
 				log( "redirect lock" );
-				urlFrontier.putUrl( location );
+				try
+					{
+					urlFrontier.putUrl( location );
+					}
+				catch ( ... ) 
+					{
+					print( "ERROR putUrl failed" );
+					exit( 1 );
+					}
 				log( "leaving redirect lock" );
 				pthread_mutex_unlock( &frontierLock );
 				}

@@ -48,7 +48,14 @@ namespace dex
 				{
 				if ( endpoints.bucketCount( ) > 8 * maxSize )
 					{
-					endpoints.rehash( maxSize * 4 );
+					try
+						{
+						endpoints.rehash( maxSize * 4 );
+						}
+					catch ( ... )
+						{
+						std::cerr << "ERROR Redirect Cache rehash Failed trying to make size = " << maxSize * 4;
+						}
 					}
 				dex::Url check = getEndpoint( value );
 				if ( check.completeUrl( ) == key.completeUrl( ) )
@@ -75,7 +82,14 @@ namespace dex
 			redirectCache( size_t max )
 				{
 				maxSize = max;
-				endpoints.rehash( max * 4 );
+				try
+					{
+					endpoints.rehash( maxSize * 4 );
+					}
+				catch ( ... )
+					{
+					std::cerr << "ERROR Redirect Cache rehash Failed trying to make size = " << maxSize * 4;
+					}
 				}
 		};
 	}
