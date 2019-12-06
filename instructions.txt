@@ -1,7 +1,7 @@
 Go to EC2
 Launch Instance
 Amazon Linux 2 AMI 64 bit x86
-t2.micro
+t2.xLarge
 Configure instance details
 Create IAM role
 Subnet -> us-east-1e
@@ -21,6 +21,9 @@ ssh -i .chris-search-engine-key.pem ec2-user@ec2-18-215-160-246.compute-1.amazon
 ssh -i .chris-search-engine-key.pem ec2-user@ec2-34-227-93-6.compute-1.amazonaws.com	
 
 ssh -i .chris-search-engine-key.pem ec2-user@ec2-100-26-57-53.compute-1.amazonaws.com
+
+Xlarge
+ssh -i .chris-search-engine-key.pem ec2-user@ec2-3-86-7-240.compute-1.amazonaws.com
 
 ssh -i keyName ec2-user@publicDNS
 
