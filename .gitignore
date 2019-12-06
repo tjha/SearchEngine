@@ -21,4 +21,4 @@ src/mvp/data/tmp/
 certificate.pem
 key.pem
 cronresult.txt
-instanceinfo.txt
+data/instanceInfo.txt
