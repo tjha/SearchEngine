@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-12-06: Implement hashing to prevent overlap between distributed crawlers: combsc
 // 2019-12-04: added wrapper functions for perf, added limits for all data structures: combsc
 // 2019-12-03: Uses frontier to start if it exists, otherwise uses seedlist, no duplicates in frontier: combsc
 // 2019-12-02: Set maximum size for frontier, add hashing for distribution of URLs: combsc
@@ -48,7 +49,7 @@ dex::frontier urlFrontier( frontierSize );
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
-long checkpoint = 3 * 60; // checkpoints every x seconds
+long checkpoint = 10; // checkpoints every x seconds
 long testTime = 40;
 time_t lastCheckpoint = time( NULL );
 time_t startTime = time( NULL );
@@ -68,13 +69,9 @@ pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 dex::unorderedSet < dex::string > crawledLinks;
 dex::sharedReaderLock crawledLock;
 
-// This vector contains all known links that are NOT in our domain
-// and need to be given to other instances. Think of this as a frontier
-// but for the other workers.
-const size_t numInstances = 2;
-const size_t instanceId = 1;
-dex::vector < dex::Url > linksToShip [ numInstances ];
-pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
+// This is used to hash URLs
+size_t numInstances;
+size_t instanceId;
 
 // This is the redirect cache. Used for handling known redirects on our
 // side without having to actually visit the sites.
@@ -287,15 +284,6 @@ void *worker( void *args )
 							{
 							urlFrontier.putUrl( *it );
 							}
-						// If we're not in charge of this link, send it off to be shipped
-						else
-							{
-							pthread_mutex_lock( &linksToShipLock );
-							log( "put ship Lock" );
-							linksToShip[ urlId ].pushBack( *it );
-							log( "leaving put ship Lock" );
-							pthread_mutex_unlock( &linksToShipLock );
-							}
 						}
 					}
 				pthread_cond_signal( &frontierCV );
@@ -328,14 +316,6 @@ void *worker( void *args )
 				log( "leaving redirect lock" );
 				pthread_mutex_unlock( &frontierLock );
 				}
-			else
-				{
-				pthread_mutex_lock( &linksToShipLock );
-				log( "ship redirect lock" );
-				linksToShip[ urlId ].pushBack( dex::Url( result.cStr( ) ) );
-				log( "leaving ship redirect lock" );
-				pthread_mutex_unlock( &linksToShipLock );
-				}
 			}
 		// This link doesn't lead anywhere, we need to add it to our broken links
 		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR || errorCode == dex::RESPONSE_TOO_LARGE )
@@ -356,6 +336,14 @@ int main( )
 			{
 			// setup logging file for this run
 			// goodbye error code 13
+			dex::pair < size_t, size_t > instanceInfo = dex::getInstanceInfo( "data/instanceInfo.txt" );
+			numInstances = instanceInfo.first;
+			instanceId = instanceInfo.second;
+			if ( numInstances == 0 && instanceId == 0 )
+				{
+				print( "Need to have file in data/instanceInfo.txt with the instance information.\nFirst line must contain numInstances=someNum, second line must contain instanceId=someNum." );
+				return 0;
+				}
 			signal(SIGPIPE, SIG_IGN);
 			int result = dex::makeDirectory( savePath.cStr( ) );
 			result = dex::makeDirectory( ( savePath + "/html" ).cStr( ) );

@@ -211,7 +211,8 @@ namespace dex
 					tv.tv_sec = 5;
 					tv.tv_usec = 0;
 					int option = setsockopt( socketFD, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv );
-
+					if ( option == -1 )
+						return SOCKET_CONNECTION_ERROR;
 					// Connect the socket to the host address.
 					connectResult = connect( socketFD, address->ai_addr, address->ai_addrlen);
 					}

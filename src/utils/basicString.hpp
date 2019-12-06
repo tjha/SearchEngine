@@ -12,6 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-12-06: Add stoi: combscs
 // 2019-11-23: Add toLowerCase: combsc
 // 2019-11-20: Add replaceWhitespace and toString function: combsc
 // 2019-11-13: Add stripWhitespace function: combsc
@@ -1159,6 +1160,22 @@ namespace dex
 		if ( isNegative )
 			toReturn += '-';
 		return string( toReturn.rbegin( ), toReturn.rend( ) );
+		}
+
+	int stoi( string s )
+		{
+		int toRet = 0;
+		int base = 1;
+		for ( size_t i = s.size( );  i > 0;  --i )
+			{
+			
+			char c = s[ i - 1 ];
+			if ( i == 1 && c == '-' )
+				return -1 * toRet;
+			toRet += ( c - '0' ) * base;
+			base *= 10;
+			}
+		return toRet;
 		}
 
 	// To be used for case insensitive finding
