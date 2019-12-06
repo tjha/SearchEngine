@@ -1,6 +1,7 @@
 // checkpointing.hpp
 //
 // This file contains functions that deal with writing data to persistent storage
+// 2019-12-06: log and performance file now rewriting old files: jhirsh
 // 2019-12-04: Change how we save HTML to disk: combsc
 // 2019-11-26: Added relative paths for saving: combsc
 // 2019-11-21: Fix html saving function, add includeGuards: combsc
@@ -11,6 +12,7 @@
 #define CHECKPOINTING_HPP
 
 #include <dirent.h>
+#include <time.h>
 #include "../utils/file.hpp"
 #include "../utils/basicString.hpp"
 #include "../spinarak/url.hpp"
@@ -55,13 +57,9 @@ namespace dex
 	// bytes 3-4 determine the name of the files
 	// This gives us 4,294,967,296 possible locations for html
 	size_t HTMLChunkSize = 100000000; // 16 MB files for htm
-	// int filenumber = 0;
-	//int urlsFileDescriptor = -1;
-	//int htmlFileDescriptor = -1;
-	//int currentDocumentCount = 0;
 	int saveHtml ( const dex::string &url, const dex::string &html, int fileDescriptor)
 		{
-		// allocate some data to store
+		// allocate data to store
 		unsigned char *toStore = new unsigned char[ url.size( ) + html.size( ) + 14 ];
 		unsigned char *toStorePointer = toStore;
 		dex::utf::encoder < dex::string > stringEncoder;
@@ -69,6 +67,10 @@ namespace dex
 		toStorePointer = stringEncoder( html, toStorePointer );
 		int toReturn = write( fileDescriptor, toStore, toStorePointer - toStore );
 		delete[ ] toStore;
+		if ( toReturn == -1 )
+			{
+			std::cout << "error writing html" << std::endl;
+			}
 		return toReturn;
 		}
 
@@ -89,62 +91,7 @@ namespace dex
 		dex::string htmlFilename( folderPath + dex::toString( filenumber ) + "_forIndexer" );
 		return open( htmlFilename.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
 		}
-	/*
-	int saveHtml ( dex::Url &url, dex::string &html, dex::string &folderPath )
-		{
-		int err = dex::makeDirectory( folderPath.cStr( ) );
-		if ( err == -1 )
-			return -1;
 
-		++currentDocumentCount;
-
-		// when chunk is filled, close and move onto next file
-		if ( dex::fileSize( htmlFileDescriptor ) > HTMLChunkSize )
-			{
-			close( htmlFileDescriptor ); // close filled chunk
-			close( urlsFileDescriptor );
-			++filenumber;
-			dex::string urlsFilename( folderPath + "html/" + dex::toString( filenumber ) + ".urls" );
-			dex::string htmlFilename( folderPath + "html/" + dex::toString( filenumber ) + "_html" );
-			std::cout << "crawled " << currentDocumentCount << " sites." << std::endl;
-			std::cout << "switching to file " << htmlFilename << std::endl;
-
-			urlsFileDescriptor = open( urlsFilename.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
-			htmlFileDescriptor = open( htmlFilename.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
-
-			currentDocumentCount = 0;
-			}
-
-		err = write( urlsFileDescriptor, ( url.completeUrl( ) + "\n" ).cStr( ), url.completeUrl( ).size( ) + 1 );
-		if ( err == -1 )
-			{
-			std::cerr << "Writing saved Urls failed.\n";
-			return -1;
-			}
-
-        err = write( htmlFileDescriptor, ( url.completeUrl( ) + "\n" ).cStr( ), url.completeUrl( ).size( ) + 1 );
-		if ( err == -1 )
-			{
-			std::cerr << "Writing url failed.\n";
-			return -1;
-			}
-
-        err = write( htmlFileDescriptor, html.cStr( ), html.size( ) );
-		if ( err == -1 )
-			{
-			std::cerr << "Writing html failed.\n";
-			return -1;
-			}
-
-        return write( htmlFileDescriptor, "\n", 1 );
-		}
-	
-	void closeHtmlFile( )
-		{
-		close( urlsFileDescriptor );
-		close( htmlFileDescriptor );
-		}
-	*/
 	dex::frontier loadFrontier ( const char * fileName, size_t size, bool encoded = false )
 		{
 		dex::frontier frontier( size );
@@ -267,8 +214,77 @@ namespace dex
 		return 0;
 		}
 
-	
-	
+	int createNewLog( dex::string logPath, dex::string &filename )
+		{
+		DIR * dir = opendir( ( logPath ).cStr( ) );
+		dirent * entry = readdir( dir );
+		
+		// delete old logs
+		while ( entry != NULL )
+			{
+			if ( strcmp( entry->d_name, "." ) && strcmp( entry->d_name, ".." ) )
+				remove( entry->d_name );
+			entry = readdir( dir );
+			}
+		closedir( dir );
+
+		// create new log
+		time_t now = time( nullptr );
+		filename = logPath;
+		filename += ctime( &now );
+		filename.popBack( );
+		filename += ".log";
+		filename = filename.replaceWhitespace( "_" );
+
+		// open the new log fileDescriptor
+		int fileDescriptor = open( filename.cStr( ), O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU );
+		std::cout << "Deleteing old log, creating new at " << filename << std::endl;
+		if ( fileDescriptor == -1 )
+			{
+			std::cerr << "Couldn't open new log file " << filename << std::endl;
+			exit( 1 );
+			}
+		
+		return fileDescriptor;
+		}
+
+	int createNewPerformanceFile( dex::string performancePath, dex::string &filename )
+		{
+		DIR * dir = opendir( ( performancePath ).cStr( ) );
+		dirent * entry = readdir( dir );
+		
+		// delete old logs
+		while ( entry != NULL )
+			{
+			if ( strcmp( entry->d_name, "." ) && strcmp( entry->d_name, ".." ) )
+				remove( entry->d_name );
+			entry = readdir( dir );
+			}
+		closedir( dir );
+
+		// create new log
+		time_t now = time( nullptr );
+		filename = performancePath;
+		filename += ctime( &now );
+		filename.popBack( );
+		filename += ".txt";
+		filename = filename.replaceWhitespace( "_" );
+
+		// open the new performance fileDescriptor
+		int fileDescriptor = open( filename.cStr( ), O_RDWR | O_CREAT, S_IRWXU );
+		if ( fileDescriptor == -1 )
+			{
+			std::cerr << "Couldn't open new log file " << filename << std::endl;
+			exit( 2 );
+			}
+		
+		std::cout << "performance FD " << fileDescriptor << std::endl;
+		// return file to driver
+		std::cout << "Deleteing old performance file, creating new at " << filename << std::endl;
+		return fileDescriptor;
+		}
+
+
 	}
 	#endif
 	

@@ -40,6 +40,15 @@ namespace dex
 				return "Invalid Argument Exception";
 				}
 		};
+	
+	class fileWriteException : public exception
+		{
+		public:
+			virtual const char *what( )
+				{
+				return "File Write Exception";
+				}
+		};
 	}
 
 #endif

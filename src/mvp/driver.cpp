@@ -1,6 +1,8 @@
 // Implementation of basic mercator architecture
 
+
 // 2019-12-06: Implement hashing to prevent overlap between distributed crawlers: combsc
+//             Split up performance and saving. logging file now refreshing after 100 mb filled: jhirsh
 // 2019-12-04: added wrapper functions for perf, added limits for all data structures: combsc
 // 2019-12-03: Uses frontier to start if it exists, otherwise uses seedlist, no duplicates in frontier: combsc
 // 2019-12-02: Set maximum size for frontier, add hashing for distribution of URLs: combsc
@@ -28,12 +30,6 @@ dex::string savePath = "../socket-html/";
 dex::string tmpPath = "data/tmp/";
 dex::string toShipPath = "data/toShip/";
 
-dex::string loggingFileName;
-pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
-
-dex::string performanceName;
-
-
 // Sizes of our data structures
 size_t frontierSize = 20000;
 size_t crawledLinksSize = 20000;
@@ -48,12 +44,6 @@ const size_t redirectsSize = 5000;
 dex::frontier urlFrontier( frontierSize );
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
-
-long checkpoint = 10; // checkpoints every x seconds
-long testTime = 40;
-time_t lastCheckpoint = time( NULL );
-time_t startTime = time( NULL );
-bool testing = false;
 
 char state = 0;
 size_t numCrawledLinks = 0;
@@ -80,7 +70,6 @@ pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
 
-
 void print( char *toPrint )
 	{
 	pthread_mutex_lock( &printLock );
@@ -95,17 +84,66 @@ void print( dex::string toPrint )
 	pthread_mutex_unlock( &printLock );
 	}
 
+// Checkpoint is time elapsed to save log, performance, and data structure
+long checkpointLog = 10;
+long checkpointPerformance = 180;
+long checkpointDataStructure = 10 * 60; // checkpoints every x seconds
+long testTime = 40;
+time_t lastLogCheckpoint = time( NULL );
+time_t lastPerformanceCheckpoint = time( NULL );
+time_t lastDataCheckpoint = time( NULL );
+time_t startTime = time( NULL );
+bool testing = false;
+
+// Keep log file and performance file descriptors open.
+// Delete old log files and performance files when you create a new one.
+int logFileDescriptor;
+int performanceFileDescriptor;
+dex::string logFile;
+dex::string performanceFile;
+size_t logFileMaxSize = 100000000;
+size_t performanceFileMaxSize = 100000000;
+pthread_mutex_t loggingLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t performanceLock = PTHREAD_MUTEX_INITIALIZER;
+
 int log( dex::string toWrite )
 	{
 	pthread_mutex_lock( &loggingLock );
-	int error = dex::appendToFile( loggingFileName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
+	if ( dex::fileSize( logFileDescriptor ) > logFileMaxSize )
+		{
+		std::cout << "log too big, switching" << std::endl;
+		close( logFileDescriptor );
+		logFileDescriptor = createNewLog( tmpPath + "logs/", logFile );
+		}
+
+	int error = write( logFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
+	if ( error == -1 )
+		{
+		std::cerr << "Couldn't write to log";
+		throw dex::fileWriteException( );
+		}
+
 	pthread_mutex_unlock( &loggingLock );
 	return error;
 	}
 
 int writePerformance( dex::string &toWrite )
 	{
-	int error = dex::appendToFile( performanceName.cStr( ), toWrite.cStr( ), toWrite.size( ) );
+	if ( dex::fileSize( performanceFileDescriptor ) > performanceFileMaxSize )
+		{
+		close( performanceFileDescriptor );
+		performanceFileDescriptor = dex::createNewPerformanceFile( ( tmpPath + "performance" ).cStr( ), performanceFile );
+		}
+
+	int error = write( performanceFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
+	if ( error == -1 )
+		{
+		std::cerr << "Couldn't write to performance";
+		throw dex::fileWriteException( );
+		}
+
+	close( performanceFileDescriptor );
+	performanceFileDescriptor = open( performanceFile.cStr( ), O_WRONLY | O_APPEND, S_IRWXU );
 	return error;
 	}
 
@@ -158,14 +196,22 @@ void addToCrawled( const dex::Url &toCrawl )
 	}
 
 // Call checkpointing functions after time alotted or user input
-void saveWork( )
+void saveDataStructures( )
 	{	
 	dex::saveFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), urlFrontier );
 	crawledLock.readLock( );
 	dex::saveCrawledLinks( "data/crawledLinks.txt", crawledLinks );
+	crawledLock.releaseReadLock( );
+	lastDataCheckpoint = time(NULL);
+	}
+
+// checkpoint performance every 15 seconds
+void savePerformance( )
+	{
+	crawledLock.readLock( );
 	dex::string toWrite;
 	toWrite.reserve( 1000 );
-	toWrite += "Number of links crawled in " + dex::toString( checkpoint ) + " seconds: " + dex::toString( numCrawledLinks) + "\n";
+	toWrite += "Number of links crawled in " + dex::toString( checkpointPerformance ) + " seconds: " + dex::toString( numCrawledLinks) + "\n";
 	toWrite += "Size of frontier: " + dex::toString( urlFrontier.size( ) ) + "\n";
 	toWrite += "Capacity of frontier: " + dex::toString( urlFrontier.capacity( ) ) + "\n";
 	toWrite += "Size of crawledLinks " + dex::toString( crawledLinks.size( ) ) + "\n";
@@ -182,7 +228,7 @@ void saveWork( )
 	print( toWrite );
 
 	numCrawledLinks = 0;
-	lastCheckpoint = time(NULL);
+	lastPerformanceCheckpoint = time( NULL );
 	}
 
 void *worker( void *args )
@@ -193,6 +239,7 @@ void *worker( void *args )
 	int currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
 	
 	log( "Start thread " + name + "\n");
+	//print( "fileName" );
 	for ( int i = 0;  true;  ++i )
 		{
 		if ( state == 'q' )
@@ -205,11 +252,20 @@ void *worker( void *args )
 			pthread_cond_wait( &frontierCV, &frontierLock );
 			}
 		dex::Url toCrawl = urlFrontier.getUrl( );
-		if ( time( NULL ) - lastCheckpoint > checkpoint || state == 's' )
+		if ( time( NULL ) - lastDataCheckpoint > checkpointDataStructure || state == 's' )
 			{
-			saveWork( );
+			saveDataStructures( );
 			state = 0;
 			}
+
+		// one worker should write the performanc at every checkpoint
+		pthread_mutex_lock( &performanceLock );
+		if ( time( NULL ) - lastPerformanceCheckpoint > checkpointPerformance )
+			{
+			savePerformance( );
+			}
+		pthread_mutex_unlock( &performanceLock );
+
 		if ( testing && time( NULL ) - startTime > testTime )
 			{
 			log( "leaving frontier lock" );
@@ -232,8 +288,6 @@ void *worker( void *args )
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
-			
-
 			if ( errorCode == dex::NOT_HTML )
 				print( toCrawl.completeUrl( ) + " is not html " );
 
@@ -356,25 +410,18 @@ int main( )
 			result = dex::makeDirectory( ( tmpPath + "performance" ).cStr( ) );
 			result = dex::makeDirectory( toShipPath.cStr( ) );
 
-			loggingFileName = tmpPath + "logs/";
-			time_t now = time( nullptr );
-			loggingFileName += ctime( &now );
-			loggingFileName.popBack( );
-			loggingFileName += ".log";
-			loggingFileName = loggingFileName.replaceWhitespace( "_" );
-
-			performanceName = tmpPath + "performance/" + ctime( &now );
-			performanceName.popBack( );
-			performanceName += ".txt";
-			performanceName = performanceName.replaceWhitespace( "_" );
+			std::cout << " creating log and performance files" << std::endl;
+			logFileDescriptor = dex::createNewLog( tmpPath + "logs/", logFile );
+			performanceFileDescriptor = dex::createNewPerformanceFile( tmpPath + "performance/", performanceFile );
+			std::cout << " created log and performance files" << std::endl;
 
 			urlFrontier = dex::loadFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), frontierSize, true );
 			if ( urlFrontier.size( ) == 0 )
 				{
 				urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize );
 				}
-			for ( auto it = urlFrontier.begin( );  it != urlFrontier.end( );  ++it )
-				print( it->completeUrl( ) );
+			/*for ( auto it = urlFrontier.begin( );  it != urlFrontier.end( );  ++it )
+				print( it->completeUrl( ) );*/
 
 			std::cout << "Starting crawl with frontier size " << urlFrontier.size( ) << std::endl;
 			if ( testing )
