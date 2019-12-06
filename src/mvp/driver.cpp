@@ -395,7 +395,7 @@ int main( )
 			instanceId = instanceInfo.second;
 			if ( numInstances == 0 && instanceId == 0 )
 				{
-				print( "Need to have file in data/instanceInfo.txt with the instance information.\nFirst line must contain numInstances=someNum, second line must contain instanceId=someNum." );
+				std::cerr << "Need to have file in data/instanceInfo.txt with the instance information.\nFirst line must contain numInstances=someNum, second line must contain instanceId=someNum.\n";
 				return 0;
 				}
 			signal(SIGPIPE, SIG_IGN);
