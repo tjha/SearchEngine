@@ -1,6 +1,9 @@
 #!/bin/sh
 
-kill -15 $(ps -e | grep "driver.exe" | grep -v grep | awk '{ print $1 }')
-cd $PATH_TO_SEARCH_ENGINE
-./build/driver.exe &
-echo done
+if pgrep -x "driver.exe" > /dev/null
+then
+	echo Running!
+else
+	cd $PATH_TO_SEARCH_ENGINE
+	./build/driver.exe &
+fi

@@ -23,8 +23,8 @@
 #include <iostream>
 #include <pthread.h>
 
+//dex::string savePath = "/home/ec2-user/socket-html/";
 dex::string savePath = "../socket-html/";
-/* dex::string savePath = \"../socket-html/\"; */ // local
 dex::string tmpPath = "data/tmp/";
 dex::string toShipPath = "data/toShip/";
 
@@ -43,7 +43,6 @@ dex::frontier urlFrontier( frontierSize );
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
-
 char state = 0;
 size_t numCrawledLinks = 0;
 pthread_mutex_t crawledLinksLock = PTHREAD_MUTEX_INITIALIZER;
@@ -61,8 +60,8 @@ dex::sharedReaderLock crawledLock;
 // This vector contains all known links that are NOT in our domain
 // and need to be given to other instances. Think of this as a frontier
 // but for the other workers.
-const size_t numInstances = 1;
-const size_t instanceId = 0;
+const size_t numInstances = 2;
+const size_t instanceId = 1;
 dex::vector < dex::Url > linksToShip [ numInstances ];
 pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -237,7 +236,7 @@ void savePerformance( )
 void *worker( void *args )
 	{
 	int a = * ( ( int * ) args );
-	dex::string name = dex::toString( a );
+	dex::string name = dex::toString( a + 1000 * instanceId );
 	dex::string folderPath = savePath + "/html/" + name + "/";
 	int currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
 	
@@ -415,7 +414,7 @@ int main( )
 			result = dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
 			for ( size_t i = 0;  i < numWorkers;  ++i )
 				{
-				result = dex::makeDirectory( ( savePath + "/html/" + dex::toString( i ) ).cStr( ) );
+				result = dex::makeDirectory( ( savePath + "/html/" + dex::toString( i + 1000 * instanceId ) ).cStr( ) );
 				}
 			result = dex::makeDirectory( tmpPath.cStr( ) );
 			result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
