@@ -20,3 +20,4 @@ data/toShip/
 src/mvp/data/tmp/
 certificate.pem
 key.pem
+cronresult.txt

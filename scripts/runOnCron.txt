@@ -1,7 +1,7 @@
 # crontab -e
 SHELL=/bin/bash
-
-PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/ec2-user/.local/bin:/home/ec2-user/bin
+HOME=/home/ec2-user
 
 # For details see man 4 crontabs
 
@@ -14,5 +14,6 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 # |  |  |  |  |
 # *  *  *  *  * user-name  command to be executed
 
-*/30 * * * * source $HOME/.bashrc; source $PATH_TO_SEARCH_ENGINE/scripts/cronScript.sh >/dev/null 2>&1
+*/15 * * * * source $HOME/.bashrc; source $PATH_TO_SEARCH_ENGINE/scripts/cronScript.sh > $PATH_TO_SEARCH_ENGINE/cronresult.txt
 
+#Congrats!!!
