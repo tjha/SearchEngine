@@ -22,7 +22,7 @@
 #include <iostream>
 #include <pthread.h>
 
-dex::string savePath = "../socket-html/";
+dex::string savePath = "/home/ec2-user/socket-html/";
 /* dex::string savePath = \"../socket-html/\"; */ // local
 dex::string tmpPath = "data/tmp/";
 dex::string toShipPath = "data/toShip/";
@@ -48,7 +48,7 @@ dex::frontier urlFrontier( frontierSize );
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
-long checkpoint = 15; // checkpoints every x seconds
+long checkpoint = 60; // checkpoints every x seconds
 long testTime = 40;
 time_t lastCheckpoint = time( NULL );
 time_t startTime = time( NULL );
@@ -58,7 +58,7 @@ char state = 0;
 size_t numCrawledLinks = 0;
 pthread_mutex_t crawledLinksLock = PTHREAD_MUTEX_INITIALIZER;
 
-#define numWorkers 100
+#define numWorkers 20
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -191,7 +191,7 @@ void saveWork( )
 void *worker( void *args )
 	{
 	int a = * ( ( int * ) args );
-	dex::string name = dex::toString( a );
+	dex::string name = dex::toString( a + 200 );
 	dex::string folderPath = savePath + "/html/" + name + "/";
 	int currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
 	
@@ -361,7 +361,7 @@ int main( )
 			result = dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
 			for ( size_t i = 0;  i < numWorkers;  ++i )
 				{
-				result = dex::makeDirectory( ( savePath + "/html/" + dex::toString( i ) ).cStr( ) );
+				result = dex::makeDirectory( ( savePath + "/html/" + dex::toString( i + 200 ) ).cStr( ) );
 				}
 			result = dex::makeDirectory( tmpPath.cStr( ) );
 			result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );

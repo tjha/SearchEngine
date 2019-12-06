@@ -24,9 +24,9 @@ if [ ! -d "$INSTALL_PATH/libressl/lib" ]; then
 	cd libressl
 	./autogen.sh
 	./configure --prefix="$INSTALL_PATH/libressl"
-	sudo echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_PATH/libressl/lib" >> ~/.bashrc
-	sudo echo "export LDFLAGS=$INSTALL_PATH/libressl/lib" >> ~/.bashrc
-	sudo echo "export CPPFLAGS=$INSTALL_PATH/libressl/include" >> ~/.bashrc
+	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTALL_PATH/libressl/lib" >> ~/.bashrc
+	echo "export LDFLAGS=$INSTALL_PATH/libressl/lib" >> ~/.bashrc
+	echo "export CPPFLAGS=$INSTALL_PATH/libressl/include" >> ~/.bashrc
 	make && make check
 	sudo make install
 	sudo mkdir etc/ # cert.pem is not installed correctly
@@ -36,7 +36,7 @@ if [ ! -d "$INSTALL_PATH/libressl/lib" ]; then
 	sudo cp apps/openssl/cert.pem etc/ssl
 	echo "$INSTALL_PATH/libressl" | sudo tee /etc/ld.so.conf.d/libressl.conf
 	sudo ldconfig
-	export PATH_TO_SEARCH_ENGINE="/home/ec2-user/SearchEngine"
+	echo "export PATH_TO_SEARCH_ENGINE=/home/ec2-user/SearchEngine" >> ~/.bashrc
 	. ~/.bashrc
 else
 	echo 'Using cached directory.'
