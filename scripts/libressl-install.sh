@@ -37,7 +37,7 @@ if [ ! -d "$INSTALL_PATH/libressl/lib" ]; then
 	echo "$INSTALL_PATH/libressl" | sudo tee /etc/ld.so.conf.d/libressl.conf
 	sudo ldconfig
 	echo "export PATH_TO_SEARCH_ENGINE=/home/ec2-user/SearchEngine" >> ~/.bashrc
-	. ~/.bashrc
+	source ~/.bashrc
 else
 	echo 'Using cached directory.'
 fi
