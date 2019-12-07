@@ -1,4 +1,5 @@
 // frontier.hpp
+// 2019-12-06: Promote www. and https: combsc
 // 2019-12-04: Made scoreUrl less aggressive, improved efficiency: combsc
 // 2019-12-03: Change getUrl to reduce number of pageFault: combsc + jhirsh
 // 2019-12-02: Implement maximumSize: combsc
@@ -21,7 +22,6 @@ namespace dex
 			unorderedSet < Url > toCheck;
 			
 			size_t maximumSize;
-
 			double scoreUrl( dex::Url url )
 				{
 				double score = 0;
@@ -29,6 +29,10 @@ namespace dex
 				dex::string host = url.getHost( );
 				if ( host.size( ) > 4 )
 					{
+					if ( host.substr( 0, 4 ) == "www." )
+						{
+						score += 8;
+						}
 					host = host.substr( host.size( ) - 4, 4);
 					if ( host == ".com" )
 						{
@@ -65,6 +69,11 @@ namespace dex
 				dex::string completeUrl = url.completeUrl( );
 				int urlSize = dex::max( size_t( 45 ), completeUrl.size( ) );
 				score += 9 * 45 / urlSize;
+
+				if ( url.getService( ) == "https" )
+					{
+					score += 8;
+					}
 
 				// Promote not a ton of /'s
 				// take off points for every / you have over 6 ( take off 3 for the slashes in every url )
