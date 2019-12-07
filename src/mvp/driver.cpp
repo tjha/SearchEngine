@@ -1,6 +1,6 @@
 // Implementation of basic mercator architecture
 
-
+// 2019-12-07: Load crawled links
 // 2019-12-06: Implement hashing to prevent overlap between distributed crawlers: combsc
 //             Split up performance and saving. logging file now refreshing after 100 mb filled: jhirsh
 // 2019-12-04: added wrapper functions for perf, added limits for all data structures: combsc
@@ -27,6 +27,7 @@
 
 //dex::string savePath = "/home/ec2-user/socket-html/";
 dex::string savePath = "../socket-html/";
+dex::string dataPath = "data/";
 dex::string tmpPath = "data/tmp/";
 dex::string toShipPath = "data/toShip/";
 
@@ -419,6 +420,7 @@ int main( )
 				{
 				urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize );
 				}
+			crawledLinks = dex::loadCrawledLinks( ( "data/crawledLinks.txt" ) );
 			/*for ( auto it = urlFrontier.begin( );  it != urlFrontier.end( );  ++it )
 				print( it->completeUrl( ) );*/
 
