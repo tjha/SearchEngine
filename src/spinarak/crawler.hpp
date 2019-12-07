@@ -108,7 +108,7 @@ namespace dex
 				
 				int endHeader;
 				int startContent;
-				int location = toSearch.find( "HTTP/1.1 " );
+				int location = toSearch.find( "HTTP/1.1 ", 9 );
 				if ( location != -1 )
 					{
 					int returnValue = 0;
@@ -121,7 +121,7 @@ namespace dex
 					if ( statusCode[ 0 ] == '2' )
 						{
 						
-						endHeader = toSearch.find( "\r\n\r\n" );
+						endHeader = toSearch.find( "\r\n\r\n", 0, 4 );
 						if ( endHeader == -1 )
 							{
 							result = toSearch;
@@ -130,13 +130,13 @@ namespace dex
 						// If there is a Content-Type field in the header
 						if ( !isRobot )
 							{
-							int contentType = toSearch.find( "Content-Type:" );
+							int contentType = toSearch.find( "Content-Type:", 0, 13 );
 							if ( contentType < endHeader && contentType >= 0 )
 								{
 								int contentTypeStart = contentType + 14;
 								int contentTypeEnd = toSearch.find( "\n", contentTypeStart );
 								string content = toSearch.substr( contentTypeStart, contentTypeEnd - contentTypeStart );
-								if ( content.find( "text/html" ) == dex::string::npos ) 
+								if ( content.find( "text/html", contentTypeStart, 9 ) == dex::string::npos ) 
 									{
 									returnValue = NOT_HTML;
 									}
@@ -153,7 +153,7 @@ namespace dex
 						if ( statusCode[ 0 ] == '3' )
 							{
 							// Copy the locaton into res and return the status code
-							int locationStart = toSearch.find( "Location: " );
+							int locationStart = toSearch.find( "Location: ", 0, 11 );
 							if ( locationStart == -1 )
 								{
 								result = toSearch;
@@ -297,7 +297,8 @@ namespace dex
 				char buffer[ 10240 ];
 				int bytes;
 				size_t totalBytes = 0;
-				dex::vector < char > response( maxPageSize );
+				dex::vector < char > response;
+				response.reserve( maxPageSize );
 				// TODO receive all of the data, then POST PROCESS it
 				if ( protocol == HTTP )
 					{
