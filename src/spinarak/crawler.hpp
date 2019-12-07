@@ -33,7 +33,7 @@
 //             regarding using the map of robots: combsc
 // 2019-10-31: Crawler looks for robot objects in unorderedMap, asks server for
 //             one if it isn't found: jhirsh
-// 2019-10-31: Crawler now has all functions static since it's a stateless 
+// 2019-10-31: Crawler now has all functions static since it's a stateless
 //             object, added error enumerations: combsc
 // 2019-10-30: Added everything into dex namespace and created a crawler object
 //             with a cleaner interface for using: combsc
@@ -65,13 +65,13 @@ namespace dex
 		LOCKING_ERROR = -15,
 		RESPONSE_TOO_LARGE = -16
 		};
-	
+
 	enum httpProtocol
 		{
 		HTTP = 0,
 		HTTPS = 1
 		};
-	
+
 	class crawler // TODO make namespace because no private members
 		{
 		// This is a class that is stateless, so every function within is static.
@@ -81,8 +81,8 @@ namespace dex
 			const static size_t maxPageSize = 5000000;
 			static dex::string makeGetMessage( const dex::string &path, const dex::string &host )
 				{
-				
-				return "GET " 
+
+				return "GET "
 					+ path
 					+ " HTTP/1.1\r\nHost: "
 					+ host
@@ -105,10 +105,10 @@ namespace dex
 			static int parseResponse( dex::vector < char > &response, dex::string &result, bool isRobot = false )
 				{
 				dex::string toSearch( response.cbegin( ), response.cend( ) );
-				
+
 				int endHeader;
 				int startContent;
-				int location = toSearch.find( "HTTP/1.1 ", 9 );
+				int location = toSearch.find( "HTTP/1.1 " );
 				if ( location != -1 )
 					{
 					int returnValue = 0;
@@ -120,8 +120,7 @@ namespace dex
 					// If the status code starts with 2, it's a valid response
 					if ( statusCode[ 0 ] == '2' )
 						{
-						
-						endHeader = toSearch.find( "\r\n\r\n", 0, 4 );
+						endHeader = toSearch.find( "\r\n\r\n" );
 						if ( endHeader == -1 )
 							{
 							result = toSearch;
@@ -130,17 +129,17 @@ namespace dex
 						// If there is a Content-Type field in the header
 						if ( !isRobot )
 							{
-							int contentType = toSearch.find( "Content-Type:", 0, 13 );
+							int contentType = toSearch.find( "Content-Type:" );
 							if ( contentType < endHeader && contentType >= 0 )
 								{
 								int contentTypeStart = contentType + 14;
 								int contentTypeEnd = toSearch.find( "\n", contentTypeStart );
 								string content = toSearch.substr( contentTypeStart, contentTypeEnd - contentTypeStart );
-								if ( content.find( "text/html", contentTypeStart, 9 ) == dex::string::npos ) 
+								if ( content.find( "text/html" ) == dex::string::npos )
 									{
 									returnValue = NOT_HTML;
 									}
-									
+
 								}
 							}
 						startContent = endHeader + 4;
@@ -153,7 +152,7 @@ namespace dex
 						if ( statusCode[ 0 ] == '3' )
 							{
 							// Copy the locaton into res and return the status code
-							int locationStart = toSearch.find( "Location: ", 0, 11 );
+							int locationStart = toSearch.find( "Location: " );
 							if ( locationStart == -1 )
 								{
 								result = toSearch;
@@ -181,7 +180,7 @@ namespace dex
 				{
 				int connectResult = 0;
 				struct addrinfo *address;
-				int socketFD; // HTTP				
+				int socketFD; // HTTP
 				tls *ctx; // HTTPS
 				// setup is different based on HTTP or HTTPS
 				if ( protocol == HTTP )
@@ -205,7 +204,7 @@ namespace dex
 						result = "Could not connect to socket\n";
 						return SOCKET_CONNECTION_ERROR;
 						}
-					
+
 					// set timeout on recv
 					struct timeval tv;
 					tv.tv_sec = 5;
@@ -225,7 +224,7 @@ namespace dex
 						}
 					// setup libressl stuff
 					tls_init( );
-					tls_config * config = tls_config_new( );  
+					tls_config * config = tls_config_new( );
 					if ( !config )
 						{
 						return TLS_CONFIG_ERROR;
@@ -293,7 +292,7 @@ namespace dex
 					result =  "Failure in sending\n";
 					return SENDING_ERROR;
 					}
-				
+
 				char buffer[ 10240 ];
 				int bytes;
 				size_t totalBytes = 0;
@@ -311,7 +310,7 @@ namespace dex
 							}
 						receive( buffer, bytes, response );
 						}
-						
+
 
 					// Close the socket and free the address info structure.
 					close( socketFD );
@@ -328,8 +327,8 @@ namespace dex
 							}
 						receive( buffer, bytes, response );
 						}
-						
-					
+
+
 					// Close SSL connection
 					tls_close( ctx );
 					tls_free( ctx );
@@ -341,7 +340,7 @@ namespace dex
 				int errorCode = parseResponse( response, result, isRobot );
 				return errorCode;
 				}
-		
+
 		public:
 			// Function used for crawling URLs. bePolite should ALWAYS be on, only turned off for testing.
 			static int crawlUrl( const Url &url, dex::string &result, dex::robotsMap &robotsCache, bool bePolite = true )
@@ -382,7 +381,7 @@ namespace dex
 						robotUrl.setPath( "/robots.txt" );
 
 						dex::string urlToVisit = robotUrl.completeUrl( );
-						
+
 						int errorCode = 300;
 						int numRedirectsFollowed = 0;
 						for ( ;  numRedirectsFollowed < 10 && errorCode / 100 == 3;  ++numRedirectsFollowed )
