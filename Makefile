@@ -55,7 +55,7 @@ build:
 $(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@ -ltls
 	./$@
-	make clean
+# make clean
 
 $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
 	make build
@@ -68,5 +68,9 @@ print_os: ;@echo 'os = ' $(OSFLAG)
 clean:
 	@rm -rf $(BUILD_PATH)/
 
+<<<<<<< HEAD
 .PHONY: tests clean cleanDriver
+=======
+# .PHONY: tests clean
+>>>>>>> 62b5b043aff59f667632ab47356655ac53dd252f
 
