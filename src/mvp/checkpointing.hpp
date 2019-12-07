@@ -20,10 +20,35 @@
 #include "file.hpp"
 #include "utf.hpp"
 #include "encode.hpp"
+#include "utility.hpp"
 
 namespace dex
 	{
+	
+	dex::pair < size_t, size_t > getInstanceInfo( const char *fileName)
+		{
+		dex::pair < size_t, size_t > toReturn;
+		toReturn.first = 0;
+		toReturn.second = 0;
+		if ( !dex::fileExists( fileName ) )
+			return toReturn;
 
+
+		string info( readFromFile( fileName ) );
+		info = info.stripWhitespace( );
+		if ( info.substr( 0, 13 ) != "numInstances=" )
+			return toReturn;
+		size_t delimLocation = info.find( "\n" );
+		if ( delimLocation == dex::string::npos )
+			return toReturn;
+
+		if ( info.substr( delimLocation + 1 , 11 ) != "instanceId=" )
+			return toReturn;
+		toReturn.first = dex::stoi( info.substr( 13, delimLocation - 13 ) );
+		toReturn.second = dex::stoi( info.substr( delimLocation + 12, info.size( ) - delimLocation - 12 ) );
+		return toReturn;
+		}
+	
 	// Folder structure
 	// Hash the URL
 	// 2 layers of folders

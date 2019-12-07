@@ -1,7 +1,7 @@
 Go to EC2
 Launch Instance
 Amazon Linux 2 AMI 64 bit x86
-t2.micro
+t2.xLarge
 Configure instance details
 IAM role
 create a new role called <name>-spinarak
@@ -30,12 +30,20 @@ ssh -i .chris-search-engine-key.pem ec2-user@ec2-18-215-160-246.compute-1.amazon
 
 ssh -i .chris-search-engine-key.pem ec2-user@ec2-34-227-93-6.compute-1.amazonaws.com	
 
+ssh -i .chris-search-engine-key.pem ec2-user@ec2-100-26-57-53.compute-1.amazonaws.com
+
+Xlarge
+ssh -i .chris-search-engine-key.pem ec2-user@ec2-3-86-7-240.compute-1.amazonaws.com
+
 ssh -i keyName ec2-user@publicDNS
 
 
 Sudo yum install git
-checkout dev/mvp
-sudo ./scripts/librescript
+cd SearchEngine
+git checkout dev/mvp
+source scripts/setEnvironment.sh
+source ~/.bashrc
+sudo ./scripts/libressl-install.sh
 
 If you get an error like error while loading shared libraries: libtls.so.20: cannot open shared object file: No such file or directory
 Run your bashrc and it should be fixed
@@ -54,7 +62,15 @@ s3fs <bucket-name> socket-html/ -o iam_role="spinarak-<name>"
 
 To test your s3 mounting, cd socket-html/; echo hurray > test.txt
 
-Check your S3 console to see if the file has uploaded. Make sure you have refreshed the page.
+Write a file called data/instanceInfo.txt in SearchEngine
+numInstances=6
+instanceId=x
+Where x is your ID.
+
+Finally, run
+source scripts/startCron.sh
+
+And you're done! It should be running
 
 TMUX CONTROLS 
 From command line:
@@ -71,4 +87,3 @@ C-b % 				split window horizontally
 C-b " 				split window vertically
 C-b :detach 			exits but keeps window running in background
 C-b :kill-session 		kill session
-

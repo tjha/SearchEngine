@@ -1,6 +1,8 @@
 // Implementation of basic mercator architecture
 
-// 2019-12-06: Split up performance and saving. logging file now refreshing after 100 mb filled: jhirsh
+
+// 2019-12-06: Implement hashing to prevent overlap between distributed crawlers: combsc
+//             Split up performance and saving. logging file now refreshing after 100 mb filled: jhirsh
 // 2019-12-04: added wrapper functions for perf, added limits for all data structures: combsc
 // 2019-12-03: Uses frontier to start if it exists, otherwise uses seedlist, no duplicates in frontier: combsc
 // 2019-12-02: Set maximum size for frontier, add hashing for distribution of URLs: combsc
@@ -57,13 +59,9 @@ pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 dex::unorderedSet < dex::string > crawledLinks;
 dex::sharedReaderLock crawledLock;
 
-// This vector contains all known links that are NOT in our domain
-// and need to be given to other instances. Think of this as a frontier
-// but for the other workers.
-const size_t numInstances = 2;
-const size_t instanceId = 1;
-dex::vector < dex::Url > linksToShip [ numInstances ];
-pthread_mutex_t linksToShipLock = PTHREAD_MUTEX_INITIALIZER;
+// This is used to hash URLs
+size_t numInstances;
+size_t instanceId;
 
 // This is the redirect cache. Used for handling known redirects on our
 // side without having to actually visit the sites.
@@ -237,7 +235,7 @@ void *worker( void *args )
 	{
 	int a = * ( ( int * ) args );
 	dex::string name = dex::toString( a + 1000 * instanceId );
-	dex::string folderPath = savePath + "/html/" + name + "/";
+	dex::string folderPath = savePath + "html/" + name + "/";
 	int currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
 	
 	log( "Start thread " + name + "\n");
@@ -248,7 +246,7 @@ void *worker( void *args )
 			return nullptr;
 
 		pthread_mutex_lock( &frontierLock );
-		log( "frontier lock" );
+		
 		while ( urlFrontier.empty( ) )
 			{
 			pthread_cond_wait( &frontierCV, &frontierLock );
@@ -270,11 +268,10 @@ void *worker( void *args )
 
 		if ( testing && time( NULL ) - startTime > testTime )
 			{
-			log( "leaving frontier lock" );
+			
 			pthread_mutex_unlock( &frontierLock );
 			exit( 0 );
 			}
-		log( "leaving frontier lock" );
 		pthread_mutex_unlock( &frontierLock );
 
 		// Fix link using our redirects cache
@@ -311,7 +308,7 @@ void *worker( void *args )
 
 				addToCrawled( toCrawl );
 
-				log( "leaving save lock" );
+				
 				dex::vector < dex::Url > links;
 				try
 					{
@@ -324,7 +321,7 @@ void *worker( void *args )
 					}
 
 				pthread_mutex_lock( &frontierLock );
-				log( "put lock" );
+				
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
 					// Fix link using our redirects cache
@@ -340,19 +337,10 @@ void *worker( void *args )
 							{
 							urlFrontier.putUrl( *it );
 							}
-						// If we're not in charge of this link, send it off to be shipped
-						else
-							{
-							pthread_mutex_lock( &linksToShipLock );
-							log( "put ship Lock" );
-							linksToShip[ urlId ].pushBack( *it );
-							log( "leaving put ship Lock" );
-							pthread_mutex_unlock( &linksToShipLock );
-							}
 						}
 					}
 				pthread_cond_signal( &frontierCV );
-				log( "leave put lock" );
+				
 				pthread_mutex_unlock( &frontierLock );
 				}
 			}
@@ -360,9 +348,9 @@ void *worker( void *args )
 		if ( errorCode == dex::POLITENESS_ERROR || errorCode == dex::PUT_BACK_IN_FRONTIER )
 			{
 			pthread_mutex_lock( &frontierLock );
-			log( "politeness put lock" );
+			
 			urlFrontier.putUrl( toCrawl );
-			log( "leaving politeness put lock" );
+			
 			pthread_mutex_unlock( &frontierLock );
 			}
         //print( "past politeness" );
@@ -376,18 +364,10 @@ void *worker( void *args )
 			if ( urlId == instanceId )
 				{
 				pthread_mutex_lock( &frontierLock );
-				log( "redirect lock" );
+				
 				urlFrontier.putUrl( location );
-				log( "leaving redirect lock" );
+				
 				pthread_mutex_unlock( &frontierLock );
-				}
-			else
-				{
-				pthread_mutex_lock( &linksToShipLock );
-				log( "ship redirect lock" );
-				linksToShip[ urlId ].pushBack( dex::Url( result.cStr( ) ) );
-				log( "leaving ship redirect lock" );
-				pthread_mutex_unlock( &linksToShipLock );
 				}
 			}
 		// This link doesn't lead anywhere, we need to add it to our broken links
@@ -409,12 +389,20 @@ int main( )
 			{
 			// setup logging file for this run
 			// goodbye error code 13
+			dex::pair < size_t, size_t > instanceInfo = dex::getInstanceInfo( "data/instanceInfo.txt" );
+			numInstances = instanceInfo.first;
+			instanceId = instanceInfo.second;
+			if ( numInstances == 0 && instanceId == 0 )
+				{
+				std::cerr << "Need to have file in data/instanceInfo.txt with the instance information. Example: \nnumInstances=6\ninstanceId=2\n";
+				return 0;
+				}
 			signal(SIGPIPE, SIG_IGN);
 			int result = dex::makeDirectory( savePath.cStr( ) );
 			result = dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
 			for ( size_t i = 0;  i < numWorkers;  ++i )
 				{
-				result = dex::makeDirectory( ( savePath + "/html/" + dex::toString( i + 1000 * instanceId ) ).cStr( ) );
+				result = dex::makeDirectory( ( savePath + "html/" + dex::toString( i + 1000 * instanceId ) ).cStr( ) );
 				}
 			result = dex::makeDirectory( tmpPath.cStr( ) );
 			result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );

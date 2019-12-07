@@ -1,6 +1,5 @@
 #!/bin/sh
 
-PATH_TO_SEARCH_ENGINE=$(pwd)
 if pgrep -x "driver.exe" > /dev/null
 then
 	kill -15 $(ps -e | grep "driver.exe" | grep -v grep | awk '{ print $1 }')
