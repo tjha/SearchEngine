@@ -34,8 +34,8 @@ dex::string toShipPath = "data/toShip/";
 // Sizes of our data structures
 size_t frontierSize = 20000;
 size_t crawledLinksSize = 20000;
-size_t robotsMapSize = 1000;
-const size_t redirectsSize = 5000;
+size_t robotsMapSize = 300;
+const size_t redirectsSize = 100;
 
 // All urls in the frontier must be known to be in our domain
 // and lead to a legitimate endpoint, or must be unknown. This
@@ -71,7 +71,7 @@ pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
 
-void print( char *toPrint )
+void print( const char *toPrint )
 	{
 	pthread_mutex_lock( &printLock );
 	std::cout << toPrint << std::endl;
@@ -87,8 +87,8 @@ void print( dex::string toPrint )
 
 // Checkpoint is time elapsed to save log, performance, and data structure
 long checkpointLog = 10;
-long checkpointPerformance = 180;
-long checkpointDataStructure = 10 * 60; // checkpoints every x seconds
+long checkpointPerformance = 30;
+long checkpointDataStructure = 2 * 60; // checkpoints every x seconds
 long testTime = 40;
 time_t lastLogCheckpoint = time( NULL );
 time_t lastPerformanceCheckpoint = time( NULL );
@@ -399,16 +399,16 @@ int main( )
 				return 0;
 				}
 			signal(SIGPIPE, SIG_IGN);
-			int result = dex::makeDirectory( savePath.cStr( ) );
-			result = dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
+			dex::makeDirectory( savePath.cStr( ) );
+			dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
 			for ( size_t i = 0;  i < numWorkers;  ++i )
 				{
-				result = dex::makeDirectory( ( savePath + "html/" + dex::toString( i + 1000 * instanceId ) ).cStr( ) );
+				dex::makeDirectory( ( savePath + "html/" + dex::toString( i + 1000 * instanceId ) ).cStr( ) );
 				}
-			result = dex::makeDirectory( tmpPath.cStr( ) );
-			result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
-			result = dex::makeDirectory( ( tmpPath + "performance" ).cStr( ) );
-			result = dex::makeDirectory( toShipPath.cStr( ) );
+			dex::makeDirectory( tmpPath.cStr( ) );
+			dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
+			dex::makeDirectory( ( tmpPath + "performance" ).cStr( ) );
+			dex::makeDirectory( toShipPath.cStr( ) );
 
 			std::cout << " creating log and performance files" << std::endl;
 			logFileDescriptor = dex::createNewLog( tmpPath + "logs/", logFile );

@@ -107,7 +107,7 @@ namespace dex
 			size_t found = frontierList.find( delimiter, 0 );
 			size_t start = found + delimiter.size( );
 			// Parse the frontier_file and add it to list of urls
-			while ( start >= 0 && start < frontierList.size( ) )
+			while ( start < frontierList.size( ) )
 				{
 				found = frontierList.find( delimiter, start );
 				if ( found < frontierList.npos )
@@ -171,7 +171,7 @@ namespace dex
 		size_t found = crawled.find( delimiter, 0 );
 		size_t start = found + delimiter.size( );
 		// Parse the frontier_file and add it to list of urls
-		while ( start >= 0 && start < crawled.size( ) )
+		while ( start < crawled.size( ) )
 			{
 			found = crawled.find( delimiter, start );
 			if ( found < crawled.npos )
@@ -199,7 +199,7 @@ namespace dex
 		size_t found = linksList.find( delimiter, 0 );
 		size_t start = found + delimiter.size( );
 		// Parse the frontier_file and add it to list of urls
-		while ( start >= 0 && start < linksList.size( ) )
+		while ( start < linksList.size( ) )
 			{
 			found = linksList.find( delimiter, start );
 			if ( found < linksList.npos )
