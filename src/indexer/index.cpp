@@ -5,9 +5,11 @@
 
 #include <cstddef>
 #include <cstring>
+#include <fcntl.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "index.hpp"
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedMap.hpp"
@@ -27,7 +29,8 @@ bool dex::index::indexChunk::postsChunk::append( size_t delta )
 	if ( currentPostOffset + 8 > postsChunkSize )
 		return false;
 
-	// TODO: This should use something like longLongToUTF to take care of the "big delta" case
+	// TODO: This maybe should use something like longLongToUTF to take care of the "big delta" case
+	// TODO: Use the better encode fuction here
 	dex::vector < byte > utf8Delta = dex::utf::encoder < size_t >( )( delta );
 	for ( byte b : utf8Delta )
 		posts[ currentPostOffset++ ] = b;
@@ -69,29 +72,49 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	{
 	// TOOO: Add some sort of magic number
 
-	struct stat fileInfo;
-	fstat( fileDescriptor, &fileInfo );
-	size_t fileSize = fileInfo.st_size;
+	if ( fileDescriptor == -1 )
+		{
+		close( fileDescriptor );
+		return;
+		}
 
-	byte *filePointer = static_cast < byte * >( mmap( nullptr, fileSize * 2,
-			PROT_READ | PROT_WRITE, MAP_PRIVATE, fileDescriptor, 0 ) );
+	if ( initialize )
+		{
+		int result = lseek( fileDescriptor, fileSize - 1, SEEK_SET );
+		if ( result == -1 )
+			{
+			close( fileDescriptor );
+			return;
+			}
+		result = write( fileDescriptor, "", 1 );
+		if ( result == -1 )
+			{
+			close( fileDescriptor );
+			return;
+			}
+		}
+
+	filePointer = mmap( nullptr, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0 );
 
 	postsChunkCount = reinterpret_cast < size_t * >( filePointer );
 	location = postsChunkCount + 1;
 
-	encodedURLsToOffsets = filePointer + urlsToOffsetsMemoryOffset;
+	encodedURLsToOffsets = reinterpret_cast < byte * >( filePointer ) + urlsToOffsetsMemoryOffset;
 
-	encodedOffsetsToPostMetadatas = filePointer + offsetsToPostMetadatasMemoryOffset;
+	encodedOffsetsToEndOfDocumentMetadatas = reinterpret_cast < byte * >( filePointer )
+			+ offsetsToEndOfDocumentMetadatasMemoryOffset;
 
-	encodedDictionary = static_cast < byte * >( filePointer + dictionaryOffset);
+	encodedDictionary = reinterpret_cast < byte * >( filePointer ) + dictionaryOffset;
 
-	postsMetadataArray = reinterpret_cast < postsMetadata * >( filePointer + postsMetadataArrayMemoryOffset );
+	postsMetadataArray = reinterpret_cast < postsMetadata * >(
+			reinterpret_cast < byte * >( filePointer ) + postsMetadataArrayMemoryOffset );
 
-	postsChunkArray = reinterpret_cast < postsChunk * >( filePointer + postsChunkArrayMemoryOffset );
+	postsChunkArray = reinterpret_cast < postsChunk * >(
+			reinterpret_cast < byte * >( filePointer ) + postsChunkArrayMemoryOffset );
 
 	if ( initialize )
 		{
-		*postsChunkCount = 1;
+		*postsChunkCount = 0;
 		*location = 0;
 
 		postsChunkArray[ 0 ] = postsChunk( );
@@ -101,8 +124,8 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		{
 			urlsToOffsets = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )
 					( encodedURLsToOffsets );
-			offsetsToPostMetadatas = dex::utf::decoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
-					( encodedOffsetsToPostMetadatas );
+			offsetsToEndOfDocumentMetadatas = dex::utf::decoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
+					( encodedOffsetsToEndOfDocumentMetadatas );
 			dictionary = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedDictionary );
 		}
 	}
@@ -112,8 +135,11 @@ dex::index::indexChunk::~indexChunk( )
 	dex::utf::encoder < dex::unorderedMap < dex::string, size_t > >( )
 			( urlsToOffsets, encodedURLsToOffsets );
 	dex::utf::encoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
-			( offsetsToPostMetadatas, encodedOffsetsToPostMetadatas );
+			( offsetsToEndOfDocumentMetadatas, encodedOffsetsToEndOfDocumentMetadatas );
 	dex::utf::encoder < dex::unorderedMap < dex::string, size_t > >( )( dictionary, encodedDictionary );
+
+	msync( filePointer, fileSize, MS_SYNC );
+	munmap( filePointer, fileSize );
 	}
 
 bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vector < dex::string > &anchorText,
@@ -134,7 +160,7 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	for ( dex::vector < dex::string >::constIterator it = title.cbegin( );  it != title.cend( );  ++it )
 		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
 
-	offsetsToPostMetadatas[ documentOffset ] = endOfDocumentMetadataType
+	offsetsToEndOfDocumentMetadatas[ documentOffset ] = endOfDocumentMetadataType
 		{
 		title.size( ) + body.size( ),
 		uniqueWords.size( ),
@@ -145,3 +171,24 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 
 	return true;
 	}
+
+dex::index::indexStreamReader::indexStreamReader( dex::string word, indexChunk *indexChunk )
+	{
+	indexChunkum = indexChunk;
+	postsMetadatum = indexChunkum->postsMetadataArray + indexChunkum->dictionary[ word ];
+	indexChunkum = indexChunkum->postsChunkArray + postsMetadatum->firstPostsChunkOffset;
+	post = indexChunkum->posts;
+	}
+
+byte *dex::index::indexStreamReader::next( )
+	{
+	if ( !post )
+		{
+
+		}
+	else
+		{
+		
+		}
+	}
+

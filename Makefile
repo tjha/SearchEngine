@@ -5,7 +5,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -g
 SRC_PATH = src
 TEST_PATH = tst
 BUILD_PATH = build
-INCLUDES = -I $(SRC_PATH)/utils/ -I $(TEST_PATH) #TODO: add more src folders here as needed
+INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/indexer -I $(TEST_PATH) #TODO: add more src folders here as needed
 
 TEST_SOURCES := $(wildcard $(TEST_PATH)/*/*.cpp)
 TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(TEST_SOURCES))
@@ -28,7 +28,7 @@ build:
 $(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@
 	./$@
-	make clean
+# make clean
 
 $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
 	make build
@@ -39,5 +39,5 @@ $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
 clean:
 	@rm -rf $(BUILD_PATH)/
 
-.PHONY: tests clean
+# .PHONY: tests clean
 

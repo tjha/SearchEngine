@@ -4,28 +4,42 @@
 // 2019-12-04: File created: jasina, lougheem
 
 #include <fcntl.h>
+#include <iostream>
+#include <sys/stat.h>
 #include <unistd.h>
 #include "catch.hpp"
-#include "indexer/index.hpp"
+#include "index.hpp"
 
-using dex::index;
+using namespace dex::index;
+using dex::vector;
+using dex::string;
+
+size_t getFileSize( int fileDescriptor )
+	{
+	struct stat fileInfo;
+	fstat( fileDescriptor, &fileInfo );
+	return fileInfo.st_size;
+	}
 
 TEST_CASE( "create index chunk" )
 	{
 	const char filePath[ ] = "hello.txt";
-	int fd = open( filePath, O_RDWR | O_CREAT );
-	index::indexChunk initializingIndexChunk = index::indexChunk( fd );
+	int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
 
-	dex::string url = "hamiltoncshell.com";
-	dex::vector < dex::string > anchorText;
+	if ( fd == -1 )
+		exit( 1 );
+	indexChunk initializingIndexChunk = indexChunk( fd );
+
+	string url = "hamiltoncshell.com";
+	vector < string > anchorText;
 	anchorText.pushBack( "best" );
 	anchorText.pushBack( "shell" );
-	dex::vector < dex::string > title;
+	vector < string > title;
 	title.pushBack( "hamilton" );
 	title.pushBack( "c" );
 	title.pushBack( "shell" );
-	dex::string titleString = "Hamilton C Shell 2012";
-	dex::vector < dex::string > body;
+	string titleString = "Hamilton C Shell 2012";
+	vector < string > body;
 	body.pushBack( "some" );
 	body.pushBack( "junk" );
 	body.pushBack( "and" );
@@ -34,4 +48,5 @@ TEST_CASE( "create index chunk" )
 
 	initializingIndexChunk.addDocument( url, anchorText, title, titleString, body );
 
+	close( fd );
 	}
