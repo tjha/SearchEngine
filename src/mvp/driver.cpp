@@ -235,7 +235,7 @@ void *worker( void *args )
 	{
 	int a = * ( ( int * ) args );
 	dex::string name = dex::toString( a + 1000 * instanceId );
-	dex::string folderPath = savePath + "/html/" + name + "/";
+	dex::string folderPath = savePath + "html/" + name + "/";
 	int currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
 	
 	log( "Start thread " + name + "\n");
@@ -246,7 +246,7 @@ void *worker( void *args )
 			return nullptr;
 
 		pthread_mutex_lock( &frontierLock );
-		log( "frontier lock" );
+		
 		while ( urlFrontier.empty( ) )
 			{
 			pthread_cond_wait( &frontierCV, &frontierLock );
@@ -268,11 +268,10 @@ void *worker( void *args )
 
 		if ( testing && time( NULL ) - startTime > testTime )
 			{
-			log( "leaving frontier lock" );
+			
 			pthread_mutex_unlock( &frontierLock );
 			exit( 0 );
 			}
-		log( "leaving frontier lock" );
 		pthread_mutex_unlock( &frontierLock );
 
 		// Fix link using our redirects cache
@@ -309,7 +308,7 @@ void *worker( void *args )
 
 				addToCrawled( toCrawl );
 
-				log( "leaving save lock" );
+				
 				dex::vector < dex::Url > links;
 				try
 					{
@@ -322,7 +321,7 @@ void *worker( void *args )
 					}
 
 				pthread_mutex_lock( &frontierLock );
-				log( "put lock" );
+				
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
 					// Fix link using our redirects cache
@@ -341,7 +340,7 @@ void *worker( void *args )
 						}
 					}
 				pthread_cond_signal( &frontierCV );
-				log( "leave put lock" );
+				
 				pthread_mutex_unlock( &frontierLock );
 				}
 			}
@@ -349,9 +348,9 @@ void *worker( void *args )
 		if ( errorCode == dex::POLITENESS_ERROR || errorCode == dex::PUT_BACK_IN_FRONTIER )
 			{
 			pthread_mutex_lock( &frontierLock );
-			log( "politeness put lock" );
+			
 			urlFrontier.putUrl( toCrawl );
-			log( "leaving politeness put lock" );
+			
 			pthread_mutex_unlock( &frontierLock );
 			}
         //print( "past politeness" );
@@ -365,9 +364,9 @@ void *worker( void *args )
 			if ( urlId == instanceId )
 				{
 				pthread_mutex_lock( &frontierLock );
-				log( "redirect lock" );
+				
 				urlFrontier.putUrl( location );
-				log( "leaving redirect lock" );
+				
 				pthread_mutex_unlock( &frontierLock );
 				}
 			}
@@ -403,7 +402,7 @@ int main( )
 			result = dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
 			for ( size_t i = 0;  i < numWorkers;  ++i )
 				{
-				result = dex::makeDirectory( ( savePath + "/html/" + dex::toString( i + 1000 * instanceId ) ).cStr( ) );
+				result = dex::makeDirectory( ( savePath + "html/" + dex::toString( i + 1000 * instanceId ) ).cStr( ) );
 				}
 			result = dex::makeDirectory( tmpPath.cStr( ) );
 			result = dex::makeDirectory( ( tmpPath + "logs" ).cStr( ) );
