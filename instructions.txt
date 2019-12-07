@@ -29,8 +29,11 @@ ssh -i keyName ec2-user@publicDNS
 
 
 Sudo yum install git
-checkout dev/mvp
-./scripts/libressl-install.sh
+cd SearchEngine
+git checkout dev/mvp
+source scripts/setEnvironment.sh
+source ~/.bashrc
+sudo ./scripts/libressl-install.sh
 
 If you get an error like error while loading shared libraries: libtls.so.20: cannot open shared object file: No such file or directory
 Run your bashrc and it should be fixed
@@ -41,6 +44,22 @@ SETUP S3 BUCKET
 Create user "name-spinarak" logheadisbeast
 Attach existing pollicies: vpc, ec2, s3, iam, config all FULL ACCESS
 
+In home directory, mkdir socket-html
+
+s3fs <bucket-name> socket-html/ -o iam_role="EMR_EC2_DefaultRole"
+s3fs testbucket-socket socket-html/ -o iam_role="EMR_EC2_DefaultRole"
+
+To test your s3 mounting, cd socket-html/; echo hurray > test.txt
+
+Write a file called data/instanceInfo.txt in SearchEngine
+numInstances=6
+instanceId=x
+Where x is your ID.
+
+Finally, run
+source scripts/startCron.sh
+
+And you're done! It should be running
 
 TMUX CONTROLS 
 From command line:
@@ -57,10 +76,3 @@ C-b % 				split window horizontally
 C-b " 				split window vertically
 C-b :detach 			exits but keeps window running in background
 C-b :kill-session 		kill session
-
-In home directory, mkdir socket-html
-
-s3fs <bucket-name> socket-html/ -o iam_role="EMR_EC2_DefaultRole"
-s3fs testbucket-socket socket-html/ -o iam_role="EMR_EC2_DefaultRole"
-
-To test your s3 mounting, cd socket-html/; echo hurray > test.txt
