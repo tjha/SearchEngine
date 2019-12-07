@@ -3,12 +3,22 @@ Launch Instance
 Amazon Linux 2 AMI 64 bit x86
 t2.micro
 Configure instance details
-Create IAM role
+IAM role
+create a new role called <name>-spinarak
+service that will use this role- ec2
+Attach existing policies by entering into seachbar: 
+- AmazonVPCFullAccess
+- AmazonEC2FullAccess
+- AmazonS3FullAccess
+- IAMFullAccess, ec2, s3, iam, config all FULL ACCESS
+- AWSConfigRole
+
 Subnet -> us-east-1e
 	
 Next add storage
-Security: 	select existing and pick default
-		default security group setting needs to have inbound ssh tcp port range 22, source: 0.0.0.0/0 to allow anyone to ssh into it with the key
+Security: select existing and pick default
+	default security group setting needs to have inbound ssh tcp 
+	port range 22, source: 0.0.0.0/0 to allow anyone to ssh into it with the key
 
 Review and launch
 Get new key
@@ -32,10 +42,19 @@ Run your bashrc and it should be fixed
 
 
 SETUP S3 BUCKET
+Make sure you have a iam_role specified in EC2 instructions with access to S3
 
-Create user "name-spinarak" logheadisbeast
-Attach existing pollicies: vpc, ec2, s3, iam, config all FULL ACCESS
+go to S3
 
+create bucket named: teamsocket-<name>
+
+In home directory, mkdir socket-html
+
+s3fs <bucket-name> socket-html/ -o iam_role="spinarak-<name>"
+
+To test your s3 mounting, cd socket-html/; echo hurray > test.txt
+
+Check your S3 console to see if the file has uploaded. Make sure you have refreshed the page.
 
 TMUX CONTROLS 
 From command line:
@@ -53,8 +72,3 @@ C-b " 				split window vertically
 C-b :detach 			exits but keeps window running in background
 C-b :kill-session 		kill session
 
-In home directory, mkdir socket-html
-
-s3fs <bucket-name> socket-html/ -o iam_role="EMR_EC2_DefaultRole"
-
-To test your s3 mounting, cd socket-html/; echo hurray > test.txt
