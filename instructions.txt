@@ -70,7 +70,20 @@ Where x is your ID.
 Finally, run
 source scripts/startCron.sh
 
-And you're done! It should be running
+And you're done! It should be running.
+Don't be worried if it segfaults/throws an error and stops. We expect this to happen every 5-20 minutes, although it's happened as soon as like 30 seconds in. The cron job will make sure that the driver will be brought back every minute. If you think that something is broken, use the date command to see when a new minute passes. If a new minute passes and by 30 seconds running the script called getDriverPID doesn't return anything, something went wrong.
+
+Sanity Checks:
+	Check your .bashrc file to see if you have
+	# User specific aliases and functions
+	export LD_LIBRARY_PATH=/opt/libressl/lib
+	export LDFLAGS=/opt/libressl/lib
+	export CPPFLAGS=/opt/libressl/include
+	export PATH_TO_SEARCH_ENGINE=/home/ec2-user/SearchEngine
+	To verify that these environment variables are set, you can run 
+	echo $PATH_TO_SEARCH_ENGINE, it should print out /home/ec2-user/SearchEngine
+
+	to verify that the cron job is running, run crontab -e. It should look like what is in scripts/runOnCron.txt
 
 TMUX CONTROLS 
 From command line:

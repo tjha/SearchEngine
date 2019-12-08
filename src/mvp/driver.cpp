@@ -1,6 +1,6 @@
 // Implementation of basic mercator architecture
 
-// 2019-12-08: blacklist getstencil.com: combsc
+// 2019-12-08: blacklist getstencil.com, fix crawled logic: combsc
 // 2019-12-07: Load crawled links
 // 2019-12-06: Implement hashing to prevent overlap between distributed crawlers: combsc
 //             Split up performance and saving. logging file now refreshing after 100 mb filled: jhirsh
@@ -254,6 +254,10 @@ void *worker( void *args )
 			pthread_cond_wait( &frontierCV, &frontierLock );
 			}
 		dex::Url toCrawl = urlFrontier.getUrl( );
+		while ( alreadyCrawled( toCrawl ) )
+			{
+			toCrawl = urlFrontier.getUrl( );
+			}
 		if ( time( NULL ) - lastDataCheckpoint > checkpointDataStructure || state == 's' )
 			{
 			saveDataStructures( );
@@ -285,12 +289,16 @@ void *worker( void *args )
 		if ( robotsCache.purge( ) == 1 )
 			print( "Purged Robot Cache" );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
+		addToCrawled( toCrawl );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
 			if ( errorCode == dex::NOT_HTML )
+				{
 				print( toCrawl.completeUrl( ) + " is not html " );
+				}
+				
 
 			if ( errorCode == 0 )
 				{
@@ -307,8 +315,6 @@ void *worker( void *args )
 				pthread_mutex_lock( &crawledLinksLock );
 				numCrawledLinks++;
 				pthread_mutex_unlock( &crawledLinksLock );
-
-				addToCrawled( toCrawl );
 
 				
 				dex::vector < dex::Url > links;
@@ -378,7 +384,6 @@ void *worker( void *args )
 		// This link doesn't lead anywhere, we need to add it to our broken links
 		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR || errorCode == dex::RESPONSE_TOO_LARGE )
 			{
-			addToCrawled( toCrawl );
 			}
 		}
 	return nullptr;
