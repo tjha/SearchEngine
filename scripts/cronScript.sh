@@ -1,9 +1,10 @@
 #!/bin/sh
 
+cd $PATH_TO_SEARCH_ENGINE
 if pgrep -x "driver.exe" > /dev/null
 then
-	echo Running!
+	rm scripts/tmp/cronresult.txt
 else
-	cd $PATH_TO_SEARCH_ENGINE
+	rm scripts/tmp/cronresult.txt
 	./build/driver.exe &
 fi
