@@ -1,6 +1,7 @@
 // index.hpp
 // Indexer.
 //
+// 2019-12-08: IndexStreamReader constructor and next: lougheem
 // 2019-11-21: File created
 
 #include <cstddef>
@@ -17,6 +18,8 @@
 #include "../utils/utf.hpp"
 #include "../utils/utility.hpp"
 #include "../utils/vector.hpp"
+
+#include <iostream>
 
 // postsChunk
 dex::index::indexChunk::postsChunk::postsChunk( size_t previousPostsChunkOffset ) :
@@ -172,23 +175,31 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	return true;
 	}
 
-dex::index::indexStreamReader::indexStreamReader( dex::string word, indexChunk *indexChunk )
+dex::index::indexChunk::indexStreamReader::indexStreamReader( dex::string word, indexChunk *indexChunk )
 	{
 	indexChunkum = indexChunk;
 	postsMetadatum = indexChunkum->postsMetadataArray + indexChunkum->dictionary[ word ];
-	indexChunkum = indexChunkum->postsChunkArray + postsMetadatum->firstPostsChunkOffset;
-	post = indexChunkum->posts;
+	postsChunkum = indexChunkum->postsChunkArray + postsMetadatum->firstPostsChunkOffset;
+	post = postsChunkum->posts;
 	}
 
-byte *dex::index::indexStreamReader::next( )
+unsigned char *dex::index::indexChunk::indexStreamReader::next( )
 	{
+	if ( postsMetadatum->occurenceCount == 0 )
+		int x = 2; // TODO: fix this placeholder
+
 	if ( !post )
 		{
-
+		postsChunkum = indexChunkum->postsChunkArray + postsMetadatum->firstPostsChunkOffset;
+		post = postsChunkum->posts;
 		}
 	else
 		{
-		
+		// Assume valid posts and all...
+		// 	post is a pointer to an encoded something. Just decode this whatever using the decode functions
+		size_t delta = dex::utf::decodeSafe( post );
+		post += dex::utf::encoder < size_t >( )( delta ).size( ); // TODO: create ecoder length function
+		return post;
 		}
 	}
 

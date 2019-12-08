@@ -1,6 +1,7 @@
 // index.hpp
 // Indexer.
 //
+// 2019-12-08: Begin IndexStreamReader class: lougheem
 // 2019-11-22: Wrote addDocument, update sync points, encoder/decoder for metadata, add stemming, change how to go
 //             between offsets and posts,move things to index.cpp: jasina, lougheem
 // 2019-11-13: Define most of index chunk internals: jasina, lougheem
@@ -256,6 +257,7 @@ namespace dex
 						// 	offset into the indexChunk where the current pointer is
 
 					public:
+						indexStreamReader( dex::string word, indexChunk *indexChunk);
 						byte *next( );
 						byte *nextDocument( );
 						byte *seek( size_t target );
