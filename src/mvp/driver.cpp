@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-12-08: blacklist getstencil.com: combsc
 // 2019-12-07: Load crawled links
 // 2019-12-06: Implement hashing to prevent overlap between distributed crawlers: combsc
 //             Split up performance and saving. logging file now refreshing after 100 mb filled: jhirsh
@@ -328,17 +329,20 @@ void *worker( void *args )
 					// Fix link using our redirects cache
 					dex::Url current = *it;
 					current.setFragment( "" );
-					fixRedirect( current );
-
-					// Check to see if the endpoint we have is a known broken link or if we've already crawled
-					if ( !alreadyCrawled( current) )
+					if ( current.getHost( ) != "getstencil.com" )
 						{
-						size_t urlId = getUrlInstance( *it );
-						if ( urlId == instanceId )
+						fixRedirect( current );
+						// Check to see if the endpoint we have is a known broken link or if we've already crawled
+						if ( !alreadyCrawled( current) )
 							{
-							urlFrontier.putUrl( *it );
+							size_t urlId = getUrlInstance( *it );
+							if ( urlId == instanceId )
+								{
+								urlFrontier.putUrl( *it );
+								}
 							}
 						}
+					
 					}
 				pthread_cond_signal( &frontierCV );
 				
