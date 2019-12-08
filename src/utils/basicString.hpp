@@ -12,6 +12,7 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-12-07: Increase efficiency of iterators (at the cost of safety) and find: jasina
 // 2019-12-06: Add stoi: combscs
 // 2019-11-23: Add toLowerCase: combsc
 // 2019-11-20: Add replaceWhitespace and toString function: combsc
@@ -260,10 +261,10 @@ namespace dex
 					size_t position;
 					_iterator(
 							typename
-									dex::conditional < isConst, const basicString < charT > &, basicString < charT > & >::type
+									dex::conditional < isConst, const basicString < charT > *, basicString < charT > * >::type
 									string,
 							size_t position ) :
-							string( &string ), position( position ) { }
+							string( string ), position( position ) { }
 				public:
 					template < typename = typename dex::enableIf < isConst > >
 					_iterator( const _iterator < false, isForward > &other ) :
@@ -271,15 +272,10 @@ namespace dex
 
 					friend bool operator==( const _iterator &a, const _iterator &b )
 						{
-						// Only makes sense to compare iterators pointing to the same string
-						if ( a.string != b.string )
-							throw invalidArgumentException( );
 						return a.position == b.position;
 						}
 					friend bool operator!=( const _iterator &a, const _iterator &b )
 						{
-						if ( a.string != b.string )
-							throw invalidArgumentException( );
 						return a.position != b.position;
 						}
 
@@ -298,80 +294,55 @@ namespace dex
 
 					_iterator &operator++( )
 						{
-						if ( position < string->size( ) )
-							++position;
-						else
-							throw outOfRangeException( );
+						++position;
 						return *this;
 						}
 					_iterator operator++( int )
 						{
 						_iterator toReturn( *this );
-						if ( position < string->size( ) )
-							++position;
-						else
-							throw outOfRangeException( );
+						++position;
 						return toReturn;
 						}
 
 					_iterator &operator--( )
 						{
-						if ( position > 0 )
-							--position;
-						else
-							throw outOfRangeException( );
+						--position;
 						return *this;
 						}
 					_iterator operator--( int )
 						{
-						if ( position > 0 )
-							--position;
-						else
-							throw outOfRangeException( );
-						return *this;
+						_iterator toReturn( *this );
+						--position;
+						return toReturn;
 						}
 
 					friend _iterator operator-( const _iterator &it, int n )
 						{
-						if ( it.position > n + it.string->size( ) || ( n > 0 && it.position < size_t( n ) ) )
-							throw outOfRangeException( );
-						return _iterator( *it.string, it.position - n );
+						return _iterator( it.string, it.position - n );
 						}
 					friend int operator-( const _iterator &a, const _iterator &b )
 						{
-						if ( a.string != b.string )
-							throw invalidArgumentException( );
 						return int( a.position - b.position );
 						}
 					friend _iterator operator+( const _iterator &it, int n )
 						{
-						if ( it.position + n > it.string->size( ) || ( n < 0 && it.position < size_t( -n ) ) )
-							throw outOfRangeException( );
-						return _iterator( *it.string, it.position + n );
+						return _iterator( it.string, it.position + n );
 						}
 
 					friend bool operator<( const _iterator &a, const _iterator &b )
 						{
-						if ( a.string != b.string )
-							throw invalidArgumentException( );
 						return a.position < b.position;
 						}
 					friend bool operator>( const _iterator &a, const _iterator &b )
 						{
-						if ( a.string != b.string )
-							throw invalidArgumentException( );
 						return a.position > b.position;
 						}
 					friend bool operator<=( const _iterator &a, const _iterator &b )
 						{
-						if ( a.string != b.string )
-							throw invalidArgumentException( );
 						return a.position <= b.position;
 						}
 					friend bool operator>=( const _iterator &a, const _iterator &b )
 						{
-						if ( a.string != b.string )
-							throw invalidArgumentException( );
 						return a.position >= b.position;
 						}
 
@@ -395,41 +366,41 @@ namespace dex
 			typedef _iterator < false, true > iterator;
 			iterator begin( )
 				{
-				return iterator( *this, 0 );
+				return iterator( this, 0 );
 				}
 			iterator end( )
 				{
-				return iterator( *this, size( ) );
+				return iterator( this, size( ) );
 				}
 
 			typedef _iterator < true, true > constIterator;
 			constIterator cbegin( ) const
 				{
-				return constIterator( *this, 0 );
+				return constIterator( this, 0 );
 				}
 			constIterator cend( ) const
 				{
-				return constIterator( *this, size( ) );
+				return constIterator( this, size( ) );
 				}
 
 			typedef _iterator < false, false > reverseIterator;
 			reverseIterator rbegin( )
 				{
-				return reverseIterator( *this, 0 );
+				return reverseIterator( this, 0 );
 				}
 			reverseIterator rend( )
 				{
-				return reverseIterator( *this, size( ) );
+				return reverseIterator( this, size( ) );
 				}
-			
+
 			typedef _iterator < true, false > constReverseIterator;
 			constReverseIterator crbegin( ) const
 				{
-				return constReverseIterator( *this, 0 );
+				return constReverseIterator( this, 0 );
 				}
 			constReverseIterator crend( ) const
 				{
-				return constReverseIterator( *this, size( ) );
+				return constReverseIterator( this, size( ) );
 				}
 
 			// CTRLF Element Access
@@ -786,17 +757,17 @@ namespace dex
 				}
 			size_t find( const charT *other, size_t position, size_t n ) const
 				{
-				constIterator location = dex::search( cbegin( ) + position, cend( ), other, other + n );
-				if ( location == cend( ) )
+				const charT *location = dex::search( cStr( ) + position, cStr( ) + size( ), other, other + n );
+				if ( location == cStr( ) + size( ) )
 					return npos;
-				return location - cbegin( );
+				return location - cStr( );
 				}
 			size_t find( charT c, size_t position = 0 ) const
 				{
-				constIterator location = dex::find( cbegin( ) + position, cend( ), c );
-				if ( location == cend( ) )
+				const charT *location = dex::find( cStr( ) + position, cStr( ) + size( ), c );
+				if ( location == cStr( ) + size( ) )
 					return npos;
-				return location - cbegin( );
+				return location - cStr( );
 				}
 
 			size_t rfind( const basicString &other, size_t position = npos ) const
@@ -996,7 +967,7 @@ namespace dex
 
 				for ( size_t i = stripped.findFirstOf( whitespace );  i != npos;  i = stripped.findFirstOf( whitespace ) )
 					stripped.replace( i, 1, replace );
-				
+
 				return stripped;
 				}
 
@@ -1138,8 +1109,6 @@ namespace dex
 		return lhs.compare( rhs ) <= 0;
 		}
 
-	
-
 	typedef dex::basicString < char > string;
 
 	string toString( long i )
@@ -1168,7 +1137,7 @@ namespace dex
 		int base = 1;
 		for ( size_t i = s.size( );  i > 0;  --i )
 			{
-			
+
 			char c = s[ i - 1 ];
 			if ( i == 1 && c == '-' )
 				return -1 * toRet;

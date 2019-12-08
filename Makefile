@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g -pthread
+CXXFLAGS = -std=c++17 -Wall -Wextra -g3 -pthread
 
 # flags
 UNAME_S := $(shell uname -s)

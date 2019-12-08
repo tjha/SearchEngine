@@ -107,7 +107,7 @@ namespace dex
 			size_t found = frontierList.find( delimiter, 0 );
 			size_t start = found + delimiter.size( );
 			// Parse the frontier_file and add it to list of urls
-			while ( start >= 0 && start < frontierList.size( ) )
+			while ( start < frontierList.size( ) )
 				{
 				found = frontierList.find( delimiter, start );
 				if ( found < frontierList.npos )
@@ -159,6 +159,35 @@ namespace dex
 		return writeToFile( fileName, crawledData.cStr( ), crawledData.size( ) );
 		}
 
+	dex::unorderedSet < dex::string > loadCrawledLinks( const char * fileName )
+		{
+		dex::unorderedSet < dex::string > links;
+		if ( !dex::fileExists( fileName ) )
+			return links;
+		// read in the frontier file
+		string crawled( readFromFile( fileName ) );
+		
+		string delimiter = "\n";
+		size_t found = crawled.find( delimiter, 0 );
+		size_t start = found + delimiter.size( );
+		// Parse the frontier_file and add it to list of urls
+		while ( start < crawled.size( ) )
+			{
+			found = crawled.find( delimiter, start );
+			if ( found < crawled.npos )
+				{
+				string url( crawled.begin( ) + start, crawled.begin( ) + found );
+				links.insert( url );
+				start = found + delimiter.size( );
+				}
+			else
+				{
+				break;
+				}
+			}
+		return links;
+		}
+
 	dex::unorderedSet < dex::Url > loadBrokenLinks ( const char * fileName )
 		{
 		dex::unorderedSet < dex::Url > brokenLinks;
@@ -170,7 +199,7 @@ namespace dex
 		size_t found = linksList.find( delimiter, 0 );
 		size_t start = found + delimiter.size( );
 		// Parse the frontier_file and add it to list of urls
-		while ( start >= 0 && start < linksList.size( ) )
+		while ( start < linksList.size( ) )
 			{
 			found = linksList.find( delimiter, start );
 			if ( found < linksList.npos )
