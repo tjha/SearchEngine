@@ -30,9 +30,9 @@ namespace dex
 				if ( host.size( ) > 4 )
 					{
 					if ( host.substr( 0, 4 ) == "www." )
-						{
-						score += 8;
-						}
+-                                              {
+-                                              score += 8;
+-                                              }
 					host = host.substr( host.size( ) - 4, 4);
 					if ( host == ".com" )
 						{
