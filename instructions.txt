@@ -10,7 +10,7 @@ Attach existing policies by entering into seachbar:
 - AmazonVPCFullAccess
 - AmazonEC2FullAccess
 - AmazonS3FullAccess
-- IAMFullAccess, ec2, s3, iam, config all FULL ACCESS
+- IAMFullAccess
 - AWSConfigRole
 
 Subnet -> us-east-1e
@@ -87,3 +87,10 @@ C-b % 				split window horizontally
 C-b " 				split window vertically
 C-b :detach 			exits but keeps window running in background
 C-b :kill-session 		kill session
+
+SFTP transfer your s3 into our indexer instance
+
+./scripts/sftp-bucket.sh <bucket-path> <batch-name>
+EX:
+./scripts/sftp-bucket.sh ../socket-html/html/ jonas-batch0
+
