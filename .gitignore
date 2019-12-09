@@ -11,3 +11,7 @@ ehthumbs.db
 Thumbs.db
 *.gch
 *.dSYM
+data/tmp
+data/toShip
+data/crawledLinks.txt
+data/instanceInfo.txt
