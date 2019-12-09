@@ -254,8 +254,12 @@ void *worker( void *args )
 			pthread_cond_wait( &frontierCV, &frontierLock );
 			}
 		dex::Url toCrawl = urlFrontier.getUrl( );
-		while ( alreadyCrawled( toCrawl ) )
+		while ( alreadyCrawled( toCrawl ) || !robotsCache.politeToVisit( toCrawl.getHost( ), toCrawl.getPath( ) ) )
 			{
+			if ( !alreadyCrawled( toCrawl ) )
+				{
+				urlFrontier.putUrl( toCrawl );
+				}
 			toCrawl = urlFrontier.getUrl( );
 			}
 		if ( time( NULL ) - lastDataCheckpoint > checkpointDataStructure || state == 's' )
