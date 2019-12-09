@@ -33,10 +33,9 @@ dex::string tmpPath = "data/tmp/";
 dex::string toShipPath = "data/toShip/";
 
 // Sizes of our data structures
-size_t frontierSize = 20000;
-size_t crawledLinksSize = 20000;
+size_t frontierSize = 50000;
+size_t crawledLinksSize = 50000;
 size_t robotsMapSize = 5000;
-const size_t redirectsSize = 500;
 
 // All urls in the frontier must be known to be in our domain
 // and lead to a legitimate endpoint, or must be unknown. This
@@ -64,11 +63,6 @@ dex::sharedReaderLock crawledLock;
 // This is used to hash URLs
 size_t numInstances;
 size_t instanceId;
-
-// This is the redirect cache. Used for handling known redirects on our
-// side without having to actually visit the sites.
-dex::redirectCache redirects( redirectsSize );
-pthread_mutex_t redirectsLock = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -160,22 +154,6 @@ size_t getUrlInstance( const dex::Url &url )
 	return h % numInstances;
 	}
 
-void fixRedirect( dex::Url &toCrawl )
-	{
-	pthread_mutex_lock( &redirectsLock );
-	toCrawl = redirects.getEndpoint( toCrawl );
-	if ( redirects.size( ) > redirectsSize )
-		redirects.reset( );
-	pthread_mutex_unlock( &redirectsLock );
-	}
-
-void updateRedirect( const dex::Url &toCrawl, const dex::Url &location)
-	{
-	pthread_mutex_lock( &redirectsLock );
-	redirects.updateUrl( toCrawl, location );
-	pthread_mutex_unlock( &redirectsLock );
-	}
-
 bool alreadyCrawled( const dex::Url &toCrawl )
 	{
 	bool ret;
@@ -222,10 +200,6 @@ void savePerformance( )
 	toWrite += "Size of robotsMap " + dex::toString( robotsCache.size( ) ) + "\n";
 	toWrite += "Capacity of robotsMap " + dex::toString( robotsCache.capacity( ) ) + "\n";
 
-	pthread_mutex_lock( &redirectsLock );
-	toWrite += "Size of redirects " + dex::toString( redirects.size( ) ) + "\n";
-	toWrite += "Capacity of redirects " + dex::toString( redirects.capacity( ) ) + "\n";
-	pthread_mutex_unlock( &redirectsLock );
 	writePerformance( toWrite );
 	print( toWrite );
 
@@ -283,17 +257,15 @@ void *worker( void *args )
 			exit( 0 );
 			}
 		pthread_mutex_unlock( &frontierLock );
-		// Fix link using our redirects cache
-		fixRedirect( toCrawl );
 		
-		print( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
+		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
 		dex::string result;
 		result.reserve( 2000000 );
 		if ( robotsCache.purge( ) == 1 )
 			print( "Purged Robot Cache" );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
 		addToCrawled( toCrawl );
-		print( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
+		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
@@ -335,12 +307,10 @@ void *worker( void *args )
 				
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
-					// Fix link using our redirects cache
 					dex::Url current = *it;
 					current.setFragment( "" );
 					if ( current.getHost( ) != "getstencil.com" )
 						{
-						fixRedirect( current );
 						// Check to see if the endpoint we have is a known broken link or if we've already crawled
 						if ( !alreadyCrawled( current) )
 							{
@@ -368,12 +338,9 @@ void *worker( void *args )
 			pthread_mutex_unlock( &frontierLock );
 			}
         //print( "past politeness" );
-		// If we get a redirect, we need to update the redirects cache and put the link
-		// into the frontier or should be shipped.
 		if ( errorCode >= 300 && errorCode < 400 )
 			{
 			dex::Url location = dex::Url( result.cStr( ) );
-			updateRedirect( toCrawl, location );
 			size_t urlId = getUrlInstance( location );
 			if ( urlId == instanceId )
 				{
@@ -460,7 +427,6 @@ int main( )
 			/*crawledLock.writeLock( );
 			crawledLinks.clear( );
 			crawledLock.releaseWriteLock( );*/
-			redirects.reset( );
 			}
 		}
 	}
