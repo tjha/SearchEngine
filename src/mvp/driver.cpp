@@ -186,8 +186,6 @@ int addToFrontier( dex::Url &current )
 		if ( !alreadyCrawled( current) )
 			{
 			size_t urlId = getUrlInstance( current );
-			print( dex::toString( urlId ) );
-			print( dex::toString( instanceId ) );
 			if ( urlId == instanceId )
 				{
 				urlFrontier.putUrl( current );
