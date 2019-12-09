@@ -189,6 +189,7 @@ namespace dex
 					for ( ;  first != last;  ++first, ++newLocation )
 						{
 						string wordToAdd = decorator + dex::porterStemmer::stem( *first );
+						std::cout << "wordToAdd: " << wordToAdd << "\n";
 						postsMetadata *wordMetadata = nullptr;
 						if ( !dictionary.count( wordToAdd ) && !newWords.count( wordToAdd ) )
 							{
@@ -200,14 +201,20 @@ namespace dex
 							// deocrator string.
 							wordMetadata = &postsMetadataArray[ dictionary.size( ) + newWords.size( ) ];
 							*wordMetadata = postsMetadata( *postsChunkCount, postsMetadata::BODY );
+							std::cout << "New word!\n";
 
 							// Add a new postsChunk
 							postsChunkArray[ *postsChunkCount++ ] = postsChunk( 0 );
 
 							newWords[ wordToAdd ] = dictionary.size( ) + newWords.size( );
+							std::cout << "\t" << wordToAdd << "\t" << newWords[ wordToAdd ] << "\n";
 							}
 						else
+							{
+							std::cout << "\t" << dictionary[ wordToAdd ] << "\n";
 							wordMetadata = &postsMetadataArray[ dictionary[ wordToAdd ] ];
+							std::cout << "\t" << dictionary[ wordToAdd ] << "\n";
+							}
 
 						// Note: this loop executes its body at most once, unless things have gone impossibly, horribly,
 						// terribly wrong somehow.
@@ -234,10 +241,24 @@ namespace dex
 
 					*location = newLocation;
 
+					std::cout << "Dictionary now holds...\n";
+					for ( dex::unorderedMap < dex::string, size_t >::constIterator it = dictionary.cbegin( ); 
+							it != dictionary.cend( ); it++ )
+						std::cout << "\t-" << it->first << "-\t" << it->second << "\n";
 					return true;
 					}
 
 			public:
+				// TODO: remove this getter
+				void *getFilePointer( )
+					{
+					return filePointer;
+					}
+				
+				dex::unorderedMap < dex::string, size_t > *getDictionary ( )
+					{
+					return &dictionary;
+					}
 				bool addDocument( const dex::string &url, const dex::vector < dex::string > &anchorText,
 					const dex::vector < dex::string > &title, const dex::string &titleString,
 					const dex::vector < dex::string > &body );

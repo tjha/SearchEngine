@@ -177,10 +177,17 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 
 dex::index::indexChunk::indexStreamReader::indexStreamReader( dex::string word, indexChunk *indexChunk )
 	{
+	std::cout << "dictionary has size: " << indexChunk->dictionary.size( ) << "\n";
 	indexChunkum = indexChunk;
 	postsMetadatum = indexChunkum->postsMetadataArray + indexChunkum->dictionary[ word ];
 	postsChunkum = indexChunkum->postsChunkArray + postsMetadatum->firstPostsChunkOffset;
 	post = postsChunkum->posts;
+
+	std::cout << "Created indexStreamReader\n";
+	std::cout << "dictionary has size: " << indexChunkum->dictionary.size( ) << "\n";
+	std::cout << "\toccurs in " << postsMetadatum->documentCount << " documents\n";
+	std::cout << "\tfirstPostsChunkOffset: " << postsMetadatum->firstPostsChunkOffset << "\n";
+	std::cout << "\tdictionary[" << word << "] = " << indexChunk->dictionary[ word ] << "\n";
 	}
 
 unsigned char *dex::index::indexChunk::indexStreamReader::next( )

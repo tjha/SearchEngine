@@ -24,6 +24,7 @@ size_t getFileSize( int fileDescriptor )
 	return fileInfo.st_size;
 	}
 
+/*
 TEST_CASE( "create index chunk" )
 	{
 	const char filePath[ ] = "hello.txt";
@@ -43,6 +44,7 @@ TEST_CASE( "create index chunk" )
 
 	close( fd );
 	}
+	*/
 
 TEST_CASE( "ISR shit" )
 	{
@@ -89,16 +91,27 @@ TEST_CASE( "ISR functions" )
 	vector < string > anchorText = { "best", "shell" };
 	vector < string > title = { "hamilton", "c", "shell" };
 	string titleString = "Hamilton C Shell 2012";
-	vector < string > body = { "some", "junk", "and", "more", "junk" };
+	// vector < string > body = { "some", "junk", "and", "more", "junk" };
+	vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
+	// vector < string > body = { "some", "junk", "and", "more" };
 
 	REQUIRE( initializingIndexChunk.addDocument( url, anchorText, title, titleString, body ) );
+	REQUIRE( initializingIndexChunk.getFilePointer( ) );
+	std::cout << initializingIndexChunk.getFilePointer( ) << "\n";
+	REQUIRE( initializingIndexChunk.getDictionary( ) );
+	std::cout << "dictionary has length: " << initializingIndexChunk.getDictionary( )->size( ) << "\n";
 
 	std::cout << "Initialized indexChunk\n";
 
-	string junkString = "junk";
+	// "junk" and "some" have their offsets set to 0 in the dictionary!!
+	// 	some in the first word, so it should probably be have its offset be 0
+	// 	removing the second occurence of junk makes its offset be 1 instead of 0
+	string junkString = "junk"; 
 	indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( junkString, &initializingIndexChunk);
 	string someString = "some";
 	indexChunk::indexStreamReader someISR = indexChunk::indexStreamReader( someString, &initializingIndexChunk);
+	string andString = "and";
+	indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( andString, &initializingIndexChunk);
 	
 	// std::cout << dex::utf::decodeSafe( *junkISR.next( ) ) << "\n";
 
