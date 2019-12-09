@@ -1,7 +1,16 @@
 
-#include "../utils/basicString.hpp"
-#include "../utils/unorderedSet.hpp"
-#include "../utils/exception.hpp"
+#ifndef DEX_URL_HPP
+#define DEX_URL_HPP
+
+#include "basicString.hpp"
+#include "unorderedSet.hpp"
+#include "exception.hpp"
+#include "functional.hpp"
+// 2019-12-02: Added const to respective functions
+// 2019-11-27: Fixed completeUrl if no path is given but ?# are: combsc
+// 2019-11-24: Changed completeUrl: combsc
+// 2019-11-21: Fixed fragment/query bug: combsc
+// 2019-11-20: Add =operator, hash: combsc
 // 2019-11-10: made parts of url private, have to call get and set
 //             to ensure we don't mess up the url in the future: combsc
 // 2019-10-31: Copy constructor for robots: jhirsh
@@ -22,11 +31,14 @@ namespace dex
 			// path ALWAYS begins with '/'. Port should NOT end with
 			// '/', since this is a URL and therefore an endpoint.
 			string path;
-			// query should not include ?
+
 			string query;
-			// fragment should not include #
 			string fragment;
+			string complete;
 		public:
+			Url( )
+				{
+				}
 			Url( const char *url )
 				{
 				// Assumes url points to static text but
@@ -48,7 +60,7 @@ namespace dex
 					beginHost = endservice + 3;
 					}
 
-				int endHost = totalUrl.findFirstOf( "/:", beginHost );
+				int endHost = totalUrl.findFirstOf( "?#/:", beginHost );
 				// If there is no path or port, the end of the host is the end of the string.
 				if ( endHost == -1 )
 					endHost = totalUrl.size( );
@@ -109,10 +121,14 @@ namespace dex
 				// If a fragment exists ( the end of the query is NOT the end of the Url )
 				if ( endQuery < int( totalUrl.size( ) ) )
 					{
-					int beginFragment = endQuery + 1;
+					int beginFragment = endQuery;
 					int endFragment = int( totalUrl.size( ) );
 					fragment = totalUrl.substr( beginFragment, endFragment - beginFragment );
 					}
+				}
+
+			Url( string url )	: Url( url.cStr( ) )
+				{
 				}
 
 			Url( const Url &other )
@@ -136,29 +152,35 @@ namespace dex
 				return *this;
 				}
 			
-			string completeUrl( )
+			string computeFullUrl( )
 				{
 				string completeUrl = service + "://" + host;
 				if ( port != "" && port != "443" && port != "80" )
 					{
 					completeUrl += ":" + port;
 					}
-				if ( path != "/" )
-					{
-					completeUrl += path;
-					}
-				if ( query != "" )
-					{
-					completeUrl += "?" + query;
-					}
-				if ( fragment != "" )
-					{
-					completeUrl += "#" + fragment;
-					}
+				completeUrl += path;
+				completeUrl += query;
+				completeUrl += fragment;
 				return completeUrl;
 				}
-			
-			string getService( )
+
+			// TODO only compute this when you need to which should be
+			// 	at url creation and when you set Url
+			string completeUrl( ) const
+				{
+				string completeUrl = service + "://" + host;
+				if ( port != "" && port != "443" && port != "80" )
+					{
+					completeUrl += ":" + port;
+					}
+				completeUrl += path;
+				completeUrl += query;
+				completeUrl += fragment;
+				return completeUrl;
+				}
+
+			string getService( ) const
 				{
 				return service;
 				}
@@ -172,7 +194,7 @@ namespace dex
 					}
 				}
 
-			string getHost( )
+			string getHost( ) const
 				{
 				return host;
 				}
@@ -181,7 +203,7 @@ namespace dex
 				host = h;
 				}
 
-			string getPort( )
+			string getPort( ) const
 				{
 				return port;
 				}
@@ -203,7 +225,7 @@ namespace dex
 					}
 				}
 
-			string getPath( )
+			string getPath( ) const
 				{
 				return path;
 				}
@@ -217,7 +239,7 @@ namespace dex
 					path.popBack( );
 				}
 
-			string getQuery( )
+			string getQuery( ) const
 				{
 				return query;
 				}
@@ -227,7 +249,7 @@ namespace dex
 				query = q;
 				}
 
-			string getFragment( )
+			string getFragment( ) const
 				{
 				return fragment;
 				}
@@ -236,5 +258,20 @@ namespace dex
 				{
 				fragment = f;
 				}
+		
+		};
+
+	bool operator==( const dex::Url &lhs, const dex::Url &rhs )
+		{
+		return lhs.completeUrl( ) == rhs.completeUrl( );
+		}
+	template < >
+	struct hash < dex::Url >
+		{
+		unsigned long operator()( const dex::Url &url ) const
+			{
+			return dex::hash< dex::string >{} ( url.completeUrl( ) );
+			}
 		};
 	}
+#endif
