@@ -2,6 +2,7 @@
 //
 // Perform tests on vector implementation
 //
+// 2019-12-04 jasina, lougheem - Add test for initializer list constructor
 // 2019-10-27 jasina - Revamp swap test
 // 2019-10-26 medhak, tjha - Added test to pushBack and popBack to vector <string>
 // 2019-10-24 jasina, jhirshey, lougheem, medhak - finish up remaining test cases
@@ -27,6 +28,9 @@ TEST_CASE( "test constructors", "[vector]")
 		REQUIRE( v2.size( ) == 5 );
 		vector < int > v3( 0 );      // constructor with size specified to 0
 		REQUIRE( v3.size( ) == 0 );
+		vector < int > v4 = { 3, 1, 4, 1, 5, 9 };
+		REQUIRE( v4.size( ) == 6 );
+		REQUIRE( v4.data( )[ 2 ] == 4 );
 		}
 
 	SECTION( "copy" )
