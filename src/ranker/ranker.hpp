@@ -1,6 +1,7 @@
 // ranker.hpp
 // This ranks the stuff
 
+// 2019-12-09: Implementing static title ranking: combsc
 // 2019-12-09: Init Commit: combsc + lougheem
 
 #include "vector.hpp"
@@ -55,12 +56,37 @@ namespace dex
 				{
 				return pos;
 				}
+			dex::string getWord( )
+				{
+				return word;
+				}
+		};
+
+		struct document
+			{
+			// Constraint solver needs to make sure to not return pornographic results
+			// vector of ISRs should be in the order of the flattened query
+			dex::vector < dex::ISR > titleISRs;
+			dex::vector < dex::ISR > bodyISRs;
+			dex::string title;
+			dex::Url url;
+			unsigned rarestWordIndex;
+			unsigned documentBodyLength;
+			};
+
+	
+		class indexChunkWorker
+		{
+		
+		public:
+			dex::vector < dex::vector < dex::ISR > > get ( std::string query );
 		};
 	
 	class ranker
 		{
 		private:
-			double scoreUrl( dex::Url url )
+			dex::vector < dex::pair < unsigned, double > > staticTitleWeights;
+			double staticScoreUrl( dex::Url url )
 				{
 				double score = 0;
 				// Promote good tlds ( .com, .org, .gov )
@@ -135,6 +161,21 @@ namespace dex
 				return score;
 				}
 
+
+			// Title weights contains vector of pairs
+			// pair.first is the number of characters in the title
+			// pair.second is the number of points awarded if the size is less than or equal to first
+			double staticScoreTitle( const dex::string &title )
+				{
+				unsigned size = title.size( );
+				for ( auto it = staticTitleWeights.cbegin( );  it != staticTitleWeights.cend( );  ++it )
+					{
+					if ( size <= it->first )
+						return it->second;
+					}
+				return 0;
+				}
+
 			/*
 			Spans  (Contain all query words contained in this body)
 				Range from 0 - 5 occurrences
@@ -185,13 +226,26 @@ namespace dex
 
 			ranker( )
 				{
+				staticTitleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
 				}
+
+			ranker( dex::vector < dex::pair < unsigned, double > > titleWeights)
+				{
+				staticTitleWeights = titleWeights;
+				}
+
+			double getStaticScoreTitle( dex::string title )
+				{
+				return staticScoreTitle( title );
+				}
+			
 			// Heuristics is a vector contianing the lengths of the spans you're looking for in the document
 			// Emphasized is a vector containing whether or not the word at that index was emphasized
 			// Vector of ISRs should be arranged such that the words of the ISRs line up with the order of the query
 			// rarest should be the index of the ISR of the rarest word in the query
 			// { 1, 2, 4, 8 }
-			vector < unsigned > getDesiredSpans( vector < double > heuristics, vector < bool > emphasized, vector < ISR > isrs, unsigned rarest )
+			vector < unsigned > getDesiredSpans( vector < double > heuristics, vector < bool > emphasized, 
+					vector < ISR > isrs, unsigned rarest )
 				{
 				unsigned size = isrs.size( );
 				vector < unsigned > spansOccurances( heuristics.size( ) );
@@ -200,19 +254,28 @@ namespace dex
 				vector < unsigned > next( size );
 				for ( unsigned index = 0;  index < size;  ++index )
 					{
-					std::cout << isrs[ index ].getPos( ) << std::endl;
+					std::cout << "Initializing " << isrs[ index ].getWord ( ) << "\n";
 					current[ index ] = isrs[ index ].next( );
-					std::cout << isrs[ index ].getPos( ) << std::endl;
+					std::cout << "\t" << current[ index ];
 					next[ index ] = isrs[ index ].next( );
+					std::cout << "\t" << next[ index ] << "\n";
 					}
 
 				dex::vector < unsigned > closestLocations( size );
 				while ( current[ rarest ] != ISR::npos )
 					{
+					std::cout << "Iteration: " << current[ rarest ] << "\n";
 					closestLocations[ rarest ] = current[ rarest ];
 					for ( unsigned index = 0;  index < size;  ++index )
 						{
-						unsigned desiredPosition = current[ rarest ] + index - rarest;
+						unsigned desiredPosition;
+						if ( current[ rarest ] + index < rarest )
+							desiredPosition = 0;
+						else
+							desiredPosition = current[ rarest ] + index - rarest;
+
+						std::cout << "\t -" << isrs[ index ].getWord( ) << " starts at " << current[ index ] 
+								<< " with desiredPosition of " << desiredPosition << "\n";
 						if ( index != rarest )
 							{
 							// Position our ISRs such that current is less than our desired position and next is greater than our
@@ -220,40 +283,43 @@ namespace dex
 							// next[ index ] - current[ rarest ] < index - rarest
 							while ( next[ index ] != ISR::npos && next[ index ] + rarest < current[ rarest ] + index )
 								{
-								std::cout << "increment" << std::endl;
 								current[ index ] = next[ index ];
 								next[ index ] = isrs[ index ].next( );
+								std::cout << "\t\t\t..." << current[ index ] << "\n";
 								}
+
 							// Take the value that is closest to our desired position for this span.
 							unsigned closest;
-							std::cout << "first: " << desiredPosition - current[ index ] << std::endl;
-							std::cout << "second: " << next[ index ] - desiredPosition << std::endl;
-							if ( desiredPosition - current[ index ] < next[ index ] - desiredPosition )
+							// if ( desiredPosition - current[ index ] < next[ index ] - desiredPosition )
+							if ( desiredPosition + desiredPosition < next[ index ] + current[ index ] )
 								{
 								closest = current[ index ];
-								std::cout << desiredPosition << std::endl;
-								std::cout << closest << std::endl;
+								std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+										<< " and " << next[ index ] << "\n";
 								}
 							else
 								{
-								if ( desiredPosition - current[ index ] > next[ index ] - desiredPosition || index > rarest )
+								// if ( desiredPosition - current[ index ] > next[ index ] - desiredPosition || index > rarest )
+								if ( desiredPosition + desiredPosition > next[ index ] + current[ index ]  || index > rarest )
 									{
 									closest = next[ index ];
+									std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+											<< " and " << next[ index ] << "\n";
 									}
 								else
 									{
 									closest = current[ index ];
+									std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+											<< " and " << next[ index ] << "\n";
 									}
 								}
 							closestLocations[ index ] = closest;
 							}
 						}
-					unsigned max = ISR::npos;
-					unsigned min = 0;
-					std::cout << "new span for " << current[ rarest ] << std::endl;
+					unsigned min = ISR::npos;
+					unsigned max = 0;
 					for ( unsigned index = 0;  index < size;  ++index )
 						{
-						std::cout << closestLocations[ index ] << std::endl;
 						if ( closestLocations[ index ] > max )
 							{
 							max = closestLocations[ index ];
@@ -263,7 +329,9 @@ namespace dex
 							min = closestLocations[ index ];
 							}
 						}
-					unsigned span = max - min;
+					// What if min/max weren't updated??
+					unsigned span = max - min + 1;
+					std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
 					for ( unsigned index = 0;  index < heuristics.size( );  ++index )
 						{
 						if ( span <= heuristics[ index ] * size )
