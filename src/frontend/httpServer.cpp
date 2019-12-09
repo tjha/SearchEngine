@@ -144,6 +144,15 @@ void *Talk( void *p )
       return nullptr;
    path = request.substr( typeEnd + 2, pathEnd - typeEnd - 2 );
 
+   string query;
+   size_t r = path.find( "results.html");
+   size_t q = path.find( "?query=");
+   if ( r != string::npos && q != string::npos && r + 12 == q )
+      {
+      query = path.substr( q + 7, pathEnd - q - 7 );
+      path = "results.html";
+      }
+
    int file;
    if ( !pathIsLegal( path ) || ( file = open( path.c_str( ), O_RDONLY ) ) == -1 )
       {
@@ -151,19 +160,46 @@ void *Talk( void *p )
       send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
       }
 
+
+   // TODO: send query to query compiler
+   
+   // TODO: populate webpage with content
+
+
    struct stat fileInfo;
    fstat( file, &fileInfo );
    char *map = ( char * )mmap( nullptr, fileInfo.st_size, PROT_READ, MAP_PRIVATE, file, 0 );
+
+   string results;
+   string content;
+   if ( path == "results.html" )
+      {
+      results = "Results 1 - 10 populated here";
+      content = string(map);
+      content.insert(content.find("query=") + 6, query );
+      content.insert(content.find("results=") + 8, results );
+      }
+
    if ( map == MAP_FAILED )
       return nullptr;
 
-   string responseHeader = "HTTP/1.1 200 OK\r\nContent-Length: " + to_string( fileInfo.st_size )
+   int totalSize = fileInfo.st_size + query.size() + results.size();
+
+   string responseHeader = "HTTP/1.1 200 OK\r\nContent-Length: "
+         + to_string( totalSize )
          + "\r\nConnection: close\r\nContent-Type: " + Mimetype( path ) + "\r\n\r\n";
    send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
 
-   for ( int i = 0;  i != fileInfo.st_size / bufferSize;  ++i )
-      send( socket, map + i * bufferSize, bufferSize, 0 );
-   send( socket, map + bufferSize * ( fileInfo.st_size / bufferSize ), fileInfo.st_size % bufferSize, 0 );
+   if ( path == "results.html" )
+      send( socket, content.data( ), content.size( ), 0 );
+   else
+      {
+      for ( int i = 0;  i != fileInfo.st_size / bufferSize;  ++i )
+         send( socket, map + i * bufferSize, bufferSize, 0 );
+
+      send( socket, map + bufferSize * ( fileInfo.st_size / bufferSize ), fileInfo.st_size % bufferSize, 0 );
+      }
+
 
    close( file );
    return nullptr;
