@@ -34,7 +34,10 @@ namespace dex
 					return -100;
 					}
 				// Promote good tlds ( .com, .org, .gov )
-				
+				if ( host.find( "tumblr" ) != dex::string::npos )
+					{
+					score -= 10;
+					}
 				if ( host.size( ) > 4 )
 					{
 					if ( host.substr( 0, 4 ) == "www." )

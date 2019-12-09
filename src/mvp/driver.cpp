@@ -151,7 +151,7 @@ int writePerformance( dex::string &toWrite )
 size_t getUrlInstance( const dex::Url &url )
 	{
 	dex::hash < dex::string > hasher;
-	unsigned long h = hasher( url.getHost( ) );
+	unsigned long h = hasher( url.completeUrl( ) );
 	return h % numInstances;
 	}
 
@@ -186,6 +186,8 @@ int addToFrontier( dex::Url &current )
 		if ( !alreadyCrawled( current) )
 			{
 			size_t urlId = getUrlInstance( current );
+			print( dex::toString( urlId ) );
+			print( dex::toString( instanceId ) );
 			if ( urlId == instanceId )
 				{
 				urlFrontier.putUrl( current );
@@ -453,6 +455,7 @@ int main( )
 			for ( size_t i = 0;  i < numWorkers; ++i )
 				pthread_join( workers[ i ], nullptr );
 			
+			saveDataStructures( );	
 			std::cout << "exiting safely...\n";
 			return 0;
 			}
