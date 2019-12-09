@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-12-09: Only add links into our frontier that are polite: combsc
 // 2019-12-08: blacklist getstencil.com, fix crawled logic: combsc
 // 2019-12-07: Load crawled links
 // 2019-12-06: Implement hashing to prevent overlap between distributed crawlers: combsc
@@ -128,7 +129,7 @@ int writePerformance( dex::string &toWrite )
 	if ( dex::fileSize( performanceFileDescriptor ) > performanceFileMaxSize )
 		{
 		close( performanceFileDescriptor );
-		performanceFileDescriptor = dex::createNewPerformanceFile( ( tmpPath + "performance" ).cStr( ), performanceFile );
+		performanceFileDescriptor = dex::createNewPerformanceFile( ( tmpPath + "performance/" ).cStr( ), performanceFile );
 		}
 
 	int error = write( performanceFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
@@ -173,6 +174,26 @@ void addToCrawled( const dex::Url &toCrawl )
 		}
 	crawledLinks.insert( toCrawl.completeUrl( ) );
 	crawledLock.releaseWriteLock( );
+	}
+
+// returns 0 if added successfully, return -1 if not added.
+int addToFrontier( dex::Url &current )
+	{
+	current.setFragment( "" );
+	if ( current.getHost( ) != "getstencil.com" )
+		{
+		// Check to see if the endpoint we have is a known broken link or if we've already crawled
+		if ( !alreadyCrawled( current) )
+			{
+			size_t urlId = getUrlInstance( current );
+			if ( urlId == instanceId )
+				{
+				urlFrontier.putUrl( current );
+				return 0;
+				}
+			}
+		}
+	return -1;
 	}
 
 // Call checkpointing functions after time alotted or user input
@@ -304,25 +325,40 @@ void *worker( void *args )
 					}
 
 				pthread_mutex_lock( &frontierLock );
-				
+
+				dex::vector < dex::Url > inboundLinks;
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
-					dex::Url current = *it;
-					current.setFragment( "" );
-					if ( current.getHost( ) != "getstencil.com" )
+					if ( it->getHost( ) == toCrawl.getHost( ) )
 						{
-						// Check to see if the endpoint we have is a known broken link or if we've already crawled
-						if ( !alreadyCrawled( current) )
+						inboundLinks.pushBack( *it );
+						}
+					else
+						{
+						if ( robotsCache.politeToVisit( it->getHost( ), it->getPath( ) ) )
 							{
-							size_t urlId = getUrlInstance( *it );
-							if ( urlId == instanceId )
-								{
-								urlFrontier.putUrl( *it );
-								}
+							dex::Url current = *it;
+							addToFrontier( current );
 							}
 						}
-					
 					}
+				
+				// Add 2 random inbound links to the frontier.
+				size_t toAdd = 2;
+				size_t added = 0;
+				while ( inboundLinks.size( ) > 0 && added < toAdd )
+					{
+					int location = rand( ) % inboundLinks.size( );
+					int didAdd = addToFrontier( inboundLinks[ location ] );
+					// If we successfully added this link
+					if ( didAdd == 0 )
+						{
+						added++;
+						}
+					inboundLinks[ location ] = inboundLinks.back( );
+					inboundLinks.popBack( );
+					}
+
 				pthread_cond_signal( &frontierCV );
 				
 				pthread_mutex_unlock( &frontierLock );
