@@ -1,6 +1,7 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-12-09: Add timeToWait: combsc
 // 2019-12-08: Default delay 10 sceonds: combsc
 // 2019-12-03: default delay 1 second:combsc
 // 2019-11-27: Finished wildcard checking: combsc
@@ -402,7 +403,10 @@ namespace dex
 				{
 				return expireTime;
 				}
-
+			time_t timeToWait( ) const
+				{
+				return allowedVisitTime - time( nullptr );
+				}
 			const dex::unorderedSet < dex::string > getAllowedPaths( ) const
 				{
 				return allowedPaths;

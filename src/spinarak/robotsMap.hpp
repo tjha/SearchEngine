@@ -132,6 +132,27 @@ namespace dex
 				return toReturn;
 				}
 
+			time_t timeToWait( const dex::string &domain )
+				{
+				mapLock.readLock( );
+				if ( !existsNoLock( domain ) )
+					{
+					mapLock.releaseReadLock( );
+					return 0;
+					}
+				mainMap[ domain ].second->readLock( );
+				if ( !mainMap[ domain ].first )
+					{
+					mainMap[ domain ].second->releaseReadLock( );
+                                        mapLock.releaseReadLock( );
+                                        return 10;
+					}
+				int toReturn = mainMap[ domain ].first->timeToWait( );
+				mainMap[ domain ].second->releaseReadLock( );
+                                mapLock.releaseReadLock( );
+                                return toReturn;
+				}
+
 			// return 0 on success, -1 on fail
 			int writeUnlock( const dex::string &domain )
 				{

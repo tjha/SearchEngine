@@ -51,7 +51,7 @@ char state = 0;
 size_t numCrawledLinks = 0;
 pthread_mutex_t crawledLinksLock = PTHREAD_MUTEX_INITIALIZER;
 
-#define numWorkers 1
+#define numWorkers 100
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -283,7 +283,6 @@ void *worker( void *args )
 			exit( 0 );
 			}
 		pthread_mutex_unlock( &frontierLock );
-
 		// Fix link using our redirects cache
 		fixRedirect( toCrawl );
 		
