@@ -283,14 +283,14 @@ void *worker( void *args )
 		// Fix link using our redirects cache
 		fixRedirect( toCrawl );
 		
-		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
+		print( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
 		dex::string result;
 		result.reserve( 2000000 );
 		if ( robotsCache.purge( ) == 1 )
 			print( "Purged Robot Cache" );
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
 		addToCrawled( toCrawl );
-		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
+		print( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
