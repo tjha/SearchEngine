@@ -1,4 +1,5 @@
 // frontier.hpp
+// 2019-12-08: Get rid of impolite URLs: combsc
 // 2019-12-06: Promote www. and https: combsc
 // 2019-12-04: Made scoreUrl less aggressive, improved efficiency: combsc
 // 2019-12-03: Change getUrl to reduce number of pageFault: combsc + jhirsh
@@ -11,6 +12,7 @@
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
 #include "../spinarak/url.hpp"
+#include "../spinarak/robotsMap.hpp"
 #include <stdlib.h>
 
 namespace dex
@@ -18,6 +20,7 @@ namespace dex
 	class frontier
 		{
 		private:
+			robotsMap *robotsPointer = nullptr;
 			vector < Url > toVisit;
 			unorderedSet < Url > toCheck;
 			
@@ -25,8 +28,13 @@ namespace dex
 			double scoreUrl( dex::Url url )
 				{
 				double score = 0;
-				// Promote good tlds ( .com, .org, .gov )
 				dex::string host = url.getHost( );
+				if ( robotsPointer && robotsPointer->robotExists( host ) && !robotsPointer->politeToVisit( host , url.getPath( ) ) )
+					{
+					return -100;
+					}
+				// Promote good tlds ( .com, .org, .gov )
+				
 				if ( host.size( ) > 4 )
 					{
 					if ( host.substr( 0, 4 ) == "www." )
@@ -91,13 +99,13 @@ namespace dex
 				// Promote no queries or fragments
 				if ( !url.getFragment( ).empty( ) || !url.getQuery( ).empty( ) )
 					score -= 5;
-
 				return score;
 				}
 
 		public:
-			frontier( size_t maxSize )
+			frontier( size_t maxSize, robotsMap *robot )
 				{
+				robotsPointer = robot;
 				maximumSize = maxSize;
 				toCheck = dex::unorderedSet < Url > ( maxSize );
 				}

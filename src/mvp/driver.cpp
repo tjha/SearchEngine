@@ -35,15 +35,15 @@ dex::string toShipPath = "data/toShip/";
 // Sizes of our data structures
 size_t frontierSize = 20000;
 size_t crawledLinksSize = 20000;
-size_t robotsMapSize = 300;
-const size_t redirectsSize = 100;
+size_t robotsMapSize = 5000;
+const size_t redirectsSize = 500;
 
 // All urls in the frontier must be known to be in our domain
 // and lead to a legitimate endpoint, or must be unknown. This
 // means we do not put broken links into our frontier and we do
 // not put links that aren't our responsibility into our frontier
 
-dex::frontier urlFrontier( frontierSize );
+dex::frontier urlFrontier( frontierSize, nullptr );
 pthread_mutex_t frontierLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t frontierCV = PTHREAD_COND_INITIALIZER;
 
@@ -51,7 +51,7 @@ char state = 0;
 size_t numCrawledLinks = 0;
 pthread_mutex_t crawledLinksLock = PTHREAD_MUTEX_INITIALIZER;
 
-#define numWorkers 100
+#define numWorkers 1
 pthread_t workers [ numWorkers ];
 int ids[ numWorkers ];
 
@@ -424,10 +424,10 @@ int main( )
 			performanceFileDescriptor = dex::createNewPerformanceFile( tmpPath + "performance/", performanceFile );
 			std::cout << " created log and performance files" << std::endl;
 
-			urlFrontier = dex::loadFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), frontierSize, true );
+			urlFrontier = dex::loadFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), frontierSize, &robotsCache, true );
 			if ( urlFrontier.size( ) == 0 )
 				{
-				urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize );
+				urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize, &robotsCache );
 				}
 			crawledLinks = dex::loadCrawledLinks( ( "data/crawledLinks.txt" ) );
 			/*for ( auto it = urlFrontier.begin( );  it != urlFrontier.end( );  ++it )

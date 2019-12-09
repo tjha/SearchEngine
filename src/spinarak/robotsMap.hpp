@@ -2,7 +2,7 @@
 // Object for organizing robots.txt objects for websites
 //
 // 2019-12-02: Set maximum size
-// 2019-12-01: Added politeToVisit: combsc
+// 2019-12-01: Added politeToVisit: comb
 // 2019-11-30: Continued working: combsc
 // 2019-11-29: Init Commit: combsc
 

@@ -15,7 +15,7 @@
 #include <time.h>
 #include "../utils/file.hpp"
 #include "../utils/basicString.hpp"
-#include "../spinarak/url.hpp"
+#include "../spinarak/robotsMap.hpp"
 #include "frontier.hpp"
 #include "file.hpp"
 #include "utf.hpp"
@@ -92,9 +92,9 @@ namespace dex
 		return open( htmlFilename.cStr( ), O_WRONLY | O_APPEND | O_CREAT, S_IRWXU );
 		}
 
-	dex::frontier loadFrontier ( const char * fileName, size_t size, bool encoded = false )
+	dex::frontier loadFrontier ( const char * fileName, size_t size, robotsMap *robot, bool encoded = false )
 		{
-		dex::frontier frontier( size );
+		dex::frontier frontier( size, robot );
 		if ( !dex::fileExists( fileName ) )
 			return frontier;
 
