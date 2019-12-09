@@ -119,11 +119,11 @@ namespace dex
 				}
 			Url getUrl( )
 				{
-				int maxScore = -1;
+				int maxScore = -101;
 				size_t maxIndex = 0;
 				size_t poolSize = dex::min( size_t( 10 ), toVisit.size( ) );
 				dex::Url best;
-				dex::Url *currentBest;
+				dex::Url *currentBest = nullptr;
 				// Get the highest scoring URL out of 10
 				int location = rand( ) % toVisit.size( );
 				for ( size_t j = 0;  j < poolSize;  ++j )
@@ -141,6 +141,10 @@ namespace dex
 						maxIndex = arrayLocation;
 						currentBest = &toVisit[ arrayLocation ];
 						}
+					}
+				if ( !currentBest )
+					{
+					currentBest = &toVisit[ location ];
 					}
 				best = *currentBest;
 				toCheck.erase( best );
@@ -180,6 +184,10 @@ namespace dex
 							minIndex = arrayLocation;
 							currentWorst = &toVisit[ arrayLocation ];
 							}
+						}
+					if ( !currentWorst )
+						{
+						currentWorst = &toVisit[ location ];
 						}
 					worst = *currentWorst;
 					toCheck.erase( worst );
