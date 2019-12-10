@@ -149,19 +149,19 @@ namespace dex
 		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
 		}
 
-	int saveCrawledLinks( const char * fileName, dex::unorderedSet < dex::string > crawled )
+	int saveCrawledLinks( const char * fileName, dex::unorderedSet < dex::string > * crawled )
 		{
 		string crawledData = "CRAWLED LINKS\n";
-		for ( auto it = crawled.begin( );  it != crawled.end( );  ++it )
+		for ( auto it = crawled->begin( );  it != crawled->end( );  ++it )
 			{
 			crawledData += *it + "\n";
 			}
 		return writeToFile( fileName, crawledData.cStr( ), crawledData.size( ) );
 		}
 
-	dex::unorderedSet < dex::string > loadCrawledLinks( const char * fileName )
+	dex::unorderedSet < dex::string > * loadCrawledLinks( const char * fileName, size_t crawledLinksSize )
 		{
-		dex::unorderedSet < dex::string > links;
+		dex::unorderedSet < dex::string > * links = new dex::unorderedSet < dex::string >( crawledLinksSize );
 		if ( !dex::fileExists( fileName ) )
 			return links;
 		// read in the frontier file
@@ -177,7 +177,7 @@ namespace dex
 			if ( found < crawled.npos )
 				{
 				string url( crawled.begin( ) + start, crawled.begin( ) + found );
-				links.insert( url );
+				links->insert( url );
 				start = found + delimiter.size( );
 				}
 			else

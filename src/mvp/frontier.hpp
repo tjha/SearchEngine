@@ -23,7 +23,7 @@ namespace dex
 		private:
 			robotsMap *robotsPointer = nullptr;
 			vector < Url > toVisit;
-			unorderedSet < Url > toCheck;
+			unorderedSet < Url > *toCheck;
 			
 			size_t maximumSize;
 			double scoreUrl( dex::Url url )
@@ -108,7 +108,7 @@ namespace dex
 				{
 				robotsPointer = robot;
 				maximumSize = maxSize;
-				toCheck = dex::unorderedSet < Url > ( maxSize );
+				toCheck = new dex::unorderedSet < dex::Url >( maxSize );
 				}
 			size_t size( )
 				{
@@ -116,7 +116,15 @@ namespace dex
 				}
 			size_t capacity( )
 				{
-				return toCheck.bucketCount( );
+				return toVisit.capacity( );
+				}
+			size_t toCheckSize( )
+				{
+				return toCheck->size( );
+				}
+			size_t toCheckCapacity( )
+				{
+				return toCheck->bucketCount( );
 				}
 			Url getUrl( )
 				{
@@ -148,7 +156,7 @@ namespace dex
 					currentBest = &toVisit[ location ];
 					}
 				best = *currentBest;
-				toCheck.erase( best );
+				toCheck->erase( best );
 				toVisit[ maxIndex ] = toVisit.back( );
 				toVisit.popBack( );
 				
@@ -157,7 +165,7 @@ namespace dex
 
 			void putUrl( const Url &url)
 				{
-				if ( toCheck.count( url ) > 0 ) 
+				if ( toCheck->count( url ) > 0 ) 
 					{
 					return;
 					}
@@ -191,18 +199,21 @@ namespace dex
 						currentWorst = &toVisit[ location ];
 						}
 					worst = *currentWorst;
-					toCheck.erase( worst );
+					toCheck->erase( worst );
 					toVisit[ minIndex ] = url;
-					toCheck.insert( url );
+					toCheck->insert( url );
 					}
 				else 
 					{
 					toVisit.pushBack( url );
-					toCheck.insert( url );
+					toCheck->insert( url );
 					}
-				if ( toCheck.bucketCount( ) > maximumSize * 4 )
+				// clear the whole toCheck when it gets to be large
+				if ( toCheckSize( ) >= maximumSize )
 					{
-					toCheck.rehash( maximumSize * 4 );
+					delete toCheck;
+					toCheck = new dex::unorderedSet< dex::Url >( maximumSize );
+					//toCheck->rehash( maximumSize * 4 );
 					}
 				}
 
