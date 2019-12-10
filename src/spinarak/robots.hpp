@@ -67,7 +67,7 @@ namespace dex
 		private:
 			dex::string domain;
 			// Time we have to wait to hit domain again in seconds
-			int crawlDelay;
+			double crawlDelay;
 
 			// Last time this domain was visited, time that we're allowed to visit again
 			time_t lastTimeVisited;
@@ -89,8 +89,7 @@ namespace dex
 
 			bool pathIsAllowed( dex::string path )
 				{
-				path = fixPath( path );
-				bool pathIsAllowed = true;
+				path = fixPath( path ); bool pathIsAllowed = true;
 				// check to see if the path is in any wildcard paths
 				for ( auto it = allowedWildcards.cbegin( );  it != allowedWildcards.cend( );  ++it )
 					{
@@ -198,13 +197,13 @@ namespace dex
 					if ( crawlStart != -1 )
 						{
 						crawlEnd = toParse.find( "\n", crawlStart + 1 );
-						crawlDelay = 1 / atoi( toParse.substr( crawlStart + 12, crawlEnd - crawlStart - 12 ).cStr( ) );
+						crawlDelay = 1 / atof( toParse.substr( crawlStart + 12, crawlEnd - crawlStart - 12 ).cStr( ) );
 						}
 					crawlStart = toParse.find( "crawl-delay: " );
 					if ( crawlStart != -1 )
 						{
 						crawlEnd = toParse.find( "\n", crawlStart + 1 );
-						crawlDelay = atoi( toParse.substr( crawlStart + 13, crawlEnd - crawlStart - 13 ).cStr( ) );
+						crawlDelay = atof( toParse.substr( crawlStart + 13, crawlEnd - crawlStart - 13 ).cStr( ) );
 						}
 
 					// find all allowed paths
