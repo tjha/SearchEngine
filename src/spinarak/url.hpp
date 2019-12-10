@@ -6,6 +6,7 @@
 #include "unorderedSet.hpp"
 #include "exception.hpp"
 #include "functional.hpp"
+// 2019-12-10: Cache Complete Url, add subdomain and domain: combsc
 // 2019-12-02: Added const to respective functions
 // 2019-11-27: Fixed completeUrl if no path is given but ?# are: combsc
 // 2019-11-24: Changed completeUrl: combsc
@@ -23,6 +24,8 @@ namespace dex
 		private:
 			// Service must ONLY be the service, no :// allowed.
 			string service;
+			string subdomain;
+			string domain;
 			// Host does not include '/' at the end. Host should be in
 			// the form of www.someSite.domain
 			string host;
@@ -113,6 +116,8 @@ namespace dex
 				int endQuery = totalUrl.find( "#", endPath );
 				if ( endQuery == -1 )
 					endQuery = int( totalUrl.size( ) );
+				else
+					endQuery++;
 				// If a query exists
 				if ( beginQuery != -1 )
 					{
@@ -125,6 +130,21 @@ namespace dex
 					int endFragment = int( totalUrl.size( ) );
 					fragment = totalUrl.substr( beginFragment, endFragment - beginFragment );
 					}
+
+				// split the host into subdomain and domain
+				size_t dotLocation = host.find( '.' );
+				if ( dotLocation == string::npos )
+					{
+					subdomain = "";
+					domain = host;
+					}
+				else
+					{
+					subdomain = host.substr( 0, dotLocation );
+					domain = host.substr( dotLocation + 1, host.size( ) - dotLocation - 1 );
+					}
+
+				computeFullUrl( );
 				}
 
 			Url( string url )	: Url( url.cStr( ) )
@@ -134,21 +154,27 @@ namespace dex
 			Url( const Url &other )
 				{
 				service = other.service;
+				subdomain = other.subdomain;
+				domain = other.domain;
 				host = other.host;
 				port = other.port;
 				path = other.path;
 				query = other.query;
 				fragment = other.fragment;
+				complete = other.complete;
 				}
 
 			Url operator=( const Url &other )
 				{
 				service = other.service;
+				subdomain = other.subdomain;
+				domain = other.domain;
 				host = other.host;
 				port = other.port;
 				path = other.path;
 				query = other.query;
 				fragment = other.fragment;
+				complete = other.complete;
 				return *this;
 				}
 			
@@ -162,6 +188,7 @@ namespace dex
 				completeUrl += path;
 				completeUrl += query;
 				completeUrl += fragment;
+				complete = completeUrl;
 				return completeUrl;
 				}
 
@@ -169,15 +196,7 @@ namespace dex
 			// 	at url creation and when you set Url
 			string completeUrl( ) const
 				{
-				string completeUrl = service + "://" + host;
-				if ( port != "" && port != "443" && port != "80" )
-					{
-					completeUrl += ":" + port;
-					}
-				completeUrl += path;
-				completeUrl += query;
-				completeUrl += fragment;
-				return completeUrl;
+				return complete;
 				}
 
 			string getService( ) const
@@ -192,6 +211,7 @@ namespace dex
 					std::cerr << "We do not support service of the type " << service << "\n";
 					throw invalidArgumentException( );
 					}
+				computeFullUrl( );
 				}
 
 			string getHost( ) const
@@ -201,6 +221,17 @@ namespace dex
 			void setHost( const string &h )
 				{
 				host = h;
+				computeFullUrl( );
+				}
+
+			string getSubdomain( ) const
+				{
+				return subdomain;
+				}
+
+			string getDomain( ) const
+				{
+				return domain;
 				}
 
 			string getPort( ) const
@@ -223,6 +254,7 @@ namespace dex
 					{
 					port = p.substr( 0, p.size( ) - 1 );
 					}
+				computeFullUrl( );
 				}
 
 			string getPath( ) const
@@ -237,6 +269,7 @@ namespace dex
 					path.insert( 0, '/' );
 				while ( path.size( ) > 1 && path.back( ) == '/' )
 					path.popBack( );
+				computeFullUrl( );
 				}
 
 			string getQuery( ) const
@@ -247,6 +280,7 @@ namespace dex
 			void setQuery( const string &q )
 				{
 				query = q;
+				computeFullUrl( );
 				}
 
 			string getFragment( ) const
@@ -257,6 +291,7 @@ namespace dex
 			void setFragment( const string &f )
 				{
 				fragment = f;
+				computeFullUrl( );
 				}
 		
 		};

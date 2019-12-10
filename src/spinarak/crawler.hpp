@@ -15,6 +15,7 @@
 #include "url.hpp"
 #include <iostream>
 
+// 2019-12-10: Improve URL object: combsc
 // 2019-12-04: Kill connection if page is greater than 5 MB or if recv takes longer than 5 seconds: combsc
 // 2019-11-30: Make robotsMap threadsafe: combsc
 // 2019-11-26: Differentiate between html and non-html when crawling: combsc
@@ -355,20 +356,20 @@ namespace dex
 					{
 					// Check to see if we have a robot object for the domain we're crawling
 
-					int startResult = robotsCache.startRobotCreation( url.getHost( ), url.getPath( ) );
+					int startResult = robotsCache.startRobotCreation( url.getDomain( ), url.getPath( ) );
 					if ( startResult == -2 )
 						{
-						result = "Different thread making the robots object for " + url.getHost( );
+						result = "Different thread making the robots object for " + url.getDomain( );
 						return PUT_BACK_IN_FRONTIER;
 						}
 					if ( startResult == 1 )
 						{
-						result = "Not ready to visit " + url.getHost( );
+						result = "Not ready to visit " + url.getDomain( );
 						return POLITENESS_ERROR;
 						}
 					if ( startResult == 2 )
 						{
-						result = "path " + url.getPath( ) + " is disallowed for domain " + url.getHost( );
+						result = "path " + url.getPath( ) + " is disallowed for domain " + url.getDomain( );
 						return DISALLOWED_ERROR;
 						}
 
@@ -396,14 +397,14 @@ namespace dex
 						if ( errorCode >= 400 && errorCode < 500 )
 							{
 							// Create Default
-							robot = dex::RobotTxt( url.getHost( ) );
+							robot = dex::RobotTxt( url.getDomain( ) );
 							}
 						// If there was an error, we need to abort and return the error
 						else
 							{
 							if ( errorCode != 0 )
 								{
-								int err = robotsCache.writeUnlock( url.getHost( ) );
+								int err = robotsCache.writeUnlock( url.getDomain( ) );
 								if ( err != 0 )
 									return dex::LOCKING_ERROR;
 								return errorCode;
@@ -412,22 +413,22 @@ namespace dex
 							if ( errorCode == 0 )
 								{
 								dex::string robotsTxtInformation = result;
-								robot = dex::RobotTxt( url.getHost( ), robotsTxtInformation );
+								robot = dex::RobotTxt( url.getDomain( ), robotsTxtInformation );
 								}
 							}
 						int pathResult = robot.visitPathResult( url.getPath( ) );
 						robot.updateLastVisited( );
-						int err = robotsCache.finishRobotCreation( url.getHost( ), robot );
+						int err = robotsCache.finishRobotCreation( url.getDomain( ), robot );
 						if ( err != 0 )
 							return dex::LOCKING_ERROR;
 						if ( pathResult == 1 )
 							{
-							result = "Not ready to visit " + url.getHost( );
+							result = "Not ready to visit " + url.getDomain( );
 							return POLITENESS_ERROR;
 							}
 						if ( pathResult == 2 )
 							{
-							result = "path " + url.getPath( ) + " is disallowed for domain " + url.getHost( );
+							result = "path " + url.getPath( ) + " is disallowed for domain " + url.getDomain( );
 							return DISALLOWED_ERROR;
 							}
 						}

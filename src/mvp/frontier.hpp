@@ -1,4 +1,5 @@
 // frontier.hpp
+// 2019-12-10: Improve URL Object: combsc
 // 2019-12-08: Get rid of impolite URLs: combsc
 // 2019-12-06: Promote www. and https: combsc
 // 2019-12-04: Made scoreUrl less aggressive, improved efficiency: combsc
@@ -28,18 +29,19 @@ namespace dex
 			double scoreUrl( dex::Url url )
 				{
 				double score = 0;
-				dex::string host = url.getHost( );
-				if ( robotsPointer && robotsPointer->robotExists( host ) && !robotsPointer->politeToVisit( host , url.getPath( ) ) )
+				dex::string domain = url.getDomain( );
+				if ( robotsPointer && robotsPointer->robotExists( domain ) && !robotsPointer->politeToVisit( domain , url.getPath( ) ) )
 					{
 					return -100;
 					}
-				// Promote good tlds ( .com, .org, .gov )
-				if ( host.size( ) > 4 )
-					{
-					if ( host.substr( 0, 4 ) == "www." )
+				if ( url.getSubdomain( ) == "www." || "" )
 						{
 						score += 8;
 						}
+				dex::string host = url.getHost( );
+				// Promote good tlds ( .com, .org, .gov )
+				if ( host.size( ) > 4 )
+					{
 					host = host.substr( host.size( ) - 4, 4);
 					if ( host == ".com" )
 						{

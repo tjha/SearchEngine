@@ -1,5 +1,6 @@
 // Implementation of basic mercator architecture
 
+// 2019-12-10: Improve URL Object: combsc
 // 2019-12-09: Only add links into our frontier that are polite: combsc
 // 2019-12-08: blacklist getstencil.com, fix crawled logic: combsc
 // 2019-12-07: Load crawled links
@@ -249,7 +250,7 @@ void *worker( void *args )
 			pthread_cond_wait( &frontierCV, &frontierLock );
 			}
 		dex::Url toCrawl = urlFrontier.getUrl( );
-		while ( alreadyCrawled( toCrawl ) || !robotsCache.politeToVisit( toCrawl.getHost( ), toCrawl.getPath( ) ) )
+		while ( alreadyCrawled( toCrawl ) || !robotsCache.politeToVisit( toCrawl.getDomain( ), toCrawl.getPath( ) ) )
 			{
 			if ( !alreadyCrawled( toCrawl ) )
 				{
@@ -335,7 +336,7 @@ void *worker( void *args )
 						}
 					else
 						{
-						if ( robotsCache.politeToVisit( it->getHost( ), it->getPath( ) ) )
+						if ( robotsCache.politeToVisit( it->getDomain( ), it->getPath( ) ) )
 							{
 							dex::Url current = *it;
 							addToFrontier( current );
