@@ -330,17 +330,21 @@ void *worker( void *args )
 				dex::vector < dex::Url > inboundLinks;
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
-					if ( it->getHost( ) == toCrawl.getHost( ) )
+					if ( it->getSubdomain( ) == "www" || it->getDomain( ) == "wikipedia.org" )
 						{
-						inboundLinks.pushBack( *it );
-						}
-					else
-						{
-						if ( robotsCache.politeToVisit( it->getDomain( ), it->getPath( ) ) )
+						if ( it->getHost( ) == toCrawl.getHost( ) )
 							{
-							dex::Url current = *it;
-							addToFrontier( current );
+							inboundLinks.pushBack( *it );
 							}
+						else
+							{
+							if ( robotsCache.politeToVisit( it->getDomain( ), it->getPath( ) ) )
+								{
+								dex::Url current = *it;
+								addToFrontier( current );
+								}
+							}
+							
 						}
 					}
 				
