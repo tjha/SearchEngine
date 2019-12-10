@@ -28,7 +28,7 @@ build:
 $(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@
 	./$@
-# make clean
+	make clean
 
 $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
 	make build
@@ -39,5 +39,5 @@ $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
 clean:
 	@rm -rf $(BUILD_PATH)/
 
-# .PHONY: tests clean
+.PHONY: tests clean
 

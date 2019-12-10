@@ -1,6 +1,7 @@
 // index.hpp
 // Indexer.
 //
+// 2019-12-09: Fix bugs in building index: lougheem, jasina
 // 2019-12-08: Begin IndexStreamReader class: lougheem
 // 2019-11-22: Wrote addDocument, update sync points, encoder/decoder for metadata, add stemming, change how to go
 //             between offsets and posts,move things to index.cpp: jasina, lougheem
@@ -120,9 +121,9 @@ namespace dex
 				// These consts can be adjusted if necessary.
 				static const size_t maxURLCount = 1L << 17;
 				static const size_t maxURLLength = 1L << 10;
-				static const size_t maxTitleLength = 1L << 10;
+				static const size_t maxTitleLength = 1 << 10;
 				static const size_t maxWordLength = 64;
-				static const size_t postsChunkArraySize = 1LL << 26;
+				static const size_t postsChunkArraySize = 1L << 26;
 				static const size_t postsMetadataArraySize = 1L << 25;
 
 				// TODO: Double check these very carefully.
@@ -189,7 +190,10 @@ namespace dex
 					for ( ;  first != last;  ++first, ++newLocation )
 						{
 						string wordToAdd = decorator + dex::porterStemmer::stem( *first );
-						std::cout << "wordToAdd: " << wordToAdd << "\n";
+
+						if ( wordToAdd.size( ) > maxWordLength )
+							continue;
+
 						postsMetadata *wordMetadata = nullptr;
 						if ( !dictionary.count( wordToAdd ) && !newWords.count( wordToAdd ) )
 							{
@@ -197,28 +201,31 @@ namespace dex
 								return false;
 
 							// Add a new postsMetaData.
-							// TODO: make this sensitive to non-BODY types. Idea: use enums ad pass those in instead of a
+							// TODO: make this sensitive to non-BODY types. Idea: use enums and pass those in instead of a
 							// deocrator string.
 							wordMetadata = &postsMetadataArray[ dictionary.size( ) + newWords.size( ) ];
 							*wordMetadata = postsMetadata( *postsChunkCount, postsMetadata::BODY );
-							std::cout << "New word!\n";
 
 							// Add a new postsChunk
-							postsChunkArray[ *postsChunkCount++ ] = postsChunk( 0 );
+							size_t newPostsChunkOffset = ( *postsChunkCount )++;
+							postsChunkArray[ newPostsChunkOffset ] = postsChunk( 0 );
+							wordMetadata->firstPostsChunkOffset = newPostsChunkOffset;
 
 							newWords[ wordToAdd ] = dictionary.size( ) + newWords.size( );
-							std::cout << "\t" << wordToAdd << "\t" << newWords[ wordToAdd ] << "\n";
 							}
 						else
 							{
-							std::cout << "\t" << dictionary[ wordToAdd ] << "\n";
-							wordMetadata = &postsMetadataArray[ dictionary[ wordToAdd ] ];
-							std::cout << "\t" << dictionary[ wordToAdd ] << "\n";
+							if ( dictionary.count( wordToAdd ) )
+								{
+								wordMetadata = &postsMetadataArray[ dictionary[ wordToAdd ] ];
+								}
+							else
+								{
+								wordMetadata = &postsMetadataArray[ newWords[ wordToAdd ] ];
+								}
 							}
 
-						// Note: this loop executes its body at most once, unless things have gone impossibly, horribly,
-						// terribly wrong somehow.
-						while ( !wordMetadata->append( *location, postsChunkArray, postsMetadataArray ) )
+						while ( !wordMetadata->append( newLocation, postsChunkArray, postsMetadataArray ) )
 							{
 							if ( *postsChunkCount == postsChunkArraySize )
 								return false;
@@ -229,7 +236,7 @@ namespace dex
 							}
 
 						unsigned long long &synchronizationPoint =
-								wordMetadata->synchronizationPoints[ newLocation >> ( sizeof( size_t ) - 8 ) ];
+								wordMetadata->synchronizationPoints[ newLocation >> ( sizeof( newLocation ) - 8 ) ];
 						if ( !synchronizationPoint )
 							synchronizationPoint = wordMetadata->lastPostsChunkOffset;
 						}
@@ -241,24 +248,10 @@ namespace dex
 
 					*location = newLocation;
 
-					std::cout << "Dictionary now holds...\n";
-					for ( dex::unorderedMap < dex::string, size_t >::constIterator it = dictionary.cbegin( ); 
-							it != dictionary.cend( ); it++ )
-						std::cout << "\t-" << it->first << "-\t" << it->second << "\n";
 					return true;
 					}
 
 			public:
-				// TODO: remove this getter
-				void *getFilePointer( )
-					{
-					return filePointer;
-					}
-				
-				dex::unorderedMap < dex::string, size_t > *getDictionary ( )
-					{
-					return &dictionary;
-					}
 				bool addDocument( const dex::string &url, const dex::vector < dex::string > &anchorText,
 					const dex::vector < dex::string > &title, const dex::string &titleString,
 					const dex::vector < dex::string > &body );
@@ -268,7 +261,9 @@ namespace dex
 					private:
 						friend class indexChunk;
 
+						size_t absoluteLocation;
 						byte *post;
+						byte *documentPost;
 						postsMetadata *postsMetadatum;
 						postsChunk *postsChunkum; // Bad naming to disambiguate chunk types
 						indexChunk *indexChunkum;
@@ -279,8 +274,9 @@ namespace dex
 
 					public:
 						indexStreamReader( dex::string word, indexChunk *indexChunk);
-						byte *next( );
-						byte *nextDocument( );
+						size_t next( );
+						// byte *nextDocument( ); This is called on a set of indexStream readers. It sets them all to their
+						// 	first occurences past the end of the current document
 						byte *seek( size_t target );
 
 						// size_t GetStartLocation( ); ??
@@ -295,8 +291,7 @@ namespace dex
 	namespace utf
 		{
 		template < class InputIt >
-		class decoder < dex::index::indexChunk::endOfDocumentMetadataType, InputIt >
-			{
+		class decoder < dex::index::indexChunk::endOfDocumentMetadataType, InputIt > {
 			public:
 				dex::index::indexChunk::endOfDocumentMetadataType operator( )
 						( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
