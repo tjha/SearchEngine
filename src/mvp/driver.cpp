@@ -85,7 +85,7 @@ void print( dex::string toPrint )
 // Checkpoint is time elapsed to save log, performance, and data structure
 long checkpointLog = 10;
 long checkpointPerformance = 30;
-long checkpointDataStructure = 2 * 60; // checkpoints every x seconds
+long checkpointDataStructure = 4 * 60; // checkpoints every x seconds
 long testTime = 40;
 time_t lastLogCheckpoint = time( NULL );
 time_t lastPerformanceCheckpoint = time( NULL );
