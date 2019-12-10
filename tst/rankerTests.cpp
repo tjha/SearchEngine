@@ -9,8 +9,11 @@
 
 TEST_CASE( "static ranking", "[ranker]" )
 	{
-	dex::ranker judge( );
-	
+	dex::ranker judge( { { 15, 50 }, { 25, 40 }, { 50, 20 } } );
+	REQUIRE( judge.getStaticScoreTitle( "under15" ) == 50 );
+	REQUIRE( judge.getStaticScoreTitle( "googlemapsgooglemaps" ) == 40 );
+	REQUIRE( judge.getStaticScoreTitle( "googlemapsgooglemaps a new paradigm" ) == 20 );
+	REQUIRE( judge.getStaticScoreTitle( "googlemapsgooglemaps a new paradigm and a bad title" ) == 0 );
 	}
 
 TEST_CASE( "sudo ISR", "[ranker]" )

@@ -75,18 +75,18 @@ namespace dex
 			};
 
 	
-		class indexChunkWorker
+		class constraintSolverWorker
 		{
-		
 		public:
-			dex::vector < dex::vector < dex::ISR > > get ( std::string query );
+			dex::vector < dex::document > getDocuments( std::string query );
 		};
 	
 	class ranker
 		{
 		private:
-			// dex::vector < dex::pair < unsigned, double > > staticTitleWeights;
-			double staticScoreUrl( dex::Url url )
+			dex::vector < dex::pair < unsigned, double > > staticTitleWeights;
+			double staticUrlWeight;
+			double staticScoreUrl( const dex::Url &url, double weight )
 				{
 				double score = 0;
 				// Promote good tlds ( .com, .org, .gov )
@@ -158,7 +158,7 @@ namespace dex
 				if ( !url.getFragment( ).empty( ) || !url.getQuery( ).empty( ) )
 					score -= 5;
 
-				return score;
+				return weight * score;
 				}
 
 
@@ -168,13 +168,13 @@ namespace dex
 			double staticScoreTitle( const dex::string &title )
 				{
 				unsigned size = title.size( );
-				/*
+				
 				for ( auto it = staticTitleWeights.cbegin( );  it != staticTitleWeights.cend( );  ++it )
 					{
 					if ( size <= it->first )
 						return it->second;
 					}
-				*/
+				
 				return 0;
 				}
 
@@ -226,21 +226,30 @@ namespace dex
 
 		public:
 
-			ranker( )
+			ranker( double urlWeight = 1 )
 				{
-				// staticTitleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
+				staticTitleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
+				staticUrlWeight = urlWeight;
 				}
 
-			/*
-			ranker( dex::vector < dex::pair < unsigned, double > > titleWeights)
+			
+			ranker( dex::vector < dex::pair < unsigned, double > > titleWeights, double urlWeight = 1 )
 				{
 				staticTitleWeights = titleWeights;
+				staticUrlWeight = urlWeight;
 				}
-			*/
+			
 
 			double getStaticScoreTitle( dex::string title )
 				{
 				return staticScoreTitle( title );
+				}
+
+			double getStaticScore( dex::document doc )
+				{
+				double score = staticScoreTitle( doc.title );
+				score += staticScoreUrl( doc.url );
+				return score;
 				}
 			
 			// Heuristics is a vector contianing the lengths of the spans you're looking for in the document
