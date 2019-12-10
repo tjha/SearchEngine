@@ -248,7 +248,7 @@ namespace dex
 			double getStaticScore( dex::document doc )
 				{
 				double score = staticScoreTitle( doc.title );
-				score += staticScoreUrl( doc.url );
+				score += staticScoreUrl( doc.url, staticUrlWeight );
 				return score;
 				}
 			

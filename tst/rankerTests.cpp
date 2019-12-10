@@ -35,10 +35,8 @@ TEST_CASE( "basic spanning", "[ranker]" )
 	SECTION ( "simple" )
 		{
 		std::cout << "basic spanning, simple\n";
-		// { 1 , 3, 60, 900 };
 		dex::vector < unsigned > duo = { 1, 3, 900 };
 		dex::ISR duoISR( "duo", duo );
-		// { 2, 61, 901 };
 		dex::vector < unsigned > mushu = { 2, 61, 901 };
 		dex::ISR mushuISR( "mushu", mushu );
 
@@ -47,22 +45,25 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		isrs.pushBack( mushuISR );
 
 		dex::ranker judge;
-		dex::vector < double > heuristics = { 1, 20, 40 };
+		dex::vector < double > heuristics = { 1, 20, 60 };
 		dex::vector < bool > emphasized = { false, false };
 		dex::vector < unsigned > spans = judge.getDesiredSpans( heuristics, emphasized, isrs, 1 );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans.size( );  ++i )
 			{
-			std::cout << spans[ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
-			prevHeuristic = heuristics[ i ];
+			std::cout << spans[ i ] << " spans between " << prevHeuristic + 1 << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ] * isrs.size( );
 			}
+		REQUIRE( spans[ 0 ] == 2 );
+		REQUIRE( spans[ 1 ] == 0 );
+		REQUIRE( spans[ 2 ] == 1 );
 		}
 	SECTION( "Quick Brown Fox" )
 		{
-		dex::vector < unsigned > quick = { 62, 69, 84, 311, 421, 430, 559, 619, 794, 952 };
+		dex::vector < unsigned > quick = { 62, 69, 84, 311, 421, 430, 566, 619, 794, 952 };
 		dex::ISR quickISR( "quick", quick );
-		dex::vector < unsigned > brown = { 83, 94, 170, 179, 216, 227, 400, 417, 422, 516, 795, 826, 828, 957 };
+		dex::vector < unsigned > brown = { 83, 94, 170, 179, 216, 227, 400, 417, 422, 575, 795, 826, 828, 957 };
 		dex::ISR brownISR( "brown", brown );
 		dex::vector < unsigned > fox = { 284, 423, 580, 612, 796, 912, 958 };
 		dex::ISR foxISR( "fox", fox );
@@ -78,9 +79,13 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans.size( );  ++i )
 			{
-			std::cout << spans[ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
-			prevHeuristic = heuristics[ i ];
+			std::cout << spans[ i ] << " spans between " << prevHeuristic + 1 << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ] * isrs.size( );
 			}
+		REQUIRE( spans[ 0 ] == 2 );
+		REQUIRE( spans[ 1 ] == 2 );
+		REQUIRE( spans[ 2 ] == 0 );
+		REQUIRE( spans[ 3 ] == 1 );
 		}
 	}
 
@@ -109,6 +114,10 @@ TEST_CASE( "edge cases", "[ranker]" )
 			std::cout << spans[ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
 			prevHeuristic = heuristics[ i ];
 			}
+		REQUIRE( spans[ 0 ] == 0 );
+		REQUIRE( spans[ 1 ] == 0 );
+		REQUIRE( spans[ 2 ] == 0 );
+		REQUIRE( spans[ 3 ] == 0 );
 		}
 	SECTION( "Empty ISR" )
 		{
@@ -133,6 +142,10 @@ TEST_CASE( "edge cases", "[ranker]" )
 			std::cout << spans[ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
 			prevHeuristic = heuristics[ i ];
 			}
+		REQUIRE( spans[ 0 ] == 0 );
+		REQUIRE( spans[ 1 ] == 0 );
+		REQUIRE( spans[ 2 ] == 0 );
+		REQUIRE( spans[ 3 ] == 0 );
 		}
 		
 	}
