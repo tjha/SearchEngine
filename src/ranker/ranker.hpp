@@ -85,7 +85,7 @@ namespace dex
 	class ranker
 		{
 		private:
-			dex::vector < dex::pair < unsigned, double > > staticTitleWeights;
+			// dex::vector < dex::pair < unsigned, double > > staticTitleWeights;
 			double staticScoreUrl( dex::Url url )
 				{
 				double score = 0;
@@ -168,11 +168,13 @@ namespace dex
 			double staticScoreTitle( const dex::string &title )
 				{
 				unsigned size = title.size( );
+				/*
 				for ( auto it = staticTitleWeights.cbegin( );  it != staticTitleWeights.cend( );  ++it )
 					{
 					if ( size <= it->first )
 						return it->second;
 					}
+				*/
 				return 0;
 				}
 
@@ -226,13 +228,15 @@ namespace dex
 
 			ranker( )
 				{
-				staticTitleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
+				// staticTitleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
 				}
 
+			/*
 			ranker( dex::vector < dex::pair < unsigned, double > > titleWeights)
 				{
 				staticTitleWeights = titleWeights;
 				}
+			*/
 
 			double getStaticScoreTitle( dex::string title )
 				{
@@ -300,7 +304,8 @@ namespace dex
 							else
 								{
 								// if ( desiredPosition - current[ index ] > next[ index ] - desiredPosition || index > rarest )
-								if ( desiredPosition + desiredPosition > next[ index ] + current[ index ]  || index > rarest )
+								if ( next[ index ] != ISR::npos && 
+										( 2 * desiredPosition > next[ index ] + current[ index ]  || index > rarest ) )
 									{
 									closest = next[ index ];
 									std::cout << "\t\tChoose " << closest << " between " << current[ index ]

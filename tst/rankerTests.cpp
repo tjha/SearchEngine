@@ -55,7 +55,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 			prevHeuristic = heuristics[ i ];
 			}
 		}
-	SECTION( "Hamilton" )
+	SECTION( "Quick Brown Fox" )
 		{
 		dex::vector < unsigned > quick = { 62, 69, 84, 311, 421, 430, 559, 619, 794, 952 };
 		dex::ISR quickISR( "quick", quick );
@@ -68,8 +68,8 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		isrs.pushBack( brownISR );
 		isrs.pushBack( foxISR );
 		dex::ranker judge;
-		dex::vector < double > heuristics = { 1, 20, 40 };
-		dex::vector < bool > emphasized = { false, false };
+		dex::vector < double > heuristics = { 1, 3, 4, 5 };
+		dex::vector < bool > emphasized = { false, false, true };
 		dex::vector < unsigned > spans = judge.getDesiredSpans( heuristics, emphasized, isrs, 1 );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
@@ -79,5 +79,57 @@ TEST_CASE( "basic spanning", "[ranker]" )
 			prevHeuristic = heuristics[ i ];
 			}
 		}
-	
+	}
+
+TEST_CASE( "edge cases", "[ranker]" )
+	{
+	SECTION( "Short ISR" )
+		{
+		dex::vector < unsigned > quick = { 300 };
+		dex::ISR quickISR( "quick", quick );
+		dex::vector < unsigned > brown = { 83, 94, 170, 179, 216, 227, 400, 417, 422, 516, 795, 826, 828, 957 };
+		dex::ISR brownISR( "brown", brown );
+		dex::vector < unsigned > fox = { 284, 423, 580, 612, 796, 912, 958 };
+		dex::ISR foxISR( "fox", fox );
+		dex::vector < dex::ISR > isrs;
+		isrs.pushBack( quickISR );
+		isrs.pushBack( brownISR );
+		isrs.pushBack( foxISR );
+		dex::ranker judge;
+		dex::vector < double > heuristics = { 1, 3, 4, 5 };
+		dex::vector < bool > emphasized = { false, false, true };
+		dex::vector < unsigned > spans = judge.getDesiredSpans( heuristics, emphasized, isrs, 1 );
+		std::cout << "Finished spanning\n";
+		unsigned prevHeuristic = 0;
+		for ( unsigned i = 0;  i < spans.size( );  ++i )
+			{
+			std::cout << spans[ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ];
+			}
+		}
+	SECTION( "Empty ISR" )
+		{
+		dex::vector < unsigned > quick;
+		dex::ISR quickISR( "quick", quick );
+		dex::vector < unsigned > brown = { 83, 94, 170, 179, 216, 227, 400, 417, 422, 516, 795, 826, 828, 957 };
+		dex::ISR brownISR( "brown", brown );
+		dex::vector < unsigned > fox = { 284, 423, 580, 612, 796, 912, 958 };
+		dex::ISR foxISR( "fox", fox );
+		dex::vector < dex::ISR > isrs;
+		isrs.pushBack( quickISR );
+		isrs.pushBack( brownISR );
+		isrs.pushBack( foxISR );
+		dex::ranker judge;
+		dex::vector < double > heuristics = { 1, 3, 4, 5 };
+		dex::vector < bool > emphasized = { false, false, true };
+		dex::vector < unsigned > spans = judge.getDesiredSpans( heuristics, emphasized, isrs, 1 );
+		std::cout << "Finished spanning\n";
+		unsigned prevHeuristic = 0;
+		for ( unsigned i = 0;  i < spans.size( );  ++i )
+			{
+			std::cout << spans[ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ];
+			}
+		}
+		
 	}
