@@ -1,3 +1,3 @@
-host=ec2-3-88-198-231.compute-1.amazonaws.com
+host=ec2-18-232-92-122.compute-1.amazonaws.com
 
 ssh -i .search-engine-key.pem ec2-user@$host

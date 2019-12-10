@@ -84,6 +84,8 @@ Sanity Checks:
 	export PATH_TO_SEARCH_ENGINE=/home/ec2-user/SearchEngine
 	To verify that these environment variables are set, you can run 
 	echo $PATH_TO_SEARCH_ENGINE, it should print out /home/ec2-user/SearchEngine
+	If they are not set, you can try `. ~/.bashrc`, but you need to make sure environment
+	variables are set on startup of the ssh session. Reconnect to verify.
 
 	to verify that the cron job is running, run crontab -e. It should look like what is in scripts/runOnCron.txt
 
