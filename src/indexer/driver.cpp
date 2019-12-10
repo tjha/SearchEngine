@@ -19,7 +19,7 @@ int main ( int argc, char ** argv )
 	
 	if ( argc != 3 )
 		{
-		std::cerr << "Usage ./build/indexer.exe <batch-name> <chunk-output-folder>;
+		std::cerr << "Usage ./build/indexer.exe <batch-name> <chunk-output-folder>";
 		exit( 1 );
 		}
 
@@ -43,6 +43,11 @@ int main ( int argc, char ** argv )
 
 	dex::utf::decoder < dex::string > stringDecoder;
 
+	int indexChunkCount = 0;
+	// TODO: What scheme will we use to name the files for the index chunks?
+	int fileDescriptor = openFile( indexChunkCount++ );
+	indexChunk *initializingIndexChunk = indexChunk( fileDescriptor );
+
 	for ( auto &directory: toProcess )
 		{
 		dir = openDir( directory );
@@ -56,10 +61,21 @@ int main ( int argc, char ** argv )
 
 				dex::string url = stringDecode( ptr, ptr );
 				dex::string html = stringDecode( ptr, ptr );
+
+				//...
+				dex::HTMLparser parser( url, html, true );
+
+				initializingIndexChunk->addDocument( url, "", parser.ReturnAnchorText( ), parser.ReturnTitle( ) )
 				}
 			}
 		
 		close( dir );
 		}
+	}
+
+int openFile( int indexChunkCount )
+	{
+	const char filePath[ ] = dex::string( dex::toString( indexChunkCount ) + "_in.dex" ).c_str( );
+	return open( filePath, O_RDWR | O_CREAT, 0777 );
 	}
 
