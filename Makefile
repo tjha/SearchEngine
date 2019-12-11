@@ -43,7 +43,7 @@ $(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
 $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
 	make build
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-	
+
 # TODO: run_integration_tests #
 
 clean:
