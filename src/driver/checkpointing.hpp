@@ -15,7 +15,7 @@
 #include <time.h>
 #include "../utils/file.hpp"
 #include "../utils/basicString.hpp"
-#include "../spinarak/robotsMap.hpp"
+#include "../crawler/robotsMap.hpp"
 #include "frontier.hpp"
 #include "file.hpp"
 #include "utf.hpp"

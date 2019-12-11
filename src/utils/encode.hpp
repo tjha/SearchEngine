@@ -11,8 +11,8 @@
 #include "exception.hpp"
 #include "vector.hpp"
 #include "basicString.hpp"
-#include "../src/spinarak/robots.hpp"
-#include "../src/spinarak/url.hpp"
+#include "../src/crawler/robots.hpp"
+#include "../src/crawler/url.hpp"
 
 namespace dex
 	{

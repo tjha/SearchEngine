@@ -12,8 +12,8 @@
 #include "../utils/vector.hpp"
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
-#include "../spinarak/url.hpp"
-#include "../spinarak/robotsMap.hpp"
+#include "../crawler/url.hpp"
+#include "../crawler/robotsMap.hpp"
 #include <stdlib.h>
 
 namespace dex

@@ -12,8 +12,8 @@
 // 2019-10-30: File creation: combsc
 
 #include "catch.hpp"
-#include "../src/spinarak/crawler.hpp"
-#include "../src/spinarak/robotsMap.hpp"
+#include "../src/crawler/crawler.hpp"
+#include "../src/crawler/robotsMap.hpp"
 #include "exception.hpp"
 #include "unorderedMap.hpp"
 #include "unorderedSet.hpp"

@@ -4,7 +4,7 @@
 // 2019-12-10: init commit: combsc
 
 #include "catch.hpp"
-#include "../src/spinarak/url.hpp"
+#include "../src/crawler/url.hpp"
 
 TEST_CASE( "basics", "[url]" )
 	{

@@ -5,7 +5,7 @@
 // 2019-11-20: Init Commit: combsc
 
 #include "catch.hpp"
-#include "../mvp/redirectCache.hpp"
+#include "../driver/redirectCache.hpp"
 #include <stdio.h>
 #include <unistd.h>
 

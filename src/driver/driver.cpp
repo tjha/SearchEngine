@@ -21,7 +21,6 @@
 #include "vector.hpp"
 #include "frontier.hpp"
 #include "checkpointing.hpp"
-#include "redirectCache.hpp"
 #include "parser.hpp"
 #include <time.h>
 #include <signal.h>
