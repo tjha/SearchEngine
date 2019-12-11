@@ -18,26 +18,27 @@
 namespace dex
 	{
 
+	class indexChunkObject
+		{
+		// Whatever matt and stephen put in here
+		};
+
 	struct queryRequest
 		{
 		dex::string query;
 		dex::indexChunkObject *chunkPointer;
 		};
 
-	class indexChunkObject
-		{
-		// Whatever matt and stephen put in here
-		};
-
-	void *getMatchingDocuments( void *args )
-			{
+	void *getMatchingDocuments( void *args );
+			/*{
 			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
-			/*we expect this to be a function that we pass a query that we get from the get request
+			
+			we expect this to be a function that we pass a query that we get from the get request
 			This function runs the query compiler and constraint solver and returns
-			a vector of documents that match the query given.*/
+			a vector of documents that match the query given. 
 			vector < dex::document > someVec;
 			return ( void * ) &someVec;
-			}
+			}*/
 
 	struct searchResult
 		{
