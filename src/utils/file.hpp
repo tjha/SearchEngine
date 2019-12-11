@@ -111,57 +111,62 @@ namespace dex
 		return map;
 		}
 
-   // Provides vector of all filenames within path that match end-pattern
-   vector< string > matchingFilenames( string dirPath, const string &pattern )
-      {
-      // using vector as stack for DFS (pushBack and popBack)
-      vector< string > Frontier;
-      unorderedSet< string > SeenSet;
-      Frontier.pushBack( dirPath );
+	// Provides vector of all filenames within path that match end-pattern
+	vector< string > matchingFilenames( string dirPath, const string &pattern )
+		{
+		// using vector as stack for DFS (pushBack and popBack)
+		vector< string > Frontier;
+		unorderedSet< string > SeenSet;
+		Frontier.pushBack( dirPath );
 
-      vector< string > results;
+		vector< string > results;
 
-      // Keep looping until Frontier is empty
-      while ( !Frontier.empty( ) )
-         {
-         string directory = Frontier.back( );
-         Frontier.popBack( );
-         SeenSet.insert( directory );
+		// Keep looping until Frontier is empty
+		while ( !Frontier.empty( ) )
+			{
+			string directory = Frontier.back( );
+			Frontier.popBack( );
+			SeenSet.insert( directory );
 
-         DIR *dir = opendir( directory.cStr( ) );
-         struct dirent* entry;
+			DIR *dir = opendir( directory.cStr( ) );
+			struct dirent* entry;
 
-         // Loop through all files and directories in current directory
-         while ( dir != nullptr && ( entry = readdir( dir ) ) != NULL )
-            {
-            // Ignore files that begin with a '.'
-            if ( entry->d_name[ 0 ] == '.' )
-               continue;
+			// Loop through all files and directories in current directory
+			while ( dir != nullptr && ( entry = readdir( dir ) ) != NULL )
+				{
+				// Ignore files that begin with a '.'
+				if ( entry->d_name[ 0 ] == '.' )
+					continue;
 
-            string filename( entry->d_name );
-            if ( directory.back( ) == '/' )
-               filename = directory + filename;
-            else
-               filename = directory + "/" + filename;
+				string filename( entry->d_name );
+				if ( directory.back( ) == '/' )
+					filename = directory + filename;
+				else
+					filename = directory + "/" + filename;
 
-            // Add file to SeenSet
-            SeenSet.insert( filename );
+				// Add subdirectory to Frontier 
+				if ( entry->d_type == DT_DIR )
+					{
+					Frontier.pushBack( filename );
+					}
+				// Check file
+				else
+					{
+					// Add file to SeenSet
+					SeenSet.insert( filename );
 
-            // Add to vector to return if filename matches end-pattern
-            size_t pos = filename.find( pattern );
-            if ( pos != string::npos && pos + pattern.length( ) == filename.length( ) )
-               results.pushBack( filename );
+					// Add to vector to return if filename matches end-pattern
+					size_t pos = filename.find( pattern );
+					if ( pos != string::npos && pos + pattern.length( ) == filename.length( ) )
+						results.pushBack( filename );
+					}
+				}
+			closedir( dir );
+			}
 
-            // Add subdirectory to Frontier 
-            if ( entry->d_type == DT_DIR )
-               Frontier.pushBack( filename );
-            }
-         closedir( dir );
-         }
+		return results;
 
-      return results;
-
-      }
+		}
 	}
 
 #endif
