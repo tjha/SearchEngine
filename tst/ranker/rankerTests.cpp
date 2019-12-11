@@ -9,11 +9,41 @@
 
 TEST_CASE( "static ranking", "[ranker]" )
 	{
-	dex::ranker judge( { { 15, 50 }, { 25, 40 }, { 50, 20 } } );
-	REQUIRE( judge.getStaticScoreTitle( "under15" ) == 50 );
-	REQUIRE( judge.getStaticScoreTitle( "googlemapsgooglemaps" ) == 40 );
-	REQUIRE( judge.getStaticScoreTitle( "googlemapsgooglemaps a new paradigm" ) == 20 );
-	REQUIRE( judge.getStaticScoreTitle( "googlemapsgooglemaps a new paradigm and a bad title" ) == 0 );
+	dex::vector < dex::pair < unsigned, double > > titleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
+	double urlWeight = 1;
+	dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics;
+	dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics;
+	double emphasizedWeight = 0;
+	double proportionCap = 0;
+	unsigned maxNumBodySpans = 0;
+	unsigned maxNumTitleSpans = 0;
+	dex::vector < dex::indexChunkObject * > someChunks;
+	dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+
+	SECTION( "static title scoring" )
+		{
+		REQUIRE( judge.staticScoreTitle( "under15" ) == 50 );
+		REQUIRE( judge.staticScoreTitle( "googlemapsgooglemaps" ) == 40 );
+		REQUIRE( judge.staticScoreTitle( "googlemapsgooglemaps a new paradigm" ) == 20 );
+		REQUIRE( judge.staticScoreTitle( "googlemapsgooglemaps a new paradigm and a bad title" ) == 0 );
+		}
+	
+	SECTION( "static url scoring" )
+		{
+		dex::vector < dex::Url > urls;
+		urls.pushBack( "http://scam.reallylongwebsitenameholymoly.biz/a/b/c/d/e/f/g?query=1#fragment" );
+		urls.pushBack( "https://scam.reallylongwebsitenameholymoly.biz/a/b/c/d/e/f/g?query=1#fragment" );
+		urls.pushBack( "https://www.reallylongwebsitenameholymoly.biz/a/b/c/d/e/f/g?query=1#fragment" );
+		urls.pushBack( "https://www.reallylongwebsitenameholymoly.biz/a/b/c/d/e/f/g" );
+		urls.pushBack( "https://www.reallylongwebsitenameholymoly.biz/a/b" );
+		urls.pushBack( "https://www.reasonable.biz/a/b" );
+		urls.pushBack( "https://www.reasonable.edu/a/b" );
+		for ( unsigned i = 0;  i < urls.size( ) - 1;  ++i )
+			{
+			REQUIRE( judge.staticScoreUrl( urls[ i ] ) < judge.staticScoreUrl( urls[ i + 1 ] ) );
+			}
+		}
 	}
 
 TEST_CASE( "sudo ISR", "[ranker]" )
@@ -32,6 +62,17 @@ TEST_CASE( "sudo ISR", "[ranker]" )
 	}
 TEST_CASE( "basic spanning", "[ranker]" )
 	{
+	dex::vector < dex::pair < unsigned, double > > titleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
+	double urlWeight = 1;
+	dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics;
+	dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics;
+	double emphasizedWeight = 0;
+	double proportionCap = 0;
+	unsigned maxNumBodySpans = 0;
+	unsigned maxNumTitleSpans = 0;
+	dex::vector < dex::indexChunkObject * > someChunks;
+	
+	
 	SECTION ( "simple" )
 		{
 		std::cout << "basic spanning, simple\n";
@@ -43,21 +84,24 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		dex::vector < dex::ISR > isrs;
 		isrs.pushBack( duoISR );
 		isrs.pushBack( mushuISR );
-
-		dex::ranker judge;
-		dex::vector < double > heuristics = { 1, 20, 60 };
-		dex::vector < bool > emphasized = { false, false };
-		dex::vector < unsigned > spans = judge.getDesiredSpans( heuristics, emphasized, isrs, 1 );
+		
+		dex::vector < dex::pair < unsigned, double > > heuristics = { { 1, 1 }, { 20, 1 }, { 60, 1 } };
+		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+		dex::vector < unsigned > wordCount;
+		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, 1, heuristics, 5, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans.size( );  ++i )
 			{
-			std::cout << spans[ i ] << " spans between " << prevHeuristic + 1 << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
-			prevHeuristic = heuristics[ i ] * isrs.size( );
+			std::cout << spans[ i ] << " spans between " << prevHeuristic + 1 << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ].first * isrs.size( );
 			}
 		REQUIRE( spans[ 0 ] == 2 );
 		REQUIRE( spans[ 1 ] == 0 );
 		REQUIRE( spans[ 2 ] == 1 );
+		REQUIRE( wordCount[ 0 ] == 3 );
+		REQUIRE( wordCount[ 1 ] == 3 );
 		}
 	SECTION( "Quick Brown Fox" )
 		{
@@ -71,26 +115,39 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		isrs.pushBack( quickISR );
 		isrs.pushBack( brownISR );
 		isrs.pushBack( foxISR );
-		dex::ranker judge;
-		dex::vector < double > heuristics = { 1, 3, 4, 5 };
-		dex::vector < bool > emphasized = { false, false, true };
-		dex::vector < unsigned > spans = judge.getDesiredSpans( heuristics, emphasized, isrs, 1 );
+		dex::vector < dex::pair < unsigned, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
+		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+		dex::vector < unsigned > wordCount;
+		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, 1, heuristics, 5, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans.size( );  ++i )
 			{
-			std::cout << spans[ i ] << " spans between " << prevHeuristic + 1 << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
-			prevHeuristic = heuristics[ i ] * isrs.size( );
+			std::cout << spans[ i ] << " spans between " << prevHeuristic + 1 << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ].first * isrs.size( );
 			}
 		REQUIRE( spans[ 0 ] == 2 );
 		REQUIRE( spans[ 1 ] == 2 );
 		REQUIRE( spans[ 2 ] == 0 );
 		REQUIRE( spans[ 3 ] == 1 );
+		REQUIRE( wordCount[ 0 ] == 10 );
+		REQUIRE( wordCount[ 1 ] == 14 );
+		REQUIRE( wordCount[ 2 ] == 7 );
 		}
 	}
 
 TEST_CASE( "edge cases", "[ranker]" )
 	{
+	dex::vector < dex::pair < unsigned, double > > titleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
+	double urlWeight = 1;
+	dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics;
+	dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics;
+	double emphasizedWeight = 0;
+	double proportionCap = 0;
+	unsigned maxNumBodySpans = 0;
+	unsigned maxNumTitleSpans = 0;
+	dex::vector < dex::indexChunkObject * > someChunks;
 	SECTION( "Short ISR" )
 		{
 		dex::vector < unsigned > quick = { 300 };
@@ -103,21 +160,25 @@ TEST_CASE( "edge cases", "[ranker]" )
 		isrs.pushBack( quickISR );
 		isrs.pushBack( brownISR );
 		isrs.pushBack( foxISR );
-		dex::ranker judge;
-		dex::vector < double > heuristics = { 1, 3, 4, 5 };
-		dex::vector < bool > emphasized = { false, false, true };
-		dex::vector < unsigned > spans = judge.getDesiredSpans( heuristics, emphasized, isrs, 1 );
+		dex::vector < dex::pair < unsigned, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
+		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+		dex::vector < unsigned > wordCount;
+		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, 1, heuristics, 5, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans.size( );  ++i )
 			{
-			std::cout << spans[ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
-			prevHeuristic = heuristics[ i ];
+			std::cout << spans[ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ].first;
 			}
 		REQUIRE( spans[ 0 ] == 0 );
 		REQUIRE( spans[ 1 ] == 0 );
 		REQUIRE( spans[ 2 ] == 0 );
 		REQUIRE( spans[ 3 ] == 0 );
+		REQUIRE( wordCount[ 0 ] == 1 );
+		REQUIRE( wordCount[ 1 ] == 14 );
+		REQUIRE( wordCount[ 2 ] == 7 );
 		}
 	SECTION( "Empty ISR" )
 		{
@@ -131,21 +192,25 @@ TEST_CASE( "edge cases", "[ranker]" )
 		isrs.pushBack( quickISR );
 		isrs.pushBack( brownISR );
 		isrs.pushBack( foxISR );
-		dex::ranker judge;
-		dex::vector < double > heuristics = { 1, 3, 4, 5 };
-		dex::vector < bool > emphasized = { false, false, true };
-		dex::vector < unsigned > spans = judge.getDesiredSpans( heuristics, emphasized, isrs, 1 );
+		dex::vector < dex::pair < unsigned, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
+		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+		dex::vector < unsigned > wordCount;
+		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, 1, heuristics, 5, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans.size( );  ++i )
 			{
-			std::cout << spans[ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ] * isrs.size( ) << std::endl;
-			prevHeuristic = heuristics[ i ];
+			std::cout << spans[ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ].first;
 			}
 		REQUIRE( spans[ 0 ] == 0 );
 		REQUIRE( spans[ 1 ] == 0 );
 		REQUIRE( spans[ 2 ] == 0 );
 		REQUIRE( spans[ 3 ] == 0 );
+		REQUIRE( wordCount[ 0 ] == 0 );
+		REQUIRE( wordCount[ 1 ] == 14 );
+		REQUIRE( wordCount[ 2 ] == 7 );
 		}
 		
 	}

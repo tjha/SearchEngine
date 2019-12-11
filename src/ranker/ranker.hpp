@@ -1,6 +1,7 @@
 // ranker.hpp
 // This ranks the stuff
 
+// 2019-12-11: Implement more dynamic ranking: combsc
 // 2019-12-10: Implement topN: lougheem
 // 2019-12-10: Implement dynamic ranking + pthread stuff: combsc
 // 2019-12-09: getDesiredSpans: lougheem
@@ -10,102 +11,13 @@
 #ifndef RANKER_HPP
 #define RANKER_HPP
 
-#include "vector.hpp"
+
 #include "topN.hpp"
-#include "../spinarak/url.hpp"
+#include "rankerObjects.hpp"
 #include <pthread.h>
 
 namespace dex
 	{
-
-	class indexChunkObject
-		{
-		// Whatever matt and stephen put in here
-		};
-
-	struct queryRequest
-		{
-		dex::string query;
-		dex::indexChunkObject *chunkPointer;
-		};
-
-	void *getMatchingDocuments( void *args );
-			/*{
-			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
-			
-			we expect this to be a function that we pass a query that we get from the get request
-			This function runs the query compiler and constraint solver and returns
-			a vector of documents that match the query given. 
-			vector < dex::document > someVec;
-			return ( void * ) &someVec;
-			}*/
-
-	struct searchResult
-		{
-		dex::Url url;
-		dex::string title;
-		};
-
-	class ISR
-		{
-		
-		private:
-			dex::vector < unsigned > internal;
-			dex::string word;
-			unsigned pos;
-
-		public:
-			const static unsigned npos = unsigned ( -1 );
-			ISR( )
-				{
-				}
-			ISR( dex::string word, dex::vector < unsigned > vecIn )
-				{
-				this->word = word;
-				internal = vecIn;
-				pos = 0;
-				}
-			unsigned first( )
-				{
-				return internal[ 0 ];
-				}
-			unsigned next( )
-				{
-				if ( pos == internal.size( ) )
-					{
-					return npos;
-					}
-				unsigned toRet = internal[ pos ];
-				pos++;
-				return toRet;
-				}
-			unsigned last( )
-				{
-				return internal.back( );
-				}
-			unsigned getPos( )
-				{
-				return pos;
-				}
-			dex::string getWord( )
-				{
-				return word;
-				}
-		};
-
-		struct document
-			{
-			// Constraint solver needs to make sure to not return pornographic results
-			// All four vectors should be in the order of the flattened query
-			dex::vector < dex::ISR > titleISRs;
-			dex::vector < dex::ISR > bodyISRs;
-			dex::vector < bool > emphasizedWords;
-			dex::string title;
-			dex::Url url;
-			unsigned rarestWordIndex;
-			unsigned documentBodyLength;
-			};
-	
 	class ranker
 		{
 		private:
@@ -114,17 +26,31 @@ namespace dex
 			// score weighting for URL
 			double staticUrlWeight;
 			// pair of < inclusive upper bound on span range, score weighting of that range >
-			dex::vector < dex::pair < unsigned, double > > dynamicSpanHeuristics;
+			dex::vector < dex::pair < unsigned, double > > dynamicBodySpanHeuristics;
+			dex::vector < dex::pair < unsigned, double > > dynamicTitleSpanHeuristics;
+			unsigned maxNumBodySpans;
+			unsigned maxNumTitleSpans;
+			double emphasizedWeight;
+			double proportionCap;
 			dex::vector < dex::indexChunkObject * > chunkPointers;
+			
 
 		public:
 			ranker( dex::vector < dex::pair < unsigned, double > > titleWeights, double urlWeight, 
-					dex::vector < pair < unsigned, double > > spanHeuristics, dex::vector < dex::indexChunkObject * > someChunks )
+					dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics, 
+					dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics,
+					double emphasizedWeight, double proportionCap,
+					unsigned bodySpans, unsigned titleSpans, dex::vector < dex::indexChunkObject * > someChunks )
 				{
 				staticTitleWeights = titleWeights;
 				staticUrlWeight = urlWeight;
-				dynamicSpanHeuristics = spanHeuristics;
+				dynamicBodySpanHeuristics = bodySpanHeuristics;
+				dynamicTitleSpanHeuristics = titleSpanHeuristics;
 				chunkPointers = someChunks;
+				maxNumBodySpans = bodySpans;
+				maxNumTitleSpans = titleSpans;
+				this->emphasizedWeight = emphasizedWeight;
+				this->proportionCap = proportionCap;
 				}
 			
 			double staticScoreUrl( const dex::Url &url )
@@ -165,8 +91,6 @@ namespace dex
 							}
 						}
 					}
-				
-
 				// Promote short URLs
 				// max of this should not give more than a good TLD
 				// completeUrls of size 45 or lower get maximum score ( of 9 ).
@@ -225,21 +149,16 @@ namespace dex
 				return score;
 				}
 
-			double getDynamicWordScore( vector < unsigned > wordCount, unsigned documentLength, vector < bool > emphasized, 
-					double emphasizedWeight )
-				{
-
-				return 0;
-				}
-			
 			// Heuristics is a vector contianing the lengths of the spans you're looking for in the document
 			// Emphasized is a vector containing whether or not the word at that index was emphasized
 			// Vector of ISRs should be arranged such that the words of the ISRs line up with the order of the query
 			// rarest should be the index of the ISR of the rarest word in the query
 			// { 1, 2, 4, 8 }
-			vector < unsigned > getDesiredSpans( vector < ISR > isrs, unsigned rarest, vector < bool > emphasized )
+			vector < unsigned > getDesiredSpans( vector < ISR > isrs, unsigned rarest, 
+					vector < pair < unsigned, double > > heuristics, unsigned maxNumSpans,
+					vector < unsigned > &wordCount )
 				{
-				vector < pair < unsigned, double > > heuristics = dynamicSpanHeuristics;
+				wordCount.resize( isrs.size( ), 0 );
 				unsigned size = isrs.size( );
 				vector < unsigned > spansOccurances( heuristics.size( ) );
 
@@ -249,6 +168,10 @@ namespace dex
 					{
 					std::cout << "Initializing " << isrs[ index ].getWord ( ) << "\n";
 					current[ index ] = isrs[ index ].next( );
+					if ( current[ index ] != ISR::npos )
+						{
+						wordCount[ index ]++;
+						}
 					std::cout << "\t" << current[ index ];
 					next[ index ] = isrs[ index ].next( );
 					std::cout << "\t" << next[ index ] << "\n";
@@ -278,6 +201,7 @@ namespace dex
 								{
 								current[ index ] = next[ index ];
 								next[ index ] = isrs[ index ].next( );
+								wordCount[ index ]++;
 								std::cout << "\t\t\t..." << current[ index ] << "\n";
 								}
 
@@ -328,24 +252,80 @@ namespace dex
 					std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
 					for ( unsigned index = 0;  index < heuristics.size( );  ++index )
 						{
-						if ( span <= heuristics[ index ].second * size )
+						if ( span <= heuristics[ index ].first * size )
 							{
-							spansOccurances[ index ]++;
+							if ( spansOccurances[ index ] < maxNumSpans )
+								{
+								spansOccurances[ index ]++;
+								}
 							break;
 							}
 						}
 					current[ rarest ] = next[ rarest ];
 					next[ rarest ] = isrs[ rarest ].next( );
+					if ( current[ rarest ] != ISR::npos )
+						{
+						wordCount[ rarest ]++;
+						}
+					}
+				for ( unsigned index = 0;  index < size;  ++index )
+					{
+					while ( next[ index ] != ISR::npos )
+						{
+						current[ index ] = next[ index ];
+						next[ index ] = isrs[ index ].next( ); 
+						wordCount[ index ]++;
+						}
 					}
 				return spansOccurances;
 				}
 
-			double getDynamicScore( dex::document doc)
+			double getDynamicWordScore( vector < unsigned > wordCount, unsigned documentLength, vector < bool > emphasized, 
+					double emphasizedWeight, double proportionCap )
 				{
-				vector < unsigned > bodySpans = getDesiredSpans( doc.bodyISRs, doc.rarestWordIndex, doc.emphasizedWords );
-				vector < unsigned > titleSpans = getDesiredSpans( doc.titleISRs, doc.rarestWordIndex, doc.emphasizedWords );
+				double score = 0;
+				for ( unsigned index = 0;  index < wordCount.size( );  ++index )
+					{
+					if ( emphasized[ index ] )
+						{
+						score += wordCount[ index ] * emphasizedWeight;
+						}
+					else
+						{
+						score += wordCount[ index ];
+						}
+					}
+				score /= documentLength;
+				if ( score > proportionCap )
+					{
+					score = proportionCap;
+					}
+				return proportionCap;
+				}
 
-				return 100;
+			double getDynamicScore( dex::document doc )
+				{
+				
+				double score = 0;
+				vector < unsigned > bodyWordCount;
+				vector < unsigned > bodySpans = getDesiredSpans( doc.bodyISRs, doc.rarestWordIndex, 
+						dynamicBodySpanHeuristics, maxNumBodySpans, bodyWordCount );
+				for ( unsigned index = 0;  index < bodySpans.size( );  ++index )
+					{
+					score += bodySpans[ index ] * dynamicBodySpanHeuristics[ index ].second;
+					}
+				vector < unsigned > titleWordCount;
+				vector < unsigned > titleSpans = getDesiredSpans( doc.titleISRs, doc.rarestWordIndex, 
+						dynamicTitleSpanHeuristics, maxNumTitleSpans, titleWordCount );
+				for ( unsigned index = 0;  index < titleSpans.size( );  ++index )
+					{
+					score += titleSpans[ index ] * dynamicTitleSpanHeuristics[ index ].second;
+					}
+
+				score += getDynamicWordScore( bodyWordCount, doc.documentBodyLength, doc.emphasizedWords,
+						emphasizedWeight, proportionCap );
+
+				return score;
 				}
 
 			dex::vector < dex::searchResult > getTopN( size_t n, dex::string query )
@@ -396,7 +376,7 @@ namespace dex
 					{
 					topDocuments.pushBack( documents[ p->documentIndex ] );
 					std::cout << p->score << "\t" << documents[ p->documentIndex ].title << "\t"
-							<< documents[ p->documentIndex ].url.completeUrl << "\n";
+							<< documents[ p->documentIndex ].url.completeUrl( ) << "\n";
 					}
 				return results;
 				}
