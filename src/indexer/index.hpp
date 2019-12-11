@@ -13,6 +13,7 @@
 #define DEX_INDEX
 
 #include <cstddef>
+#include "../constraintSolver/constraintSolver.hpp"
 #include "../utils/basicString.hpp"
 #include "../utils/stemming.hpp"
 #include "../utils/unorderedMap.hpp"
@@ -20,10 +21,6 @@
 #include "../utils/utf.hpp"
 #include "../utils/utility.hpp"
 #include "../utils/vector.hpp"
-
-// TODO: remove these
-#include <iostream>
-#define NUMINTS ( 10 )
 
 namespace dex
 	{
@@ -257,7 +254,7 @@ namespace dex
 					const dex::vector < dex::string > &title, const dex::string &titleString,
 					const dex::vector < dex::string > &body );
 
-				class indexStreamReader
+				class indexStreamReader : dex::constraintSolver::ISR
 					{
 					private:
 						friend class indexChunk;
@@ -353,5 +350,4 @@ namespace dex
 			};
 		}
 	}
-
 #endif
