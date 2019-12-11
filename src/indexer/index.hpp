@@ -259,7 +259,7 @@ namespace dex
 					private:
 						friend class indexChunk;
 
-						static const size_t npos = static_cast < size_t >( -1 );
+						static const size_t npos = dex::constraintSolver::ISR::npos;
 
 						byte *post;
 						byte *documentPost;
@@ -285,6 +285,8 @@ namespace dex
 
 						// Need functions to get metadata for a word for entire posting list
 						// 	and for in the current document
+
+						size_t documentSize( );
 					};
 			};
 		}

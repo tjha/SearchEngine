@@ -261,3 +261,10 @@ size_t dex::index::indexChunk::indexStreamReader::nextDocument( )
 		return npos;
 	return seek( endOfDocumentLocation );
 	}
+
+size_t dex::index::indexChunk::indexStreamReader::documentSize( )
+	{
+	if ( indexChunkum->offsetsToEndOfDocumentMetadatas.count( absoluteLocation ) )
+		return indexChunkum->offsetsToEndOfDocumentMetadatas[ absoluteLocation ].documentLength;
+	return -1;
+	}

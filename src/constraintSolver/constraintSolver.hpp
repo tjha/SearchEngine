@@ -8,6 +8,7 @@
 #define DEX_CONSTRAINT_SOLVER
 
 #include <cstddef>
+#include "../indexer/index.hpp"
 #include "../utils/vector.hpp"
 
 namespace dex
@@ -18,6 +19,8 @@ namespace dex
 		class ISR
 			{
 			public:
+				static const size_t npos = static_cast < size_t >( -1 );
+
 				// Jump this ISR to the first instance of our pattern that is at or after target. Return the location of the
 				// instance, or -1 if there is none.
 				virtual size_t seek( size_t target ) = 0;
@@ -31,44 +34,64 @@ namespace dex
 				virtual size_t nextDocument( ) = 0;
 			};
 
-		class andISR : ISR
+		class andISR : dex::constraintSolver::ISR
 			{
 			private:
 				// A vector of pointers to the ISRs we want to "and" together.
-				vector < ISR * > factors;
+				dex::vector < dex::constraintSolver::ISR * > factors;
+				dex::index::indexChunk::indexStreamReader *endOfDocISR;
+
+				dex::vector < size_t > locations;
+				size_t endOfDocLocation;
+
+				// Move all factors so they are in the same document. Return true when there are still things to read.
+				bool align( );
 
 			public:
-				andISR( vector < ISR * > factors ) : factors( factors ) { }
+				andISR( vector < dex::constraintSolver::ISR * > factors,
+						dex::index::indexChunk::indexStreamReader *endOfDocISR );
+				virtual size_t seek( size_t target );
+				virtual size_t next( );
+				virtual size_t nextDocument( );
 			};
 
-		class orISR : ISR
+		class orISR : dex::constraintSolver::ISR
 			{
 			private:
 				// A vector of pointers to the ISRs we want to "or" together.
-				vector < ISR * > summands;
+				dex::vector < dex::constraintSolver::ISR * > summands;
 
 			public:
-				orISR( vector < ISR * > summands ) : summands( summands ) { }
+				orISR( vector < dex::constraintSolver::ISR * > summands );
+				virtual size_t seek( size_t target );
+				virtual size_t next( );
+				virtual size_t nextDocument( );
 			};
 
-		class notISR : ISR
+		class notISR : dex::constraintSolver::ISR
 			{
 			private :
 				// ISR pointer to ISR we don't want.
-				ISR * neg;
+				dex::constraintSolver::ISR * neg;
 
 			public:
-				notISR ( ISR *neg ) : neg( neg ) { }
+				notISR ( dex::constraintSolver::ISR *neg );
+				virtual size_t seek( size_t target );
+				virtual size_t next( );
+				virtual size_t nextDocument( );
 			};
 
-		class phraseISR : ISR
+		class phraseISR : dex::constraintSolver::ISR
 			{
 			private:
 				// A vector of pointers to the ISRs we want to find a phrase of.
-				vector < ISR * > words;
+				dex::vector < dex::constraintSolver::ISR * > words;
 
 			public:
-				phraseISR( vector < ISR * > words ) : words( words ) { }
+				phraseISR( vector < dex::constraintSolver::ISR * > words );
+				virtual size_t seek( size_t target );
+				virtual size_t next( );
+				virtual size_t nextDocument( );
 			};
 		}
 	}
