@@ -4,6 +4,9 @@
 // 2019-12-09: Implementing static title ranking: combsc
 // 2019-12-09: Init Commit: combsc + lougheem
 
+#ifndef RANKER_HPP
+#define RANKER_HPP
+
 #include "vector.hpp"
 #include "../spinarak/url.hpp"
 
@@ -375,4 +378,4 @@ namespace dex
 			
 		};
 	}
-
+#endif
