@@ -1,6 +1,9 @@
 // ranker.hpp
 // This ranks the stuff
 
+// 2019-12-10: Implement topN: lougheem
+// 2019-12-10: Implement dynamic ranking + pthread stuff: combsc
+// 2019-12-09: getDesiredSpans: lougheem
 // 2019-12-09: Implementing static title ranking: combsc
 // 2019-12-09: Init Commit: combsc + lougheem
 
@@ -8,10 +11,34 @@
 #define RANKER_HPP
 
 #include "vector.hpp"
+#include "topN.hpp"
 #include "../spinarak/url.hpp"
+#include <pthread.h>
 
 namespace dex
 	{
+
+	struct queryRequest
+		{
+		dex::string query;
+		dex::indexChunkObject *chunkPointer;
+		};
+
+	class indexChunkObject
+		{
+		// Whatever matt and stephen put in here
+		};
+
+	void *getMatchingDocuments( void *args )
+			{
+			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
+			/*we expect this to be a function that we pass a query that we get from the get request
+			This function runs the query compiler and constraint solver and returns
+			a vector of documents that match the query given.*/
+			vector < dex::document > someVec;
+			return ( void * ) &someVec;
+			}
+
 	struct searchResult
 		{
 		dex::Url url;
@@ -68,28 +95,38 @@ namespace dex
 		struct document
 			{
 			// Constraint solver needs to make sure to not return pornographic results
-			// vector of ISRs should be in the order of the flattened query
+			// All four vectors should be in the order of the flattened query
 			dex::vector < dex::ISR > titleISRs;
 			dex::vector < dex::ISR > bodyISRs;
+			dex::vector < bool > emphasizedWords;
 			dex::string title;
 			dex::Url url;
 			unsigned rarestWordIndex;
 			unsigned documentBodyLength;
 			};
-
-	
-		class constraintSolverWorker
-		{
-		public:
-			dex::vector < dex::document > getDocuments( std::string query );
-		};
 	
 	class ranker
 		{
 		private:
+			// pair of < maximum length of title, score awarded to title >
 			dex::vector < dex::pair < unsigned, double > > staticTitleWeights;
+			// score weighting for URL
 			double staticUrlWeight;
-			double staticScoreUrl( const dex::Url &url, double weight )
+			// pair of < inclusive upper bound on span range, score weighting of that range >
+			dex::vector < dex::pair < unsigned, double > > dynamicSpanHeuristics;
+			dex::vector < dex::indexChunkObject * > chunkPointers;
+
+		public:
+			ranker( dex::vector < dex::pair < unsigned, double > > titleWeights, double urlWeight, 
+					dex::vector < pair < unsigned, double > > spanHeuristics, dex::vector < dex::indexChunkObject * > someChunks )
+				{
+				staticTitleWeights = titleWeights;
+				staticUrlWeight = urlWeight;
+				dynamicSpanHeuristics = spanHeuristics;
+				chunkPointers = someChunks;
+				}
+			
+			double staticScoreUrl( const dex::Url &url )
 				{
 				double score = 0;
 				// Promote good tlds ( .com, .org, .gov )
@@ -161,10 +198,9 @@ namespace dex
 				if ( !url.getFragment( ).empty( ) || !url.getQuery( ).empty( ) )
 					score -= 5;
 
-				return weight * score;
+				return staticUrlWeight * score;
 				}
-
-
+			
 			// Title weights contains vector of pairs
 			// pair.first is the number of characters in the title
 			// pair.second is the number of points awarded if the size is less than or equal to first
@@ -181,78 +217,18 @@ namespace dex
 				return 0;
 				}
 
-			/*
-			Spans  (Contain all query words contained in this body)
-				Range from 0 - 5 occurrences
-
-			Exact Match
-
-			In order span size of 2 times query length (fraction of query words)
-			In order span size of 4 times query length (fraction of query words)
-			In order span size of 5 times query length (fraction of query words)
-
-			Any order span size of 2 times query length
-			Any order span size of 4 times query length
-			Any order span size of 5 times query length
-
-			pass a vector in for our heuristics
-				{ 1, 2, 4, 5 }
-
-
-			first { 1, 3, 5, 7, 9 }
-			second { 4, 10 }
-			third { 6 }
-
-			best in order: 3, 4, 6
-
-			best out of order: 5, 4, 6
-
-
-
-			Spanning strategy
-			while ( rarestISR != end )
-				{
-				unsigned prev = currentISR;
-				currentISR = currentISR.next( );
-				if ( currentISR > rarestISR )
-					choose the best out of current and prev
-				
-
-			n rarest words and m number of words in query
-			you're returning a vector of size n, of vectors of size m of unsigneds
-
-			{ 1, 2, 3, 4, 5, }
-				rarestISR++
-				}
-			*/
-		
-
-		public:
-
-			ranker( double urlWeight = 1 )
-				{
-				staticTitleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
-				staticUrlWeight = urlWeight;
-				}
-
-			
-			ranker( dex::vector < dex::pair < unsigned, double > > titleWeights, double urlWeight = 1 )
-				{
-				staticTitleWeights = titleWeights;
-				staticUrlWeight = urlWeight;
-				}
-			
-
-			double getStaticScoreTitle( dex::string title )
-				{
-				return staticScoreTitle( title );
-				}
-
 			double getStaticScore( dex::document doc )
 				{
 				double score = staticScoreTitle( doc.title );
-				score += staticScoreUrl( doc.url, staticUrlWeight );
+				score += staticScoreUrl( doc.url );
 				return score;
+				}
+
+			double getDynamicWordScore( vector < unsigned > wordCount, unsigned documentLength, vector < bool > emphasized, 
+					double emphasizedWeight )
+				{
+
+				return 0;
 				}
 			
 			// Heuristics is a vector contianing the lengths of the spans you're looking for in the document
@@ -260,9 +236,9 @@ namespace dex
 			// Vector of ISRs should be arranged such that the words of the ISRs line up with the order of the query
 			// rarest should be the index of the ISR of the rarest word in the query
 			// { 1, 2, 4, 8 }
-			vector < unsigned > getDesiredSpans( vector < double > heuristics, vector < bool > emphasized, 
-					vector < ISR > isrs, unsigned rarest )
+			vector < unsigned > getDesiredSpans( vector < ISR > isrs, unsigned rarest, vector < bool > emphasized )
 				{
+				vector < pair < unsigned, double > > heuristics = dynamicSpanHeuristics;
 				unsigned size = isrs.size( );
 				vector < unsigned > spansOccurances( heuristics.size( ) );
 
@@ -351,7 +327,7 @@ namespace dex
 					std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
 					for ( unsigned index = 0;  index < heuristics.size( );  ++index )
 						{
-						if ( span <= heuristics[ index ] * size )
+						if ( span <= heuristics[ index ].second * size )
 							{
 							spansOccurances[ index ]++;
 							break;
@@ -363,16 +339,64 @@ namespace dex
 				return spansOccurances;
 				}
 
-			dex::vector < searchResult > getTopN( size_t n, dex::string query )
+			double getDynamicScore( dex::document doc)
 				{
-				dex::vector < searchResult > results;
+				vector < unsigned > bodySpans = getDesiredSpans( doc.bodyISRs, doc.rarestWordIndex, doc.emphasizedWords );
+				vector < unsigned > titleSpans = getDesiredSpans( doc.titleISRs, doc.rarestWordIndex, doc.emphasizedWords );
+
+				return 100;
+				}
+
+			dex::vector < dex::searchResult > getTopN( size_t n, dex::string query )
+				{
+				dex::vector < dex::searchResult > results;
+				results.reserve( n );
 				// pass query to query compiler
 				// pass compiled query to constraintSolver
 				
+				dex::vector < dex::document > documents;
+				dex::vector < double > scores;
+
+				pthread_t workerThreads [ chunkPointers.size( ) ];
+				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+					{
+					dex::queryRequest request;
+					request.query = query;
+					request.chunkPointer = chunkPointers[ index ];
+					pthread_create( &workerThreads[ index ], nullptr, getMatchingDocuments, ( void * ) &request );
+					}
+
+				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+					{
+					void *returnValue;
+					pthread_join( workerThreads[ index ], &returnValue );
+					vector < dex::document > returnDocuments = *( vector < dex::document > * ) returnValue;
+					documents.reserve( documents.size( ) + returnDocuments.size( ) );
+					for ( dex::vector< dex::document >::constIterator newDocumentIt = returnDocuments.cbegin( );
+							newDocumentIt != returnDocuments.cend( );  documents.pushBack( *( newDocumentIt++ ) ) );
+					}
 				// loop this over all index chunks
 					// Constraint Solver returns a vector of sets of ISRs?
 					// Each document contains a vector of ISRs that correspond to the words in the query
 					// Each index worker has its own constraint solver.
+					
+				for ( size_t index = 0;  index < documents.size( );  ++index )
+					{
+					double score = getDynamicScore( documents[ index ] ) + getStaticScore( documents[ index ] );
+					scores.pushBack( score );
+					}
+
+				documentInfo **topN, *p;
+				dex::vector< dex::document > topDocuments;
+
+				// topN = topN( scores, n );
+
+				for ( int index = 0;  index < n && ( p = topN[ index ] );  index++ )
+					{
+					topDocuments.pushBack( documents[ p->documentIndex ] );
+					std::cout << p->score << "\t" << documents[ p->documentIndex ].title << "\t"
+							<< documents[ p->documentIndex ].url.completeUrl << "\n";
+					}
 				return results;
 				}
 			

@@ -5,7 +5,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -g
 SRC_PATH = src
 TEST_PATH = tst
 BUILD_PATH = build
-INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/spinarak -I $(TEST_PATH) #TODO: add more src folders here as needed
+INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/spinarak -I $(SRC_PATH)/ranker -I $(TEST_PATH) #TODO: add more src folders here as needed
 
 LDFLAGS := -L/usr/local/opt/libressl/lib
 CPPFLAGS := -I/usr/local/opt/libressl/include
