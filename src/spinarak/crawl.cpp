@@ -1,6 +1,7 @@
 // crawl.cpp
 // Testing for our crawler class
 //
+// 2019-11-20: merge with master: combsc
 // 2019-11-10: pass filenames instead of file descriptors: jhirsh
 // 2019-11-04: edited code logic slightly to match other changes made today: combsc
 // 2019-11-04: File creation: jhirsh
@@ -88,7 +89,14 @@ int main( int argc, char ** argv )
 
 		if ( errorCode == dex::POLITENESS_ERROR )
 			{
-			cout << "Mr. Robot says to be polite: " << it->cStr( ) << endl;
+			cout << "Mr. Robot says try again later: " << it->cStr( ) << endl;
+			cout << result << endl;
+			++it;
+			}
+
+		if ( errorCode == dex::DISALLOWED_ERROR )
+			{
+			cout << "Mr. Robot says path not allowed: " << it->cStr( ) << endl;
 			cout << result << endl;
 			++it;
 			}

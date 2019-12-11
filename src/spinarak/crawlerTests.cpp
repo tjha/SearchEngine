@@ -24,27 +24,27 @@ void testHttps( )
 	unorderedMap < string, RobotTxt > robots{ 10 };
 	string res;
 	
-	int errorCode = dex::crawler::crawlUrl( "https://www.runescape.com", res, robots, "savedTestOutput.txt" );
+	int errorCode = dex::crawler::crawlUrl( "https://www.runescape.com", res, robots );
 	assert( errorCode == 302 );
 	assert( res == "https://www.runescape.com/splash" );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/jaggywaggy", res, robots, "savedTestOutput.txt" );
+	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/jaggywaggy", res, robots );
 	assert( errorCode == -5 );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash", res, robots, "savedTestOutput.txt", false );
+	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash", res, robots, false );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash?woodcutting=100", res, robots, "savedTestOutput.txt", false );
+	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash?woodcutting=100", res, robots, false );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash?woodcutting=100#jagex", res, robots, "savedTestOutput.txt", false );
+	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash?woodcutting=100#jagex", res, robots, false );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash#jagex", res, robots, "savedTestOutput.txt", false );
+	errorCode = dex::crawler::crawlUrl( "https://www.runescape.com/splash#jagex", res, robots, false );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "https://www.fb.com/", res, robots, "savedTestOutput.txt" );
-	assert( errorCode == -5 );
+	errorCode = dex::crawler::crawlUrl( "https://www.fb.com/", res, robots );
+	assert( errorCode == -12 );
 	}
 
 void testHttp( )
@@ -53,23 +53,40 @@ void testHttp( )
 	string res;
 
 	
-	int errorCode = dex::crawler::crawlUrl( "http://www.runescape.com/splash", res, robots, "savedTestOutput.txt" );
+	int errorCode = dex::crawler::crawlUrl( "http://www.runescape.com/splash", res, robots );
 	assert( errorCode == 302 );
 	
 	assert( res == "https://www.runescape.com/splash" );
 	
-	errorCode = dex::crawler::crawlUrl( "http://man7.org/", res, robots, "savedTestOutput.txt" );
+	errorCode = dex::crawler::crawlUrl( "http://man7.org/", res, robots );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "http://man7.org/?man=page", res, robots, "savedTestOutput.txt", false );
+	errorCode = dex::crawler::crawlUrl( "http://man7.org/?man=page", res, robots, false );
 	assert( errorCode == 0 );
 
-	errorCode = dex::crawler::crawlUrl( "http://man7.org/?man=page#foobar", res, robots, "savedTestOutput.txt" );
+	errorCode = dex::crawler::crawlUrl( "http://man7.org/?man=page#foobar", res, robots );
 	assert( errorCode == -5 );
+
+	errorCode = dex::crawler::crawlUrl( "http://tlpi/index.html", res, robots );
+	assert( errorCode == -1 );
+	}
+
+void testOther( )
+	{
+	unorderedMap < string, RobotTxt > robots{ 10 };
+	string res;
+
+	
+	//int errorCode = dex::crawler::crawlUrl( "https://www.twitter.com/", res, robots );
+
+	//cout << errorCode << endl;
+	dex::crawler::testConnect( "https://www.kernel.org/doc/man-pages/contributing.html", res, dex::HTTPS );
+	cout << res << endl;
 	}
 
 int main( )
 	{
-   testHttp( );
+	testOther( );
+	testHttp( );
 	testHttps( );
 	}

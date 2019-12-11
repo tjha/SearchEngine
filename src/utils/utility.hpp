@@ -17,9 +17,8 @@ namespace dex
 		{
 		T1 first;
 		T2 second;
-		pair( )
-			{
-			}
+
+		pair ( ) { }
 		pair( const T1& first, const T2& second ) : first( first ), second( second ) { }
 		};
 

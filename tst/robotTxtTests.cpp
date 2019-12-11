@@ -22,16 +22,16 @@ TEST_CASE( "timing for visiting sites", "[robotsTxt]" )
 	string url = "https://domain.com";
 	RobotTxt hello = RobotTxt( url, 1 );
 	hello.updateLastVisited( );
-	REQUIRE( !hello.canVisitPath( "/" ) );
+	REQUIRE( hello.canVisitPath( "/" ) == 1 );
 	sleep(2);
-	REQUIRE( hello.canVisitPath( "/" ) );
+	REQUIRE( hello.canVisitPath( "/" )  == 0);
 
 	RobotTxt henlo = RobotTxt( url, 1 );
 	henlo.updateLastVisited( );
 	henlo.addPathsDisallowed( "/" );
-	REQUIRE( !henlo.canVisitPath( "/" ) );
+	REQUIRE( henlo.canVisitPath( "/" ) == 2 );
 	sleep(2);
-	REQUIRE( !henlo.canVisitPath( "/" ) );
+	REQUIRE( henlo.canVisitPath( "/" ) == 2 );
 	}
 
 TEST_CASE( "whitelist and blacklist rules", "[robotsTxt]" )
@@ -42,16 +42,16 @@ TEST_CASE( "whitelist and blacklist rules", "[robotsTxt]" )
 	sleep(1);
 	hello.addPathsDisallowed( "/" );
 	hello.addPathsAllowed( "/secret/path/" );
-	REQUIRE( !hello.canVisitPath( "/some/other/path/" ) );
-	REQUIRE( !hello.canVisitPath( "/" ) );
-	REQUIRE( hello.canVisitPath( "/secret/path/" ) );
-	REQUIRE( hello.canVisitPath( "/secret/path/somefile/" ) );
+	REQUIRE( hello.canVisitPath( "/some/other/path/" ) == 2 );
+	REQUIRE( hello.canVisitPath( "/" ) == 2 );
+	REQUIRE( hello.canVisitPath( "/secret/path/" ) == 0 );
+	REQUIRE( hello.canVisitPath( "/secret/path/somefile/" ) == 0 );
 
 	// testing passing "bad" paths
 
 	hello.addPathsAllowed ( "secret/other/path" );
-	REQUIRE( hello.canVisitPath( "secret/other/path" ) );
-	REQUIRE( hello.canVisitPath( "secret/other/path/file" ) );
+	REQUIRE( hello.canVisitPath( "secret/other/path" ) == 0 );
+	REQUIRE( hello.canVisitPath( "secret/other/path/file" ) == 0 );
 	
 	}
 
@@ -79,15 +79,15 @@ TEST_CASE( "constructors and operator=", "[robotTxt]")
       rob1.addPathsDisallowed( "/disallowed/path/");
 
       RobotTxt rob2 = RobotTxt( rob1 );
-      REQUIRE ( rob2.canVisitPath( "/" ) );
-      REQUIRE ( rob2.canVisitPath( "/secret/path/" ) );
-      REQUIRE ( !rob2.canVisitPath( "/disallowed/path/" ) );
+      REQUIRE ( rob2.canVisitPath( "/" ) == 0 );
+      REQUIRE ( rob2.canVisitPath( "/secret/path/" ) == 0 );
+      REQUIRE ( rob2.canVisitPath( "/disallowed/path/" ) == 2 );
       rob2.updateLastVisited( );
-      REQUIRE ( !rob2.canVisitPath( "/" ) );
-      REQUIRE ( !rob2.canVisitPath( "/secret/path/" ) );
+      REQUIRE ( rob2.canVisitPath( "/" ) == 1 );
+      REQUIRE ( rob2.canVisitPath( "/secret/path/" ) == 1 );
       sleep(3);
-      REQUIRE ( rob2.canVisitPath( "/" ) );
-      REQUIRE ( rob2.canVisitPath( "/secret/path/" ) );
+      REQUIRE ( rob2.canVisitPath( "/" ) == 0 );
+      REQUIRE ( rob2.canVisitPath( "/secret/path/" ) == 0 );
       }
 
    SECTION( "Different Robots" )
@@ -140,11 +140,11 @@ TEST_CASE( "parsing a robots.txt file", "[robotTxt]" )
          "User-agent: susBot\n" +
          "Disallow: /\n";
    RobotTxt rob0 = RobotTxt( "https://www.domain.com", exampleString0 );
-   REQUIRE( rob0.getDelay( ) == 0 );
-   REQUIRE( rob0.canVisitPath( "/secret/okpath/otherfile") );
-   REQUIRE( rob0.canVisitPath( "/secret/okfile") );
-   REQUIRE( rob0.canVisitPath( "/somepublicthing") );
-   REQUIRE( !rob0.canVisitPath( "/secret/file") );
+   REQUIRE( rob0.getDelay( ) == 0 );  
+   REQUIRE( rob0.canVisitPath( "/secret/okpath/otherfile") == 0 );
+   REQUIRE( rob0.canVisitPath( "/secret/okfile") == 0 );
+   REQUIRE( rob0.canVisitPath( "/somepublicthing") == 0 );
+   REQUIRE( rob0.canVisitPath( "/secret/file") == 2 );
 
    // spaces
    string exampleString1 = dummy + "User-agent: notUs\n" + 
@@ -159,9 +159,9 @@ TEST_CASE( "parsing a robots.txt file", "[robotTxt]" )
          "Disallow: / \n";
    RobotTxt rob1 = RobotTxt( "https://www.domain.com", exampleString1 );
    REQUIRE( rob1.getDelay( ) == 0 );
-   REQUIRE( rob1.canVisitPath( "/secret/okpath/otherfile") );
-   REQUIRE( rob1.canVisitPath( "/secret/okfile") );
-   REQUIRE( rob1.canVisitPath( "/somepublicthing") );
-   REQUIRE( !rob1.canVisitPath( "/secret/file") );
+   REQUIRE( rob1.canVisitPath( "/secret/okpath/otherfile") == 0 );
+   REQUIRE( rob1.canVisitPath( "/secret/okfile") == 0 );
+   REQUIRE( rob1.canVisitPath( "/somepublicthing") == 0 );
+   REQUIRE( rob1.canVisitPath( "/secret/file") == 2 );
    }
 

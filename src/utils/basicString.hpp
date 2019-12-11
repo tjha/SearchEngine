@@ -12,6 +12,8 @@
 //    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
 //    std::basic_string::get_allocator( ) const;
 //
+// 2019-11-23: Add toLowerCase: combsc
+// 2019-11-20: Add replaceWhitespace and toString function: combsc
 // 2019-11-13: Add stripWhitespace function: combsc
 // 2019-11-04: Use typeTraits.hpp: jasina
 // 2019-10-31: Make +operator a friend function: combsc
@@ -986,6 +988,17 @@ namespace dex
 				return stripped.substr( frontStripped, backStripped - frontStripped + 1);
 				}
 
+			basicString < charT > replaceWhitespace( const basicString < charT > &replace = "" ) const
+				{
+				const charT * whitespace = " \v\f\t\r\n";
+				basicString < charT > stripped = basicString( *this );
+
+				for ( size_t i = stripped.findFirstOf( whitespace );  i != npos;  i = stripped.findFirstOf( whitespace ) )
+					stripped.replace( i, 1, replace );
+				
+				return stripped;
+				}
+
 			friend basicString < charT > operator+( const basicString < charT > &lhs, const charT *rhs )
 				{
 				basicString < charT > ret;
@@ -1127,6 +1140,41 @@ namespace dex
 	
 
 	typedef dex::basicString < char > string;
+
+	string toString( long i )
+		{
+		if ( i == 0 )
+			return "0";
+		bool isNegative = false;
+		string toReturn = "";
+		if ( i < 0 )
+			{
+			isNegative = true;
+			i = -i;
+			}
+		for ( ;  i > 0;  i /= 10 )
+			{
+			toReturn += ( '0' + i % 10 );
+			}
+		if ( isNegative )
+			toReturn += '-';
+		return string( toReturn.rbegin( ), toReturn.rend( ) );
+		}
+
+	// To be used for case insensitive finding
+	string toLower( string s )
+		{
+		string toReturn;
+		toReturn.reserve( s.size( ) );
+		for ( auto it = s.cbegin( );  it != s.cend( );  ++it )
+			{
+			char c = *it;
+			if ( c >= 'A' && c <= 'Z' )
+				c += 32;
+			toReturn.pushBack( c );
+			}
+		return toReturn;
+		}
 
 	template < > struct hash < dex::string >
 		{
