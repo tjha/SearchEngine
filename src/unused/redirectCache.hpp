@@ -1,4 +1,8 @@
 //redirectCache.hpp
+// 2019-12-09: REMOVED FROM CODEBASE
+//             Since we're not revisiting links there is no need for this redirect cache.
+//             Keeping this around simply because it feels bad to delete our work, if we were
+//             keep improving the search engine we would use this again.
 // 2019-11-21: fix pair syntax: combsc
 // 2019-11-18: Init Commit: combsc
 #ifndef REDIRECT_CACHE_HPP
