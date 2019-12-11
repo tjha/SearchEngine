@@ -1,6 +1,7 @@
 // file.hpp
 // file for dealing with our fileIO
 //
+// 2019-12-11: Added functionality to get file paths matching end-pattern: tjha
 // 2019-11-26: Silence warning: combsc
 // 2019-11-23 Added fileExists: combsc
 // 2019-11-21: Added includeGuards: combsc
@@ -10,6 +11,7 @@
 
 #ifndef FILE_HPP
 #define FILE_HPP
+#include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -18,6 +20,9 @@
 #include <stdlib.h>
 #include "exception.hpp"
 #include "algorithm.hpp"
+#include "vector.hpp"
+#include "basicString.hpp"
+#include "unorderedSet.hpp"
 
 namespace dex
 	{
@@ -105,6 +110,58 @@ namespace dex
 		close( fd );
 		return map;
 		}
+
+   // Provides vector of all filenames within path that match end-pattern
+   vector< string > matchingFilenames( string dirPath, const string &pattern )
+      {
+      // using vector as stack for DFS (pushBack and popBack)
+      vector< string > Frontier;
+      unorderedSet< string > SeenSet;
+      Frontier.pushBack( dirPath );
+
+      vector< string > results;
+
+      // Keep looping until Frontier is empty
+      while ( !Frontier.empty( ) )
+         {
+         string directory = Frontier.back( );
+         Frontier.popBack( );
+         SeenSet.insert( directory );
+
+         DIR *dir = opendir( directory.cStr( ) );
+         struct dirent* entry;
+
+         // Loop through all files and directories in current directory
+         while ( dir != nullptr && ( entry = readdir( dir ) ) != NULL )
+            {
+            // Ignore files that begin with a '.'
+            if ( entry->d_name[ 0 ] == '.' )
+               continue;
+
+            string filename( entry->d_name );
+            if ( directory.back( ) == '/' )
+               filename = directory + filename;
+            else
+               filename = directory + "/" + filename;
+
+            // Add file to SeenSet
+            SeenSet.insert( filename );
+
+            // Add to vector to return if filename matches end-pattern
+            size_t pos = filename.find( pattern );
+            if ( pos != string::npos && pos + pattern.length( ) == filename.length( ) )
+               results.pushBack( filename );
+
+            // Add subdirectory to Frontier 
+            if ( entry->d_type == DT_DIR )
+               Frontier.pushBack( filename );
+            }
+         closedir( dir );
+         }
+
+      return results;
+
+      }
 	}
 
 #endif

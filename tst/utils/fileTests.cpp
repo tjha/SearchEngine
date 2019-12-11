@@ -1,12 +1,14 @@
 // fileTests.cpp
 // Testing for our mapping for different objects
 //
+// 2019-12-11: Added tests for matchingFilenames
 // 2019-11-20: add appendToFile tests: combsc
 // 2019-11-2: Initial Commit: combsc
 
 #include "catch.hpp"
 #include "file.hpp"
 #include "basicString.hpp"
+#include "vector.hpp"
 #include <iostream>
 
 TEST_CASE( "write to file", "[robotsTxt]")
@@ -79,3 +81,54 @@ TEST_CASE( "write to file", "[robotsTxt]")
 	*/
 	}
 
+TEST_CASE( "gether matching Filenames", "[File Match]" )
+   {
+   SECTION ( "get Tests.cpp starting from SearchEngine/" )
+      {
+      dex::string directory = "./"; // Top Directory of SearchEngine
+      dex::string pattern = "Tests.cpp";
+      dex::vector< dex::string > filenames = dex::matchingFilenames( directory, pattern );
+
+      dex::vector< dex::string > correct;
+      correct.pushBack("./tst/utfTests.cpp");
+      correct.pushBack("./tst/redirectCacheTests.cpp");
+      correct.pushBack("./tst/crawlerTests.cpp");
+      correct.pushBack("./tst/fileTests.cpp");
+      correct.pushBack("./tst/robotTxtTests.cpp");
+      correct.pushBack("./tst/rankerTests.cpp");
+      correct.pushBack("./tst/utils/unorderedMapTests.cpp");
+      correct.pushBack("./tst/utils/encodeTests.cpp");
+      correct.pushBack("./tst/utils/vectorTests.cpp");
+      correct.pushBack("./tst/utils/algorithmTests.cpp");
+      correct.pushBack("./tst/utils/functionalTests.cpp");
+      correct.pushBack("./tst/utils/basicStringTests.cpp");
+      correct.pushBack("./tst/utils/unorderedSetTests.cpp");
+      correct.pushBack("./tst/utils/fileTests.cpp");
+      correct.pushBack("./tst/parser/parserTests.cpp");
+      correct.pushBack("./src/spinarak/crawlerTests.cpp");
+
+      REQUIRE( filenames.size( ) == correct.size( ) );
+      for ( size_t i = 0; i < filenames.size( ); i++ )
+         REQUIRE( filenames[ i ] == correct[ i ] );
+      }
+
+   SECTION ( "get all .txt files starting from src/" )
+      {
+      dex::string directory = "src/";
+      dex::string pattern = ".txt";
+      dex::vector< dex::string > filenames = dex::matchingFilenames( directory, pattern );
+
+      dex::vector< dex::string > correct;
+      correct.pushBack("src/spinarak/seedlist.txt");
+      correct.pushBack("src/crawler/savedCrawl.txt");
+      correct.pushBack("src/crawler/savedRobots.txt");
+      correct.pushBack("src/crawler/savedFrontier.txt");
+      correct.pushBack("src/crawler/savedBrokenLinks.txt");
+      correct.pushBack("src/crawler/savedTestOutput.txt");
+
+      REQUIRE( filenames.size( ) == correct.size( ) );
+      for ( size_t i = 0; i < filenames.size( ); i++ )
+         REQUIRE( filenames[ i ] == correct[ i ] );
+      }
+
+    }
