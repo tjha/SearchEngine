@@ -50,31 +50,32 @@ unordered_set < workers>  IndexChunkWorkers
 vector < double > rankerWeights;
 
 We expect a folder
+*/
+
 int main( int argc, char *argv[ ] )
 	{
-	Search home directory for index chunks and store into IndexChunkFileNames
-	for filename in IndexChunkFilenames
-		{
-		IndexChunkWorkers.insert( indexChunkWorkerConstructor( filename ) );
-		}
+	//Search home directory for index chunks and store into IndexChunkFileNames
+	// for filename in IndexChunkFilenames
+	// 	{
+	// 	IndexChunkWorkers.insert( indexChunkWorkerConstructor( filename ) );
+	// 	}
 
-	FRONT END TEAM IS RESPONSIBLE FOR MAKING THIS SERVER AND SERVING OUR VECTOR IN A NICE WAY
+	// FRONT END TEAM IS RESPONSIBLE FOR MAKING THIS SERVER AND SERVING OUR VECTOR IN A NICE WAY
 	
-	spins up front end linux server and waits on this for a get request
-	while ( 1 )
-		{
-		when we get a get request do:
-			{
-			string query = queryFromGetRequest;
-			vector < document > docsReturned;
-			ranker = rankerObject( rankerWeights );
-			for worker in IndexChunkWorkers
-				{
-				docsReturned.pushBack( worker.getMatchingDocuments( query );
-				}
-			// We then return the 10 highest scoring documents
-			serve( ranker.getTopN( docsReturned, 10 ) );
-			}
-		}
-	}
-*/
+	//spins up front end linux server and waits on this for a get request
+	//while ( 1 )
+	//	{
+	//	when we get a get request do:
+	//		{
+	//		string query = queryFromGetRequest;
+	//		vector < document > docsReturned;
+	//		ranker = rankerObject( rankerWeights );
+	//		for worker in IndexChunkWorkers
+	//			{
+	// 			docsReturned.pushBack( worker.getMatchingDocuments( query );
+	// 			}
+	// 		// We then return the 10 highest scoring documents
+	// 		serve( ranker.getTopN( docsReturned, 10 ) );
+	// 		}
+	// 	}
+	// }

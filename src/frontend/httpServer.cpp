@@ -8,10 +8,12 @@
 #include <fcntl.h>
 #include <iostream>
 #include <string.h>
-#include <string>
 #include <cassert>
+#include <stdlib.h>
+#include <cstdlib>
+#include <stdio.h>
 
-using namespace std;
+#include "basicString.hpp"
 
 //  Multipurpose Internet Mail Extensions (MIME) types
 
@@ -93,7 +95,7 @@ const MimetypeMap MimeTable[ ] =
    ".7z",      "application/x-7z-compressed"
    };
 
-const char *Mimetype( const string filename )
+const char *Mimetype( const dex::string filename )
    {
    // If a matching a extentsion is found return the corresponding MIME type.
    // Else, anything not matched is an "octet-stream", treated as an unknown binary, which can be downloaded.
@@ -115,9 +117,9 @@ off_t FileSize( int f )
    return fileInfo.st_size;
    }
 
-bool pathIsLegal( string path )
+bool pathIsLegal( dex::string path )
    {
-   return path.find( "/../" ) == string::npos && ( path.size( ) < 3 || path.substr( path.size( ) - 3, 3) != "/.." );
+   return path.find( "/../" ) == dex::string::npos && ( path.size( ) < 3 || path.substr( path.size( ) - 3, 3) != "/.." ); // TODO ask stephen about path
    }
 
 void *Talk( void *p )
@@ -128,35 +130,32 @@ void *Talk( void *p )
    int socket = *( int * ) p;
    delete ( int * )p;
 
-   string request;
+   dex::string request;
    bytes = recv( socket, buffer, bufferSize, 0 );
    request.append( buffer, buffer + bytes );
 
    if ( request.substr( 0, 3 ) != "GET" )
       return nullptr;
 
-   string path;
    size_t typeEnd = request.find( " /" ), pathEnd, protocolEnd = request.find( "\r\n" );
-   if ( typeEnd >= protocolEnd )
-      return nullptr;
    pathEnd = request.find( ' ', typeEnd + 1 );
    if ( pathEnd >= protocolEnd )
       return nullptr;
-   path = request.substr( typeEnd + 2, pathEnd - typeEnd - 2 );
+   dex::string path( request.substr( typeEnd + 2, pathEnd - typeEnd - 2 ).cStr( ) );
+   dex::string query;
 
-   string query;
    size_t r = path.find( "results.html");
    size_t q = path.find( "?query=");
-   if ( r != string::npos && q != string::npos && r + 12 == q )
+   if ( r != dex::string::npos && q != dex::string::npos && r + 12 == q )
       {
       query = path.substr( q + 7, pathEnd - q - 7 );
       path = "results.html";
       }
 
    int file;
-   if ( !pathIsLegal( path ) || ( file = open( path.c_str( ), O_RDONLY ) ) == -1 )
+   if ( !pathIsLegal( path ) || ( file = open( path.cStr( ), O_RDONLY ) ) == -1 )
       {
-      string responseHeader = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+      dex::string responseHeader = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
       send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
       }
 
@@ -169,26 +168,27 @@ void *Talk( void *p )
    struct stat fileInfo;
    fstat( file, &fileInfo );
    char *map = ( char * )mmap( nullptr, fileInfo.st_size, PROT_READ, MAP_PRIVATE, file, 0 );
-
-   string results;
-   string content;
+   dex::string results;
+   dex::string content;
    if ( path == "results.html" )
       {
       results = "Results 1 - 10 populated here";
-      content = string(map);
-      content.insert(content.find("query=") + 6, query );
-      content.insert(content.find("results=") + 8, results );
+      content = dex::string( map );
+      content.insert( content.find( "query=" ) + 6, query );
+      content.insert( content.find( "results=" ) + 8, results );
       }
 
    if ( map == MAP_FAILED )
       return nullptr;
 
-   int totalSize = fileInfo.st_size + query.size() + results.size();
-
-   string responseHeader = "HTTP/1.1 200 OK\r\nContent-Length: "
-         + to_string( totalSize )
-         + "\r\nConnection: close\r\nContent-Type: " + Mimetype( path ) + "\r\n\r\n";
+   int totalSize = fileInfo.st_size + query.size( ) + results.size( );
+   char buff[ sizeof(int) + 1 ];
+   sprintf( buff, "%d", totalSize );
+   dex::string responseHeader = "HTTP/1.1 200 OK\r\nContent-Length: "
+      + dex::string( buff )
+      + "\r\nConnection: close\r\nContent-Type: " + Mimetype( path ) + "\r\n\r\n";
    send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
+
 
    if ( path == "results.html" )
       send( socket, content.data( ), content.size( ), 0 );
@@ -211,7 +211,7 @@ int main( int argc, char **argv )
    {
    if ( argc < 2 )
       {
-      cerr << "Usage: server port" << endl;
+      std::cerr << "Usage: server port" << std::endl;
       return 1;
       }
 
@@ -233,19 +233,19 @@ int main( int argc, char **argv )
 
    if ( listenSockfd == -1 )
       {
-      cerr << "Could not create socket" << endl;
+      std::cerr << "Could not create socket" << std::endl;
       return 1;
       }
 
    if ( bind( listenSockfd, ( struct sockaddr * )&listenAddress, sizeof( listenAddress ) ) == -1 )
       {
-      cerr << "Could not bind socket" << endl;
+      std::cerr << "Could not bind socket" << std::endl;
       return 1;
       }
 
    if ( listen( listenSockfd, SOMAXCONN ) == -1 )
       {
-		cerr << "Could not start listening" << endl;
+		std::cerr << "Could not start listening" << std::endl;
       return 1;
       }
 
