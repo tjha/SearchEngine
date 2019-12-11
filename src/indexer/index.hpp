@@ -84,10 +84,16 @@ namespace dex
 
 						byte postType;
 
+						struct synchronizationPoint
+							{
+							size_t postsChunkArrayOffset;
+							size_t postsChunkOffset;
+							size_t location;
+							};
 						// First 32 bits of each long long form the seek offset in posting. The last 32 bits are actual
 						// location of that post. We use a long long since it is (practically) guaranteed to be 64 bits.
 						static const size_t synchronizationPointCount = 1 << 8;
-						unsigned long long synchronizationPoints[ synchronizationPointCount ];
+						synchronizationPoint synchronizationPoints[ synchronizationPointCount ];
 
 						// Offsets from the beginning of the postsChunkArray to let us access the chunks we want.
 						size_t firstPostsChunkOffset;
@@ -234,11 +240,6 @@ namespace dex
 							postsChunkArray[ *postsChunkCount ] = postsChunk( wordMetadata->lastPostsChunkOffset );
 							wordMetadata->lastPostsChunkOffset = ( *postsChunkCount )++;
 							}
-
-						unsigned long long &synchronizationPoint =
-								wordMetadata->synchronizationPoints[ newLocation >> ( sizeof( newLocation ) - 8 ) ];
-						if ( !synchronizationPoint )
-							synchronizationPoint = wordMetadata->lastPostsChunkOffset;
 						}
 
 					// Copy over newWords into dict.

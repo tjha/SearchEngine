@@ -21,6 +21,7 @@
 #include "../utils/utility.hpp"
 #include "../utils/vector.hpp"
 
+// TODO: remove this
 #include <iostream>
 
 // postsChunk
@@ -56,6 +57,7 @@ bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk 
 		postsMetadata *endOfDocumentPostsMetadata )
 	{
 	size_t delta = location - lastPostIndex;
+	size_t originalPostOffset = postsChunkArray[ lastPostsChunkOffset ].currentPostOffset;
 	bool successful = postsChunkArray[ lastPostsChunkOffset ].append( delta );
 
 	if ( successful )
@@ -67,6 +69,16 @@ bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk 
 
 		++occurenceCount;
 		lastPostIndex = location;
+
+		// The first 8 bits of our location determine our synchronization point. We only update the table if we haven't
+		// been "this high" before.
+		for ( synchronizationPoint *syncPoint = synchronizationPoints + ( location >> ( sizeof( location ) - 8 ) );
+				syncPoint >= synchronizationPoints && !syncPoint->location;  --syncPoint )
+			{
+			syncPoint->postsChunkArrayOffset = lastPostsChunkOffset;
+			syncPoint->postsChunkOffset = originalPostOffset;
+			syncPoint->location = location;
+			}
 		}
 
 	return successful;
@@ -77,6 +89,7 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	{
 	// TOOO: Add some sort of magic number
 
+	// TODO: Throw exceptions so we know that this failed
 	if ( fileDescriptor == -1 )
 		{
 		close( fileDescriptor );
