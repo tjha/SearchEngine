@@ -370,7 +370,7 @@ namespace dex
 				documentInfo **topN, *p;
 				dex::vector< dex::document > topDocuments;
 
-				// topN = topN( scores, n );
+				topN = findTopN( scores, n );
 
 				for ( int index = 0;  index < n && ( p = topN[ index ] );  index++ )
 					{
