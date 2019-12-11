@@ -262,23 +262,26 @@ namespace dex
 					private:
 						friend class indexChunk;
 
-						size_t absoluteLocation;
+						static const size_t npos = static_cast < size_t >( -1 );
+
 						byte *post;
 						byte *documentPost;
 						postsMetadata *postsMetadatum;
 						postsChunk *postsChunkum; // Bad naming to disambiguate chunk types
 						indexChunk *indexChunkum;
+						size_t absoluteLocation;
 						// For a word, will want
 						// 	the word (string)
 						// 	current postsChunk
 						// 	offset into the indexChunk where the current pointer is
 
 					public:
-						indexStreamReader( dex::string word, indexChunk *indexChunk);
+						// An ISR for the empty string is just and end of document ISR.
+						indexStreamReader( indexChunk *indexChunk, dex::string word = "" );
+						size_t seek( size_t target );
 						size_t next( );
-						// byte *nextDocument( ); This is called on a set of indexStream readers. It sets them all to their
+						size_t nextDocument( );	// This is called on a set of indexStream readers. It sets them all to their
 						// 	first occurences past the end of the current document
-						byte *seek( size_t target );
 
 						// size_t GetStartLocation( ); ??
 						// size_t GetEndLocation( ); ??
@@ -350,6 +353,5 @@ namespace dex
 			};
 		}
 	}
-
 
 #endif

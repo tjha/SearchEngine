@@ -137,6 +137,7 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 		postsChunkArray[ 0 ] = postsChunk( );
 		postsMetadataArray[ 0 ] = postsMetadata( 0, postsMetadata::END_OF_DOCUMENT );
+		dictionary[ "" ] = 0;
 		}
 	else
 		{
@@ -199,21 +200,48 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	return true;
 	}
 
-dex::index::indexChunk::indexStreamReader::indexStreamReader( dex::string word, indexChunk *indexChunk ) :
-		absoluteLocation( 0 )
+dex::index::indexChunk::indexStreamReader::indexStreamReader( indexChunk *indexChunk, dex::string word ) :
+		indexChunkum( indexChunk ), absoluteLocation( 0 )
 	{
-	indexChunkum = indexChunk;
 	postsMetadatum = indexChunkum->postsMetadataArray + indexChunkum->dictionary[ word ];
 	postsChunkum = indexChunkum->postsChunkArray + postsMetadatum->firstPostsChunkOffset;
 	post = postsChunkum->posts;
 	documentPost = indexChunkum->postsChunkArray[ 0 ].posts;
 	}
 
+size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
+	{
+	postsMetadata::synchronizationPoint *syncPoint
+			= postsMetadatum->synchronizationPoints + ( target >> ( sizeof( target ) - 8 ) );
+
+	// TODO: Maybe remove?
+	if ( target < absoluteLocation )
+		throw dex::invalidArgumentException( );
+
+	if ( !syncPoint->location )
+		return ( npos );
+
+	// Jump to the point the synchronization table tells us to.
+	if ( syncPoint->location > absoluteLocation )
+		{
+		postsChunkum = indexChunkum->postsChunkArray + syncPoint->postsChunkArrayOffset;
+		post = postsChunkum->posts + syncPoint->postsChunkOffset;
+		absoluteLocation = syncPoint->location;
+		}
+
+	// Keep scanning until we find the first place not before our target. We'll return -1 if we fail to reach it.
+	while ( absoluteLocation < target )
+		if ( next( ) == npos )
+			return npos;
+
+	return absoluteLocation;
+	}
+
 size_t dex::index::indexChunk::indexStreamReader::next( )
 	{
 	if ( postsMetadatum->occurenceCount == 0
 			|| ( dex::utf::isSentinel( post ) && !postsChunkum->nextPostsChunkOffset ) )
-		return ( static_cast < size_t >( -1 ) );
+		return npos;
 
 	if ( dex::utf::isSentinel( post ) )
 		// This operation returns a "good" postsChunk because we only add a new chunk if we have data to add (i.e. we
@@ -223,4 +251,13 @@ size_t dex::index::indexChunk::indexStreamReader::next( )
 	// Assume valid posts and all...
 	// Post is a pointer to an encoded size_t.
 	return absoluteLocation += dex::utf::decoder < size_t >( )( post, &post );
+	}
+
+size_t dex::index::indexChunk::indexStreamReader::nextDocument( )
+	{
+	dex::index::indexChunk::indexStreamReader endOfDocumentISR( indexChunkum );
+	size_t endOfDocumentLocation = endOfDocumentISR.seek( absoluteLocation );
+	if ( endOfDocumentLocation == npos )
+		return npos;
+	return seek( endOfDocumentLocation );
 	}
