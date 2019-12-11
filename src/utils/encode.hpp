@@ -198,6 +198,7 @@ namespace dex
 			};
 
 		// Encode a vector of type T
+		/*
 		template < class T >
 		class encoder < dex::unorderedSet < T > >
 			{
@@ -237,7 +238,7 @@ namespace dex
 
 					return encodedVector.cbegin( );
 					}
-			};
+			};*/
 
 		template < >
 		class encoder < dex::RobotTxt >
@@ -386,6 +387,7 @@ namespace dex
 					}
 			};
 
+		/*
 		template < class T, class InputIt >
 		class decoder < unorderedSet < T >, InputIt >
 			{
@@ -407,7 +409,7 @@ namespace dex
 
 					return decodedData;
 					}
-			};
+			};*/
 		}
 	}
 

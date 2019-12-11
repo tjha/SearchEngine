@@ -59,7 +59,7 @@ int ids[ numWorkers ];
 dex::robotsMap robotsCache( robotsMapSize );
 pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 
-dex::unorderedSet < dex::string > crawledLinks;
+dex::unorderedSet < dex::string > * crawledLinks;
 dex::sharedReaderLock crawledLock;
 
 // This is used to hash URLs
@@ -160,7 +160,7 @@ bool alreadyCrawled( const dex::Url &toCrawl )
 	{
 	bool ret;
 	crawledLock.readLock( );
-	ret = crawledLinks.count( toCrawl.completeUrl( ) ) > 0;
+	ret = crawledLinks->count( toCrawl.completeUrl( ) ) > 0;
 	crawledLock.releaseReadLock( );
 	return ret;
 	}
@@ -168,12 +168,14 @@ bool alreadyCrawled( const dex::Url &toCrawl )
 void addToCrawled( const dex::Url &toCrawl )
 	{
 	crawledLock.writeLock( );
-	if ( crawledLinks.size( ) > crawledLinksSize )
+	if ( crawledLinks->size( ) >= crawledLinksSize )
 		{
-		crawledLinks.clear( );
+		// delete crawledLinks object and remake a new one
+		delete crawledLinks;
+		crawledLinks = new dex::unorderedSet< dex::string >( crawledLinksSize );
 		print( "Purged crawledLinks" );
 		}
-	crawledLinks.insert( toCrawl.completeUrl( ) );
+	crawledLinks->insert( toCrawl.completeUrl( ) );
 	crawledLock.releaseWriteLock( );
 	}
 
@@ -181,7 +183,8 @@ void addToCrawled( const dex::Url &toCrawl )
 int addToFrontier( dex::Url &current )
 	{
 	current.setFragment( "" );
-	if ( current.getHost( ) != "getstencil.com" )
+	// Dont add urls > 1023 chars to the frontier: Indexer has limit
+	if ( current.completeUrl( ).size( ) < 1023 && current.getHost( ) != "getstencil.com" )
 		{
 		// Check to see if the endpoint we have is a known broken link or if we've already crawled
 		if ( !alreadyCrawled( current) )
@@ -216,8 +219,10 @@ void savePerformance( )
 	toWrite += "Number of links crawled in " + dex::toString( checkpointPerformance ) + " seconds: " + dex::toString( numCrawledLinks) + "\n";
 	toWrite += "Size of frontier: " + dex::toString( urlFrontier.size( ) ) + "\n";
 	toWrite += "Capacity of frontier: " + dex::toString( urlFrontier.capacity( ) ) + "\n";
-	toWrite += "Size of crawledLinks " + dex::toString( crawledLinks.size( ) ) + "\n";
-	toWrite += "Capacity of crawledLinks " + dex::toString( crawledLinks.bucketCount( ) ) + "\n";
+	toWrite += "Size of frontier's toCheck: " + dex::toString( urlFrontier.toCheckSize( ) ) + "\n";
+	toWrite += "Capacity of frontier's toCheck: " + dex::toString( urlFrontier.toCheckCapacity( ) ) + "\n";
+	toWrite += "Size of crawledLinks " + dex::toString( crawledLinks->size( ) ) + "\n";
+	toWrite += "Capacity of crawledLinks " + dex::toString( crawledLinks->bucketCount( ) ) + "\n";
 	crawledLock.releaseReadLock( );
 	toWrite += "Size of robotsMap " + dex::toString( robotsCache.size( ) ) + "\n";
 	toWrite += "Capacity of robotsMap " + dex::toString( robotsCache.capacity( ) ) + "\n";
@@ -282,9 +287,12 @@ void *worker( void *args )
 		
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
 		dex::string result;
-		result.reserve( 2000000 );
+		result.reserve( 4000000 );
 		if ( robotsCache.purge( ) == 1 )
+			{
 			print( "Purged Robot Cache" );
+			}
+
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
 		addToCrawled( toCrawl );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
@@ -420,6 +428,8 @@ int main( )
 				return 0;
 				}
 			signal(SIGPIPE, SIG_IGN);
+			
+			// Make the necessary directories if they don't exist
 			dex::makeDirectory( savePath.cStr( ) );
 			dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
 			for ( size_t i = 0;  i < numWorkers;  ++i )
@@ -431,25 +441,29 @@ int main( )
 			dex::makeDirectory( ( tmpPath + "performance" ).cStr( ) );
 			dex::makeDirectory( toShipPath.cStr( ) );
 
+			// Create file descriptors for the performance files
 			std::cout << " creating log and performance files" << std::endl;
 			logFileDescriptor = dex::createNewLog( tmpPath + "logs/", logFile );
 			performanceFileDescriptor = dex::createNewPerformanceFile( tmpPath + "performance/", performanceFile );
 			std::cout << " created log and performance files" << std::endl;
 
+			// Load the frontier if its saved, otherwise start from seedlist
 			urlFrontier = dex::loadFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), frontierSize, &robotsCache, true );
 			if ( urlFrontier.size( ) == 0 )
 				{
 				urlFrontier = dex::loadFrontier( "data/seedlist.txt", frontierSize, &robotsCache );
 				}
-			crawledLinks = dex::loadCrawledLinks( ( "data/crawledLinks.txt" ) );
-			/*for ( auto it = urlFrontier.begin( );  it != urlFrontier.end( );  ++it )
-				print( it->completeUrl( ) );*/
+
+			// Create a new dynamically allocalted crawledLinks object
+			crawledLinks = dex::loadCrawledLinks( "data/crawledLinks.txt", crawledLinksSize );
 
 			std::cout << "Starting crawl with frontier size " << urlFrontier.size( ) << std::endl;
 			if ( testing )
 			{
 			print( "YOU ARE TESTING, IT WILL END AFTER " + dex::toString( testTime ) + " seconds" );
 			}
+
+			// Spin up workers threads
 			for ( int i = 0;  i < numWorkers;  ++i )
 				{
 				ids[ i ] = i;
@@ -465,11 +479,11 @@ int main( )
 			}
 		catch ( const std::bad_alloc& )
 			{
-			std::cerr << "Invalid memory access or allocation" << std::endl;
+			std::cerr << "Crawler invalid memory access or allocation" << std::endl;
 			robotsCache.purge( );
-			/*crawledLock.writeLock( );
-			crawledLinks.clear( );
-			crawledLock.releaseWriteLock( );*/
+			crawledLock.writeLock( );
+			crawledLinks->clear( );
+			crawledLock.releaseWriteLock( );
 			}
 		}
 	}

@@ -141,6 +141,7 @@ TEST_CASE( "encode", "[types]" )
 		REQUIRE( integers == VectorIntegerDecoder( VectorIntegerEncoder( integers ).data( ) ) );
 		}
 
+	/*
 	SECTION( "unorderedSet" )
 		{
 		unorderedSet < dex::Url > links;
@@ -157,7 +158,7 @@ TEST_CASE( "encode", "[types]" )
 			REQUIRE( it->completeUrl( ) == itDec->completeUrl( ) );
 			++itDec;
 			}
-		}
+		}*/
 
 	SECTION( "empty types" )
 		{
