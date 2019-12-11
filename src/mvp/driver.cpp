@@ -328,6 +328,7 @@ void *worker( void *args )
 				pthread_mutex_lock( &frontierLock );
 
 				dex::vector < dex::Url > inboundLinks;
+				inboundLinks.reserve( links.size( ) );
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
 					if ( it->getSubdomain( ) == "www" || it->getDomain( ) == "wikipedia.org" )
