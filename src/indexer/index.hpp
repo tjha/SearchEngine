@@ -104,6 +104,9 @@ namespace dex
 						bool append( size_t location, postsChunk *postsChunkArray );
 					};
 
+			public:
+				// This is public so we can write the encoder and decoders. There might be a better way of doing this, but
+				// time is short.
 				struct endOfDocumentMetadataType
 					{
 					size_t documentLength;
@@ -119,6 +122,7 @@ namespace dex
 					friend class dex::utf::encoder;
 					};
 
+				private:
 				// These consts can be adjusted if necessary.
 				static const size_t maxURLCount = 1L << 17;
 				static const size_t maxURLLength = 1L << 10;
