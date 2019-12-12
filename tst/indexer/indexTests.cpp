@@ -8,10 +8,13 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
+
 #include "catch.hpp"
+#include "file.hpp"
 #include "index.cpp"
 #include "utf.hpp"
 
+#include <fstream>
 #include <iostream>
 
 using namespace dex::index;
@@ -27,7 +30,6 @@ size_t getFileSize( int fileDescriptor )
 
 // TODO: Add test case for closing and reopening an indexChunk
 
-/*
 TEST_CASE( "create index chunk" )
 	{
 	const char filePath[ ] = "_in.dex";
@@ -151,7 +153,6 @@ string quickBinaryToStringReversed( unsigned n )
 		n /= 2;
 		}
 	}
-*/
 
 TEST_CASE( "ONE BIG DOC" )
 	{
@@ -226,8 +227,9 @@ TEST_CASE( "ONE BIG DOC" )
 
 	SECTION( "Fill an indexChunk" )
 		{
-
+		string filename = "shakespeare.txt";
 		}
+
 	SECTION( "Many unique words" )
 		{
 

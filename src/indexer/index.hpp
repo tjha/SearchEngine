@@ -105,7 +105,7 @@ namespace dex
 					public:
 						postsMetadata( size_t chunkOffset = 0, const byte typeOfToken = BODY );
 
-						bool append( size_t location, postsChunk *postsChunkArray,
+						bool append( size_t location, postsChunk *postsChunkArray, 
 								postsMetadata *endOfDocumentPostsMetadata );
 					};
 
@@ -180,8 +180,6 @@ namespace dex
 				postsMetadata *postsMetadataArray;
 				postsChunk *postsChunkArray;
 
-				size_t *maxLocation;
-
 			public:
 				indexChunk( int fileDescriptor, bool initialize = true );
 				~indexChunk( );
@@ -190,7 +188,7 @@ namespace dex
 				// InputIt should dereference to a string.
 				// Note: This has to be defined in the header due to the templating.
 				template < class InputIt >
-				bool append( InputIt first, InputIt last, const dex::string &decorator = "" )
+				bool append( InputIt first, InputIt last, dex::unorderedMap < dex::string, size_t > &postsMetadataChanges, const dex::string &decorator = "" )
 					{
 					// Need to keep track of our old state in case the appendation fails.
 					dex::unorderedMap < dex::string, size_t > newWords;
@@ -245,6 +243,12 @@ namespace dex
 							postsChunkArray[ *postsChunkCount ] = postsChunk( wordMetadata->lastPostsChunkOffset );
 							wordMetadata->lastPostsChunkOffset = ( *postsChunkCount )++;
 							}
+
+						if ( postsMetadataChanges.count( wordToAdd ) )
+							postsMetadataChanges[ wordToAdd ]++;
+						else
+							postsMetadataChanges[ wordToAdd ] = 1;
+						
 						}
 
 					// Copy over newWords into dict.

@@ -74,7 +74,7 @@ bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk 
 			// Then increase the count of documents we've seen
 			++documentCount;
 
-		++occurenceCount;
+		// ++occurenceCount; // This is incremented in indexChunk.append( ) after everything has successfully been added
 		lastPostIndex = location;
 
 		// The first 8 bits of our location determine our synchronization point. We only update the table if we haven't
@@ -123,6 +123,7 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 	postsChunkCount = reinterpret_cast < size_t * >( filePointer );
 	location = postsChunkCount + 1;
+	maxLocation = postsChunkCount + 2;
 
 	encodedURLsToOffsets = reinterpret_cast < byte * >( filePointer ) + urlsToOffsetsMemoryOffset;
 
@@ -141,6 +142,7 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		{
 		*postsChunkCount = 1;
 		*location = 0;
+		*maxLocation = 0;
 
 		postsChunkArray[ 0 ] = postsChunk( );
 		postsMetadataArray[ 0 ] = postsMetadata( 0, postsMetadata::END_OF_DOCUMENT );
@@ -176,10 +178,14 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	if ( url.size( ) > maxURLLength || titleString.size( ) > maxTitleLength )
 		throw dex::invalidArgumentException( );
 
+	dex::unorderedMap < dex::string, size_t > postsMetadataChanges;
+
 	size_t documentOffset = *location;
-	if ( !append( body.cbegin( ), body.cend( ) ) || !append( title.cbegin( ), title.cend( ), "#" )
-			|| !append( anchorText.cbegin( ), anchorText.cend( ), "@" ) )
+	if ( !append( body.cbegin( ), body.cend( ), postsMetadataChanges ) || !append( title.cbegin( ), title.cend( ), postsMetadataChanges, "#" )
+			|| !append( anchorText.cbegin( ), anchorText.cend( ), postsMetadataChanges, "@" ) )
 		return false;
+
+	*maxLocation = *location;
 
 	urlsToOffsets[ url ] = documentOffset;
 
@@ -192,6 +198,7 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	// Update the count of how many documents each word appears in.
 	for ( dex::unorderedSet < const dex::string >::constIterator uniqueWord = uniqueWords.cbegin( );
 			uniqueWord != uniqueWords.cend( ); postsMetadataArray[ dictionary[ *( uniqueWord++ ) ] ].documentCount++ )
+		postsMetadataArray[ dictionary[ *uniqueWord ] ].occurenceCount += postsMetadataChanges[ *uniqueWord ];
 
 	offsetsToEndOfDocumentMetadatas[ documentOffset ] = endOfDocumentMetadataType
 		{
@@ -224,6 +231,9 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 	// TODO: Maybe remove?
 	if ( target < absoluteLocation )
 		throw dex::invalidArgumentException( );
+	
+	if ( target > *( indexChunkum->maxLocation ) )
+		throw dex::outOfRangeException( );
 
 	if ( !syncPoint->location )
 		return ( npos );
@@ -246,7 +256,7 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 
 size_t dex::index::indexChunk::indexStreamReader::next( )
 	{
-	if ( postsMetadatum->occurenceCount == 0
+	if ( postsMetadatum->occurenceCount == 0 || absoluteLocation >= * ( indexChunkum->maxLocation )
 			|| ( dex::utf::isSentinel( post ) && !postsChunkum->nextPostsChunkOffset ) )
 		return npos;
 
@@ -254,13 +264,11 @@ size_t dex::index::indexChunk::indexStreamReader::next( )
 		// This operation returns a "good" postsChunk because we only add a new chunk if we have data to add (i.e. we
 		// are now no longer pointing to a sentinel).
 		{
-		// std::cout << "new offset for ISR: " << postsChunkum->nextPostsChunkOffset << "\n";
 		postsChunkum = indexChunkum->postsChunkArray + postsChunkum->nextPostsChunkOffset;
 		post = postsChunkum->posts;
 		}
 
-	// Assume valid posts and all...
-	// Post is a pointer to an encoded size_t.
+	// Post is a pointer to a valid encoded size_t.
 	return absoluteLocation += dex::utf::decoder < size_t >( )( post, &post );
 	}
 
