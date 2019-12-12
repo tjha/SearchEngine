@@ -164,6 +164,7 @@ namespace dex
 
 				// Number of tokens in the index.
 				size_t *location;
+				size_t *maxLocation;
 
 				// Use urls.size( ) to get how many documents there are in the index.
 				// The following two maps are effectively inverses of each other.
@@ -178,6 +179,8 @@ namespace dex
 
 				postsMetadata *postsMetadataArray;
 				postsChunk *postsChunkArray;
+
+				size_t *maxLocation;
 
 			public:
 				indexChunk( int fileDescriptor, bool initialize = true );
@@ -196,6 +199,8 @@ namespace dex
 					for ( ;  first != last;  ++first, ++newLocation )
 						{
 						string wordToAdd = decorator + dex::porterStemmer::stem( *first );
+
+						// std::cout << "append: " << wordToAdd << "\n";
 
 						if ( wordToAdd.size( ) > maxWordLength )
 							continue;

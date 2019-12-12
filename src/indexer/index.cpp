@@ -13,13 +13,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "index.hpp"
-#include "../utils/basicString.hpp"
-#include "../utils/exception.hpp"
-#include "../utils/unorderedMap.hpp"
-#include "../utils/unorderedSet.hpp"
-#include "../utils/utf.hpp"
-#include "../utils/utility.hpp"
-#include "../utils/vector.hpp"
+#include "basicString.hpp"
+#include "exception.hpp"
+#include "unorderedMap.hpp"
+#include "unorderedSet.hpp"
+#include "utf.hpp"
+#include "utility.hpp"
+#include "vector.hpp"
 
 // TODO: remove this
 #include <iostream>
@@ -59,6 +59,13 @@ bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk 
 	size_t delta = location - lastPostIndex;
 	size_t originalPostOffset = postsChunkArray[ lastPostsChunkOffset ].currentPostOffset;
 	bool successful = postsChunkArray[ lastPostsChunkOffset ].append( delta );
+
+	if ( lastPostsChunkOffset != 1 )
+		{
+		// std::cout << "first append to new postsChunk: " << lastPostsChunkOffset << " was successful: " << successful << "\n";
+		// std::cout << "\tfirst postsChunk: " << firstPostsChunkOffset << "\t which is followed by: " <<
+				// postsChunkArray[ firstPostsChunkOffset ].nextPostsChunkOffset << "\n";
+		}
 
 	if ( successful )
 		{
@@ -246,7 +253,11 @@ size_t dex::index::indexChunk::indexStreamReader::next( )
 	if ( dex::utf::isSentinel( post ) )
 		// This operation returns a "good" postsChunk because we only add a new chunk if we have data to add (i.e. we
 		// are now no longer pointing to a sentinel).
+		{
+		// std::cout << "new offset for ISR: " << postsChunkum->nextPostsChunkOffset << "\n";
 		postsChunkum = indexChunkum->postsChunkArray + postsChunkum->nextPostsChunkOffset;
+		post = postsChunkum->posts;
+		}
 
 	// Assume valid posts and all...
 	// Post is a pointer to an encoded size_t.
