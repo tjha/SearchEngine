@@ -48,7 +48,7 @@ namespace dex
 				bool align( );
 
 			public:
-				andISR( vector < dex::constraintSolver::ISR * > factors,
+				andISR( dex::vector < dex::constraintSolver::ISR * > factors,
 						dex::index::indexChunk::indexStreamReader *endOfDocISR );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
@@ -60,9 +60,14 @@ namespace dex
 			private:
 				// A vector of pointers to the ISRs we want to "or" together.
 				dex::vector < dex::constraintSolver::ISR * > summands;
+				dex::index::indexChunk::indexStreamReader *endOfDocISR;
+
+				dex::vector < size_t > locations;
+				size_t endOfDocLocation;
 
 			public:
-				orISR( vector < dex::constraintSolver::ISR * > summands );
+				orISR( dex::vector < dex::constraintSolver::ISR * > summands,
+						dex::index::indexChunk::indexStreamReader *endOfDocISR );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
@@ -72,10 +77,15 @@ namespace dex
 			{
 			private :
 				// ISR pointer to ISR we don't want.
-				dex::constraintSolver::ISR * neg;
+				dex::constraintSolver::ISR *neg;
+				dex::index::indexChunk::indexStreamReader *endOfDocISR;
+
+				size_t location;
+				size_t endOfDocLocation;
 
 			public:
-				notISR ( dex::constraintSolver::ISR *neg );
+				notISR ( dex::constraintSolver::ISR *neg,
+					dex::index::indexChunk::indexStreamReader *endOfDocISR );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
@@ -87,8 +97,14 @@ namespace dex
 				// A vector of pointers to the ISRs we want to find a phrase of.
 				dex::vector < dex::constraintSolver::ISR * > words;
 
+				dex::vector < size_t > locations;
+
+				// Move all word ISRs so that they in order next to each other in a phrase. Return true when there are still
+				// things to read.
+				bool align( );
+
 			public:
-				phraseISR( vector < dex::constraintSolver::ISR * > words );
+				phraseISR( dex::vector < dex::constraintSolver::ISR * > words );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
