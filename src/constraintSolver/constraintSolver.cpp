@@ -2,11 +2,11 @@
 //
 // Defines ISR interface and some specializations.
 //
+// 2019-12-12: Implement all ISRs: jasina, medhak
 // 2019-12-11: File created: jasina, medhak
 
 #include <cstddef>
 #include "constraintSolver.hpp"
-#include "../indexer/index.hpp"
 #include "../utils/vector.hpp"
 
 size_t argMin( const dex::vector < size_t > &v )
@@ -30,10 +30,17 @@ size_t argMax( const dex::vector < size_t > &v )
 	}
 
 
+const size_t dex::constraintSolver::ISR::npos = static_cast < size_t >( -1 );
+
+
 bool dex::constraintSolver::andISR::align( )
 	{
 	while ( true )
 		{
+		endOfDocLocation = endOfDocISR->seek( locations[ argMax( locations ) ] );
+		if ( endOfDocLocation == npos )
+			return false;
+
 		size_t minIndex = argMin( locations );
 
 		size_t startOfDocLocation = endOfDocLocation - endOfDocISR->documentSize( );
@@ -41,13 +48,15 @@ bool dex::constraintSolver::andISR::align( )
 			return true;
 
 		locations[ minIndex ] = factors[ minIndex ]->seek( startOfDocLocation );
+
+		// This check is technically not necessary, but it keeps us from having to make an extra seek call.
 		if ( locations[ minIndex ] == npos )
 			return false;
 		}
 	}
 
 dex::constraintSolver::andISR::andISR( dex::vector < dex::constraintSolver::ISR * > factors,
-		dex::index::indexChunk::indexStreamReader *endOfDocISR ) : factors( factors ), endOfDocISR( endOfDocISR )
+		endOfDocumentISR *endOfDocISR ) : factors( factors ), endOfDocISR( endOfDocISR )
 	{
 	locations.resize( factors.size( ) );
 	for ( size_t index = 1;  index < factors.size( );  ++index )
@@ -67,11 +76,10 @@ size_t dex::constraintSolver::andISR::seek( size_t target )
 		}
 	endOfDocLocation = endOfDocISR->seek( max );
 	if ( align( ) )
-		return locations[ 0 ];
+		return endOfDocLocation;
 	return npos;
 	}
 
-// TODO: Do we really need this?
 size_t dex::constraintSolver::andISR::next( )
 	{
 	return nextDocument( );
@@ -81,13 +89,13 @@ size_t dex::constraintSolver::andISR::nextDocument( )
 	{
 	locations[ 0 ] = factors[ 0 ]->nextDocument( );
 	if ( align( ) )
-		return locations[ 0 ];
+		return endOfDocLocation;
 	return npos;
 	}
 
 
 dex::constraintSolver::orISR::orISR( dex::vector < dex::constraintSolver::ISR * > summands,
-		dex::index::indexChunk::indexStreamReader *endOfDocISR ) : summands( summands ), endOfDocISR( endOfDocISR )
+		endOfDocumentISR *endOfDocISR ) : summands( summands ), endOfDocISR( endOfDocISR )
 	{
 	locations.reserve( summands.size( ) );
 	for ( size_t index = 1;  index < summands.size( );  ++index )
@@ -106,9 +114,6 @@ size_t dex::constraintSolver::orISR::seek( size_t target )
 
 size_t dex::constraintSolver::orISR::next(  )
 	{
-	// size_t minIndex = argMin( locations );
-	// locations[ minIndex ] = summands[ minIndex ]->nextDocument( );
-	// return locations[ argMin( locations ) ];
 	return nextDocument( );
 	}
 
@@ -121,12 +126,12 @@ size_t dex::constraintSolver::orISR::nextDocument( )
 		locations[ minIndex ] = summands[ minIndex ]->nextDocument( );
 		minIndex = argMin( locations );
 		}
-	return locations[ minIndex ];
+	return endOfDocLocation;
 	}
 
 
-dex::constraintSolver::notISR::notISR( dex::constraintSolver::ISR *neg,
-		dex::index::indexChunk::indexStreamReader *endOfDocISR ) : neg( neg ), endOfDocISR( endOfDocISR )
+dex::constraintSolver::notISR::notISR( dex::constraintSolver::ISR *neg, endOfDocumentISR *endOfDocISR )
+		: neg( neg ), endOfDocISR( endOfDocISR )
 	{
 	endOfDocLocation = 0;
 	location = neg->next( );
@@ -183,7 +188,8 @@ bool dex::constraintSolver::phraseISR::align( )
 		}
 	}
 
-dex::constraintSolver::phraseISR::phraseISR( vector < dex::constraintSolver::ISR * > words ) : words( words )
+dex::constraintSolver::phraseISR::phraseISR( vector < dex::constraintSolver::ISR * > words,
+		dex::constraintSolver::endOfDocumentISR *endOfDocISR ) : words( words )
 	{
 	locations.resize( words.size( ) );
 	for ( size_t index = 1;  index < words.size( );  ++index )
@@ -214,6 +220,6 @@ size_t dex::constraintSolver::phraseISR::nextDocument( )
 	{
 	locations[ 0 ] = words[ 0 ]->nextDocument( );
 	if ( align( ) )
-		return locations[ 0 ];
+		return endOfDocISR->seek( locations[ 0 ] );
 	return npos;
 	}

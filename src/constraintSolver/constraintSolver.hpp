@@ -2,13 +2,13 @@
 //
 // Defines ISR interface and some specializations.
 //
+// 2019-12-12: Fix inheritance: jasina, medhak
 // 2019-12-11: File created: jasina, medhak
 
 #ifndef DEX_CONSTRAINT_SOLVER
 #define DEX_CONSTRAINT_SOLVER
 
 #include <cstddef>
-#include "../indexer/index.hpp"
 #include "../utils/vector.hpp"
 
 namespace dex
@@ -19,7 +19,7 @@ namespace dex
 		class ISR
 			{
 			public:
-				static const size_t npos = static_cast < size_t >( -1 );
+				static const size_t npos;
 
 				// Jump this ISR to the first instance of our pattern that is at or after target. Return the location of the
 				// instance, or -1 if there is none.
@@ -34,12 +34,21 @@ namespace dex
 				virtual size_t nextDocument( ) = 0;
 			};
 
-		class andISR : dex::constraintSolver::ISR
+		class endOfDocumentISR : public dex::constraintSolver::ISR
+			{
+			public:
+				virtual size_t seek( size_t target ) = 0;
+				virtual size_t next( ) = 0;
+				virtual size_t nextDocument( ) = 0;
+				virtual size_t documentSize( ) = 0;
+			};
+
+		class andISR : public dex::constraintSolver::ISR
 			{
 			private:
 				// A vector of pointers to the ISRs we want to "and" together.
 				dex::vector < dex::constraintSolver::ISR * > factors;
-				dex::index::indexChunk::indexStreamReader *endOfDocISR;
+				dex::constraintSolver::endOfDocumentISR *endOfDocISR;
 
 				dex::vector < size_t > locations;
 				size_t endOfDocLocation;
@@ -49,54 +58,53 @@ namespace dex
 
 			public:
 				andISR( dex::vector < dex::constraintSolver::ISR * > factors,
-						dex::index::indexChunk::indexStreamReader *endOfDocISR );
+						dex::constraintSolver::endOfDocumentISR *endOfDocISR );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
 			};
 
-		class orISR : dex::constraintSolver::ISR
+		class orISR : public dex::constraintSolver::ISR
 			{
 			private:
 				// A vector of pointers to the ISRs we want to "or" together.
 				dex::vector < dex::constraintSolver::ISR * > summands;
-				dex::index::indexChunk::indexStreamReader *endOfDocISR;
+				dex::constraintSolver::endOfDocumentISR *endOfDocISR;
 
 				dex::vector < size_t > locations;
 				size_t endOfDocLocation;
 
 			public:
 				orISR( dex::vector < dex::constraintSolver::ISR * > summands,
-						dex::index::indexChunk::indexStreamReader *endOfDocISR );
+						dex::constraintSolver::endOfDocumentISR *endOfDocISR );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
 			};
 
-		class notISR : dex::constraintSolver::ISR
+		class notISR : public dex::constraintSolver::ISR
 			{
 			private :
 				// ISR pointer to ISR we don't want.
 				dex::constraintSolver::ISR *neg;
-				dex::index::indexChunk::indexStreamReader *endOfDocISR;
+				dex::constraintSolver::endOfDocumentISR *endOfDocISR;
 
 				size_t location;
 				size_t endOfDocLocation;
 
 			public:
-				notISR ( dex::constraintSolver::ISR *neg,
-					dex::index::indexChunk::indexStreamReader *endOfDocISR );
+				notISR ( dex::constraintSolver::ISR *neg, dex::constraintSolver::endOfDocumentISR *endOfDocISR );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
 			};
 
-		class phraseISR : dex::constraintSolver::ISR
+		class phraseISR : public dex::constraintSolver::ISR
 			{
 			private:
 				// A vector of pointers to the ISRs we want to find a phrase of.
 				dex::vector < dex::constraintSolver::ISR * > words;
-
+				dex::constraintSolver::endOfDocumentISR *endOfDocISR;
 				dex::vector < size_t > locations;
 
 				// Move all word ISRs so that they in order next to each other in a phrase. Return true when there are still
@@ -104,7 +112,8 @@ namespace dex
 				bool align( );
 
 			public:
-				phraseISR( dex::vector < dex::constraintSolver::ISR * > words );
+				phraseISR( dex::vector < dex::constraintSolver::ISR * > words,
+						dex::constraintSolver::endOfDocumentISR *endOfDocISR );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );

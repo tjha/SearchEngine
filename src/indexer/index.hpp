@@ -285,7 +285,12 @@ namespace dex
 
 						// Need functions to get metadata for a word for entire posting list
 						// 	and for in the current document
+					};
 
+				class endOfDocumentIndexStreamReader
+						: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
+					{
+					public:
 						size_t documentSize( );
 					};
 			};
