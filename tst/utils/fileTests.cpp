@@ -1,15 +1,17 @@
 // fileTests.cpp
 // Testing for our mapping for different objects
 //
+// 2019-12-11: Added tests for matchingFilenames: tejas
 // 2019-11-20: add appendToFile tests: combsc
 // 2019-11-2: Initial Commit: combsc
 
 #include "catch.hpp"
 #include "file.hpp"
 #include "basicString.hpp"
+#include "vector.hpp"
 #include <iostream>
 
-TEST_CASE( "write to file", "[robotsTxt]")
+TEST_CASE( "write to file", "[file]")
 	{
 	SECTION( "mmap test" )
 		{
@@ -57,25 +59,45 @@ TEST_CASE( "write to file", "[robotsTxt]")
 		REQUIRE( file[ 0 ] == 'z' );
 		remove( "test.txt" );
 		}
-		
-	/*
-	SECTION( "write unorderedMap< RobotTxt > into file" )
-		{
-		dex::unorderedMap< string, RobotTxt > robots { 10 };
-		RobotTxt rob1( "domain1" );
-		RobotTxt rob2( "domain2" );
-		robots["domain1"] = rob1;
-		robots["domain2"] = rob2;
-		
-		for ( auto it = robots.begin();  it != robots.cend();  ++it ) 
-			{
-			if ( it->second.getDomain( ) != "no-domain" )
-				{
-				//write to file
-				std::cout << it->second;
-				}
-			}
-		}
-	*/
 	}
 
+TEST_CASE( "gether matching Filenames", "[file]" )
+	{
+	SECTION ( "test with slash" )
+		{
+		dex::string directory = "./tst/utils/fileTestsFolder/"; // Top Directory of SearchEngine
+		dex::string pattern = ".cpp";
+		dex::vector< dex::string > filenames = dex::matchingFilenames( directory, pattern );
+
+		dex::unorderedSet< dex::string > correct;
+		correct.insert("./tst/utils/fileTestsFolder/1.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/2.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/3.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/alpha/4.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/alpha/5.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/beta/6.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/beta/delta/7.cpp");
+		REQUIRE( filenames.size( ) == correct.size( ) );
+		for ( size_t i = 0; i < filenames.size( ); i++ )
+			REQUIRE( correct.count( filenames[ i ] ) == 1 );
+		}
+
+	SECTION ( "test with no slash" )
+		{
+		dex::string directory = "./tst/utils/fileTestsFolder"; // Top Directory of SearchEngine
+		dex::string pattern = ".cpp";
+		dex::vector< dex::string > filenames = dex::matchingFilenames( directory, pattern );
+
+		dex::unorderedSet< dex::string > correct;
+		correct.insert("./tst/utils/fileTestsFolder/1.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/2.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/3.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/alpha/4.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/alpha/5.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/beta/6.cpp");
+		correct.insert("./tst/utils/fileTestsFolder/beta/delta/7.cpp");
+		REQUIRE( filenames.size( ) == correct.size( ) );
+		for ( size_t i = 0; i < filenames.size( ); i++ )
+			REQUIRE( correct.count( filenames[ i ] ) == 1 );
+		}
+	 }
