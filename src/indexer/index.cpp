@@ -70,9 +70,9 @@ bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk 
 	if ( successful )
 		{
 		// If this occurence is in a currently "unseen" document
-		if ( lastPostIndex < endOfDocumentPostsMetadata->lastPostIndex )
+		// if ( lastPostIndex < endOfDocumentPostsMetadata->lastPostIndex )
 			// Then increase the count of documents we've seen
-			++documentCount;
+			// ++documentCount;
 
 		// ++occurenceCount; // This is incremented in indexChunk.append( ) after everything has successfully been added
 		lastPostIndex = location;
@@ -198,7 +198,10 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	// Update the count of how many documents each word appears in.
 	for ( dex::unorderedSet < const dex::string >::constIterator uniqueWord = uniqueWords.cbegin( );
 			uniqueWord != uniqueWords.cend( ); postsMetadataArray[ dictionary[ *( uniqueWord++ ) ] ].documentCount++ )
+		{
 		postsMetadataArray[ dictionary[ *uniqueWord ] ].occurenceCount += postsMetadataChanges[ *uniqueWord ];
+		postsMetadataArray[ dictionary[ *uniqueWord ] ].documentCount++;
+		}
 
 	offsetsToEndOfDocumentMetadatas[ documentOffset ] = endOfDocumentMetadataType
 		{
