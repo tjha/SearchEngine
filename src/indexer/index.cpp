@@ -59,21 +59,8 @@ bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk 
 	size_t originalPostOffset = postsChunkArray[ lastPostsChunkOffset ].currentPostOffset;
 	bool successful = postsChunkArray[ lastPostsChunkOffset ].append( delta );
 
-	if ( lastPostsChunkOffset != 1 )
-		{
-		// std::cout << "first append to new postsChunk: " << lastPostsChunkOffset << " was successful: " << successful << "\n";
-		// std::cout << "\tfirst postsChunk: " << firstPostsChunkOffset << "\t which is followed by: " <<
-				// postsChunkArray[ firstPostsChunkOffset ].nextPostsChunkOffset << "\n";
-		}
-
 	if ( successful )
 		{
-		// If this occurence is in a currently "unseen" document
-		// if ( lastPostIndex < endOfDocumentPostsMetadata->lastPostIndex )
-			// Then increase the count of documents we've seen
-			// ++documentCount;
-
-		// ++occurenceCount; // This is incremented in indexChunk.append( ) after everything has successfully been added
 		lastPostIndex = location;
 
 		// The first 8 bits of our location determine our synchronization point. We only update the table if we haven't
@@ -97,28 +84,24 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 	// TODO: Throw exceptions so we know that this failed
 	if ( fileDescriptor == -1 )
-		{
-		close( fileDescriptor );
-		return;
-		}
+		throw dex::exception( );
 
 	if ( initialize )
 		{
 		int result = lseek( fileDescriptor, fileSize - 1, SEEK_SET );
 		if ( result == -1 )
-			{
-			close( fileDescriptor );
-			return;
-			}
+			throw dex::exception( );
 		result = write( fileDescriptor, "", 1 );
 		if ( result == -1 )
-			{
-			close( fileDescriptor );
-			return;
-			}
+			throw dex::exception( );
 		}
 
 	filePointer = mmap( nullptr, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0 );
+
+	// std::cout << errno << std::endl;
+
+	if ( filePointer == MAP_FAILED )
+		throw dex::exception( );
 
 	postsChunkCount = reinterpret_cast < size_t * >( filePointer );
 	location = postsChunkCount + 1;
@@ -139,6 +122,7 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 	if ( initialize )
 		{
+		std::cout << reinterpret_cast < void * >( postsChunkCount ) << std::endl;
 		*postsChunkCount = 1;
 		*location = 0;
 		*maxLocation = 0;
@@ -170,9 +154,8 @@ dex::index::indexChunk::~indexChunk( )
 	}
 
 // TODO: remove (replace?) the anchorText argument
-bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vector < dex::string > &anchorText,
-		const dex::vector < dex::string > &title, const dex::string &titleString,
-		const dex::vector < dex::string > &body )
+bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vector < dex::string > &title,
+		const dex::string &titleString, const dex::vector < dex::string > &body )
 	{
 	if ( url.size( ) > maxURLLength || titleString.size( ) > maxTitleLength )
 		throw dex::invalidArgumentException( );
@@ -180,8 +163,8 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	dex::unorderedMap < dex::string, size_t > postsMetadataChanges;
 
 	size_t documentOffset = *location;
-	if ( !append( body.cbegin( ), body.cend( ), postsMetadataChanges ) || !append( title.cbegin( ), title.cend( ), postsMetadataChanges, "#" )
-			|| !append( anchorText.cbegin( ), anchorText.cend( ), postsMetadataChanges, "@" ) )
+	if ( !append( body.cbegin( ), body.cend( ), postsMetadataChanges )
+			|| !append( title.cbegin( ), title.cend( ), postsMetadataChanges, "#" ) )
 		return false;
 
 	*maxLocation = *location;
@@ -202,16 +185,6 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 		postsMetadataArray[ dictionary[ *uniqueWord ] ].documentCount++;
 		}
 
-	// offsetsToEndOfDocumentMetadatas[ documentOffset ].documentLength = title.size( ) + body.size( );
-	// offsetsToEndOfDocumentMetadatas[ documentOffset ].numberUniqueWords = uniqueWords.size( );
-	// offsetsToEndOfDocumentMetadatas[ documentOffset ].numberIncomingLinks = 1;
-	// const char *urlCStr = url.cStr( );
-	// const char *titleCStr = titleString.cStr( );
-	// for ( int charIndex = 0;  charIndex <= url.size( );  charIndex++ )
-	// 	offsetsToEndOfDocumentMetadatas[ documentOffset ].url[ charIndex ] = urlCStr[ charIndex ];
-
-	// for ( int charIndex = 0;  charIndex <= titleString.size( );  charIndex++ )
-	// 	title[ charIndex ] = urlCStr[ charIndex ];
 	offsetsToEndOfDocumentMetadatas[ documentOffset ] = endOfDocumentMetadataType
 		{
 		title.size( ) + body.size( ),
@@ -243,7 +216,7 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 	// TODO: Maybe remove?
 	if ( target < absoluteLocation )
 		throw dex::invalidArgumentException( );
-	
+
 	if ( target > *( indexChunkum->maxLocation ) )
 		throw dex::outOfRangeException( );
 

@@ -40,12 +40,11 @@ TEST_CASE( "create index chunk" )
 	indexChunk initializingIndexChunk = indexChunk( fd );
 
 	string url = "hamiltoncshell.com";
-	vector < string > anchorText = { "best", "shell" };
 	vector < string > title = { "hamilton", "c", "shell" };
 	string titleString = "Hamilton C Shell 2012";
 	vector < string > body = { "some", "junk", "and", "more", "junk" };
 
-	initializingIndexChunk.addDocument( url, anchorText, title, titleString, body );
+	initializingIndexChunk.addDocument( url, title, titleString, body );
 
 	close( fd );
 	}
@@ -60,12 +59,11 @@ TEST_CASE( "ISR functions on one document" )
 	indexChunk initializingIndexChunk = indexChunk( fd );
 
 	string url = "hamiltoncshell.com";
-	vector < string > anchorText;
 	vector < string > title = { "hamilton", "c", "shell" };
 	string titleString = "Hamilton C Shell 2012";
 	vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
 
-	REQUIRE( initializingIndexChunk.addDocument( url, anchorText, title, titleString, body ) );
+	REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 
 	// "junk" and "some" have their offsets set to 0 in the dictionary!!
 	// 	some in the first word, so it should probably be have its offset be 0
@@ -100,19 +98,17 @@ TEST_CASE( "ISR functions on two documents" )
 	indexChunk initializingIndexChunk = indexChunk( fd );
 
 	string url = "hamiltoncshell.com";
-	vector < string > anchorText;
 	vector < string > title = { "hamilton", "c", "shell" };
 	string titleString = "Hamilton C Shell 2012";
 	vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
 
 	string url2 = "google.com";
-	vector < string > anchorText2;
 	vector < string > title2 = { "evil", "company", "sell", "your", "data" };
 	string titleString2 = "Evil company sell your data";
 	vector < string > body2 = { "click", "this", "ad", "and", "you", "can", "live" };
 
-	REQUIRE( initializingIndexChunk.addDocument( url, anchorText, title, titleString, body ) );
-	REQUIRE( initializingIndexChunk.addDocument( url2, anchorText2, title2, titleString2, body2 ) );
+	REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+	REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
 
 	// "junk" and "some" have their offsets set to 0 in the dictionary!!
 	// 	some in the first word, so it should probably be have its offset be 0
@@ -169,14 +165,13 @@ TEST_CASE( "ONE BIG DOC" )
 
 		string word = "someWord";
 		string url = "hamiltoncshell.com";
-		vector < string > anchorText;
 		vector < string > title = { "hamilton", "c", "shell" };
 		string titleString = "Hamilton C Shell 2012";
 
 		// Each postsChunk has a byte posts[ ] of size 1<<12
 		vector < string > body( 1<<12, "someWord" );
 
-		REQUIRE( initializingIndexChunk.addDocument( url, anchorText, title, titleString, body ) );
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 		indexChunk::indexStreamReader wordISR = indexChunk::indexStreamReader( &initializingIndexChunk, "someWord" );
 		REQUIRE( body.size( ) == ( 1<<12 ) );
 		for ( int iters = 0;  iters < (1<<12) - 2;  iters++ )
@@ -198,7 +193,6 @@ TEST_CASE( "ONE BIG DOC" )
 		string word1 = "uno";
 		string word2 = "dos";
 		string url = "hamiltoncshell.com";
-		vector < string > anchorText;
 		vector < string > title = { "hamilton", "c", "shell" };
 		string titleString = "Hamilton C Shell 2012";
 
@@ -206,10 +200,10 @@ TEST_CASE( "ONE BIG DOC" )
 		vector < string > body1( 1<<11, "uno" );
 		vector < string > body2( 1<<11, "dos" );
 
-		REQUIRE( initializingIndexChunk.addDocument( url + word1, anchorText, title, titleString, body1 ) );
-		REQUIRE( initializingIndexChunk.addDocument( url + word2, anchorText, title, titleString, body2 ) );
-		REQUIRE( initializingIndexChunk.addDocument( url + word1 + word1, anchorText, title, titleString, body1 ) );
-		REQUIRE( initializingIndexChunk.addDocument( url + word2 + word2, anchorText, title, titleString, body2 ) );
+		REQUIRE( initializingIndexChunk.addDocument( url + word1, title, titleString, body1 ) );
+		REQUIRE( initializingIndexChunk.addDocument( url + word2, title, titleString, body2 ) );
+		REQUIRE( initializingIndexChunk.addDocument( url + word1 + word1, title, titleString, body1 ) );
+		REQUIRE( initializingIndexChunk.addDocument( url + word2 + word2, title, titleString, body2 ) );
 		indexChunk::indexStreamReader unoISR = indexChunk::indexStreamReader( &initializingIndexChunk, "uno" );
 		indexChunk::indexStreamReader dosISR = indexChunk::indexStreamReader( &initializingIndexChunk, "dos" );
 

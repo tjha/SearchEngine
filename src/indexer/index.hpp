@@ -260,9 +260,8 @@ namespace dex
 					}
 
 			public:
-				bool addDocument( const dex::string &url, const dex::vector < dex::string > &anchorText,
-					const dex::vector < dex::string > &title, const dex::string &titleString,
-					const dex::vector < dex::string > &body );
+				bool addDocument( const dex::string &url, const dex::vector < dex::string > &title,
+						const dex::string &titleString, const dex::vector < dex::string > &body );
 
 				class indexStreamReader
 					{
