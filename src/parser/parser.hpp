@@ -217,6 +217,7 @@ namespace dex
 		{
 		return lenAnchors;
 		}
+
 	vector < dex::Url > HTMLparser::ReturnLinks ( )
 		{
 		return links;
@@ -231,6 +232,7 @@ namespace dex
 		{
 		return anchors;
 		}
+	
 	vector < string > HTMLparser::ReturnTitle ( )
 		{
 		return title ;

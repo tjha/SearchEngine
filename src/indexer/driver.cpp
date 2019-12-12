@@ -1,6 +1,8 @@
 // Index Driver process html files into index chunks
 //
-// 2019-12-08: 
+// 2019-12-11:	edited to call correct functions to index and use lexicoComp: jhirsh, loghead
+// 2019-12-10:	edits to attach to index.hpp functions: combsc, loghead
+// 2019-12-08:	created index driver to read through directory: jhirsh
 //
 
 #include <iostream>
@@ -11,9 +13,17 @@
 #include "file.hpp"
 #include "vector.hpp"
 #include "basicString.hpp"
+#include "parser.hpp"
+#include "url.hpp"
 
 using dex::string;
 using dex::vector;
+
+int openFile( int indexChunkCount )
+	{
+	const char * filePath = ( dex::toString( indexChunkCount ) + "_in.dex" ).cStr( );
+	return open( filePath, O_RDWR | O_CREAT, 0777 );
+	}
 
 int main ( int argc, char ** argv )
 	{
@@ -32,14 +42,14 @@ int main ( int argc, char ** argv )
 	dir = opendir( batch.cStr( ) );
 	dirent * entry = readdir( dir );
 
-	string directory( "." );
+	string currentDirectory( "." );
 	string parentDirectory( ".." );
 
 	while ( entry != NULL )
 		{
 		string direntryName( entry->d_name );
 		if ( dex::lexicographicalCompare( direntryName.cbegin( ), direntryName.cend( ),
-				directory.cbegin( ), directory.cend( ) )
+				currentDirectory.cbegin( ), currentDirectory.cend( ) )
 				&& dex::lexicographicalCompare( direntryName.cbegin( ), direntryName.cend( ),
 				parentDirectory.cbegin( ), parentDirectory.cend( ) ) 
 				&& entry->d_type == DT_DIR )
@@ -55,48 +65,65 @@ int main ( int argc, char ** argv )
 	int indexChunkCount = 0;
 	// TODO: What scheme will we use to name the files for the index chunks?
 	int fileDescriptor = openFile( indexChunkCount++ );
-	dex::indexChunk *initializingIndexChunk = indexChunk( fileDescriptor );
+	dex::index::indexChunk *initializingIndexChunk = new dex::index::indexChunk( fileDescriptor );
 
 	for ( auto &directory: toProcess )
 		{
-		dir = openDir( directory );
+		dir = opendir( directory );
 		entry = readdir( dir );
 		while ( entry != NULL )
 			{
-			if ( strcmp( entry->d_name, "." != 0 && strcmp( entry->d_name, ".." != 0 && entry->d_type == DT_REG )
+			string direntryName( entry->d_name );
+			if ( dex::lexicographicalCompare( direntryName.cbegin( ), direntryName.cend( ),
+					currentDirectory.cbegin( ), currentDirectory.cend( ) )
+					&& dex::lexicographicalCompare( direntryName.cbegin( ), direntryName.cend( ),
+					parentDirectory.cbegin( ), parentDirectory.cend( ) ) 
+					&& entry->d_type == DT_DIR )
 				{
-				unsigned char *html = dex::readFromFile( entry->d_name, 0 );
-				unsigned char *ptr = html;
+				
+				// Decode the current file
+				unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( entry->d_name, 0 ) );
+				unsigned char *ptr = savedHtml;
 
-				dex::string url = stringDecode( ptr, ptr );
-				dex::string html = stringDecode( ptr, ptr );
+				// retrieve the saved url + html pair
+				dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
+				dex::string html = stringDecoder( ptr, &ptr );
 
-				//...
 				dex::HTMLparser parser( url, html, true );
 
-				if ( !initializingIndexChunk->addDocument( url, parser.ReturnAnchorText( ), parser.ReturnTitle( ),
+				dex::string titleString;
+				titleString.reserve( 25 );
+				for ( auto &titleWord: parser.ReturnTitle( ) )
+					{
+					titleString += titleWord;
+					}
+				
+				// TODO this should go in parser but didn't want to break dependent functionality
+				dex::vector < dex::AncWord > anchors = parser.ReturnAnchorText( );
+				dex::vector < dex::string > anchorText( anchors.size( ) );
+				for ( auto &anchor: anchors )
+					{
+
+					}
+				// TODO add default argument for anchorText in index.hpp
+				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), { }, parser.ReturnTitle( ), titleString, 
 						parser.ReturnWords( ) ) )
 					{
 					close( fileDescriptor );
 					fileDescriptor = openFile( indexChunkCount++ );
 					initializingIndexChunk = indexChunk( fileDescriptor );
 					}
-				if ( !initializingIndexChunk->addDocument( url, parser.ReturnAnchorText( ), parser.ReturnTitle( ),
+				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), { }, parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{
 					// TODO: Throw an exception. Should not fail to add a document to a new index chunk
-					throw dex::fileWriteException;
+					throw dex::fileWriteException( );
 					}
 				}
 			}
-		close( dir );
+		closedir( dir );
 		}
 	close( fileDescriptor );
 	}
 
-int openFile( int indexChunkCount )
-	{
-	const char filePath[ ] = dex::string( dex::toString( indexChunkCount ) + "_in.dex" ).c_str( );
-	return open( filePath, O_RDWR | O_CREAT, 0777 );
-	}
 

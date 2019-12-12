@@ -30,6 +30,7 @@ MODULE_TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,
 
 all: print_os $(TESTS)
 
+# TODO rename driver to crawlerDriver
 driver: src/mvp/driver.cpp
 	make build
 	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/driver.exe
@@ -37,6 +38,10 @@ driver: src/mvp/driver.cpp
 driverFinal: src/mvp/driver.cpp
 	make build
 	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -o3 $(BUILD_PATH)/driver.exe
+
+indexDriver: src/indexer/driver.cpp
+	make build
+	$(CXX) $(CXXFLAGS) src/indexer/driver.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/indexDriver.exe
 
 multithreadingTest: src/mvp/multithreadingTest.cpp
 	$(CXX) $(CXXFLAGS) src/mvp/multithreadingTest.cpp $(INCLUDES) -ltls -o build/multithreadingTest.exe
@@ -68,9 +73,5 @@ print_os: ;@echo 'os = ' $(OSFLAG)
 clean:
 	@rm -rf $(BUILD_PATH)/
 
-<<<<<<< HEAD
 .PHONY: tests clean cleanDriver
-=======
-# .PHONY: tests clean
->>>>>>> 62b5b043aff59f667632ab47356655ac53dd252f
 
