@@ -11,10 +11,13 @@
        width: 50%;
    }
    </style>
-
 	<script type="text/javascript">
 	  function searchResults(){
 		 window.location = "/results.html?query=" + document.getElementsByClassName("searchTerm")[0].value;;
+	  };
+	  var myBoolean = false;
+	  function toggleBoolean() {
+			myBoolean = !myBoolean;
 	  }
 	</script>
 
@@ -30,39 +33,26 @@
    </head>
 
    <body style="background:url(./imgs/bg.jpg);">
+
+	<h1 class=header>Team Socket</h1>
                                                                                
 	<div class="wrap">
 		<div class="search" action="/results.html">
-			<input type="text" class="searchTerm" placeholder="What are you searching for?">
+			<input type="text" class="searchTerm" placeholder="What are you searching for?" onKeyDown="if(event.keyCode==13) searchResults();">
 			<button type="submit" class="searchButton" onclick="searchResults()">
 			Search
 		  </button>
 		</div>
 	</div>
     
+
+   
+	<div class="toggle">
+	  <input type="checkbox" class="check" onclick="toggleBoolean();">
+	  <b class="b switch"></b>
+	  <b class="b track"></b>
+	</div>
+ 
     </body>
 </html>
-	<!--
-   <div class="container-fluid">
-       <div class="row">                                                       
-       <div class="center">
-           <h1 class="center">Team Socket Search</h1>
-           <br>
-           <img src="./imgs/logo.png" alt="Team Logo",
-style="width:150px;margin-left:330px;">
 
-           <form class="center", action="/results.html">
-             <br><br>
-             <input type="text" name="query" value="" size="100">
-             <br>
-             <div class="center" style="width:150px">
-               <input type="submit" value="Search">
-             </div>
-           </form>
-       </div>                                                                  
-       </div>                                                                  
-	</div>
-
-   </body>                                                                     
-                                                                               
-</html>
