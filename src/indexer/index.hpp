@@ -105,8 +105,7 @@ namespace dex
 					public:
 						postsMetadata( size_t chunkOffset = 0, const byte typeOfToken = BODY );
 
-						bool append( size_t location, postsChunk *postsChunkArray, 
-								postsMetadata *endOfDocumentPostsMetadata );
+						bool append( size_t location, postsChunk *postsChunkArray );
 					};
 
 				struct endOfDocumentMetadataType
@@ -234,7 +233,7 @@ namespace dex
 								}
 							}
 
-						while ( !wordMetadata->append( newLocation, postsChunkArray, postsMetadataArray ) )
+						while ( !wordMetadata->append( newLocation, postsChunkArray ) )
 							{
 							if ( *postsChunkCount == postsChunkArraySize )
 								return false;

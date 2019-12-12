@@ -53,8 +53,7 @@ dex::index::indexChunk::postsMetadata::postsMetadata( size_t chunkOffset, const 
 		std::memset( synchronizationPoints, 0, synchronizationPointCount * sizeof( unsigned long long ) );
 		}
 
-bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk *postsChunkArray,
-		postsMetadata *endOfDocumentPostsMetadata )
+bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk *postsChunkArray )
 	{
 	size_t delta = location - lastPostIndex;
 	size_t originalPostOffset = postsChunkArray[ lastPostsChunkOffset ].currentPostOffset;
@@ -212,7 +211,7 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 		1 // TODO: how do we update this? Answer: it's really really hard :(
 		};
 
-	postsMetadataArray[ 0 ].append( ( *location )++, postsChunkArray, postsMetadataArray );
+	postsMetadataArray[ 0 ].append( ( *location )++, postsChunkArray );
 
 	return true;
 	}
