@@ -39,7 +39,7 @@ namespace dex
 			ranker( dex::vector < dex::pair < unsigned, double > > titleWeights, double urlWeight, 
 					dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics, 
 					dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics,
-					double emphasizedWeight, double proportionCap,
+					double emphasizedWeightIn, double proportionCapIn,
 					unsigned bodySpans, unsigned titleSpans, dex::vector < dex::indexChunkObject * > someChunks )
 				{
 				staticTitleWeights = titleWeights;
@@ -49,22 +49,22 @@ namespace dex
 				chunkPointers = someChunks;
 				maxNumBodySpans = bodySpans;
 				maxNumTitleSpans = titleSpans;
-				this->emphasizedWeight = emphasizedWeight;
-				this->proportionCap = proportionCap;
+				emphasizedWeight = emphasizedWeightIn;
+				proportionCap = proportionCapIn;
 				}
 			
 			ranker ( dex::vector < dex::indexChunkObject * > someChunks )
 				{
 				chunkPointers = someChunks;
 				RankerConfiguration config;
-				staticTitleWeights = config.TITLE_WEIGHTS;
-				staticUrlWeight = config.URL_WEIGHT;
-				dynamicBodySpanHeuristics = config.BODY_SPAN_HEURISTICS;
-				dynamicTitleSpanHeuristics = config.TITLE_SPAN_HEURISTICS;
-				maxNumBodySpans = config.BODY_SPANS;
-				maxNumTitleSpans = config.TITLE_SPANS;
-				emphasizedWeight = config.EMPHASIZED_WEIGHT;
-				proportionCap = config.PROPORTION_CAP;
+				staticTitleWeights = config.StaticTitleWeights;
+				staticUrlWeight = config.StaticUrlWeight;
+				dynamicBodySpanHeuristics = config.BodySpanHeuristics;
+				dynamicTitleSpanHeuristics = config.TitleSpanHeuristics;
+				maxNumBodySpans = config.MaxBodySpans;
+				maxNumTitleSpans = config.MaxTitleSpans;
+				emphasizedWeight = config.EmphasizedWeight;
+				proportionCap = config.ProportionCap;
 				}
 
 			double staticScoreUrl( const dex::Url &url )
@@ -156,11 +156,19 @@ namespace dex
 				return 0;
 				}
 
-			double getStaticScore( dex::document doc )
+			double getStaticScore( dex::document doc, bool printInfo = false )
 				{
-				double score = staticScoreTitle( doc.title );
-				score += staticScoreUrl( doc.url );
-				return score;
+				double titleScore = staticScoreTitle( doc.title );
+				if ( printInfo )
+					{
+					std::cout << "Static Score Title: " << titleScore << std::endl;
+					}
+				double urlScore = staticScoreUrl( doc.url ) * staticUrlWeight;
+				if ( printInfo )
+					{
+					std::cout << "Static Score Url: " << urlScore << std::endl;
+					}
+				return titleScore + urlScore;
 				}
 
 			// Heuristics is a vector contianing the lengths of the spans you're looking for in the document
@@ -317,29 +325,42 @@ namespace dex
 				return proportionCap;
 				}
 
-			double getDynamicScore( dex::document doc )
+			double getDynamicScore( dex::document doc, bool printInfo = false )
 				{
 				
-				double score = 0;
 				vector < unsigned > bodyWordCount;
 				vector < unsigned > bodySpans = getDesiredSpans( doc.bodyISRs, doc.rarestWordIndex, 
 						dynamicBodySpanHeuristics, maxNumBodySpans, bodyWordCount );
+				double bodySpanScore = 0;
 				for ( unsigned index = 0;  index < bodySpans.size( );  ++index )
 					{
-					score += bodySpans[ index ] * dynamicBodySpanHeuristics[ index ].second;
+					bodySpanScore += bodySpans[ index ] * dynamicBodySpanHeuristics[ index ].second;
+					}
+				if ( printInfo )
+					{
+					std::cout << "Body Span Score: " << bodySpanScore << std::endl;
 					}
 				vector < unsigned > titleWordCount;
 				vector < unsigned > titleSpans = getDesiredSpans( doc.titleISRs, doc.rarestWordIndex, 
 						dynamicTitleSpanHeuristics, maxNumTitleSpans, titleWordCount );
+				double titleSpanScore = 0;
 				for ( unsigned index = 0;  index < titleSpans.size( );  ++index )
 					{
-					score += titleSpans[ index ] * dynamicTitleSpanHeuristics[ index ].second;
+					titleSpanScore += titleSpans[ index ] * dynamicTitleSpanHeuristics[ index ].second;
+					}
+				if ( printInfo )
+					{
+					std::cout << "Title Span Score: " << titleSpanScore << std::endl;
+					}
+				double dynamicWordScore = 0;
+				dynamicWordScore = getDynamicWordScore( bodyWordCount, doc.documentBodyLength, doc.emphasizedWords,
+						emphasizedWeight, proportionCap );
+				if ( printInfo )
+					{
+					std::cout << "Dynamic Word Score: " << dynamicWordScore << std::endl;
 					}
 
-				score += getDynamicWordScore( bodyWordCount, doc.documentBodyLength, doc.emphasizedWords,
-						emphasizedWeight, proportionCap );
-
-				return score;
+				return bodySpanScore + titleSpanScore + dynamicWordScore;
 				}
 
 			dex::vector < dex::searchResult > getTopN( size_t n, dex::string query )
