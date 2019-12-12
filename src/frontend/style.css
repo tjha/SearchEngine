@@ -50,3 +50,25 @@ body{
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+/* Results Page CSS style */
+.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
+
+.leftIndent {
+    text-align: left;
+    text-indent: 100px;
+    margin-top: 50px;
+}
+
+.results {
+    padding-left: 0px;
+}
+
+.result {
+    padding-top: 15px;
+}
