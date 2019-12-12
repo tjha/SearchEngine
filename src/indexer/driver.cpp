@@ -85,39 +85,42 @@ int main ( int argc, char ** argv )
 				unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( entry->d_name, 0 ) );
 				unsigned char *ptr = savedHtml;
 
-				// retrieve the saved url + html pair
-				dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
-				dex::string html = stringDecoder( ptr, &ptr );
+				while ( !dex::utf::isUTFSentinel( ptr ) )
+					{
+					// retrieve the saved url + html pair
+					dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
+					dex::string html = stringDecoder( ptr, &ptr );
 
-				dex::HTMLparser parser( url, html, true );
+					dex::HTMLparser parser( url, html, true );
 
-				dex::string titleString;
-				titleString.reserve( 25 );
-				for ( auto &titleWord: parser.ReturnTitle( ) )
-					{
-					titleString += titleWord;
-					}
-				
-				// TODO this should go in parser but didn't want to break dependent functionality
-				dex::vector < dex::AncWord > anchors = parser.ReturnAnchorText( );
-				dex::vector < dex::string > anchorText( anchors.size( ) );
-				for ( auto &anchor: anchors )
-					{
+					dex::string titleString;
+					titleString.reserve( 25 );
+					for ( auto &titleWord: parser.ReturnTitle( ) )
+						{
+						titleString += titleWord;
+						}
+					
+					// TODO this should go in parser but didn't want to break dependent functionality
+					dex::vector < dex::AncWord > anchors = parser.ReturnAnchorText( );
+					dex::vector < dex::string > anchorText( anchors.size( ) );
+					for ( auto &anchor: anchors )
+						{
 
-					}
-				// TODO add default argument for anchorText in index.hpp
-				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), { }, parser.ReturnTitle( ), titleString, 
-						parser.ReturnWords( ) ) )
-					{
-					close( fileDescriptor );
-					fileDescriptor = openFile( indexChunkCount++ );
-					initializingIndexChunk = indexChunk( fileDescriptor );
-					}
-				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), { }, parser.ReturnTitle( ), titleString,
-						parser.ReturnWords( ) ) )
-					{
-					// TODO: Throw an exception. Should not fail to add a document to a new index chunk
-					throw dex::fileWriteException( );
+						}
+					// TODO add default argument for anchorText in index.hpp
+					if ( !initializingIndexChunk->addDocument( url.completeUrl( ), { }, parser.ReturnTitle( ), titleString, 
+							parser.ReturnWords( ) ) )
+						{
+						close( fileDescriptor );
+						fileDescriptor = openFile( indexChunkCount++ );
+						initializingIndexChunk = indexChunk( fileDescriptor );
+						}
+					if ( !initializingIndexChunk->addDocument( url.completeUrl( ), { }, parser.ReturnTitle( ), titleString,
+							parser.ReturnWords( ) ) )
+						{
+						// TODO: Throw an exception. Should not fail to add a document to a new index chunk
+						throw dex::fileWriteException( );
+						}
 					}
 				}
 			}
