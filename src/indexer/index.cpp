@@ -21,9 +21,6 @@
 #include "utility.hpp"
 #include "vector.hpp"
 
-// TODO: remove this
-#include <iostream>
-
 // postsChunk
 dex::index::indexChunk::postsChunk::postsChunk( size_t previousPostsChunkOffset ) :
 	previousPostsChunkOffset( previousPostsChunkOffset ), nextPostsChunkOffset( 0 ),
@@ -98,8 +95,6 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 	filePointer = mmap( nullptr, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0 );
 
-	// std::cout << errno << std::endl;
-
 	if ( filePointer == MAP_FAILED )
 		throw dex::exception( );
 
@@ -122,7 +117,6 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 	if ( initialize )
 		{
-		std::cout << reinterpret_cast < void * >( postsChunkCount ) << std::endl;
 		*postsChunkCount = 1;
 		*location = 0;
 		*maxLocation = 0;

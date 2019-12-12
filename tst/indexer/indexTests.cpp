@@ -4,8 +4,8 @@
 // 2019-12-08: IndexStreamReader tests: lougheem
 // 2019-12-04: File created: jasina, lougheem
 
+#include <cstddef>
 #include <fcntl.h>
-#include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -13,9 +13,6 @@
 #include "file.hpp"
 #include "index.cpp"
 #include "utf.hpp"
-
-#include <fstream>
-#include <iostream>
 
 using namespace dex::index;
 using dex::vector;
@@ -73,17 +70,17 @@ TEST_CASE( "ISR functions on one document" )
 
 	REQUIRE( andISR.next( ) == 2 );
 	REQUIRE( andISR.next( ) == 5 );
-	REQUIRE( andISR.next( ) == -1 );
+	REQUIRE( andISR.next( ) == static_cast < size_t >( -1 ) );
 	REQUIRE( junkISR.next( ) == 1 );
 	REQUIRE( junkISR.next( ) == 4 );
-	REQUIRE( junkISR.next( ) == -1 );
+	REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
 
 	andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
 	REQUIRE( andISR.seek( 0 ) == 2 );
 	REQUIRE( andISR.seek( 2 ) == 2 );
 	REQUIRE( andISR.seek( 3 ) == 5 );
-	REQUIRE( andISR.seek( 6 ) == -1 );
+	REQUIRE( andISR.seek( 6 ) == static_cast < size_t >( -1 ) );
 
 	close( fd );
 	}
@@ -119,10 +116,10 @@ TEST_CASE( "ISR functions on two documents" )
 	REQUIRE( andISR.next( ) == 2 );
 	REQUIRE( andISR.next( ) == 5 );
 	REQUIRE( andISR.next( ) == 13 );
-	REQUIRE( andISR.next( ) == -1 );
+	REQUIRE( andISR.next( ) == static_cast < size_t >( -1 ) );
 	REQUIRE( junkISR.next( ) == 1 );
 	REQUIRE( junkISR.next( ) == 4 );
-	REQUIRE( junkISR.next( ) == -1 );
+	REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
 
 	andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
@@ -178,7 +175,7 @@ TEST_CASE( "ONE BIG DOC" )
 			REQUIRE( wordISR.next( ) == iters );
 		REQUIRE( wordISR.next( ) == ( 1<<12 ) - 2 );
 		REQUIRE( wordISR.next( ) == ( 1<<12 ) - 1 );
-		REQUIRE( wordISR.next( ) == -1 );
+		REQUIRE( wordISR.next( ) == static_cast < size_t >( -1 ) );
 		}
 
 	SECTION( "Interweaving of linked posting lists" )

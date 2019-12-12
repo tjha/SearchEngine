@@ -21,10 +21,6 @@
 #include "../utils/utility.hpp"
 #include "../utils/vector.hpp"
 
-// TODO: remove these
-#include <iostream>
-#define NUMINTS ( 10 )
-
 namespace dex
 	{
 	namespace index
@@ -44,7 +40,7 @@ namespace dex
 				template < class T, class InputIt >
 				friend class dex::utf::decoder;
 
-				template < class T, class InputIt >
+				template < class T >
 				friend class dex::utf::encoder;
 
 				class postsChunk
@@ -196,8 +192,6 @@ namespace dex
 					for ( ;  first != last;  ++first, ++newLocation )
 						{
 						string wordToAdd = decorator + dex::porterStemmer::stem( *first );
-
-						// std::cout << "append: " << wordToAdd << "\n";
 
 						if ( wordToAdd.size( ) > maxWordLength )
 							continue;
