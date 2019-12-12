@@ -1,6 +1,12 @@
 // robots.hpp
 // class for respecting robots protocol
 
+// 2019-12-09: Add timeToWait: combsc
+// 2019-12-08: Default delay 10 sceonds: combsc
+// 2019-12-03: default delay 1 second:combsc
+// 2019-11-27: Finished wildcard checking: combsc
+// 2019-11-26: Wildcard checking: combsc
+// 2019-11-23: Distinguish between politeness requests and disallowed paths, fixed parsing bug: combsc
 // 2019-11-18: Added expiration date: combsc
 // 2019-11-13: Added parsing for robots.txt files: combsc
 // 2019-11-04: fixed fixPath function, should NOT have / at the end: combsc
@@ -18,14 +24,42 @@
 
 #include <time.h>
 #include <stdio.h>
-#include "../utils/basicString.hpp"
-#include "../utils/vector.hpp"
-#include "../utils/unorderedSet.hpp"
-#include "../utils/algorithm.hpp"
-#include "../utils/functional.hpp"
+#include "basicString.hpp"
+#include "vector.hpp"
+#include "unorderedSet.hpp"
+#include "algorithm.hpp"
+#include "functional.hpp"
 
 namespace dex
 	{
+	bool match( dex::string str, dex::string pattern )
+		{
+		size_t lastFound = 0;
+		size_t lastLocation = 0;
+		size_t asteriskLocation = pattern.find( "*", lastLocation );
+		for ( ;  asteriskLocation != dex::string::npos;  asteriskLocation = pattern.find( "*", lastLocation ) )
+			{
+			int size = asteriskLocation - lastLocation;
+			if ( size > 0 )
+				{
+				string toFind = pattern.substr( lastLocation, size );
+				lastFound = str.find( toFind, lastFound );
+				if ( lastFound == dex::string::npos )
+					return false;
+				lastFound += toFind.size( );
+				}
+			lastLocation = asteriskLocation + 1;
+			}
+		int size = pattern.size( ) - lastLocation;
+		if ( size > 0 )
+			{
+			string toFind = pattern.substr( lastLocation, pattern.size( ) - lastLocation );
+			lastFound = str.find( toFind, lastFound );
+			if ( lastFound == dex::string::npos )
+				return false;
+			}
+		return true;
+		}
 	// using this link to understand the protocol: 
 	// https://www.promptcloud.com/blog/how-to-read-and-respect-robots-file/
 	struct RobotTxt
@@ -33,7 +67,7 @@ namespace dex
 		private:
 			dex::string domain;
 			// Time we have to wait to hit domain again in seconds
-			int crawlDelay;
+			double crawlDelay;
 
 			// Last time this domain was visited, time that we're allowed to visit again
 			time_t lastTimeVisited;
@@ -47,10 +81,31 @@ namespace dex
 			// Paths that are exceptions to disallowed paths above. All extensions on the paths
 			// within this set are also allowed.
 			dex::unorderedSet < dex::string > allowedPaths { 10 };
+			// This datastructure is for checking wildcard paths
+			dex::vector < dex::string > allowedWildcards;
+			dex::vector < dex::string > disallowedWildcards;
+
+			
 
 			bool pathIsAllowed( dex::string path )
 				{
-				path = fixPath( path );
+				path = fixPath( path ); bool pathIsAllowed = true;
+				// check to see if the path is in any wildcard paths
+				for ( auto it = allowedWildcards.cbegin( );  it != allowedWildcards.cend( );  ++it )
+					{
+					if ( match( path, *it ) )
+						{
+						return true;
+						}
+					}
+				for ( auto it = disallowedWildcards.cbegin( );  it != disallowedWildcards.cend( );  ++it )
+					{
+					if ( match( path, *it ) )
+						{
+						pathIsAllowed = false;
+						}
+					}
+				
 				// if the path passed in is explicitly in disallowed paths, return false
 				if ( disallowedPaths.count( path ) > 0 )
 					return false;
@@ -59,7 +114,7 @@ namespace dex
 				if ( allowedPaths.count( path ) > 0 )
 					return true;
 
-				bool pathIsAllowed = true;
+				
 				// Parse the path to see if it is part of a disallowed path or allowed path
 				for ( size_t nextSlashLocation = path.find( "/" );  nextSlashLocation != dex::string::npos;
 						nextSlashLocation = path.find( "/", nextSlashLocation + 1 ) )
@@ -76,6 +131,7 @@ namespace dex
 						return true;
 					}
 
+
 				return pathIsAllowed;
 				}
 
@@ -87,7 +143,7 @@ namespace dex
 					fixedPath.insert( 0, "/" );
 				if ( fixedPath.back( ) != '/' )
 					fixedPath.append( "/" );
-				return fixedPath;
+				return dex::toLower( fixedPath );
 				}
 			
 
@@ -123,43 +179,48 @@ namespace dex
 				lastTimeVisited = allowedVisitTime - crawlDelay;
 				allowedVisitTime = time( nullptr );
 				expireTime = allowedVisitTime + defaultExpiration;
+				string toSearch = dex::toLower( robotTxtFile );
 				// see if user-agent matches our user-agent OR if it's *
-				int start = robotTxtFile.find( "User-agent: " + userAgent );
+				int start = toSearch.find( "user-agent: " + userAgent );
 				if ( start == -1 )
-					start = robotTxtFile.find( "User-agent: *" );
+					start = toSearch.find( "user-agent: *" );
 				if ( start != -1 )
 					{
-					int end = robotTxtFile.find( "User-agent:", start + 1 );
+					int end = toSearch.find( "user-agent:", start + 1 );
 					if ( end == -1 )
-						end = robotTxtFile.size( );
-					dex::string toParse = robotTxtFile.substr( start, end - start );
+						end = toSearch.size( );
+					dex::string toParse = toSearch.substr( start, end - start );
 
 					// find the crawling rate they'd prefer us to use.
 					int crawlStart, crawlEnd;
-					crawlStart = toParse.find( "Crawl-rate: " );
+					crawlStart = toParse.find( "crawl-rate: " );
 					if ( crawlStart != -1 )
 						{
 						crawlEnd = toParse.find( "\n", crawlStart + 1 );
-						crawlDelay = 1 / atoi( toParse.substr( crawlStart + 12, crawlEnd - crawlStart - 12 ).cStr( ) );
+						crawlDelay = 1 / atof( toParse.substr( crawlStart + 12, crawlEnd - crawlStart - 12 ).cStr( ) );
 						}
-					crawlStart = toParse.find( "Crawl-delay: " );
+					crawlStart = toParse.find( "crawl-delay: " );
 					if ( crawlStart != -1 )
 						{
 						crawlEnd = toParse.find( "\n", crawlStart + 1 );
-						crawlDelay = atoi( toParse.substr( crawlStart + 13, crawlEnd - crawlStart - 13 ).cStr( ) );
+						crawlDelay = atof( toParse.substr( crawlStart + 13, crawlEnd - crawlStart - 13 ).cStr( ) );
 						}
 
 					// find all allowed paths
 					int allowStart, allowEnd;
-					for ( allowStart = toParse.find( "Allow: " );  allowStart != -1;  allowStart = toParse.find( "Allow: ", allowStart + 1) ) 
+					for ( allowStart = toParse.find( "allow: " );  allowStart != -1;  allowStart = toParse.find( "allow: ", allowStart + 1) ) 
 						{
-						allowEnd = toParse.find( "\n", allowStart + 1 );
-						addPathsAllowed( toParse.substr( allowStart + 7, allowEnd - allowStart - 7 ) );
+						string check = toParse.substr( allowStart - 3, 10 );
+						if ( allowStart > 2 && check.compare( "disallow: ") != 0 )
+							{
+							allowEnd = toParse.find( "\n", allowStart + 1 );
+							addPathsAllowed( toParse.substr( allowStart + 7, allowEnd - allowStart - 7 ) );
+							}
 						}
 
 					// find all disallowed paths
 					int disallowStart, disallowEnd;
-					for ( disallowStart = toParse.find( "Disallow: " );  disallowStart != -1;  disallowStart = toParse.find( "Disallow: ", disallowStart + 1 ) )
+					for ( disallowStart = toParse.find( "disallow: " );  disallowStart != -1;  disallowStart = toParse.find( "disallow: ", disallowStart + 1 ) )
 						{
 						disallowEnd = toParse.find( "\n", disallowStart + 1 );
 						addPathsDisallowed( toParse.substr( disallowStart + 10, disallowEnd - disallowStart - 10 ) );
@@ -215,7 +276,13 @@ namespace dex
 			void addPathsDisallowed( const InputIt &begin, const InputIt &end )
 				{
 				for ( InputIt it = begin;  it != end;  ++it )
-					disallowedPaths.insert( fixPath( *it ) );
+					{
+					if ( it->find( "*" ) == dex::string::npos )
+						disallowedPaths.insert( fixPath( *it ) );
+					else
+						disallowedWildcards.pushBack( *it );
+					}
+					
 				}
 			void addPathsDisallowed( const dex::unorderedSet < dex::string > &paths )
 				{
@@ -227,7 +294,13 @@ namespace dex
 				}
 			void addPathsDisallowed( const dex::string &str )
 				{
-				disallowedPaths.insert( fixPath( str ) );
+				if ( str.find( "*" ) == dex::string::npos )
+					disallowedPaths.insert( fixPath( str ) );
+				else
+					{
+					disallowedWildcards.pushBack( str );
+					}
+					
 				}
 
 			// Set the allowed paths for the domain
@@ -247,7 +320,13 @@ namespace dex
 			void addPathsAllowed( const InputIt &begin, const InputIt &end )
 				{
 				for ( InputIt it = begin;  it != end;  ++it )
-					allowedPaths.insert( fixPath( *it ) );
+					{
+					if ( it->find( "*" ) == dex::string::npos )
+						allowedPaths.insert( fixPath( *it ) );
+					else
+						allowedWildcards.pushBack( *it );
+					}
+					
 				}
 			void addPathsAllowed( const dex::unorderedSet < dex::string > &paths )
 				{
@@ -259,17 +338,25 @@ namespace dex
 				}
 			void addPathsAllowed( const dex::string &path )
 				{
-				allowedPaths.insert( fixPath( path) );
+				if ( path.find( "*" ) == dex::string::npos )
+					allowedPaths.insert( fixPath( path ) );
+				else
+					{
+					allowedWildcards.pushBack( path );
+					}
+					
 				}
 
 			// Checks for if you can perform HTTP request
-			bool canVisitPath( const dex::string &path )
+			// if you can visit return 0, if politeness error return 1, if disallowed return 2
+			int visitPathResult( const dex::string &path )
 				{
-				dex::string fixedPath = fixPath( path );
-				if ( !pathIsAllowed( fixedPath ) )
-					return false;
+				if ( !pathIsAllowed( path ) )
+					return 2;
 				
-				return time( nullptr ) >= allowedVisitTime; 
+				if ( time( nullptr ) < allowedVisitTime )
+					return 1;
+				return 0;
 				}
 
 			bool hasExpired( )
@@ -283,7 +370,7 @@ namespace dex
 			dex::string compress( )
 				{
 				return "Domain:\t\t\t" + domain + "\n" +
-							"Crawl-Delay:\t\t" + int( crawlDelay ) + "\n" +
+							"Crawl-Delay:\t\t" + dex::toString( crawlDelay ) + "\n" +
 							"Allowed-Visit-Time:\t" + ctime( &allowedVisitTime ) +
 							"Last-Visit:\t\t" + ctime( &lastTimeVisited ) + "\n" +
 							"Expire Time:\t\t" + ctime( &expireTime ) + "\n" + 
@@ -291,14 +378,42 @@ namespace dex
 							"Disallowed-Paths\n" + disallowedPaths.compress( );
 				}
 
-			// need domain for hash func
-			const dex::string getDomain( ) const
+			// Need access to all member variables for encoding
+			dex::string getDomain( ) const
 				{
 				return domain;
 				}
 			int getDelay( ) const
 				{
 				return crawlDelay;
+				}
+
+			time_t getLastVisit( ) const
+				{
+				return lastTimeVisited;
+				}
+
+			time_t getAllowedVisitTime( ) const
+				{
+				return allowedVisitTime;
+				}
+
+			time_t getExpireTime( ) const
+				{
+				return expireTime;
+				}
+			time_t timeToWait( ) const
+				{
+				return allowedVisitTime - time( nullptr );
+				}
+			const dex::unorderedSet < dex::string > getAllowedPaths( ) const
+				{
+				return allowedPaths;
+				}
+
+			const dex::unorderedSet < dex::string > getDisallowedPaths( ) const
+				{
+				return disallowedPaths;
 				}
 		};
 

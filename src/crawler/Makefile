@@ -3,7 +3,7 @@ CXXFLAGS = -std=c++11 -Wall -Wextra
 
 LDFLAGS := -L/usr/local/opt/libressl/lib
 CPPFLAGS := -I/usr/local/opt/libressl/include
-INCLUDE := -I$(SRC_PATH)/utils/
+INCLUDE := -I$(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/
 
 crawlerTests: crawlerTests.cpp robots.hpp 
 	$(CXX) $(CXXFLAGS) crawlerTests.cpp $(LDFLAGS) $(CPPFLAGS) $(INCLUDE) -ltls -o crawlerTests.exe

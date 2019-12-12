@@ -322,6 +322,7 @@ TEST_CASE( "encode and decode", "[utf]" )
 			}
 		}
 
+
 	SECTION( "string" )
 		{
 		unsigned char array[ 100 ];

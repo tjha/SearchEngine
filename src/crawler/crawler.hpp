@@ -1,15 +1,26 @@
+
+#ifndef DEX_CRAWLER_HPP
+#define DEX_CRAWLER_HPP
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <tls.h>
-#include "robots.hpp"
-#include "../utils/exception.hpp"
-#include "../utils/unorderedMap.hpp"
-#include "../utils/file.hpp"
+#include <sys/time.h>
+#include <string.h>
+#include "robotsMap.hpp"
+#include "exception.hpp"
+#include "file.hpp"
 #include "url.hpp"
 #include <iostream>
 
+// 2019-12-10: Improve URL object: combsc
+// 2019-12-04: Kill connection if page is greater than 5 MB or if recv takes longer than 5 seconds: combsc
+// 2019-11-30: Make robotsMap threadsafe: combsc
+// 2019-11-26: Differentiate between html and non-html when crawling: combsc
+// 2019-11-23: Differentiate between path disallow and timeout: combsc
+// 2019-11-21: increased robustness to failure: combsc, jhirsh
 // 2019-11-18: removed isError function, receive input correctly, let robots expire: combsc
 // 2019-11-13: fixed isError function, generalized User-agent: combsc
 // 2019-11-12: http/sConect functions are now connectPage. Concatenate results
@@ -23,7 +34,7 @@
 //             regarding using the map of robots: combsc
 // 2019-10-31: Crawler looks for robot objects in unorderedMap, asks server for
 //             one if it isn't found: jhirsh
-// 2019-10-31: Crawler now has all functions static since it's a stateless 
+// 2019-10-31: Crawler now has all functions static since it's a stateless
 //             object, added error enumerations: combsc
 // 2019-10-30: Added everything into dex namespace and created a crawler object
 //             with a cleaner interface for using: combsc
@@ -45,24 +56,34 @@ namespace dex
 		POLITENESS_ERROR = -5,
 		NO_LOCATION_ERROR = -6,
 		NO_HEADER_END_ERROR = -7,
-		PROTOCOL_ERROR = -9
+		SOCKET_CONNECTION_ERROR = -8,
+		PROTOCOL_ERROR = -9,
+		TLS_CONFIG_ERROR = -10,
+		RESPONSE_ERROR = -11,
+		DISALLOWED_ERROR = -12,
+		NOT_HTML = -13,
+		PUT_BACK_IN_FRONTIER = -14,
+		LOCKING_ERROR = -15,
+		RESPONSE_TOO_LARGE = -16
 		};
-	
+
 	enum httpProtocol
 		{
 		HTTP = 0,
 		HTTPS = 1
 		};
-	
+
 	class crawler // TODO make namespace because no private members
 		{
 		// This is a class that is stateless, so every function within is static.
 		// We're keeping it a class so that we can make the interface clear when
 		// you're using it.
 		private:
+			const static size_t maxPageSize = 5000000;
 			static dex::string makeGetMessage( const dex::string &path, const dex::string &host )
 				{
-				return "GET " 
+
+				return "GET "
 					+ path
 					+ " HTTP/1.1\r\nHost: "
 					+ host
@@ -78,24 +99,22 @@ namespace dex
 			//		the URL we're being redirected to will be contained within res.
 			static void receive( const char *buffer, unsigned bytes, dex::vector < char > &response )
 				{
-				response.reserve( response.size( ) + bytes );
 				for ( unsigned i = 0;  i < bytes;  ++i )
 					response.pushBack( buffer[ i ] );
 				}
 
-			static int parseResponse( dex::vector < char > response , dex::string &result )
+			static int parseResponse( dex::vector < char > &response, dex::string &result, bool isRobot = false )
 				{
-				char buffer[ response.size( ) + 1 ];
-				buffer[ response.size( ) ] = '\0';
-				dex::copy( response.cbegin( ), response.cend( ), buffer );
-				dex::string toSearch = buffer;
+				dex::string toSearch( response.cbegin( ), response.cend( ) );
+
 				int endHeader;
 				int startContent;
 				int location = toSearch.find( "HTTP/1.1 " );
 				if ( location != -1 )
 					{
-					char statusCode[ 4 ] = { buffer[ location + 9 ], buffer[ location + 10 ],
-							buffer[ location + 11 ], '\0' };
+					int returnValue = 0;
+					char statusCode[ 4 ] = { toSearch[ location + 9 ], toSearch[ location + 10 ],
+							toSearch[ location + 11 ], '\0' };
 					int status = ( statusCode[ 0 ] - '0' ) * 100 +
 							( statusCode[ 1 ] - '0' ) * 10 +
 							( statusCode[ 2 ] - '0' );
@@ -108,9 +127,25 @@ namespace dex
 							result = toSearch;
 							return NO_HEADER_END_ERROR;
 							}
+						// If there is a Content-Type field in the header
+						if ( !isRobot )
+							{
+							int contentType = toSearch.find( "Content-Type:" );
+							if ( contentType < endHeader && contentType >= 0 )
+								{
+								int contentTypeStart = contentType + 14;
+								int contentTypeEnd = toSearch.find( "\n", contentTypeStart );
+								string content = toSearch.substr( contentTypeStart, contentTypeEnd - contentTypeStart );
+								if ( content.find( "text/html" ) == dex::string::npos )
+									{
+									returnValue = NOT_HTML;
+									}
+
+								}
+							}
 						startContent = endHeader + 4;
 						result = toSearch.substr( startContent, toSearch.size( ) - startContent );
-						return 0;
+						return returnValue;
 						}
 					// If the status code starts with a 3, it's a redirect
 					else
@@ -124,8 +159,8 @@ namespace dex
 								result = toSearch;
 								return NO_LOCATION_ERROR;
 								}
-							const char *beginRedirect = buffer + locationStart + 10;
-							const char *endRedirect = beginRedirect;
+							auto beginRedirect = toSearch.begin( ) + locationStart + 10;
+							auto endRedirect = beginRedirect;
 							for ( ; *endRedirect != '\r' ;  ++endRedirect );
 							result = dex::string( beginRedirect, endRedirect );
 							return status;
@@ -142,11 +177,11 @@ namespace dex
 				return NO_RESPONSE_ERROR;
 				}
 
-			static int connectPage( Url url, dex::string &result, bool protocol )
+			static int connectPage( Url url, dex::string &result, bool protocol, bool isRobot = false )
 				{
 				int connectResult = 0;
 				struct addrinfo *address;
-				int socketFD; // HTTP				
+				int socketFD; // HTTP
 				tls *ctx; // HTTPS
 				// setup is different based on HTTP or HTTPS
 				if ( protocol == HTTP )
@@ -159,14 +194,25 @@ namespace dex
 					hints.ai_protocol = IPPROTO_TCP;
 
 					int getaddrresult = getaddrinfo( url.getHost( ).cStr( ), !url.getPort( ).empty( ) ? url.getPort( ).cStr( ) : "80", &hints, &address );
-					if ( getaddrresult == 1 )
+					if ( getaddrresult != 0 )
 						{
 						result = "Could not resolve DNS\n";
 						return RESOLVE_DNS_ERROR;
 						}
-
 					socketFD = socket( address->ai_family, address->ai_socktype, address->ai_protocol );
+					if ( socketFD == -1 )
+						{
+						result = "Could not connect to socket\n";
+						return SOCKET_CONNECTION_ERROR;
+						}
 
+					// set timeout on recv
+					struct timeval tv;
+					tv.tv_sec = 5;
+					tv.tv_usec = 0;
+					int option = setsockopt( socketFD, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv );
+					if ( option == -1 )
+						return SOCKET_CONNECTION_ERROR;
 					// Connect the socket to the host address.
 					connectResult = connect( socketFD, address->ai_addr, address->ai_addrlen);
 					}
@@ -177,20 +223,56 @@ namespace dex
 						result = "Disallowed protocol\n";
 						return PROTOCOL_ERROR;
 						}
-
 					// setup libressl stuff
 					tls_init( );
-					tls_config * config = tls_config_new( );  
+					tls_config * config = tls_config_new( );
+					if ( !config )
+						{
+						return TLS_CONFIG_ERROR;
+						}
 					ctx = tls_client( );
-					tls_configure( ctx, config );
-
+					if ( !ctx )
+						{
+						return TLS_CONFIG_ERROR;
+						}
+					int err = tls_configure( ctx, config );
+					if ( err == -1 )
+						{
+						return TLS_CONFIG_ERROR;
+						}
+					tls_config_free( config );
+					const char * error = tls_config_error( config );
+					if ( error != NULL )
+						{
+						result = error;
+						return TLS_CONFIG_ERROR;
+						}
+					error = tls_error( ctx );
+					if ( error != NULL )
+						{
+						result = error;
+						return RESPONSE_ERROR;
+						}
 					// Connect to the host address
 					connectResult = tls_connect( ctx, url.getHost( ).cStr( ), !url.getPort( ).empty( ) ? url.getPort( ).cStr( ) : "443" );
+					error = tls_config_error( config );
+					if ( error != NULL )
+						{
+						result = error;
+						return TLS_CONFIG_ERROR;
+						}
+					error = tls_error( ctx );
+					if ( error != NULL )
+						{
+						result = error;
+						return RESPONSE_ERROR;
+						}
 					}
 
 				if ( connectResult == -1 )
 					{
-					result = "Could not connect to Host\n";
+					result = "Could not connect to " + url.getHost( ) + " on port " + url.getPort( ) + " using ";
+					result += ( protocol == HTTP ? "http\n" : "https\n" );
 					return CONNECTION_ERROR;
 					}
 
@@ -211,15 +293,25 @@ namespace dex
 					result =  "Failure in sending\n";
 					return SENDING_ERROR;
 					}
-				
+
 				char buffer[ 10240 ];
 				int bytes;
+				size_t totalBytes = 0;
 				dex::vector < char > response;
+				response.reserve( maxPageSize );
 				// TODO receive all of the data, then POST PROCESS it
 				if ( protocol == HTTP )
 					{
 					while ( ( bytes = recv( socketFD, buffer, sizeof( buffer ), 0 ) ) > 0 )
+						{
+						totalBytes += bytes;
+						if ( totalBytes > maxPageSize )
+							{
+							return RESPONSE_TOO_LARGE;
+							}
 						receive( buffer, bytes, response );
+						}
+
 
 					// Close the socket and free the address info structure.
 					close( socketFD );
@@ -228,21 +320,33 @@ namespace dex
 				else
 					{
 					while ( ( bytes = tls_read( ctx, buffer, sizeof( buffer ) ) ) > 0 )
+						{
+						totalBytes += bytes;
+						if ( totalBytes > maxPageSize )
+							{
+							return RESPONSE_TOO_LARGE;
+							}
 						receive( buffer, bytes, response );
-					
+						}
+
+
 					// Close SSL connection
 					tls_close( ctx );
 					tls_free( ctx );
 					}
-				int errorCode = parseResponse( response, result );
+				if ( bytes == -1 )
+					{
+					return RESPONSE_ERROR;
+					}
+				int errorCode = parseResponse( response, result, isRobot );
 				return errorCode;
 				}
-		
+
 		public:
 			// Function used for crawling URLs. bePolite should ALWAYS be on, only turned off for testing.
-			static int crawlUrl( Url url, dex::string &result, dex::unorderedMap < dex::string, dex::RobotTxt > &robots, const dex::string contentFilename, bool bePolite = true )
+			static int crawlUrl( const Url &url, dex::string &result, dex::robotsMap &robotsCache, bool bePolite = true )
 				{
-				int protocol = ( url.getService( ) == "http" ) ? HTTP : HTTPS;
+				int protocol = ( url.getService( ) == "https" ) ? HTTPS : HTTP;
 
 				if ( !bePolite )
 					{
@@ -250,9 +354,27 @@ namespace dex
 					}
 				else
 					{
-					dex::RobotTxt robot;
 					// Check to see if we have a robot object for the domain we're crawling
-					if ( robots.count( url.getHost( ) ) < 1 || ( robots.count( url.getHost( ) ) >= 1 && robots[ url.getHost( ) ].hasExpired( ) ) )
+
+					int startResult = robotsCache.startRobotCreation( url.getDomain( ), url.getPath( ) );
+					if ( startResult == -2 )
+						{
+						result = "Different thread making the robots object for " + url.getDomain( );
+						return PUT_BACK_IN_FRONTIER;
+						}
+					if ( startResult == 1 )
+						{
+						result = "Not ready to visit " + url.getDomain( );
+						return POLITENESS_ERROR;
+						}
+					if ( startResult == 2 )
+						{
+						result = "path " + url.getPath( ) + " is disallowed for domain " + url.getDomain( );
+						return DISALLOWED_ERROR;
+						}
+
+					// Robots.txt does not exist for this domain yet
+					if ( startResult == -1 )
 						{
 						// visit robots.txt until we no longer receieve a redirect or until we've
 						// gone too long and we need to kill this redirect chain.
@@ -260,61 +382,68 @@ namespace dex
 						robotUrl.setPath( "/robots.txt" );
 
 						dex::string urlToVisit = robotUrl.completeUrl( );
+
 						int errorCode = 300;
 						int numRedirectsFollowed = 0;
-
 						for ( ;  numRedirectsFollowed < 10 && errorCode / 100 == 3;  ++numRedirectsFollowed )
 							{
 							Url robotUrl( urlToVisit.cStr( ) );
 							protocol = ( robotUrl.getService( ) == "http" ) ? HTTP : HTTPS;
-							errorCode = connectPage( robotUrl, result, protocol );
+							errorCode = connectPage( robotUrl, result, protocol, true );
 							urlToVisit = result;
 							}
-
 						// If our error code is 404, the path does not exist and we create a default robots.txt object
-						if ( errorCode == 404 )
+						dex::RobotTxt robot;
+						if ( errorCode >= 400 && errorCode < 500 )
 							{
 							// Create Default
-							dex::RobotTxt newRobot( url.getHost( ) );
-							robot = newRobot;
+							robot = dex::RobotTxt( url.getDomain( ) );
 							}
 						// If there was an error, we need to abort and return the error
-						if ( errorCode != 0 )
+						else
 							{
-							return errorCode;
+							if ( errorCode != 0 )
+								{
+								int err = robotsCache.writeUnlock( url.getDomain( ) );
+								if ( err != 0 )
+									return dex::LOCKING_ERROR;
+								return errorCode;
+								}
+							// Create new RobotsTxt
+							if ( errorCode == 0 )
+								{
+								dex::string robotsTxtInformation = result;
+								robot = dex::RobotTxt( url.getDomain( ), robotsTxtInformation );
+								}
 							}
-						// Create new RobotsTxt
-						dex::string robotsTxtInformation = result;
-						dex::RobotTxt newRobot( url.getHost( ), robotsTxtInformation );
-						robot = newRobot;
+						int pathResult = robot.visitPathResult( url.getPath( ) );
+						robot.updateLastVisited( );
+						int err = robotsCache.finishRobotCreation( url.getDomain( ), robot );
+						if ( err != 0 )
+							return dex::LOCKING_ERROR;
+						if ( pathResult == 1 )
+							{
+							result = "Not ready to visit " + url.getDomain( );
+							return POLITENESS_ERROR;
+							}
+						if ( pathResult == 2 )
+							{
+							result = "path " + url.getPath( ) + " is disallowed for domain " + url.getDomain( );
+							return DISALLOWED_ERROR;
+							}
 						}
-					else
-						{
-						robot = robots[ url.getHost( ) ];
-						}
-
-					if ( !robot.canVisitPath( url.getPath( ) ) )
-						{
-						result = "Cannot visit path due to robots object";
-						return POLITENESS_ERROR;
-						}
-					
-					robot.updateLastVisited( );
-					// Update the robot in our cache
-					robots[ url.getHost( ) ] = robot;
 					}
-
 				result = "";
 				protocol = ( url.getService( ) == "http" ) ? HTTP : HTTPS;
-				int errorCode = connectPage( url, result, protocol );
-
-				if ( errorCode == 0 )
-					{
-					dex::writeToFile( contentFilename.cStr( ), result.cStr( ), result.size( ) );
-					}
-
+				int errorCode = connectPage( url, result, protocol, false );
 				return errorCode;
+				}
+			// Used for testing our connectPage function
+			static int testConnect( Url url, dex::string &result, bool protocol )
+				{
+				return connectPage( url, result, protocol, false );
 				}
 		};
 	}
 
+#endif

@@ -1,6 +1,8 @@
 // crawl.cpp
 // Testing for our crawler class
 //
+// 2019-11-30: Threadsafe crawlUrl: combsc
+// 2019-11-20: merge with master: combsc
 // 2019-11-10: pass filenames instead of file descriptors: jhirsh
 // 2019-11-04: edited code logic slightly to match other changes made today: combsc
 // 2019-11-04: File creation: jhirsh
@@ -17,7 +19,7 @@ using dex::writeToFile;
 using dex::readFromFile;
 using std::cout;
 using std::endl;
-
+using dex::robotsMap;
 
 std::list< string > loadFrontier( const char * fileName )
 	{
@@ -47,7 +49,7 @@ std::list< string > loadFrontier( const char * fileName )
 	return frontier;
 	}
 
-int outputRobots( const char * fileName, unorderedMap < string, RobotTxt > &robots )
+int outputRobots( const char * fileName, robotsMap &robots )
 	{
 	string robotsData = "ROBOTS DATA\n" + robots.compress( ); // TODO use reserve
 	return writeToFile( fileName, robotsData.cStr( ), robotsData.size( ) );
@@ -75,7 +77,7 @@ int main( int argc, char ** argv )
 	std::list< string > brokenLinks;
 
 	string result = "";
-	unorderedMap < string, RobotTxt > robots{ 20 };
+	robotsMap robots;
 
 	for ( auto it = frontier.begin( );  it != frontier.end( ); )
 		{
@@ -88,7 +90,14 @@ int main( int argc, char ** argv )
 
 		if ( errorCode == dex::POLITENESS_ERROR )
 			{
-			cout << "Mr. Robot says to be polite: " << it->cStr( ) << endl;
+			cout << "Mr. Robot says try again later: " << it->cStr( ) << endl;
+			cout << result << endl;
+			++it;
+			}
+
+		if ( errorCode == dex::DISALLOWED_ERROR )
+			{
+			cout << "Mr. Robot says path not allowed: " << it->cStr( ) << endl;
 			cout << result << endl;
 			++it;
 			}

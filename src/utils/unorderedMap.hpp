@@ -3,6 +3,7 @@
 //
 // We ignore the key_equal predicate and allocator
 //
+// 2019-11-30: Added insertionWillRehash function: combsc
 // 2019-11-04: Use typeTraits.hpp: jasina
 // 2019-11-02: Change default table size, allocate memory for pair only when needed: jasina
 // 2019-10-28: Implement insert: jasina
@@ -347,6 +348,15 @@ namespace dex
 					}
 
 				return dex::pair < iterator, bool >{ iterator( *this, location ), inserted };
+				}
+
+			bool insertionWillRehash( const Key key )
+				{
+				if ( 2 * ( size( ) + ghostCount + 1 ) <= bucketCount( ) )
+					return false;
+				size_t location = probe( key );
+				wrappedPair *bucket = &table[ location ];
+				return bucket->isEmpty;
 				}
 
 			template < class InputIt >

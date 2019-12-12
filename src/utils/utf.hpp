@@ -31,6 +31,7 @@
 #include "unorderedMap.hpp"
 #include "unorderedSet.hpp"
 #include "vector.hpp"
+#include "../crawler/robots.hpp"
 
 namespace dex
 	{
@@ -239,6 +240,67 @@ namespace dex
 					}
 			};
 
+		template <>
+		class encoder < dex::RobotTxt >
+			{
+			public:
+				/*template < class InputIt >
+				InputIt operator( )( const dex::RobotTxt &robot, InputIt it ) const
+					{
+					encoder < dex::string > StringEncoder;
+					encoder < time_t > TimeEncoder;
+					encoder < int > IntegerEncoder;
+					encoder < dex::unorderedSet < dex::string > > PathEncoder;
+					encoder < Key > KeyEncoder;
+					it = encoder< size_t >( )( data.size( ), it );
+					return it;
+					}*/
+
+				dex::vector < unsigned char > operator( )( const dex::RobotTxt &robot ) const
+					{
+					// All encoders RobotTxt needs
+					encoder < dex::basicString < char > > StringEncoder;
+					encoder < int > IntegerEncoder;
+					encoder < dex::unorderedSet < dex::string > > PathEncoder;
+
+					// Data Vector for encoding
+					dex::vector < unsigned char > encodedData;
+
+					// Domain
+					vector < unsigned char > domainEncoding = StringEncoder( robot.getDomain( ) );
+					encodedData.insert( encodedData.cend( ), domainEncoding.cbegin( ), domainEncoding.cend( ) );
+
+					// Crawl-Delay
+					vector < unsigned char > crawlEncoding = IntegerEncoder( robot.getDelay( ) );
+					encodedData.insert( encodedData.cend( ), crawlEncoding.cbegin( ), crawlEncoding.cend( ) );
+
+					// Last-Visit-Time
+					vector < unsigned char > lastVisitEncoding = IntegerEncoder(
+							( long int ) robot.getLastVisit( ) );
+					encodedData.insert( encodedData.cend( ), lastVisitEncoding.cbegin( ), lastVisitEncoding.cend( ) );
+
+					// Allowed-Visit-Time
+					vector < unsigned char > allowedVisitEncoding = IntegerEncoder(
+							( long int ) robot.getAllowedVisitTime( ) );
+					encodedData.insert( encodedData.cend( ), allowedVisitEncoding.cbegin( ), allowedVisitEncoding.cend( ) );
+
+					// Expire-Time
+					vector < unsigned char > expireTimeEncoding = IntegerEncoder(
+							( long int ) robot.getExpireTime( ) );
+					encodedData.insert( encodedData.cend( ), expireTimeEncoding.cbegin( ), expireTimeEncoding.cend( ) );
+
+					// Allowed-Paths
+					vector < unsigned char > allowedPathsEncoding = PathEncoder( robot.getAllowedPaths( ) );
+					encodedData.insert( encodedData.cend( ), allowedPathsEncoding.cbegin( ), allowedPathsEncoding.cend( ) );
+
+					// Disallowed-Paths
+					vector < unsigned char > disallowedPathsEncoding = PathEncoder( robot.getDisallowedPaths( ) );
+					encodedData.insert( encodedData.cend( ), disallowedPathsEncoding.cbegin( ), disallowedPathsEncoding.cend( ) );
+
+					return encodedData;
+					}
+			};
+
 		template < class InputIt >
 		unsigned long decodeSafe( InputIt encoding )
 			{
@@ -416,6 +478,22 @@ namespace dex
 					return decodedData;
 					}
 			};
+
+		// TODO not sure if this should actually go into utf-8 or in a separate
+		// encoding function
+		/*
+		template < class InputIt >
+		class decoder < dex::RobotTxt, InputIt >
+			{
+			public:
+				dex::RobotTxt operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
+					{
+					InputIt *localAdvancedEncoding = &encoding;
+					decoder < dex::basicString > StringDecoder;
+					decoder < int > IntegerDecoder;
+					decoder < dex::unorderedSet < dex::string > > PathDecoder;
+					}
+			};*/
 
 		// We'll say a byte is a sentinel if it looks like 11111111
 		template < class InputIt >
