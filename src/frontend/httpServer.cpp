@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <stdio.h>
 
+#include "file.hpp"
 #include "ranker.hpp"
 #include "basicString.hpp"
 
@@ -161,12 +162,18 @@ void *Talk( void *p )
 		}
 
 
-	// TODO: ranker stuff
+	// ranker stuff
+	// TODO: have a structure to store and change these easily. Maybe in a file?
 	dex::vector < dex::pair < unsigned, double > > titleWeights;
 	double urlWeight;
-	dex::vector < dex::pair < unsigned, double > > spanHeuristics;
-	dex::vector < dex::indexChunkObject * > someChunks;
-	dex::ranker rankerObject( titleWeights, urlWeight, spanHeuristics, someChunks );
+	dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics;
+	dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics;
+	double emphasizedWeight = 0;
+	double proportionCap = 0;
+	double bodySpans = 0;
+	double titleSpans = 0;
+	dex::ranker rankerObject( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, emphasizedWeight, 
+			proportionCap, bodySpans, titleSpans, indexChunkObjects );
 	dex::vector < dex::searchResult > searchResults = rankerObject.getTopN( 10, query );
 	
 	// TODO: populate webpage with content
@@ -213,6 +220,8 @@ void *Talk( void *p )
 	}
 
 
+// Global variables for ranker
+dex::vector < dex::indexChunkObject * > indexChunkObjects;
 
 int main( int argc, char **argv )
 	{
@@ -256,6 +265,16 @@ int main( int argc, char **argv )
 		return 1;
 		}
 
+	// Create indexChunkObjects
+	// TODO: have Stephen take a look at this :)
+	dex::string indexChunkDirector = "./data/indexChunks/"; // Top directory of search
+	dex::string pattern = "_in.dex";
+	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirector, pattern );
+	indexChunkObjects.reserve( indexChunkFilenames.size( ) );
+	for ( dex::vector< dex::string >::constIterator filenameIterator = indexChunkFilenames.cbegin( );
+			filenameIterator != indexChunkFilenames.cend( );  filenameIterator++ )
+		indexChunkObjects.pushBack( new dex::indexChunkObject( *filenameIterator ) );
+
 	while ( ( talkAddressLength = sizeof( talkAddress ),
 			talkSockfd = accept( listenSockfd, ( struct sockaddr * )&talkAddress, &talkAddressLength ) )
 			&& talkSockfd != -1 )
@@ -264,4 +283,8 @@ int main( int argc, char **argv )
 		pthread_create( &child, nullptr, Talk, new int( talkSockfd ) );
 		pthread_detach( child );
 		}
+
+	for ( dex::vector < dex::indexChunkObject * >::constIterator indexChunkObjectIterator = indexChunkObjects.cbegin( );
+			indexChunkObjectIterator != indexChunkObjects.cend( );  indexChunkObjectIterator++ )
+		delete *indexChunkObjectIterator;
 	}

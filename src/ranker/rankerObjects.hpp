@@ -72,6 +72,8 @@ namespace dex
 	class indexChunkObject
 		{
 		// Whatever matt and stephen put in here
+		public:
+			indexChunkObject( dex::string filename );
 		};
 
 	struct queryRequest
