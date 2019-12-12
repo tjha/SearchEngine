@@ -11,9 +11,9 @@
 #ifndef RANKER_HPP
 #define RANKER_HPP
 
-
 #include "topN.hpp"
 #include "rankerObjects.hpp"
+#include "rankerConfig.hpp"
 #include <pthread.h>
 
 namespace dex
@@ -53,6 +53,20 @@ namespace dex
 				this->proportionCap = proportionCap;
 				}
 			
+			ranker ( dex::vector < dex::indexChunkObject * > someChunks )
+				{
+				chunkPointers = someChunks;
+				RankerConfiguration config;
+				staticTitleWeights = config.TITLE_WEIGHTS;
+				staticUrlWeight = config.URL_WEIGHT;
+				dynamicBodySpanHeuristics = config.BODY_SPAN_HEURISTICS;
+				dynamicTitleSpanHeuristics = config.TITLE_SPAN_HEURISTICS;
+				maxNumBodySpans = config.BODY_SPANS;
+				maxNumTitleSpans = config.TITLE_SPANS;
+				emphasizedWeight = config.EMPHASIZED_WEIGHT;
+				proportionCap = config.PROPORTION_CAP;
+				}
+
 			double staticScoreUrl( const dex::Url &url )
 				{
 				double score = 0;
