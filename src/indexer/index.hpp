@@ -119,7 +119,7 @@ namespace dex
 					template < class T, class InputIt >
 					friend class dex::utf::decoder;
 
-					template < class T, class InputIt >
+					template < class T >
 					friend class dex::utf::encoder;
 					};
 
@@ -247,7 +247,6 @@ namespace dex
 							postsMetadataChanges[ wordToAdd ]++;
 						else
 							postsMetadataChanges[ wordToAdd ] = 1;
-						
 						}
 
 					// Copy over newWords into dict.

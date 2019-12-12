@@ -202,6 +202,16 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 		postsMetadataArray[ dictionary[ *uniqueWord ] ].documentCount++;
 		}
 
+	// offsetsToEndOfDocumentMetadatas[ documentOffset ].documentLength = title.size( ) + body.size( );
+	// offsetsToEndOfDocumentMetadatas[ documentOffset ].numberUniqueWords = uniqueWords.size( );
+	// offsetsToEndOfDocumentMetadatas[ documentOffset ].numberIncomingLinks = 1;
+	// const char *urlCStr = url.cStr( );
+	// const char *titleCStr = titleString.cStr( );
+	// for ( int charIndex = 0;  charIndex <= url.size( );  charIndex++ )
+	// 	offsetsToEndOfDocumentMetadatas[ documentOffset ].url[ charIndex ] = urlCStr[ charIndex ];
+
+	// for ( int charIndex = 0;  charIndex <= titleString.size( );  charIndex++ )
+	// 	title[ charIndex ] = urlCStr[ charIndex ];
 	offsetsToEndOfDocumentMetadatas[ documentOffset ] = endOfDocumentMetadataType
 		{
 		title.size( ) + body.size( ),
