@@ -1,0 +1,113 @@
+Go to EC2
+Launch Instance
+Amazon Linux 2 AMI 64 bit x86
+t2.xLarge
+Configure instance details
+IAM role
+create a new role called <name>-spinarak
+service that will use this role- ec2
+Attach existing policies by entering into seachbar: 
+- AmazonVPCFullAccess
+- AmazonEC2FullAccess
+- AmazonS3FullAccess
+- IAMFullAccess
+- AWSConfigRole
+
+Subnet -> us-east-1e
+	
+Next add storage
+Security: select existing and pick default
+	default security group setting needs to have inbound ssh tcp 
+	port range 22, source: 0.0.0.0/0 to allow anyone to ssh into it with the key
+
+Review and launch
+Get new key
+Name it something memorable
+Chmod 600 keyName
+
+
+ssh -i .chris-search-engine-key.pem ec2-user@ec2-18-215-160-246.compute-1.amazonaws.com
+
+ssh -i .chris-search-engine-key.pem ec2-user@ec2-34-227-93-6.compute-1.amazonaws.com	
+
+ssh -i .chris-search-engine-key.pem ec2-user@ec2-100-26-57-53.compute-1.amazonaws.com
+
+Xlarge
+ssh -i .chris-search-engine-key.pem ec2-user@ec2-3-86-7-240.compute-1.amazonaws.com
+
+ssh -i keyName ec2-user@publicDNS
+
+
+sudo yum install git
+git clone https://github.com/tjha/SearchEngine.git
+cd SearchEngine
+git checkout dev/mvp
+source scripts/setEnvironment.sh
+source ~/.bashrc
+sudo ./scripts/libressl-install.sh
+
+If you get an error like error while loading shared libraries: libtls.so.20: cannot open shared object file: No such file or directory
+Run your bashrc and it should be fixed
+
+
+SETUP S3 BUCKET
+Make sure you have a iam_role specified in EC2 instructions with access to S3
+
+go to S3
+
+create bucket named: teamsocket-<name>
+
+In home directory, mkdir socket-html	
+
+s3fs <bucket-name> socket-html/ -o iam_role="spinarak-<name>"
+
+To test your s3 mounting, cd socket-html/; echo hurray > test.txt
+
+Write a file called data/instanceInfo.txt in SearchEngine
+numInstances=6
+instanceId=x
+Where x is your ID.
+
+Finally, run
+mkdir data/tmp
+source scripts/startCron.sh
+
+And you're done! It should be running.
+Don't be worried if it segfaults/throws an error and stops. We expect this to happen every 5-20 minutes, although it's happened as soon as like 30 seconds in. The cron job will make sure that the driver will be brought back every minute. If you think that something is broken, use the date command to see when a new minute passes. If a new minute passes and by 30 seconds running the script called getDriverPID doesn't return anything, something went wrong.
+
+Sanity Checks:
+	Check your .bashrc file to see if you have
+	# User specific aliases and functions
+	export LD_LIBRARY_PATH=/opt/libressl/lib
+	export LDFLAGS=/opt/libressl/lib
+	export CPPFLAGS=/opt/libressl/include
+	export PATH_TO_SEARCH_ENGINE=/home/ec2-user/SearchEngine
+	To verify that these environment variables are set, you can run 
+	echo $PATH_TO_SEARCH_ENGINE, it should print out /home/ec2-user/SearchEngine
+	If they are not set, you can try `. ~/.bashrc`, but you need to make sure environment
+	variables are set on startup of the ssh session. Reconnect to verify.
+
+	to verify that the cron job is running, run crontab -e. It should look like what is in scripts/runOnCron.txt
+
+TMUX CONTROLS 
+From command line:
+tmux 				enter new tmux session
+tmux list-sessions		list all open session
+tmux attach-session -t <id>	joint session with <id>
+
+From tmux session:
+C - Control
+
+C-b 				is prefix for tmux mode
+C-b + 				arrow get around windows
+C-b % 				split window horizontally
+C-b " 				split window vertically
+C-b :detach 			exits but keeps window running in background
+C-b :kill-session 		kill session
+
+SFTP transfer your s3 into our indexer instance
+
+./scripts/sftp-bucket.sh <bucket-path> <batch-name>
+EX:
+./scripts/sftp-bucket.sh ../socket-html/html/ jonas-batch0
+

@@ -1,11 +1,24 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g
+CXXFLAGS = -std=c++17 -Wall -Wextra -g3 -pthread
+
+# flags
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+	OSFLAG := -D LINUX
+	LDFLAGS := -L/opt/libressl/lib
+	CPPFLAGS := -I/opt/libressl/include
+endif
+ifeq ($(UNAME_S),Darwin)
+	OSFLAG := -D OSX
+	LDFLAGS := -L/usr/local/opt/libressl/lib
+	CPPFLAGS := -I/usr/local/opt/libressl/include
+endif
 
 # path #
 SRC_PATH = src
 TEST_PATH = tst
 BUILD_PATH = build
-INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/indexer/ -I $(TEST_PATH) #TODO: add more src folders here as needed
+INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/crawler/ -I $(TEST_PATH) $(LDFLAGS) $(CPPFLAGS)
 
 TEST_SOURCES := $(wildcard $(TEST_PATH)/*/*.cpp)
 TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(TEST_SOURCES))
@@ -15,7 +28,22 @@ TESTS_PATHS := $(patsubst $(TEST_PATH)/%,%,$(TESTS_PATHS))
 MODULE_CASES := $(wildcard $(TEST_PATH)/$(module)/*.cpp)
 MODULE_TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(MODULE_CASES))
 
-all: $(TESTS)
+all: print_os $(TESTS)
+
+driver: src/driver/driver.cpp
+	make build
+	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/driver.exe
+
+driverFinal: src/driver/driver.cpp
+	make build
+	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -o3 $(BUILD_PATH)/driver.exe
+
+multithreadingTest: src/driver/multithreadingTest.cpp
+	$(CXX) $(CXXFLAGS) src/driver/multithreadingTest.cpp $(INCLUDES) -ltls -o build/multithreadingTest.exe
+
+cleanDriver:
+	@rm -rf data/tmp/logs/
+	@rm -rf data/tmp/performance/
 
 test: $(BUILD_PATH)/tst/$(case)Tests.exe
 
@@ -24,20 +52,21 @@ tests: $(MODULE_TESTS)
 build:
 	@mkdir -vp $(addprefix $(BUILD_PATH)/tst/,$(TESTS_PATHS))
 
-
 $(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@ -ltls
 	./$@
 	make clean
 
 $(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
 	make build
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@ -ltls
+
+print_os: ;@echo 'os = ' $(OSFLAG)
 
 # TODO: run_integration_tests #
 
 clean:
 	@rm -rf $(BUILD_PATH)/
 
-.PHONY: tests clean
+.PHONY: tests clean cleanDriver
 
