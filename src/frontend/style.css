@@ -61,8 +61,8 @@ body{
 
 .leftIndent {
     text-align: left;
-    text-indent: 100px;
-    margin-top: 50px;
+    text-indent: 75px;
+    margin-top: 75px;
 }
 
 .results {
@@ -71,4 +71,12 @@ body{
 
 .result {
     padding-top: 15px;
+    padding-left: 0px;
 }
+
+.searchBarResultsPageWrap {
+    padding-left: 75px;
+    width: 80%;
+    max-width: 800px;
+    margin-bottom: 40px;
+};

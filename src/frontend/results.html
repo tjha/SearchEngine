@@ -3,7 +3,8 @@
     <head>                 
     <meta charset="utf-8" />                        
     <meta name="viewport" content="width=device-width, initial-scale=1" />         
-     
+    
+    <link rel="stylesheet" type="text/css" href="style.css">    
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
         
     <title>Team Socket Search</title>                            
@@ -11,9 +12,15 @@
     
     <body>                                                       
         <div id="result_page" class="leftIndent">
-            <div id="search_bar">
+            <div id="search_bar" class="searchBarResultsPageWrap">
+                <div class="search" action="/results.html">
+			<input type="text" class="searchTerm" placeholder="What are you searching for?">
+			<button type="submit" class="searchButton" onclick="searchResults()">
+			Search
+		  </button>
+		</div>
             </div>
-            <div id="search_results" class >
+            <div id="search_results">
                 <b>Results</b>
                 <ul style="list-style-type: none" class="results">
                     <li class="result"><a href="https://apple.com">Apple</a> Title</li>
