@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "file.hpp"
+#include "index.hpp"
 #include "ranker.hpp"
 #include "basicString.hpp"
 
@@ -172,9 +173,9 @@ void *Talk( void *p )
 	double proportionCap = 0;
 	double bodySpans = 0;
 	double titleSpans = 0;
-	dex::ranker rankerObject( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, emphasizedWeight, 
+	/*dex::ranker rankerObject( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, emphasizedWeight, 
 			proportionCap, bodySpans, titleSpans, indexChunkObjects );
-	dex::vector < dex::searchResult > searchResults = rankerObject.getTopN( 10, query );
+	dex::vector < dex::searchResult > searchResults = rankerObject.getTopN( 10, query );*/
 	
 	// TODO: populate webpage with content
 

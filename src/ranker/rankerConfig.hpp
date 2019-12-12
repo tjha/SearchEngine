@@ -12,22 +12,22 @@ struct RankerConfiguration
 	{
 	dex::vector < dex::pair < unsigned, double > > TITLE_WEIGHTS = 
 		{
-		dex::pair( 1, 1.2 ),
-		dex::pair( 2, 0.8 )
+		dex::pair < unsigned, double >( 1, 1.2 ),
+		dex::pair < unsigned, double >( 2, 0.8 )
 		};
 
 	double URL_WEIGHT = 1.5;
 
 	dex::vector < dex::pair < unsigned, double > > BODY_SPAN_HEURISTICS = 
 		{
-		dex::pair( 1, 1.2 ),
-		dex::pair( 2, 0.8 )
+		dex::pair < unsigned, double >( 1, 1.2 ),
+		dex::pair < unsigned, double >( 2, 0.8 )
 		};
 
 	dex::vector < dex::pair < unsigned, double > > TITLE_SPAN_HEURISTICS = 
 		{
-		dex::pair( 1, 1.2 ),
-		dex::pair( 2, 0.8 )
+		dex::pair < unsigned, double >( 1, 1.2 ),
+		dex::pair < unsigned, double >( 2, 0.8 )
 		};
 	
 	double EMPHASIZED_WEIGHT = 2.0;
