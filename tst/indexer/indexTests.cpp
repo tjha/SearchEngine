@@ -140,6 +140,7 @@ TEST_CASE( "ISR functions on two documents" )
 	close( fd );
 	}
 
+/*
 string quickBinaryToStringReversed( unsigned n )
 	{
 	string toReturn;
@@ -153,6 +154,7 @@ string quickBinaryToStringReversed( unsigned n )
 		n /= 2;
 		}
 	}
+	*/
 
 TEST_CASE( "ONE BIG DOC" )
 	{
