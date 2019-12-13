@@ -23,3 +23,4 @@ key.pem
 cronresult.txt
 data/instanceInfo.txt
 .chris*
+*.dex
