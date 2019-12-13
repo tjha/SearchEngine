@@ -75,7 +75,9 @@ int main ( int argc, char ** argv )
 			// retrieve the saved url + html pair
 			dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
 			dex::string html = stringDecoder( ptr, &ptr );
-
+			std::cout << "\tAbout to add url: " << url.completeUrl( ) << "\n";
+			std::cout << "HTML: \n " << html << "\n";
+			/*
 			try
 				{
 				std::cout << "\tAbout to add url: " << url.completeUrl( ) << "\n";
@@ -111,10 +113,11 @@ int main ( int argc, char ** argv )
 				std::cout << "Skipping malformed html: " << url.completeUrl( ) << "\n";
 				continue;
 				}
+			*/
 			}
 		std::cout << "processed " + fileName << std::endl;
 		documentsProcessed++;
-		int renamed = rename( fileName.cStr( ) , ( fileName + "_processed" ).cStr( ) );
+		int renamed = rename( fileName.cStr( ) , ( fileName ).cStr( ) );
 		if ( renamed == -1 )
 			{
 			std::cout << "Failed to rename " + fileName << std::endl;
