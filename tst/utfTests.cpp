@@ -339,12 +339,12 @@ TEST_CASE( "encode and decode", "[utf]" )
 		REQUIRE( s == decoder < string >( )( array ) );
 
 		vector < string > words = {
-			string( 1 << 17, '1' ),
+			// string( 1 << 17, '1' ),
 			string( 1 << 4, 203 ),
-			string( 1 << 13, 'a' ),
-			string( 1 << 12, 1 ),
-			string( 1 << 3, 'r' ),
-			string( 1 << 14, 'u' )
+			// string( 1 << 13, 'a' ),
+			// string( 1 << 12, 1 ),
+			// string( 1 << 3, 'r' ),
+			// string( 1 << 14, 'u' )
 		};
 
 		encoder < string > stringEncoder;
@@ -354,9 +354,6 @@ TEST_CASE( "encode and decode", "[utf]" )
 
 		for ( unsigned i = 0;  i < words.size( );  ++i )
 			readerHead = stringEncoder( words[ i ], readerHead );
-
-		for ( size_t i = 0;  i != 20;  ++i  )
-			std::cout << static_cast < size_t >( array[ i ] ) << std::endl;
 
 		readerHead = array;
 		for ( unsigned i = 0;  i < words.size( );  ++i )
