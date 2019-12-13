@@ -234,6 +234,8 @@ int main( int argc, char **argv )
 
 	int port = atoi( argv[ 1 ] );
 
+	std::cout << "Starting Server..." << std::endl;
+
 
 	struct sockaddr_in listenAddress, talkAddress;
 	socklen_t talkAddressLength;
@@ -268,13 +270,15 @@ int main( int argc, char **argv )
 
 	// Create indexChunkObjects
 	// TODO: have Stephen take a look at this :)
+	/*
 	dex::string indexChunkDirector = "./data/indexChunks/"; // Top directory of search
 	dex::string pattern = "_in.dex";
 	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirector, pattern );
 	indexChunkObjects.reserve( indexChunkFilenames.size( ) );
 	for ( dex::vector< dex::string >::constIterator filenameIterator = indexChunkFilenames.cbegin( );
 			filenameIterator != indexChunkFilenames.cend( );  filenameIterator++ )
-		indexChunkObjects.pushBack( new dex::indexChunkObject( *filenameIterator ) );
+		indexChunkObjects.pushBack( new dex::indexChunkObject( *filenameIterator ) );	
+	*/
 
 	while ( ( talkAddressLength = sizeof( talkAddress ),
 			talkSockfd = accept( listenSockfd, ( struct sockaddr * )&talkAddress, &talkAddressLength ) )
