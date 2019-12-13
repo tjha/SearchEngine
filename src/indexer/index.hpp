@@ -200,7 +200,8 @@ namespace dex
 						postsMetadata *wordMetadata = nullptr;
 						if ( !dictionary.count( wordToAdd ) && !newWords.count( wordToAdd ) )
 							{
-							if ( dictionary.size( ) == postsMetadataArraySize || *postsChunkCount == postsChunkArraySize )
+							if ( dictionary.size( ) + newWords.size( ) == postsMetadataArraySize
+									|| *postsChunkCount == postsChunkArraySize )
 								return false;
 
 							// Add a new postsMetaData.

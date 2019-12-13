@@ -92,7 +92,7 @@ int main ( int argc, char ** argv )
 				titleString.reserve( 25 );
 				for ( auto &titleWord: parser.ReturnTitle( ) )
 					{
-					titleString += titleWord;
+					titleString += ( titleWord + " " );
 					}
 				std::cout << "\t\twith title: " << titleString << "\n";
 				
@@ -113,18 +113,18 @@ int main ( int argc, char ** argv )
 					}
 				documentsProcessed++;
 				if ( documentsProcessed % checkpoint == 0 )
-                		        {
-		                        dex::string toWrite = dex::toString( documentsProcessed ) + " documents processed in " +
-                                        		dex::toString( time( nullptr ) - start ) + " seconds\n";
-                        		int error = write( statisticsFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
-                		        if ( error == -1 )
-		                                {
-		                                std::cout << "Failed to write to statistics file " << std::endl;
-                                		throw dex::fileWriteException( );
-                		                }
+					{
+					dex::string toWrite = dex::toString( documentsProcessed ) + " documents processed in " +
+										dex::toString( time( nullptr ) - start ) + " seconds\n";
+					int error = write( statisticsFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
+					if ( error == -1 )
+						{
+						std::cout << "Failed to write to statistics file " << std::endl;
+						throw dex::fileWriteException( );
+						}
 					documentsProcessed = 0;
-		                        start = time( nullptr );
-                        		}
+					start = time( nullptr );
+					}
 
 				}
 			catch ( ... )
