@@ -21,8 +21,6 @@
 #include "../utils/utility.hpp"
 #include "../utils/vector.hpp"
 
-#include <iostream>
-
 namespace dex
 	{
 	namespace index
@@ -193,9 +191,7 @@ namespace dex
 					for ( ;  first != last;  ++first, ++newLocation )
 						{
 						// std::cout << "About to stem: ->" << *first << "<-\n";
-						// TODO: fix stemmer. Breaks on "s" :(
-						// string wordToAdd = decorator + dex::porterStemmer::stem( *first );
-						string wordToAdd = decorator + *first;
+						string wordToAdd = decorator + dex::porterStemmer::stem( *first );
 
 						if ( wordToAdd.size( ) > maxWordLength )
 							continue;

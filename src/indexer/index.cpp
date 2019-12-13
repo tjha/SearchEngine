@@ -1,4 +1,4 @@
-// index.hpp
+// index.cpp
 // Indexer.
 //
 // 2019-12-09: Fix bugs in addDocument and append: lougheem, jasina
@@ -6,7 +6,6 @@
 // 2019-11-21: File created
 
 #include <cstddef>
-// #include <cstring>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -19,8 +18,6 @@
 #include "utf.hpp"
 #include "utility.hpp"
 #include "vector.hpp"
-
-#include <iostream>
 
 // postsChunk
 dex::index::indexChunk::postsChunk::postsChunk( ) : nextPostsChunkOffset( 0 ), currentPostOffset( 0 )
@@ -43,7 +40,7 @@ bool dex::index::indexChunk::postsChunk::append( size_t delta )
 // postMetadata
 dex::index::indexChunk::postsMetadata::postsMetadata( size_t chunkOffset ) :
 		occurenceCount( 0 ), documentCount( 0 ), firstPostsChunkOffset( chunkOffset ),
-		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ) { }
+		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ), synchronizationPoints( ) { }
 
 bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk *postsChunkArray )
 	{
@@ -86,15 +83,11 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		if ( result == -1 )
 			throw dex::exception( );
 		}
-	else
-		std::cout << "reading in existing indexChunk\n";
 
 	filePointer = mmap( nullptr, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0 );
 
 	if ( filePointer == MAP_FAILED )
 		throw dex::exception( );
-
-	std::cout << "Created indexChunk!\n";
 
 	postsChunkCount = reinterpret_cast < size_t * >( filePointer );
 	location = postsChunkCount + 1;
@@ -125,7 +118,6 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		}
 	else
 		{
-		std::cout << "Time to decode unorderedMaps\n";
 		urlsToOffsets = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedURLsToOffsets );
 		offsetsToEndOfDocumentMetadatas = dex::utf::decoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
 				( encodedOffsetsToEndOfDocumentMetadatas );
@@ -164,10 +156,10 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	// TODO: This can be made more efficient by creating an auxillary vector of words we want to insert. At the same
 	// time, we would populate uniqueWords
 	dex::unorderedSet < const dex::string > uniqueWords( 2 * ( body.size( ) + title.size( ) ) );
-	// for ( dex::vector < dex::string >::constIterator it = body.cbegin( );  it != body.cend( );  ++it )
-		// uniqueWords.insert( dex::porterStemmer::stem( *it ) );
-	// for ( dex::vector < dex::string >::constIterator it = title.cbegin( );  it != title.cend( );  ++it )
-		// uniqueWords.insert( dex::porterStemmer::stem( *it ) );
+	for ( dex::vector < dex::string >::constIterator it = body.cbegin( );  it != body.cend( );  ++it )
+		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
+	for ( dex::vector < dex::string >::constIterator it = title.cbegin( );  it != title.cend( );  ++it )
+		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
 
 	// Update the count of how many documents each word appears in.
 	for ( dex::unorderedSet < const dex::string >::constIterator uniqueWord = uniqueWords.cbegin( );
@@ -193,7 +185,7 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 dex::index::indexChunk::indexStreamReader::indexStreamReader( indexChunk *indexChunk, dex::string word ) :
 		indexChunkum( indexChunk ), absoluteLocation( 0 )
 	{
-	postsMetadatum = indexChunkum->postsMetadataArray + indexChunkum->dictionary[ word ];
+	postsMetadatum = indexChunkum->postsMetadataArray + indexChunkum->dictionary[ dex::porterStemmer::stem( word ) ];
 	postsChunkum = indexChunkum->postsChunkArray + postsMetadatum->firstPostsChunkOffset;
 	post = postsChunkum->posts;
 	documentPost = indexChunkum->postsChunkArray[ 0 ].posts;
