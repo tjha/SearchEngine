@@ -155,6 +155,10 @@ void *Talk( void *p )
 		  t != dex::string::npos && r + 12 == q )
 		{
 		query = path.substr( q + 7, t - q - 7 );
+
+		if ( path.substr( t + 8, pathEnd - t - 8 ) == "true" )
+			toggle = true;
+		
 		path = "results.html";
 		}
 
