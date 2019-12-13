@@ -29,7 +29,10 @@ class testingEndOfDocumentISR : public dex::constraintSolver::endOfDocumentISR
 				next( );
 
 			while ( index < deltas.size( ) && location < target )
-				location += deltas[ ++index ];
+				if ( index < deltas.size( ) - 1 )
+					location += deltas[ ++index ];
+				else
+					++index;
 
 			if ( index >= deltas.size( ) )
 				return npos;
@@ -72,13 +75,21 @@ class testingISR : public dex::constraintSolver::ISR
 		testingISR( const dex::vector <size_t> &deltas, testingEndOfDocumentISR *endOfDocumentISR )
 				: deltas( deltas ), endOfDocumentISR( endOfDocumentISR ), index( -1 ), location( 0 ) { }
 
+		~testingISR( )
+			{
+			delete endOfDocumentISR;
+			}
+
 		size_t seek( size_t target )
 			{
 			if ( index == static_cast < size_t >( -1 ) )
 				next( );
 
 			while ( index < deltas.size( ) && location < target )
-				location += deltas[ ++index ];
+				if ( index < deltas.size( ) - 1 )
+					location += deltas[ ++index ];
+				else
+					++index;
 			if ( index >= deltas.size( ) )
 				return npos;
 
@@ -612,8 +623,8 @@ TEST_CASE( "notISR" )
 
 		REQUIRE( isrNotB.seek( 27 ) == 30 );
 		REQUIRE( isrNotB.seek( 35 ) == 40 );
-		REQUIRE( isrNotB.next(  ) == 60 );
+		REQUIRE( isrNotB.next( ) == 60 );
 		REQUIRE( isrNotB.seek( 75 ) == dex::constraintSolver::ISR::npos );
-		REQUIRE( isrNotB.next(  ) == dex::constraintSolver::ISR::npos );
+		REQUIRE( isrNotB.next( ) == dex::constraintSolver::ISR::npos );
 		}
 	}

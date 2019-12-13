@@ -152,6 +152,7 @@ dex::constraintSolver::notISR::notISR( dex::constraintSolver::ISR *neg, endOfDoc
 
 dex::constraintSolver::notISR::~notISR( )
 	{
+	delete neg;
 	delete endOfDocISR;
 	}
 
