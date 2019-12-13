@@ -24,7 +24,12 @@ using dex::vector;
 
 int openFile( int indexChunkCount, dex::string outputFolder )
 	{
-	const char * filePath = ( outputFolder + dex::toString( indexChunkCount ) + "_in.dex" ).cStr( );
+	std::cout << "outputFolder = " << outputFolder << std::endl <<
+			"toString = " << dex::toString( indexChunkCount ) << std::endl;
+	outputFolder += dex::toString( indexChunkCount );
+	outputFolder += "_in.dex";
+	const char * filePath = outputFolder.cStr( );
+	std::cout << "filePath " << filePath << std::endl;
 	return open( filePath, O_RDWR | O_CREAT, 0777 );
 	}
 
@@ -70,17 +75,17 @@ int main ( int argc, char ** argv )
 		unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( fileName.cStr( ), 0 ) );
 		unsigned char *ptr = savedHtml;
 		
-		while ( !dex::utf::isSentinel( ptr ) )
+		size_t filesize = dex::getFileSize( fileName.cStr( ) );
+		while ( static_cast < size_t >( ptr - savedHtml ) < filesize )
 			{
 			// retrieve the saved url + html pair
 			dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
 			dex::string html = stringDecoder( ptr, &ptr );
 			std::cout << "\tAbout to add url: " << url.completeUrl( ) << "\n";
-			std::cout << "HTML: \n " << html << "\n";
-			/*
+			// std::cout << "HTML: \n " << html << "\n";
 			try
 				{
-				std::cout << "\tAbout to add url: " << url.completeUrl( ) << "\n";
+				// std::cout << "\tAbout to add url: " << url.completeUrl( ) << "\n";
 				dex::HTMLparser parser( url, html, true );
 
 				dex::string titleString;
@@ -113,7 +118,6 @@ int main ( int argc, char ** argv )
 				std::cout << "Skipping malformed html: " << url.completeUrl( ) << "\n";
 				continue;
 				}
-			*/
 			}
 		std::cout << "processed " + fileName << std::endl;
 		documentsProcessed++;
