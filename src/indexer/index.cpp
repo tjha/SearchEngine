@@ -19,6 +19,9 @@
 #include "utility.hpp"
 #include "vector.hpp"
 
+// TODO: remove this
+#include <iostream>
+
 // postsChunk
 dex::index::indexChunk::postsChunk::postsChunk( ) : nextPostsChunkOffset( 0 ), currentPostOffset( 0 )
 	{
@@ -29,7 +32,10 @@ bool dex::index::indexChunk::postsChunk::append( size_t delta )
 	{
 	// We're "full" if we can't insert a "widest" UTF-8 character. Write a sentinel instead.
 	if ( currentPostOffset + 8 > postsChunkSize )
+		{
+		posts[ currentPostOffset ] = dex::utf::sentinel;
 		return false;
+		}
 
 	currentPostOffset = dex::utf::encoder < size_t >( )( delta, posts + currentPostOffset ) - posts;
 	posts[ currentPostOffset ] = dex::utf::sentinel;
@@ -71,6 +77,7 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	{
 	// TOOO: Add some sort of magic number
 
+	// TODO: Throw exceptions so we know that this failed
 	if ( fileDescriptor == -1 )
 		throw dex::exception( );
 
@@ -242,9 +249,16 @@ size_t dex::index::indexChunk::indexStreamReader::next( )
 
 size_t dex::index::indexChunk::indexStreamReader::nextDocument( )
 	{
-	dex::index::indexChunk::indexStreamReader endOfDocumentISR( indexChunkum );
+	dex::index::indexChunk::indexStreamReader endOfDocumentISR( indexChunkum, "" );
 	size_t endOfDocumentLocation = endOfDocumentISR.seek( absoluteLocation );
 	if ( endOfDocumentLocation == npos )
 		return npos;
 	return seek( endOfDocumentLocation );
+	}
+
+size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::documentSize( )
+	{
+	if ( indexChunkum->offsetsToEndOfDocumentMetadatas.count( absoluteLocation ) )
+		return indexChunkum->offsetsToEndOfDocumentMetadatas[ absoluteLocation ].documentLength;
+	return -1;
 	}
