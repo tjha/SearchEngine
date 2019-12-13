@@ -146,15 +146,22 @@ void *Talk( void *p )
 		return nullptr;
 	dex::string path( request.substr( typeEnd + 2, pathEnd - typeEnd - 2 ).cStr( ) );
 	dex::string query;
+	bool toggle = false;
 
 	size_t r = path.find( "results.html");
-	size_t q = path.find( "?query=");
-	if ( r != dex::string::npos && q != dex::string::npos && r + 12 == q )
+	size_t q = path.find( "?query=" );
+	size_t t = path.find( "&toggle=" );
+	if ( r != dex::string::npos && q != dex::string::npos &&
+		  t != dex::string::npos && r + 12 == q )
 		{
-		query = path.substr( q + 7, pathEnd - q - 7 );
+		query = path.substr( q + 7, t - q - 7 );
 		path = "results.html";
 		}
 
+	std::cout << "Path: " << path << std::endl;
+	std::cout << "Query: " << query << std::endl;
+	std::cout << "Trigger: " << toggle << std::endl << std::endl;
+	
 	int file;
 	if ( !pathIsLegal( path ) || ( file = open( path.cStr( ), O_RDONLY ) ) == -1 )
 		{
@@ -249,6 +256,13 @@ int main( int argc, char **argv )
 
 	int listenSockfd = socket( AF_INET, SOCK_STREAM, 0 );
 	int talkSockfd;
+
+	int yesval = 1;
+	if ( setsockopt( listenSockfd, SOL_SOCKET, SO_REUSEADDR, &yesval, sizeof(int) ) == -1 )
+		{
+		std::cerr << "Error setting socket options" << std::endl;
+		return 1;
+		}
 
 	if ( listenSockfd == -1 )
 		{
