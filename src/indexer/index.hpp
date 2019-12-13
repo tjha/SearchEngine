@@ -89,8 +89,6 @@ namespace dex
 							size_t postsChunkArrayOffset;
 							size_t postsChunkOffset;
 							size_t inverseLocation;
-
-							synchronizationPoint( );
 							};
 						// First 32 bits of each long long form the seek offset in posting. The last 32 bits are actual
 						// location of that post. We use a long long since it is (practically) guaranteed to be 64 bits.
