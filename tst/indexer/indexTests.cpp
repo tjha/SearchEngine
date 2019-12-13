@@ -218,6 +218,83 @@ TEST_CASE( "ONE BIG DOC" )
 		*/
 		}
 
+	SECTION( "Read indexChunk from a file" )
+		{
+		
+		const char filePath[ ] = "_in.dex";
+		int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+
+		if ( fd == -1 )
+			exit( 1 );
+
+		{
+		indexChunk initializingIndexChunk = indexChunk( fd );
+
+		string url = "hamiltoncshell.com";
+		vector < string > title = { "hamilton", "c", "shell" };
+		string titleString = "Hamilton C Shell 2012";
+		vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
+
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+		}
+
+		close( fd );
+		fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+		REQUIRE( fd != -1 );
+
+		indexChunk fromFileIndexChunk = indexChunk( fd, false );
+		indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "junk");
+		indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "and" );
+
+		REQUIRE( andISR.next( ) == 2 );
+		REQUIRE( andISR.next( ) == 5 );
+		REQUIRE( andISR.next( ) == static_cast < size_t >( -1 ) );
+		REQUIRE( junkISR.next( ) == 1 );
+		REQUIRE( junkISR.next( ) == 4 );
+		REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
+
+		andISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "and" );
+
+		REQUIRE( andISR.seek( 0 ) == 2 );
+		REQUIRE( andISR.seek( 2 ) == 2 );
+		REQUIRE( andISR.seek( 3 ) == 5 );
+		REQUIRE( andISR.seek( 6 ) == static_cast < size_t >( -1 ) );
+		}
+	SECTION( "Read indexChunk from a file" )
+		{
+		const char filePath[ ] = "_in.dex";
+		int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+
+		if ( fd == -1 )
+			exit( 1 );
+
+		{
+		indexChunk initializingIndexChunk = indexChunk( fd );
+
+		string word = "someWord";
+		string url = "hamiltoncshell.com";
+		vector < string > title = { "hamilton", "c", "shell" };
+		string titleString = "Hamilton C Shell 2012";
+
+		// Each postsChunk has a byte posts[ ] of size 1<<12
+		vector < string > body( 1<<12, "someWord" );
+
+		REQUIRE( body.size( ) == ( 1<<12 ) );
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+		}
+
+		close( fd );
+		fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+		REQUIRE( fd != -1 );
+
+		indexChunk fromFileIndexChunk = indexChunk( fd, false );
+		indexChunk::indexStreamReader wordISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
+		for ( int iters = 0;  iters < (1<<12) - 2;  iters++ )
+			REQUIRE( wordISR.next( ) == iters );
+		REQUIRE( wordISR.next( ) == ( 1<<12 ) - 2 );
+		REQUIRE( wordISR.next( ) == ( 1<<12 ) - 1 );
+		REQUIRE( wordISR.next( ) == static_cast < size_t >( -1 ) );
+		}
 	SECTION( "Fill an indexChunk" )
 		{
 		string filename = "shakespeare.txt";

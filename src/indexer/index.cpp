@@ -6,9 +6,8 @@
 // 2019-11-21: File created
 
 #include <cstddef>
-#include <cstring>
+// #include <cstring>
 #include <fcntl.h>
-#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -21,19 +20,19 @@
 #include "utility.hpp"
 #include "vector.hpp"
 
+#include <iostream>
+
 // postsChunk
-dex::index::indexChunk::postsChunk::postsChunk( size_t previousPostsChunkOffset ) :
-	previousPostsChunkOffset( previousPostsChunkOffset ), nextPostsChunkOffset( 0 ),
-	currentPostOffset( 0 ) { }
+dex::index::indexChunk::postsChunk::postsChunk( ) : nextPostsChunkOffset( 0 ), currentPostOffset( 0 )
+	{
+	posts[ 0 ] = dex::utf::sentinel;
+	}
 
 bool dex::index::indexChunk::postsChunk::append( size_t delta )
 	{
 	// We're "full" if we can't insert a "widest" UTF-8 character. Write a sentinel instead.
 	if ( currentPostOffset + 8 > postsChunkSize )
-		{
-		posts[ currentPostOffset ] = dex::utf::sentinel;
 		return false;
-		}
 
 	currentPostOffset = dex::utf::encoder < size_t >( )( delta, posts + currentPostOffset ) - posts;
 	posts[ currentPostOffset ] = dex::utf::sentinel;
@@ -41,29 +40,29 @@ bool dex::index::indexChunk::postsChunk::append( size_t delta )
 	return true;
 	}
 
+// synchronizationPoint
+dex::index::indexChunk::postsMetadata::synchronizationPoint::synchronizationPoint( )
+	: postsChunkArrayOffset( 0 ), postsChunkOffset( 0 ), location( npos ) { }
+
 // postMetadata
-dex::index::indexChunk::postsMetadata::postsMetadata( size_t chunkOffset, const byte typeOfToken ) :
-		occurenceCount( 0 ), documentCount( 0 ), postType( typeOfToken ),
-		firstPostsChunkOffset( chunkOffset ), lastPostsChunkOffset( chunkOffset ),
-		lastPostIndex( 0 )
-		{
-		std::memset( synchronizationPoints, 0, synchronizationPointCount * sizeof( unsigned long long ) );
-		}
+dex::index::indexChunk::postsMetadata::postsMetadata( size_t chunkOffset ) :
+		occurenceCount( 0 ), documentCount( 0 ), firstPostsChunkOffset( chunkOffset ),
+		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ), synchronizationPoints( ) { }
 
 bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk *postsChunkArray )
 	{
-	size_t delta = location - lastPostIndex;
+	size_t delta = location - lastLocation;
 	size_t originalPostOffset = postsChunkArray[ lastPostsChunkOffset ].currentPostOffset;
 	bool successful = postsChunkArray[ lastPostsChunkOffset ].append( delta );
 
 	if ( successful )
 		{
-		lastPostIndex = location;
+		lastLocation = location;
 
 		// The first 8 bits of our location determine our synchronization point. We only update the table if we haven't
 		// been "this high" before.
 		for ( synchronizationPoint *syncPoint = synchronizationPoints + ( location >> ( sizeof( location ) - 8 ) );
-				syncPoint >= synchronizationPoints && !syncPoint->location;  --syncPoint )
+				syncPoint >= synchronizationPoints && syncPoint->location == syncPoint->npos;  --syncPoint )
 			{
 			syncPoint->postsChunkArrayOffset = lastPostsChunkOffset;
 			syncPoint->postsChunkOffset = originalPostOffset;
@@ -79,7 +78,6 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	{
 	// TOOO: Add some sort of magic number
 
-	// TODO: Throw exceptions so we know that this failed
 	if ( fileDescriptor == -1 )
 		throw dex::exception( );
 
@@ -92,11 +90,15 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		if ( result == -1 )
 			throw dex::exception( );
 		}
+	else
+		std::cout << "reading in existing indexChunk\n";
 
 	filePointer = mmap( nullptr, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0 );
 
 	if ( filePointer == MAP_FAILED )
 		throw dex::exception( );
+
+	std::cout << "Created indexChunk!\n";
 
 	postsChunkCount = reinterpret_cast < size_t * >( filePointer );
 	location = postsChunkCount + 1;
@@ -122,23 +124,22 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		*maxLocation = 0;
 
 		postsChunkArray[ 0 ] = postsChunk( );
-		postsMetadataArray[ 0 ] = postsMetadata( 0, postsMetadata::END_OF_DOCUMENT );
+		postsMetadataArray[ 0 ] = postsMetadata( 0 );
 		dictionary[ "" ] = 0;
 		}
 	else
 		{
-			urlsToOffsets = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )
-					( encodedURLsToOffsets );
-			offsetsToEndOfDocumentMetadatas = dex::utf::decoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
-					( encodedOffsetsToEndOfDocumentMetadatas );
-			dictionary = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedDictionary );
+		std::cout << "Time to decode unorderedMaps\n";
+		urlsToOffsets = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedURLsToOffsets );
+		offsetsToEndOfDocumentMetadatas = dex::utf::decoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
+				( encodedOffsetsToEndOfDocumentMetadatas );
+		dictionary = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedDictionary );
 		}
 	}
 
 dex::index::indexChunk::~indexChunk( )
 	{
-	dex::utf::encoder < dex::unorderedMap < dex::string, size_t > >( )
-			( urlsToOffsets, encodedURLsToOffsets );
+	dex::utf::encoder < dex::unorderedMap < dex::string, size_t > >( )( urlsToOffsets, encodedURLsToOffsets );
 	dex::utf::encoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
 			( offsetsToEndOfDocumentMetadatas, encodedOffsetsToEndOfDocumentMetadatas );
 	dex::utf::encoder < dex::unorderedMap < dex::string, size_t > >( )( dictionary, encodedDictionary );
@@ -147,12 +148,11 @@ dex::index::indexChunk::~indexChunk( )
 	munmap( filePointer, fileSize );
 	}
 
-// TODO: remove (replace?) the anchorText argument
 bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vector < dex::string > &title,
 		const dex::string &titleString, const dex::vector < dex::string > &body )
 	{
 	if ( url.size( ) > maxURLLength || titleString.size( ) > maxTitleLength )
-		throw dex::invalidArgumentException( );
+		return true;
 
 	dex::unorderedMap < dex::string, size_t > postsMetadataChanges;
 
@@ -165,7 +165,9 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 
 	urlsToOffsets[ url ] = documentOffset;
 
-	dex::unorderedSet < const dex::string > uniqueWords;
+	// TODO: This can be made more efficient by creating an auxillary vector of words we want to insert. At the same
+	// time, we would populate uniqueWords
+	dex::unorderedSet < const dex::string > uniqueWords( 2 * ( body.size( ) + title.size( ) ) );
 	for ( dex::vector < dex::string >::constIterator it = body.cbegin( );  it != body.cend( );  ++it )
 		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
 	for ( dex::vector < dex::string >::constIterator it = title.cbegin( );  it != title.cend( );  ++it )
@@ -173,10 +175,10 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 
 	// Update the count of how many documents each word appears in.
 	for ( dex::unorderedSet < const dex::string >::constIterator uniqueWord = uniqueWords.cbegin( );
-			uniqueWord != uniqueWords.cend( ); postsMetadataArray[ dictionary[ *( uniqueWord++ ) ] ].documentCount++ )
+			uniqueWord != uniqueWords.cend( );  ++postsMetadataArray[ dictionary[ *( uniqueWord++ ) ] ].documentCount )
 		{
 		postsMetadataArray[ dictionary[ *uniqueWord ] ].occurenceCount += postsMetadataChanges[ *uniqueWord ];
-		postsMetadataArray[ dictionary[ *uniqueWord ] ].documentCount++;
+		++postsMetadataArray[ dictionary[ *uniqueWord ] ].documentCount;
 		}
 
 	offsetsToEndOfDocumentMetadatas[ documentOffset ] = endOfDocumentMetadataType
@@ -185,7 +187,6 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 		uniqueWords.size( ),
 		url,
 		titleString,
-		1 // TODO: how do we update this? Answer: it's really really hard :(
 		};
 
 	postsMetadataArray[ 0 ].append( ( *location )++, postsChunkArray );
