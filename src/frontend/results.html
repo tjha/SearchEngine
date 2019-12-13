@@ -1,11 +1,24 @@
-<!DOCTYPE html>                                                                 
-<html lang="en">      
-    <head>                 
-    <meta charset="utf-8" />                        
-    <meta name="viewport" content="width=device-width, initial-scale=1" />         
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     
-    <link rel="stylesheet" type="text/css" href="style.css">    
+    <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+	 <script type="text/javascript">
+     var myBoolean = false;
+     function searchResults(){
+       window.location.href = "/results.html?query=" + document.getElementsByClassName("searchTerm")[0].value + "&toggle=" + myBoolean.toString();
+     };                                                                         
+     function toggleBoolean() {                                                 
+         myBoolean = !myBoolean;                                                
+     }                                                                          
+     function searchResults2() {
+       window.location.href = "/results.html?query=" + document.getElementsByClassName("searchTerm")[0].value + "&toggle=" + myBoolean.toString();
+     };                                                                         
+   </script>
         
     <title>Team Socket Search</title>                            
     </head>                 
@@ -14,8 +27,8 @@
         <div id="result_page" class="leftIndent">
             <div id="search_bar" class="searchBarResultsPageWrap">
                 <div class="search" action="/results.html">
-			<input type="text" class="searchTerm" placeholder="What are you searching for?">
-			<button type="submit" class="searchButton" onclick="searchResults()">
+			<input type="text" class="searchTerm" placeholder="What are you searching for?" onKeyDown="if(event.keyCode==13) searchResults2();">
+			<button type="submit" class="searchButton" onclick="searchResults2();">
 			Search
 		  </button>
 		</div>
@@ -26,8 +39,15 @@
                     <li class="result"><a href="https://apple.com">Apple</a> Title</li>
                     <li class="result"><a href="https://amazon.com">Amazon - Whole Foods</a></li>
                 </ul>
-            </div>  
-        </div> 
-    </body>                                                                     
+            </div>
+        </div>
+
+			<div class="toggle2">                                                        
+			  <input type="checkbox" class="check" onclick="toggleBoolean();">           
+			  <b class="b switch"></b>                                                   
+			  <b class="b track"></b>                                                    
+			</div> 
+
+    </body>
                                                                                 
 </html>
