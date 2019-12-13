@@ -111,6 +111,20 @@ int main ( int argc, char ** argv )
 					// TODO: Throw an exception. Should not fail to add a document to a new index chunk
 					throw dex::fileWriteException( );
 					}
+				documentsProcessed++;
+				if ( documentsProcessed % checkpoint == 0 )
+                		        {
+		                        dex::string toWrite = dex::toString( documentsProcessed ) + " documents processed in " +
+                                        		dex::toString( time( nullptr ) - start ) + " seconds\n";
+                        		int error = write( statisticsFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
+                		        if ( error == -1 )
+		                                {
+		                                std::cout << "Failed to write to statistics file " << std::endl;
+                                		throw dex::fileWriteException( );
+                		                }
+					documentsProcessed = 0;
+		                        start = time( nullptr );
+                        		}
 
 				}
 			catch ( ... )
@@ -120,7 +134,6 @@ int main ( int argc, char ** argv )
 				}
 			}
 		std::cout << "processed " + fileName << std::endl;
-		documentsProcessed++;
 		int renamed = rename( fileName.cStr( ) , ( fileName ).cStr( ) );
 		if ( renamed == -1 )
 			{
@@ -128,19 +141,6 @@ int main ( int argc, char ** argv )
 			throw dex::fileWriteException( );
 			}
 		close( fileDescriptor );
-
-		if ( documentsProcessed % checkpoint == 0 || documentsProcessed == toProcess.size( ) )
-			{
-			dex::string toWrite = dex::toString( documentsProcessed ) + " documents processed in " + 
-					dex::toString( time( nullptr ) - start ) + " seconds\n";
-			int error = write( statisticsFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
-			if ( error == -1 )
-				{
-				std::cout << "Failed to write to statistics file " << std::endl;
-				throw dex::fileWriteException( );
-				}
-			start = time( nullptr );
-			}
 		}
 	
 
