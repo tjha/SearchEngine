@@ -156,14 +156,14 @@ namespace dex
 				return 0;
 				}
 
-			double getStaticScore( dex::document doc, bool printInfo = false )
+			double getStaticScore( const dex::string &title, const dex::Url &url, bool printInfo = false )
 				{
-				double titleScore = staticScoreTitle( doc.title );
+				double titleScore = staticScoreTitle( title );
 				if ( printInfo )
 					{
 					std::cout << "Static Score Title: " << titleScore << std::endl;
 					}
-				double urlScore = staticScoreUrl( doc.url ) * staticUrlWeight;
+				double urlScore = staticScoreUrl( url ) * staticUrlWeight;
 				if ( printInfo )
 					{
 					std::cout << "Static Score Url: " << urlScore << std::endl;
@@ -171,16 +171,47 @@ namespace dex
 				return titleScore + urlScore;
 				}
 
+			// When given bodyISRs return the rarest word index. Also keep track of the word count for this
+			// document.
+			// Body ISRs are assumed to be pointing to the beginning of the document.
+			// ISRs will seek back to the beginning after this function.
+			unsigned getRarestWord( vector < ISR > &bodyISRs, unsigned beginDocument, unsigned endDocument,
+					vector < unsigned > &wordCount )
+				{
+				for ( unsigned index = 0;  index < bodyISRs.size( );  ++index )
+					{
+					wordCount[ index ] = 0;
+					unsigned result = bodyISRs[ index ].next( );
+					while ( result < endDocument )
+						{
+						++wordCount[ index ];
+						result = bodyISRs[ index ].next( );
+						}
+					bodyISRs[ index ].reset( beginDocument );
+					}
+				unsigned minCount = wordCount[ 0 ];
+				unsigned minIndex = 0;
+				for ( unsigned index = 1;  index < wordCount.size( );  ++index )
+					{
+					if ( wordCount[ index ] < minCount )
+						{
+						minCount = wordCount[ index ];
+						minIndex = index;
+						}
+					}
+				return minIndex;
+				}
+
 			// Heuristics is a vector contianing the lengths of the spans you're looking for in the document
 			// Emphasized is a vector containing whether or not the word at that index was emphasized
 			// Vector of ISRs should be arranged such that the words of the ISRs line up with the order of the query
 			// rarest should be the index of the ISR of the rarest word in the query
 			// { 1, 2, 4, 8 }
-			vector < unsigned > getDesiredSpans( vector < ISR > isrs, unsigned rarest, 
-					vector < pair < unsigned, double > > heuristics, unsigned maxNumSpans,
-					vector < unsigned > &wordCount )
+			// ISRs will not be moved back to the beginning
+			vector < unsigned > getDesiredSpans( vector < ISR > &isrs, unsigned rarest, 
+					const vector < pair < unsigned, double > > &heuristics, unsigned maxNumSpans,
+					unsigned endDocument )
 				{
-				wordCount.resize( isrs.size( ), 0 );
 				unsigned size = isrs.size( );
 				vector < unsigned > spansOccurances( heuristics.size( ) );
 
@@ -190,17 +221,13 @@ namespace dex
 					{
 					std::cout << "Initializing " << isrs[ index ].getWord ( ) << "\n";
 					current[ index ] = isrs[ index ].next( );
-					if ( current[ index ] != ISR::npos )
-						{
-						wordCount[ index ]++;
-						}
 					std::cout << "\t" << current[ index ];
 					next[ index ] = isrs[ index ].next( );
 					std::cout << "\t" << next[ index ] << "\n";
 					}
 
 				dex::vector < unsigned > closestLocations( size );
-				while ( current[ rarest ] != ISR::npos )
+				while ( current[ rarest ] < endDocument )
 					{
 					std::cout << "Iteration: " << current[ rarest ] << "\n";
 					closestLocations[ rarest ] = current[ rarest ];
@@ -219,11 +246,10 @@ namespace dex
 							// Position our ISRs such that current is less than our desired position and next is greater than our
 							// desired position.
 							// next[ index ] - current[ rarest ] < index - rarest
-							while ( next[ index ] != ISR::npos && next[ index ] + rarest < current[ rarest ] + index )
+							while ( next[ index ] < endDocument && next[ index ] + rarest < current[ rarest ] + index )
 								{
 								current[ index ] = next[ index ];
 								next[ index ] = isrs[ index ].next( );
-								wordCount[ index ]++;
 								std::cout << "\t\t\t..." << current[ index ] << "\n";
 								}
 
@@ -239,7 +265,7 @@ namespace dex
 							else
 								{
 								// if ( desiredPosition - current[ index ] > next[ index ] - desiredPosition || index > rarest )
-								if ( next[ index ] != ISR::npos && 
+								if ( next[ index ] < endDocument && 
 										( 2 * desiredPosition > next[ index ] + current[ index ]  || index > rarest ) )
 									{
 									closest = next[ index ];
@@ -256,7 +282,7 @@ namespace dex
 							closestLocations[ index ] = closest;
 							}
 						}
-					unsigned min = ISR::npos;
+					unsigned min = endDocument;
 					unsigned max = 0;
 					for ( unsigned index = 0;  index < size;  ++index )
 						{
@@ -285,24 +311,19 @@ namespace dex
 						}
 					current[ rarest ] = next[ rarest ];
 					next[ rarest ] = isrs[ rarest ].next( );
-					if ( current[ rarest ] != ISR::npos )
-						{
-						wordCount[ rarest ]++;
-						}
 					}
 				for ( unsigned index = 0;  index < size;  ++index )
 					{
-					while ( next[ index ] != ISR::npos )
+					while ( next[ index ] < endDocument )
 						{
 						current[ index ] = next[ index ];
 						next[ index ] = isrs[ index ].next( ); 
-						wordCount[ index ]++;
 						}
 					}
 				return spansOccurances;
 				}
 
-			double getDynamicWordScore( vector < unsigned > wordCount, unsigned documentLength, vector < bool > emphasized, 
+			double getDynamicWordScore( const vector < unsigned > &wordCount, unsigned documentLength, vector < bool > emphasized, 
 					double emphasizedWeight, double proportionCap )
 				{
 				double score = 0;
@@ -324,13 +345,16 @@ namespace dex
 					}
 				return proportionCap;
 				}
-
-			double getDynamicScore( dex::document doc, bool printInfo = false )
+			// bodyISRs, titleISRs, and emphasized should be in the order of the flattened query
+			// ISRs will be shifted to the next position after the function ends, and begin after beginDocument
+			// beginDocument and endDocument keep track of the document boundaries
+			double getDynamicScore( vector < ISR > &bodyISRs, vector < ISR > &titleISRs,
+			unsigned beginDocument, unsigned endDocument, vector < bool > emphasized, bool printInfo = false )
 				{
-				
-				vector < unsigned > bodyWordCount;
-				vector < unsigned > bodySpans = getDesiredSpans( doc.bodyISRs, doc.rarestWordIndex, 
-						dynamicBodySpanHeuristics, maxNumBodySpans, bodyWordCount );
+				vector < unsigned > wordCount;
+				unsigned rarestWord = getRarestWord( bodyISRs, beginDocument, endDocument, wordCount );
+				vector < unsigned > bodySpans = getDesiredSpans( bodyISRs, rarestWord, 
+						dynamicBodySpanHeuristics, maxNumBodySpans, endDocument );
 				double bodySpanScore = 0;
 				for ( unsigned index = 0;  index < bodySpans.size( );  ++index )
 					{
@@ -341,8 +365,8 @@ namespace dex
 					std::cout << "Body Span Score: " << bodySpanScore << std::endl;
 					}
 				vector < unsigned > titleWordCount;
-				vector < unsigned > titleSpans = getDesiredSpans( doc.titleISRs, doc.rarestWordIndex, 
-						dynamicTitleSpanHeuristics, maxNumTitleSpans, titleWordCount );
+				vector < unsigned > titleSpans = getDesiredSpans( titleISRs, rarestWord, 
+						dynamicTitleSpanHeuristics, maxNumTitleSpans, endDocument );
 				double titleSpanScore = 0;
 				for ( unsigned index = 0;  index < titleSpans.size( );  ++index )
 					{
@@ -353,7 +377,8 @@ namespace dex
 					std::cout << "Title Span Score: " << titleSpanScore << std::endl;
 					}
 				double dynamicWordScore = 0;
-				dynamicWordScore = getDynamicWordScore( bodyWordCount, doc.documentBodyLength, doc.emphasizedWords,
+				unsigned docLength = beginDocument - endDocument;
+				dynamicWordScore = getDynamicWordScore( wordCount, docLength, emphasized,
 						emphasizedWeight, proportionCap );
 				if ( printInfo )
 					{
@@ -362,59 +387,59 @@ namespace dex
 
 				return bodySpanScore + titleSpanScore + dynamicWordScore;
 				}
-
-			dex::vector < dex::searchResult > getTopN( size_t n, dex::string query )
-				{
-				dex::vector < dex::searchResult > results;
-				results.reserve( n );
-				// pass query to query compiler
-				// pass compiled query to constraintSolver
+			
+			// dex::vector < dex::searchResult > getTopN( size_t n, dex::string query )
+			// 	{
+			// 	dex::vector < dex::searchResult > results;
+			// 	results.reserve( n );
+			// 	// pass query to query compiler
+			// 	// pass compiled query to constraintSolver
 				
-				dex::vector < dex::document > documents;
-				dex::vector < double > scores;
+			// 	dex::vector < dex::matchedDocuments > documents;
+			// 	dex::vector < double > scores;
 
-				pthread_t workerThreads [ chunkPointers.size( ) ];
-				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
-					{
-					dex::queryRequest request;
-					request.query = query;
-					request.chunkPointer = chunkPointers[ index ];
-					pthread_create( &workerThreads[ index ], nullptr, getMatchingDocuments, ( void * ) &request );
-					}
+			// 	pthread_t workerThreads [ chunkPointers.size( ) ];
+			// 	for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+			// 		{
+			// 		dex::queryRequest request;
+			// 		request.query = query;
+			// 		request.chunkPointer = chunkPointers[ index ];
+			// 		pthread_create( &workerThreads[ index ], nullptr, getMatchingDocuments, ( void * ) &request );
+			// 		}
 
-				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
-					{
-					void *returnValue;
-					pthread_join( workerThreads[ index ], &returnValue );
-					vector < dex::document > returnDocuments = *( vector < dex::document > * ) returnValue;
-					documents.reserve( documents.size( ) + returnDocuments.size( ) );
-					for ( dex::vector< dex::document >::constIterator newDocumentIt = returnDocuments.cbegin( );
-							newDocumentIt != returnDocuments.cend( );  documents.pushBack( *( newDocumentIt++ ) ) );
-					}
-				// loop this over all index chunks
-					// Constraint Solver returns a vector of sets of ISRs?
-					// Each document contains a vector of ISRs that correspond to the words in the query
-					// Each index worker has its own constraint solver.
+			// 	for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+			// 		{
+			// 		void *returnValue;
+			// 		pthread_join( workerThreads[ index ], &returnValue );
+			// 		vector < dex::document > returnDocuments = *( vector < dex::document > * ) returnValue;
+			// 		documents.reserve( documents.size( ) + returnDocuments.size( ) );
+			// 		for ( dex::vector< dex::document >::constIterator newDocumentIt = returnDocuments.cbegin( );
+			// 				newDocumentIt != returnDocuments.cend( );  documents.pushBack( *( newDocumentIt++ ) ) );
+			// 		}
+			// 	// loop this over all index chunks
+			// 		// Constraint Solver returns a vector of sets of ISRs?
+			// 		// Each document contains a vector of ISRs that correspond to the words in the query
+			// 		// Each index worker has its own constraint solver.
 					
-				for ( size_t index = 0;  index < documents.size( );  ++index )
-					{
-					double score = getDynamicScore( documents[ index ] ) + getStaticScore( documents[ index ] );
-					scores.pushBack( score );
-					}
+			// 	for ( size_t index = 0;  index < documents.size( );  ++index )
+			// 		{
+			// 		double score = getDynamicScore( documents[ index ] ) + getStaticScore( documents[ index ] );
+			// 		scores.pushBack( score );
+			// 		}
 
-				documentInfo **topN, *p;
-				dex::vector< dex::document > topDocuments;
+			// 	documentInfo **topN, *p;
+			// 	dex::vector< dex::document > topDocuments;
 
-				topN = findTopN( scores, n );
+			// 	topN = findTopN( scores, n );
 
-				for ( int index = 0;  index < n && ( p = topN[ index ] );  index++ )
-					{
-					topDocuments.pushBack( documents[ p->documentIndex ] );
-					std::cout << p->score << "\t" << documents[ p->documentIndex ].title << "\t"
-							<< documents[ p->documentIndex ].url.completeUrl( ) << "\n";
-					}
-				return results;
-				}
+			// 	for ( int index = 0;  index < n && ( p = topN[ index ] );  index++ )
+			// 		{
+			// 		topDocuments.pushBack( documents[ p->documentIndex ] );
+			// 		std::cout << p->score << "\t" << documents[ p->documentIndex ].title << "\t"
+			// 				<< documents[ p->documentIndex ].url.completeUrl( ) << "\n";
+			// 		}
+			// 	return results;
+			// 	}
 			
 		};
 	}
