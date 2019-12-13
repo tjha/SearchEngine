@@ -8,9 +8,9 @@ then
 	exit 65
 fi
 
-key=.search-engine-key.pem
+key=.search-engine-driver.pem
 user=ec2-user
-host=ec2-100-24-240-217.compute-1.amazonaws.com
+host=ec2-52-55-42-64.compute-1.amazonaws.com
 
 mv $1/html $1/$2/html
 rsync --recursive --stats -e "ssh -i $key" $1 $user@$host:~/$2/
