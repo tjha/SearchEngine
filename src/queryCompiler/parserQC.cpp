@@ -9,9 +9,9 @@
  * as well as any additional functions you declare in parser.h
  */
 
-#include "../constraintSolver/constraintSolver.h"
-#include "expression.h"
-#include "parser.h"
+#include "../constraintSolver/constraintSolver.hpp"
+#include "expression.hpp"
+#include "parserQC.hpp"
 
 Expression *Parser::FindPhrase( )
    {

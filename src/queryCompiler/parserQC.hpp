@@ -30,9 +30,9 @@
 #define PARSER_H_
 
 #include <string>
-#include "expression.h"
-#include "../constraintSolver/constraintSolver.h"
-#include "tokenstream.h"
+#include "expression.hpp"
+#include "../constraintSolver/constraintSolver.hpp"
+#include "tokenstream.hpp"
 
 /**
  * The actual expression parser
@@ -49,7 +49,7 @@ class Parser
     */
    Expression *FindAND( );
 
-   Expression *FindFactor( ); 
+   Expression *FindFactor( );
 
    Expression *FindNot( );
 
