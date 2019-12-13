@@ -1,8 +1,9 @@
 // stemming.hpp
 // Library implementing the Porter stemmer. See http://snowball.tartarus.org/algorithms/porter/stemmer.html
 //
-// 2019-12-04: Move const strings to an anonymous namespace
-// 2019-11-04: File created
+// 2019-12-13: Account for edge cases dealing with empty strings: jasina
+// 2019-12-04: Move const strings to an anonymous namespace: jasina
+// 2019-11-04: File created: jasina
 
 #ifndef DEX_STEMMING
 #define DEX_STEMMING
@@ -221,6 +222,7 @@ namespace dex
 						{
 						word.clear( );
 						deltas.clear( );
+						return;
 						}
 
 					size_t deltasNewSize = deltas.size( );
@@ -305,6 +307,7 @@ namespace dex
 		public:
 			static string stem( const string &word )
 				{
+				string originalWord = word;
 				wordForm form = makeForm( word );
 
 				// Step 1a
@@ -415,6 +418,8 @@ namespace dex
 				if ( form.endsWith( 'l' ) && form.endsWithDoubleConsonant( ) && form.measure( ) > 1 )
 					form.truncate( 1 );
 
+				if ( form.word.empty( ) )
+					return originalWord;
 				return form.word;
 				}
 		};

@@ -26,6 +26,7 @@ namespace dex
 			unorderedSet < Url > *toCheck;
 			
 			size_t maximumSize;
+
 			double scoreUrl( dex::Url url )
 				{
 				double score = 0;
@@ -78,11 +79,6 @@ namespace dex
 				dex::string completeUrl = url.completeUrl( );
 				int urlSize = dex::max( size_t( 45 ), completeUrl.size( ) );
 				score += 9 * 45 / urlSize;
-
-				if ( url.getService( ) == "https" )
-					{
-					score += 8;
-					}
 
 				// Promote not a ton of /'s
 				// take off points for every / you have over 6 ( take off 3 for the slashes in every url )

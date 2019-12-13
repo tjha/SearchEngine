@@ -30,13 +30,21 @@ MODULE_TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,
 
 all: print_os $(TESTS)
 
-driver: src/driver/driver.cpp
+crawlerDriver: src/driver/driver.cpp
 	make build
-	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/driver.exe
+	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/driver.exe
+
+indexerDriver: src/indexer/driver.cpp src/indexer/index.cpp
+	make build
+	$(CXX) $(CXXFLAGS) src/indexer/driver.cpp src/indexer/index.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/indexerDriver.exe
+
+indexerEncodingTest: tst/indexer/indexerEncodingTests.cpp
+	make build
+	$(CXX) $(CXXFLAGS) tst/indexer/indexerEncodingTests.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/encodingTests.exe
 
 driverFinal: src/driver/driver.cpp
 	make build
-	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -o3 $(BUILD_PATH)/driver.exe
+	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -O3 $(BUILD_PATH)/driver.exe
 
 multithreadingTest: src/driver/multithreadingTest.cpp
 	$(CXX) $(CXXFLAGS) src/driver/multithreadingTest.cpp $(INCLUDES) -ltls -o build/multithreadingTest.exe

@@ -30,7 +30,7 @@ size_t getFileSize( int fileDescriptor )
 TEST_CASE( "create index chunk" )
 	{
 	const char filePath[ ] = "_in.dex";
-	int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+	int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
 
 	if ( fd == -1 )
 		exit( 1 );
@@ -49,7 +49,7 @@ TEST_CASE( "create index chunk" )
 TEST_CASE( "ISR functions on one document" )
 	{
 	const char filePath[ ] = "_in.dex";
-	int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+	int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
 
 	if ( fd == -1 )
 		exit( 1 );
@@ -88,7 +88,7 @@ TEST_CASE( "ISR functions on one document" )
 TEST_CASE( "ISR functions on two documents" )
 	{
 	const char filePath[ ] = "_in.dex";
-	int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+	int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
 
 	if ( fd == -1 )
 		exit( 1 );
@@ -154,7 +154,7 @@ TEST_CASE( "ONE BIG DOC" )
 	SECTION( "Single word more than a single postsChunk" )
 		{
 		const char filePath[ ] = "_in.dex";
-		int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+		int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
 
 		if ( fd == -1 )
 			exit( 1 );
@@ -181,7 +181,7 @@ TEST_CASE( "ONE BIG DOC" )
 	SECTION( "Interweaving of linked posting lists" )
 		{
 		const char filePath[ ] = "_in.dex";
-		int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+		int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
 
 		if ( fd == -1 )
 			exit( 1 );
@@ -220,9 +220,8 @@ TEST_CASE( "ONE BIG DOC" )
 
 	SECTION( "Read indexChunk from a file" )
 		{
-		
 		const char filePath[ ] = "_in.dex";
-		int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+		int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
 
 		if ( fd == -1 )
 			exit( 1 );
@@ -239,7 +238,7 @@ TEST_CASE( "ONE BIG DOC" )
 		}
 
 		close( fd );
-		fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+		fd = open( filePath, O_RDWR, 0777 );
 		REQUIRE( fd != -1 );
 
 		indexChunk fromFileIndexChunk = indexChunk( fd, false );
@@ -260,10 +259,11 @@ TEST_CASE( "ONE BIG DOC" )
 		REQUIRE( andISR.seek( 3 ) == 5 );
 		REQUIRE( andISR.seek( 6 ) == static_cast < size_t >( -1 ) );
 		}
+
 	SECTION( "Read indexChunk from a file" )
 		{
 		const char filePath[ ] = "_in.dex";
-		int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+		int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
 
 		if ( fd == -1 )
 			exit( 1 );
@@ -284,7 +284,7 @@ TEST_CASE( "ONE BIG DOC" )
 		}
 
 		close( fd );
-		fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+		fd = open( filePath, O_RDWR, 0777 );
 		REQUIRE( fd != -1 );
 
 		indexChunk fromFileIndexChunk = indexChunk( fd, false );

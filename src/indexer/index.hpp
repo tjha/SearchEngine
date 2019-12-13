@@ -13,6 +13,7 @@
 #define DEX_INDEX
 
 #include <cstddef>
+#include "../constraintSolver/constraintSolver.hpp"
 #include "../utils/basicString.hpp"
 #include "../utils/stemming.hpp"
 #include "../utils/unorderedMap.hpp"
@@ -86,9 +87,7 @@ namespace dex
 
 							size_t postsChunkArrayOffset;
 							size_t postsChunkOffset;
-							size_t location;
-
-							synchronizationPoint( );
+							size_t inverseLocation;
 							};
 						// First 32 bits of each long long form the seek offset in posting. The last 32 bits are actual
 						// location of that post. We use a long long since it is (practically) guaranteed to be 64 bits.
@@ -192,6 +191,7 @@ namespace dex
 
 					for ( ;  first != last;  ++first, ++newLocation )
 						{
+						// std::cout << "About to stem: ->" << *first << "<-\n";
 						string wordToAdd = decorator + dex::porterStemmer::stem( *first );
 
 						if ( wordToAdd.size( ) > maxWordLength )
@@ -251,7 +251,7 @@ namespace dex
 				bool addDocument( const dex::string &url, const dex::vector < dex::string > &title,
 						const dex::string &titleString, const dex::vector < dex::string > &body );
 
-				class indexStreamReader
+				class indexStreamReader : dex::constraintSolver::ISR
 					{
 					private:
 						friend class indexChunk;
@@ -264,24 +264,23 @@ namespace dex
 						postsChunk *postsChunkum; // Bad naming to disambiguate chunk types
 						indexChunk *indexChunkum;
 						size_t absoluteLocation;
-						// For a word, will want
-						// 	the word (string)
-						// 	current postsChunk
-						// 	offset into the indexChunk where the current pointer is
 
 					public:
 						// An ISR for the empty string is just and end of document ISR.
-						indexStreamReader( indexChunk *indexChunk, dex::string word = "" );
+						indexStreamReader( indexChunk *indexChunk, dex::string word );
 						size_t seek( size_t target );
 						size_t next( );
-						size_t nextDocument( );	// This is called on a set of indexStream readers. It sets them all to their
-						// 	first occurences past the end of the current document
-
-						// size_t GetStartLocation( ); ??
-						// size_t GetEndLocation( ); ??
+						size_t nextDocument( );
 
 						// Need functions to get metadata for a word for entire posting list
 						// 	and for in the current document
+					};
+
+				class endOfDocumentIndexStreamReader
+						: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
+					{
+					public:
+						size_t documentSize( );
 					};
 			};
 		}
@@ -342,5 +341,4 @@ namespace dex
 			};
 		}
 	}
-
 #endif

@@ -6,8 +6,45 @@
 #ifndef RANKER_OBJECTS_HPP
 #define RANKER_OBJECTS_HPP
 
+#include "constraintSolver.hpp"
 #include "vector.hpp"
 #include "url.hpp"
+
+// // This is what our cosntraintSolver ISR interface looks like. See constraintSolver.hpp
+// namespace dex
+// 	{
+// 	namespace constraintSolver
+// 		{
+// 		// A virtual interface for index stream readers.
+// 		class ISR
+// 			{
+// 			public:
+// 				static const size_t npos;
+
+// 				// Jump this ISR to the first instance of our pattern that is at or after target. Return the location of the
+// 				// instance, or -1 if there is none.
+// 				virtual size_t seek( size_t target ) = 0;
+
+// 				// Jump ISR to next location of our pattern. Return location of instance or -1 if there is none.
+// 				virtual size_t next( ) = 0;
+
+// 				// Jump this ISR to the first location of our pattern that is in the next document. Return the location of the
+// 				// instance, or -1 if there is none.
+// 				// Note that this requires some way of accessing document boundaries.
+// 				virtual size_t nextDocument( ) = 0;
+// 			};
+
+// 		class endOfDocumentISR : public dex::constraintSolver::ISR
+// 			{
+// 			public:
+// 				virtual size_t seek( size_t target ) = 0;
+// 				virtual size_t next( ) = 0;
+// 				virtual size_t nextDocument( ) = 0;
+// 				virtual size_t documentSize( ) = 0;
+// 			};
+// 		}
+// 	}
+
 namespace dex
 	{
 	class ISR
@@ -56,19 +93,18 @@ namespace dex
 				}
 		};
 
-	struct document
+	struct chunk
 		{
 		// Constraint solver needs to make sure to not return pornographic results
 		// All four vectors should be in the order of the flattened query
-		dex::vector < dex::ISR > titleISRs;
-		dex::vector < dex::ISR > bodyISRs;
+		dex::vector < dex::constraintSolver::ISR > titleISRs;
+		dex::vector < dex::constraintSolver::ISR > bodyISRs;
+		dex::vector < dex::constraintSolver::endOfDocumentISR > documentISRs;
 		dex::vector < bool > emphasizedWords;
 		dex::string title;
 		dex::Url url;
-		unsigned rarestWordIndex;
-		unsigned documentBodyLength;
 		};
-	
+
 	class indexChunkObject
 		{
 		// Whatever matt and stephen put in here
@@ -91,10 +127,11 @@ namespace dex
 	void *getMatchingDocuments( void *args )
 		{
 		dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
+		// Also need to pass list of index chunk pointers
 		/*we expect this to be a function that we pass a query that we get from the get request
 		This function runs the query compiler and constraint solver and returns
 		a vector of documents that match the query given.*/
-		vector < dex::document > someVec;
+		vector < dex::chunk > someVec;
 		return nullptr;
 		}
 	}
