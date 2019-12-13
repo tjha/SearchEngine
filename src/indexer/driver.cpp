@@ -54,8 +54,8 @@ int main ( int argc, char ** argv )
 
 	dex::utf::decoder < dex::string > stringDecoder;
 	
-	int indexChunkCount = 0;
-	// TODO: What scheme will we use to name the files for the index chunks?
+	dex::vector < dex::string > existingIndexChunks = dex::matchingFilenames( outputFolder, "_in.dex");
+	int indexChunkCount = existingIndexChunks.size( );
 	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
 	dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fileDescriptor );
 
