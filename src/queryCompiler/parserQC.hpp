@@ -64,7 +64,7 @@ public:
    /**
     * Construct parser based on given input
     */
-   Parser( const std::string &in );
+   Parser( const dex::string &in );
 
    /**
     * The public interface of the parser. Call this function,

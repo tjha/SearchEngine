@@ -8,7 +8,12 @@
 #include "constraintSolver.hpp"
 #include "expression.hpp"
 
-using namespace std;
+// using namespace std;
+
+dex::constraintSolver::ISR * converter( Expression * changeThis)
+	{
+	//do some stuff
+	}
 
 Expression::~Expression( ) { }
 
@@ -21,27 +26,33 @@ NotExpression::~NotExpression( )
 
 dex::constraintSolver::ISR *NotExpression::eval( ) const
 	{
-	return dex::constraintSolver::notISR( value->eval( ), getENDOFDOCISRTOPASSIN );
+	dex::constraintSolver::endOfDocumentISR *endDocISR;
+	//Get that somehow ;;
+	dex::constraintSolver::ISR * temp = converter(value);
+	return &dex::constraintSolver::notISR( temp, endDocISR );
 	}
 
 OrExpression::OrExpression( ) { }
 
 OrExpression::~OrExpression( )
 	{
-	for ( Expression *expression : terms )
+	for ( dex::constraintSolver::ISR  *expression : terms )
 		delete expression;
 	}
 
 dex::constraintSolver::ISR * OrExpression::eval( ) const
 	{
-	int64_t sum = 0;
-	vector < dex::constraintSolver::orISR * > ISRs;
-	for ( size_t i = 0;  i != terms.size( );  ++i )
-		if ( positive[ i ] )
-			sum += terms[ i ]->Eval( );
-		else
-			sum -= terms[i]->Eval( );
-	return sum;
+	
+	// dex::vector < dex::constraintSolver::ISR * > isrs;
+	dex::constraintSolver::endOfDocumentISR *endDocISR;
+	//somehow get the endofDocISRs
+	dex::vector < dex::constraintSolver::ISR * > temp;
+	for ( size_t i =0; i < terms.size(); i++)
+		{
+		temp.pushBack( converter( terms[ i ] ) );
+		}
+	dex::constraintSolver::orISR retIsr( temp, endOfDocISR );
+	return &retIsr;
 	}
 
 AndExpression::AndExpression( ) { }
@@ -54,16 +65,15 @@ AndExpression::~AndExpression( )
 
 dex::constraintSolver::ISR * AndExpression::eval( ) const
 	{
-	int64_t product = 1;
-	for ( size_t i = 0;  i != terms.size( );  ++i )
-		if ( multiply[ i ] )
-			product *= terms[ i ]->Eval( );
-		else
-			product /= terms[ i ]->Eval( );
-	return product;
+	dex::constraintSolver::endOfDocumentISR *endDocISR;
+	dex::vector < dex::constraintSolver::ISR * > temp;
+	for ( size_t i =0; i < terms.size(); i++)
+		{
+		temp.pushBack( converter( terms[ i ] ) );
+		}
+	dex::constraintSolver::andISR retIsr( temp, endOfDocISR );
+	return &retIsr;
 	}
 
 
-	{
-	return value;
-	}
+	

@@ -13,37 +13,38 @@
 #include "expression.hpp"
 #include "parserQC.hpp"
 
-Expression *Parser::FindPhrase( )
-   {
-   if ( stream.AllConsumed( ) )
-      return nullptr;
-   if ( stream.Match( '"' ) )
-      {
-      Expression *phrase = ParsePhrase( ); // ParsePhrase : 
-      if ( stream.Match( '"' ) )
-         return phrase;
-      if ( phrase )
-         delete phrase;
-      return nullptr;
-      }
-   return stream.ParsePhrase( );
-   }
+// Expression *Parser::FindPhrase( )
+//    {
+//    if ( stream.AllConsumed( ) )
+//       return nullptr;
+//    if ( stream.Match( '"' ) )
+//       {
+//       Expression *phrase; // ParsePhrase : 
+//       phrase->
+//       if ( stream.Match( '"' ) )
+//          return phrase;
+//       if ( phrase )
+//          delete phrase;
+//       return nullptr;
+//       }
+//    return stream.ParsePhrase( );
+//    }
 
-Expression *Parser::FindFactor( )
-   {
-   if ( stream.AllConsumed( ) )
-      return nullptr;
-   if ( stream.Match( '(' ) )
-      {
-      Expression *add = FindOR( );
-      if ( stream.Match( ')' ) )
-         return add;
-      if ( add )
-         delete add;
-      return nullptr;
-      }
-   return stream.ParseNumber( );
-   }
+// Expression *Parser::FindFactor( )
+//    {
+//    if ( stream.AllConsumed( ) )
+//       return nullptr;
+//    if ( stream.Match( '(' ) )
+//       {
+//       Expression *add = FindOR( );
+//       if ( stream.Match( ')' ) )
+//          return add;
+//       if ( add )
+//          delete add;
+//       return nullptr;
+//       }
+//    return stream.ParsePhrase( );
+//    }
 
 Expression *Parser::FindNot( )
    {
@@ -54,9 +55,9 @@ Expression *Parser::FindNot( )
       return FindPhrase( );
    else
       {
-      Expression *factor = FindPhrase( );
+      Expression *factor;// = FindPhrase( );
       if ( factor )
-         return new Neg( factor );
+         return new NotExpression( factor );
       return nullptr;
       }
    }
@@ -66,9 +67,8 @@ Expression *Parser::FindOR( )
    Expression *left = FindAND( );
    if ( left )
       {
-      AddSub *self = new AddSub( );
-      self->terms.push_back( left );
-      self->positive.push_back( true );
+      OrExpression *self = new OrExpression( );
+      self->terms.pushBack( left );
 
       bool termAdded = true;
       while ( termAdded )
@@ -78,8 +78,7 @@ Expression *Parser::FindOR( )
             left = FindAND( );
             if ( !left )
                return nullptr;
-            self->terms.push_back( left );
-            self->positive.push_back( true );
+            self->terms.pushBack( left );
             }
          else
             {
@@ -96,10 +95,8 @@ Expression *Parser::FindAND( )
    Expression *left = FindNot( );
    if ( left )
       {
-      MultDiv *self = new MultDiv( );
-      self->terms.push_back( left );
-      self->multiply.push_back( true );
-
+      AndExpression *self = new AndExpression( );
+      self->terms.pushBack( left );
       bool termAdded = true;
       while ( termAdded )
          {
@@ -108,8 +105,7 @@ Expression *Parser::FindAND( )
             left = FindNot( );
             if ( !left )
                return nullptr;
-            self->terms.push_back( left );
-            self->multiply.push_back( true );
+            self->terms.pushBack( left );        
             }
          else
             {
@@ -131,4 +127,4 @@ Expression *Parser::Parse( )
    return nullptr;
    }
 
-Parser::Parser( const std::string &in ) : stream( in ) { }
+Parser::Parser( const dex::string &in ) : stream( in ) { }
