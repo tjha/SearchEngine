@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include "dirent.h"
 #include <time.h>
-//#include "index.hpp"
+#include "index.hpp"
 #include "exception.hpp"
 #include "file.hpp"
 #include "vector.hpp"
@@ -52,7 +52,7 @@ int main ( int argc, char ** argv )
 	int indexChunkCount = 0;
 	// TODO: What scheme will we use to name the files for the index chunks?
 	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
-	//dex::index::indexChunk *initializingIndexChunk = new dex::index::indexChunk( fileDescriptor );
+	dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fileDescriptor );
 
 
 	unsigned documentsProcessed = 0;
@@ -65,12 +65,11 @@ int main ( int argc, char ** argv )
 		dex::string fileName = toProcess[ index ];
 		// Decode the current file
 
-		/*
 		// Decode the current file
-		unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( entry->d_name, 0 ) );
+		unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( fileName.cStr( ), 0 ) );
 		unsigned char *ptr = savedHtml;
 
-		while ( !dex::utf::isUTFSentinel( ptr ) )
+		while ( !dex::utf::isSentinel( ptr ) )
 			{
 			// retrieve the saved url + html pair
 			dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
@@ -86,28 +85,21 @@ int main ( int argc, char ** argv )
 				}
 			
 			// TODO this should go in parser but didn't want to break dependent functionality
-			dex::vector < dex::AncWord > anchors = parser.ReturnAnchorText( );
-			dex::vector < dex::string > anchorText( anchors.size( ) );
-			for ( auto &anchor: anchors )
-				{
-
-				}
 			// TODO add default argument for anchorText in index.hpp
-			if ( !initializingIndexChunk->addDocument( url.completeUrl( ), { }, parser.ReturnTitle( ), titleString, 
+			if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString, 
 					parser.ReturnWords( ) ) )
 				{
 				close( fileDescriptor );
-				fileDescriptor = openFile( indexChunkCount++ );
-				initializingIndexChunk = indexChunk( fileDescriptor );
+				fileDescriptor = openFile( indexChunkCount++, outputFolder );
+				initializingIndexChunk = dex::index::indexChunk( fileDescriptor );
 				}
-			if ( !initializingIndexChunk->addDocument( url.completeUrl( ), { }, parser.ReturnTitle( ), titleString,
+			if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 					parser.ReturnWords( ) ) )
 				{
 				// TODO: Throw an exception. Should not fail to add a document to a new index chunk
 				throw dex::fileWriteException( );
 				}
 			}
-		*/
 		std::cout << "processed " + fileName << std::endl;
 		documentsProcessed++;
 		int renamed = rename( fileName.cStr( ) , ( fileName + "_processed" ).cStr( ) );
@@ -134,5 +126,6 @@ int main ( int argc, char ** argv )
 	
 
 	}
+
 
 

@@ -30,9 +30,13 @@ MODULE_TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,
 
 all: print_os $(TESTS)
 
-driver: src/driver/driver.cpp
+crawlerDriver: src/driver/driver.cpp
 	make build
 	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/driver.exe
+
+indexerDriver: src/indexer/driver.cpp src/indexer/index.cpp
+	make build
+	$(CXX) $(CXXFLAGS) src/indexer/driver.cpp src/indexer/index.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/indexerDriver.exe
 
 driverFinal: src/driver/driver.cpp
 	make build
