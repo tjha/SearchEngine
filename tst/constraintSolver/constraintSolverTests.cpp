@@ -232,3 +232,227 @@ TEST_CASE( "andISR" )
 			}
 		}
 	}
+
+TEST_CASE( "orISR" )
+	{
+	SECTION( "seek" )
+		{
+		testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndC( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndOr( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 9, 27, 45, 66, 75 } ) ), &isrEndA );
+		testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 1, 3, 4, 12, 48, 65, 77 } ) ), &isrEndB );
+		testingISR isrC( locationsToDeltas( dex::vector < size_t >( { 7, 49, 67 } ) ), &isrEndC );
+		dex::constraintSolver::orISR isrOr(
+				dex::vector < dex::constraintSolver::ISR * >( { &isrA, &isrB, &isrC } ), &isrEndOr );
+
+		REQUIRE( isrOr.seek( 10 ) == 20 );
+		REQUIRE( isrOr.seek( 30 ) == 50 );
+		REQUIRE( isrOr.seek( 40 ) == 50 );
+		REQUIRE( isrOr.seek( 71 ) == 80 );
+		REQUIRE( isrOr.seek( 78 ) == dex::constraintSolver::ISR::npos ); // or should this be 80?
+		}
+
+	SECTION( "next/nextDocument" )
+		{
+		SECTION( "All in first doc" )
+			{
+			testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+			testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+			testingEndOfDocumentISR isrEndC( locationsToDeltas( dex::vector < size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+			testingEndOfDocumentISR isrEndOR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+			testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 0, 4, 5, 8, 10, 11 } ) ), &isrEndA );
+			testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 1, 6, 15 } ) ), &isrEndB );
+			testingISR isrC( locationsToDeltas( dex::vector < size_t >( { 2 } ) ), &isrEndC );
+			dex::constraintSolver::orISR isrOR(
+					dex::vector < dex::constraintSolver::ISR * >( { &isrA, &isrB, &isrC } ), &isrEndOR );
+
+			REQUIRE( isrOR.next( ) == 3 );
+			REQUIRE( isrOR.next( ) == 7 );
+			REQUIRE( isrOR.next( ) == 9 );
+			REQUIRE( isrOR.next( ) == 12 );
+			REQUIRE( isrOR.next( ) == 16 );
+			REQUIRE( isrOR.next( ) == dex::constraintSolver::ISR::npos );
+			}
+
+		SECTION( "A few matches" )
+			{
+			testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 35, 81, 126, 139, 165 } ) ) );
+			testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 35, 81, 126, 139, 165 } ) ) );
+			testingEndOfDocumentISR isrEndOr( locationsToDeltas( dex::vector < size_t >( { 35, 81, 126, 139, 165 } ) ) );
+			testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 17, 19, 70, 140, 145 } ) ), &isrEndA );
+			testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 49, 53, 131, 141 } ) ), &isrEndB );
+			dex::constraintSolver::orISR isrOr(
+					dex::vector < dex::constraintSolver::ISR * >( { &isrA, &isrB } ), &isrEndOr );
+
+			REQUIRE( isrOr.next( ) == 35 );
+			REQUIRE( isrOr.next( ) == 81 );
+			REQUIRE( isrOr.next( ) == 139 );
+			REQUIRE( isrOr.next( ) == 165 );
+			REQUIRE( isrOr.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrOr.next( ) == dex::constraintSolver::ISR::npos );
+			}
+
+		SECTION( "No matches" )
+			{
+			testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingEndOfDocumentISR isrEndOr( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 9, 19, 29, 43 } ) ), &isrEndA );
+			testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 23, 58 } ) ), &isrEndB );
+			dex::constraintSolver::orISR isrOr(
+					dex::vector < dex::constraintSolver::ISR * >( { &isrA, &isrB } ), &isrEndOr );
+
+			REQUIRE( isrOr.next( ) == 10 );
+			REQUIRE( isrOr.next( ) == 20 );
+			REQUIRE( isrOr.next( ) == 30 );
+			REQUIRE( isrOr.next( ) == 50 );
+			REQUIRE( isrOr.next( ) == 60 );
+			REQUIRE( isrOr.next( ) == dex::constraintSolver::ISR::npos );
+			}
+
+		SECTION( "Consecutive matches" )
+			{
+			testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingEndOfDocumentISR isrEndOR( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 9, 21, 29, 43, 52, 53 } ) ), &isrEndA );
+			testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 13, 22, 24, 44, 58 } ) ), &isrEndB );
+			dex::constraintSolver::orISR isrOr(
+					dex::vector < dex::constraintSolver::ISR * >( { &isrA, &isrB } ), &isrEndOR );
+
+			REQUIRE( isrOr.next( ) == 10 );
+			REQUIRE( isrOr.next( ) == 20 );
+			REQUIRE( isrOr.seek( 29 ) == 30 );
+			REQUIRE( isrOr.seek( 45 ) == 60 );
+			REQUIRE( isrOr.next( ) == 60 );
+			REQUIRE( isrOr.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrOr.next( ) == dex::constraintSolver::ISR::npos );
+			}
+		}
+	}
+
+TEST_CASE( "phraseISR" )
+	{
+	SECTION( "seek" )
+		{
+		testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndC( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndPhrase( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 9, 13, 27, 45, 66, 75 } ) ), &isrEndA );
+		testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 1, 3, 4, 11, 14, 46, 65, 77 } ) ), &isrEndB );
+		testingISR isrC( locationsToDeltas( dex::vector < size_t >( { 7, 12, 15, 47, 67 } ) ), &isrEndC );
+		dex::constraintSolver::phraseISR isrPhrase(
+				dex::vector < dex::constraintSolver::ISR * >( { &isrA, &isrB, &isrC } ), &isrEndPhrase );
+
+		REQUIRE( isrPhrase.seek( 10 ) == 20 );
+		REQUIRE( isrPhrase.seek( 41 ) == 50 );
+		REQUIRE( isrPhrase.seek( 60 ) == dex::constraintSolver::ISR::npos ); // or should this be 80?
+		}
+
+	SECTION( "next/nextDocument" )
+		{
+		SECTION( "All in first doc" )
+			{
+			testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+			testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+			testingEndOfDocumentISR isrEndC( locationsToDeltas( dex::vector < size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+			testingEndOfDocumentISR isrEndPhrase( locationsToDeltas( dex::vector < size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+			testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 0, 4, 5, 8, 10, 11 } ) ), &isrEndA );
+			testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 1, 6, 15 } ) ), &isrEndB );
+			testingISR isrC( locationsToDeltas( dex::vector < size_t >( { 2 } ) ), &isrEndC );
+			dex::constraintSolver::phraseISR isrPhrase(
+					dex::vector < dex::constraintSolver::ISR * >( { &isrA, &isrB, &isrC } ), &isrEndPhrase );
+
+			REQUIRE( isrPhrase.next( ) == 3 );
+			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			}
+
+		SECTION( "A few matches" )
+			{
+			testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 35, 81, 126, 139, 165 } ) ) );
+			testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 35, 81, 126, 139, 165 } ) ) );
+			testingEndOfDocumentISR isrEndPhrase( locationsToDeltas( dex::vector < size_t >( { 35, 81, 126, 139, 165 } ) ) );
+			testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 17, 19, 70, 140, 145 } ) ), &isrEndA );
+			testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 18, 49, 53, 131, 141 } ) ), &isrEndB );
+			dex::constraintSolver::phraseISR isrPhrase(
+					dex::vector < dex::constraintSolver::ISR * >( { &isrA, &isrB } ), &isrEndPhrase );
+
+			REQUIRE( isrPhrase.next( ) == 35 );
+			REQUIRE( isrPhrase.next( ) == 165 );
+			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			}
+
+		SECTION( "No matches" )
+			{
+			testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingEndOfDocumentISR isrEndPhrase( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 9, 19, 24, 43 } ) ), &isrEndA );
+			testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 23, 45, 58 } ) ), &isrEndB );
+			dex::constraintSolver::phraseISR isrPhrase(
+					dex::vector < dex::constraintSolver::ISR * >( { &isrA, &isrB } ), &isrEndPhrase );
+
+			// REQUIRE( isrOr.next( ) == 10 );
+			// REQUIRE( isrOr.next( ) == 20 );
+			// REQUIRE( isrOr.next( ) == 30 );
+			// REQUIRE( isrOr.next( ) == 50 );
+			// REQUIRE( isrOr.next( ) == 60 );
+			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			}
+
+		SECTION( "Consecutive matches" )
+			{
+			testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingEndOfDocumentISR isrEndPhrase( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60 } ) ) );
+			testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 11, 13, 21, 29, 43, 52, 54 } ) ), &isrEndA );
+			testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 12, 14, 22, 24, 44, 53, 58 } ) ), &isrEndB );
+			dex::constraintSolver::phraseISR isrPhrase(
+					dex::vector < dex::constraintSolver::ISR * >( { &isrA, &isrB } ), &isrEndPhrase );
+
+			REQUIRE( isrPhrase.next( ) == 20 );
+			REQUIRE( isrPhrase.next( ) == 30 );
+			REQUIRE( isrPhrase.next( ) == 50 );
+			REQUIRE( isrPhrase.seek( 45 ) == 60 );
+			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrPhrase.seek( 55 ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			}
+		}
+	}
+
+TEST_CASE( "notISR" )
+	{
+	SECTION( "next" )
+		{
+		testingEndOfDocumentISR isrEndA( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndB( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndC( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndNotA( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndNotB( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR isrEndNotC( locationsToDeltas( dex::vector < size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+
+		testingISR isrA( locationsToDeltas( dex::vector < size_t >( { 9, 13, 27, 45, 66, 75 } ) ), &isrEndA );
+		testingISR isrB( locationsToDeltas( dex::vector < size_t >( { 1, 3, 4, 11, 14, 46, 65, 77 } ) ), &isrEndB );
+		testingISR isrC( locationsToDeltas( dex::vector < size_t >( { 7, 12, 15, 47, 67 } ) ), &isrEndC );
+
+		dex::constraintSolver::notISR isrNotA( &isrA, &isrEndNotA );
+		dex::constraintSolver::notISR isrNotB( &isrB, &isrEndNotB );
+		dex::constraintSolver::notISR isrNotC( &isrC, &isrEndNotC );
+
+		REQUIRE( isrNotA.next( ) == 40 );
+		REQUIRE( isrNotA.next( ) == 60 );
+		REQUIRE( isrNotA.seek( 55 ) == 60 );
+		REQUIRE( isrNotA.next( ) == dex::constraintSolver::ISR::npos );
+
+		REQUIRE( isrNotB.seek( 27 ) == 30 );
+		REQUIRE( isrNotB.seek( 35 ) == 40 );
+		REQUIRE( isrNotB.next(  ) == 60 );
+		REQUIRE( isrNotB.seek( 75 ) == dex::constraintSolver::ISR::npos );
+		REQUIRE( isrNotB.next(  ) == dex::constraintSolver::ISR::npos );
+		}
+	}

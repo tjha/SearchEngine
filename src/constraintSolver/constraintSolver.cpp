@@ -97,7 +97,7 @@ size_t dex::constraintSolver::andISR::nextDocument( )
 dex::constraintSolver::orISR::orISR( dex::vector < dex::constraintSolver::ISR * > summands,
 		endOfDocumentISR *endOfDocISR ) : summands( summands ), endOfDocISR( endOfDocISR )
 	{
-	locations.reserve( summands.size( ) );
+	locations.resize( summands.size( ) );
 	for ( size_t index = 1;  index < summands.size( );  ++index )
 		locations[ index ] = summands[ index ]->next( );
 
@@ -109,7 +109,7 @@ size_t dex::constraintSolver::orISR::seek( size_t target )
 	for ( size_t index = 0;  index < locations.size( );  ++index )
 		locations[ index ] = summands[ index ]->seek( target );
 
-	return locations[ argMin( locations ) ];
+	return endOfDocLocation = endOfDocISR->seek( locations[ argMin( locations ) ] );
 	}
 
 size_t dex::constraintSolver::orISR::next(  )
@@ -133,7 +133,6 @@ size_t dex::constraintSolver::orISR::nextDocument( )
 dex::constraintSolver::notISR::notISR( dex::constraintSolver::ISR *neg, endOfDocumentISR *endOfDocISR )
 		: neg( neg ), endOfDocISR( endOfDocISR )
 	{
-	endOfDocLocation = 0;
 	location = neg->next( );
 	}
 
@@ -142,7 +141,7 @@ size_t dex::constraintSolver::notISR::seek( size_t target )
 	endOfDocLocation = endOfDocISR->seek( target );
 	size_t startOfDoc = endOfDocLocation - endOfDocISR->documentSize( );
 	location = neg->seek( startOfDoc );
-	if( endOfDocLocation < location )
+	if ( endOfDocLocation < location )
 		return endOfDocLocation;
 
 	return nextDocument( );
@@ -166,14 +165,14 @@ bool dex::constraintSolver::phraseISR::align( )
 	while ( true )
 		{
 		bool inOrder = true;
-		for( size_t index = 1;  index < locations.size( );  ++index )
-			if( locations[ index ] - locations[ index - 1 ] != 1 )
+		for ( size_t index = 1;  index < locations.size( );  ++index )
+			if ( locations[ index ] - locations[ index - 1 ] != 1 )
 				{
 				inOrder = false;
 				break;
 				}
 
-		if( inOrder )
+		if ( inOrder )
 			return true;
 
 		size_t maxLocation = locations[ argMax( locations ) ];
@@ -181,15 +180,15 @@ bool dex::constraintSolver::phraseISR::align( )
 		if ( maxLocation == npos )
 			return false;
 
-		size_t rightmostPossibleOffset = maxLocation - words.size( );
+		size_t rightmostPossibleOffset = maxLocation - words.size( ) + 1;
 		for ( size_t index = 0;  index < locations.size( );  ++index )
-			if ( locations[ index ] < rightmostPossibleOffset )
-				locations[ index ] = words[ index ]->seek( rightmostPossibleOffset );
+			if ( locations[ index ] < rightmostPossibleOffset + index )
+				locations[ index ] = words[ index ]->seek( rightmostPossibleOffset + index );
 		}
 	}
 
 dex::constraintSolver::phraseISR::phraseISR( vector < dex::constraintSolver::ISR * > words,
-		dex::constraintSolver::endOfDocumentISR *endOfDocISR ) : words( words )
+		dex::constraintSolver::endOfDocumentISR *endOfDocISR ) : words( words ), endOfDocISR( endOfDocISR )
 	{
 	locations.resize( words.size( ) );
 	for ( size_t index = 1;  index < words.size( );  ++index )
@@ -205,9 +204,11 @@ size_t dex::constraintSolver::phraseISR::seek( size_t target )
 		if ( locations[ index ] < max )
 			max = locations[index];
 		}
-
 	if ( align( ) )
-		return locations[ argMin( locations ) ];
+		{
+		size_t endOfDocLocation = endOfDocISR->seek( locations[ argMin( locations ) ] );
+		return endOfDocLocation;
+		}
 	return npos;
 	}
 
