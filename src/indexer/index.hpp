@@ -117,7 +117,7 @@ namespace dex
 					friend class dex::utf::encoder;
 					};
 
-				private:
+				
 				// These consts can be adjusted if necessary.
 				static const size_t maxURLCount = 1L << 17;
 				static const size_t maxURLLength = 1L << 10;
