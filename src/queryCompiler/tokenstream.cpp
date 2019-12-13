@@ -14,6 +14,13 @@
 #include "expression.h"
 #include "tokenstream.h"
 
+bool isalpha ( char c )
+    {
+    if ( ( c > 64 && c < 91 ) || ( c > 96 && c < 123 )
+        return true;
+    return false;
+    }
+
 bool CharIsRelevant( char c )
    {
    switch ( c )

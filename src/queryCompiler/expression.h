@@ -7,80 +7,79 @@
 #ifndef EXPRESSION_H_
 #define EXPRESSION_H_
 
-#include <stdint.h>
-#include <vector>
+#include "basicString.hpp"
+#include "index.hpp"
+#include "vector.hpp"
 
 /**
  * Just a plain old expression
  */
 class Expression
-   {
-   public:
-      virtual ~Expression( );
-      virtual int64_t Eval( ) const = 0;
-      virtual ISR* getIndexISR( string word );
-   };
+	{
+	public:
+		virtual ~Expression( );
+		virtual int64_t Eval( ) const = 0;
+		virtual dex::constraintSolver::ISR *eval( string word ) const = 0;
+	};
 // class Expression
 
 /**
  * <Neg> ::= '-' <AddSub>
  */
-class Not: public Expression
-   {
-   protected:
-      Expression *value;
-   public:
-      Neg( Expression *value );
-      ~Neg( );
-      int64_t Eval( ) const override;
-      ISR* getIndexISR( string word );
-   };
+
+class PhraseExpression : public Expression
+	{
+	protected:
+		dex::vector < dex::string > words;
+		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
+	public:
+		PhraseExpression( );
+		~PhraseExpression( );
+		dex::constraintSolverISR *eval( ) const override;
+	};
+
+class NotExpression: public Expression
+	{
+	protected:
+		Expression *value;
+		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
+	public:
+		NotExpression( Expression *value );
+		~NotExpression( );
+		dex::constraintSolver::ISR *eval( ) const override;
+	};
 // class AddSub
 
 /**
  * <AddSub> ::= <MultDiv> { ‘+’ <MultDiv> }
  */
-class Or: public Expression
-   {
-   protected:
-      std::vector < Expression * > terms;
-      std::vector < bool > positive;
-      friend class Parser;
-   public:
-      Or( );
-      ~Or( );
-      int64_t Eval( ) const override;
-		ISR* getIndexISR( string word );
-   };
+class OrExpression: public Expression
+	{
+	protected:
+		std::vector < Expression * > terms;
+		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
+		friend class Parser;
+	public:
+		OrExpression( );
+		~OrExpression( );
+		dex::constraintSolver::ISR *eval( ) const override;
+	};
 // class AddSub
 
 /**
  * <MultDiv> ::= <FactorExpression> { ‘*’ <FactorExpression> }
  */
-class MultDiv: public Expression
-   {
-   protected:
-      std::vector < Expression * > terms;
-      std::vector < bool > multiply;
-      friend class Parser;
-   public:
-      MultDiv( );
-      ~MultDiv( );
-      int64_t Eval( ) const override;
-   };
+class AndExpression: public Expression
+	{
+	protected:
+		std::vector < Expression * > terms;
+		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
+		friend class Parser;
+	public:
+		AndExpression( );
+		~AndExpression( );
+		dex::constraintSolver::ISR *eval( ) const override;
+	};
 // class MultDiv
-
-/**
- * A number
- */
-class Number: public Expression
-   {
-   protected:
-      int64_t value;
-   public:
-      Number( int64_t value );
-      int64_t Eval( ) const override;
-   };
-// class Number
 
 #endif /* EXPRESSION_H_ */

@@ -65,6 +65,13 @@ dex::constraintSolver::andISR::andISR( dex::vector < dex::constraintSolver::ISR 
 	endOfDocLocation = endOfDocISR->next( );
 	}
 
+dex::constraintSolver::andISR::~andISR( )
+	{
+	for ( size_t index = 0;  index != factors.size( );  ++index )
+		delete factors[ index ];
+	delete endOfDocISR;
+	}
+
 size_t dex::constraintSolver::andISR::seek( size_t target )
 	{
 	size_t max = 0;
@@ -104,6 +111,13 @@ dex::constraintSolver::orISR::orISR( dex::vector < dex::constraintSolver::ISR * 
 	endOfDocLocation = endOfDocISR->next( );
 	}
 
+dex::constraintSolver::orISR::~orISR( )
+	{
+	for ( size_t index = 0;  index != summands.size( );  ++index )
+		delete summands[ index ];
+	delete endOfDocISR;
+	}
+
 size_t dex::constraintSolver::orISR::seek( size_t target )
 	{
 	for ( size_t index = 0;  index < locations.size( );  ++index )
@@ -134,6 +148,11 @@ dex::constraintSolver::notISR::notISR( dex::constraintSolver::ISR *neg, endOfDoc
 		: neg( neg ), endOfDocISR( endOfDocISR )
 	{
 	location = neg->next( );
+	}
+
+dex::constraintSolver::notISR::~notISR( )
+	{
+	delete endOfDocISR;
 	}
 
 size_t dex::constraintSolver::notISR::seek( size_t target )
@@ -193,6 +212,13 @@ dex::constraintSolver::phraseISR::phraseISR( vector < dex::constraintSolver::ISR
 	locations.resize( words.size( ) );
 	for ( size_t index = 1;  index < words.size( );  ++index )
 		locations[ index ] = words[ index ]->next( );
+	}
+
+dex::constraintSolver::phraseISR::~phraseISR( )
+	{
+	for ( size_t index = 0;  index != words.size( );  ++index )
+		delete words[ index ];
+	delete endOfDocISR;
 	}
 
 size_t dex::constraintSolver::phraseISR::seek( size_t target )

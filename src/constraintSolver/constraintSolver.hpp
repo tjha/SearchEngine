@@ -32,6 +32,8 @@ namespace dex
 				// instance, or -1 if there is none.
 				// Note that this requires some way of accessing document boundaries.
 				virtual size_t nextDocument( ) = 0;
+
+				virtual ~ISR( ) = default;
 			};
 
 		class endOfDocumentISR : public dex::constraintSolver::ISR
@@ -59,6 +61,7 @@ namespace dex
 			public:
 				andISR( dex::vector < dex::constraintSolver::ISR * > factors,
 						dex::constraintSolver::endOfDocumentISR *endOfDocISR );
+				~andISR( );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
@@ -77,6 +80,7 @@ namespace dex
 			public:
 				orISR( dex::vector < dex::constraintSolver::ISR * > summands,
 						dex::constraintSolver::endOfDocumentISR *endOfDocISR );
+				~orISR( );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
@@ -93,7 +97,8 @@ namespace dex
 				size_t endOfDocLocation;
 
 			public:
-				notISR ( dex::constraintSolver::ISR *neg, dex::constraintSolver::endOfDocumentISR *endOfDocISR );
+				notISR( dex::constraintSolver::ISR *neg, dex::constraintSolver::endOfDocumentISR *endOfDocISR );
+				~notISR( );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
@@ -114,6 +119,7 @@ namespace dex
 			public:
 				phraseISR( dex::vector < dex::constraintSolver::ISR * > words,
 						dex::constraintSolver::endOfDocumentISR *endOfDocISR );
+				~phraseISR( );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );

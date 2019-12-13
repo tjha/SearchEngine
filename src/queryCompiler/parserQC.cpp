@@ -19,14 +19,14 @@ Expression *Parser::FindPhrase( )
       return nullptr;
    if ( stream.Match( '"' ) )
       {
-      Expression *add = FindOR( );  // NOT SURE ABOUT THIS LINE
+      Expression *phrase = ParsePhrase( ); // ParsePhrase : 
       if ( stream.Match( '"' ) )
-         return add;
-      if ( add )
-         delete add;
+         return phrase;
+      if ( phrase )
+         delete phrase;
       return nullptr;
       }
-   return stream.ParseNumber( );
+   return stream.ParsePhrase( );
    }
 
 Expression *Parser::FindFactor( )
