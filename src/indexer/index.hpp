@@ -88,7 +88,7 @@ namespace dex
 
 							size_t postsChunkArrayOffset;
 							size_t postsChunkOffset;
-							size_t location;
+							size_t inverseLocation;
 
 							synchronizationPoint( );
 							};

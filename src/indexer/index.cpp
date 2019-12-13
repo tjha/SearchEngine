@@ -40,14 +40,10 @@ bool dex::index::indexChunk::postsChunk::append( size_t delta )
 	return true;
 	}
 
-// synchronizationPoint
-dex::index::indexChunk::postsMetadata::synchronizationPoint::synchronizationPoint( )
-	: postsChunkArrayOffset( 0 ), postsChunkOffset( 0 ), location( npos ) { }
-
 // postMetadata
 dex::index::indexChunk::postsMetadata::postsMetadata( size_t chunkOffset ) :
 		occurenceCount( 0 ), documentCount( 0 ), firstPostsChunkOffset( chunkOffset ),
-		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ), synchronizationPoints( ) { }
+		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ) { }
 
 bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk *postsChunkArray )
 	{
@@ -62,11 +58,11 @@ bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk 
 		// The first 8 bits of our location determine our synchronization point. We only update the table if we haven't
 		// been "this high" before.
 		for ( synchronizationPoint *syncPoint = synchronizationPoints + ( location >> ( sizeof( location ) - 8 ) );
-				syncPoint >= synchronizationPoints && syncPoint->location == syncPoint->npos;  --syncPoint )
+				syncPoint >= synchronizationPoints && ~syncPoint->inverseLocation == syncPoint->npos;  --syncPoint )
 			{
 			syncPoint->postsChunkArrayOffset = lastPostsChunkOffset;
 			syncPoint->postsChunkOffset = originalPostOffset;
-			syncPoint->location = location;
+			syncPoint->inverseLocation = ~location;
 			}
 		}
 
@@ -215,15 +211,15 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 	if ( target > *( indexChunkum->maxLocation ) )
 		throw dex::outOfRangeException( );
 
-	if ( !syncPoint->location )
+	if ( ~syncPoint->inverseLocation == syncPoint->npos )
 		return ( npos );
 
 	// Jump to the point the synchronization table tells us to.
-	if ( syncPoint->location > absoluteLocation )
+	if ( ~syncPoint->inverseLocation > absoluteLocation )
 		{
 		postsChunkum = indexChunkum->postsChunkArray + syncPoint->postsChunkArrayOffset;
 		post = postsChunkum->posts + syncPoint->postsChunkOffset;
-		absoluteLocation = syncPoint->location;
+		absoluteLocation = ~syncPoint->inverseLocation;
 		}
 
 	// Keep scanning until we find the first place not before our target. We'll return -1 if we fail to reach it.
