@@ -25,10 +25,10 @@ QUERY COMPILER + CONSTRAINT SOLVER TEAM IS IN CHARGE OF IMPLEMENTING THIS OBJECT
 class worker
 	{
 	private:
-		indexChunkPointer / fileDescriptor;
+		const char *filename;
 		anything else you guys need
 	public:
-		worker( indexChunkPointer / fileDescriptor ){ }
+		worker( filename ){ }
 
 		// Preferrably this should be multithreaded. If we get two search requests and call this function
 		// on a worker twice we shouldn't have to wait for the first to finish for the second to begin. But

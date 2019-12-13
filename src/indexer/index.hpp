@@ -41,7 +41,7 @@ namespace dex
 				template < class T, class InputIt >
 				friend class dex::utf::decoder;
 
-				template < class T, class InputIt >
+				template < class T >
 				friend class dex::utf::encoder;
 
 				class postsChunk
@@ -54,24 +54,19 @@ namespace dex
 						static const size_t postsChunkSize = 1 << 12;
 						byte posts[ postsChunkSize ];
 
-						// These are 0 if they do not "point" to anything meaningful.
-						size_t previousPostsChunkOffset;
+						// This is 0 if they do not "point" to anything meaningful.
 						size_t nextPostsChunkOffset;
 
 						// Keep track of where we should append the next post.
 						size_t currentPostOffset;
 					public:
-						postsChunk( size_t previousPostsChunkOffset = 0 );
+						postsChunk( );
 
 						bool append( size_t delta );
 					};
 
 				class postsMetadata
 					{
-					public:
-						// Types of tokens.
-						enum : byte { END_OF_DOCUMENT, ANCHOR_WORD, URL, TITLE, BODY };
-
 					private:
 						friend class indexChunk;
 
@@ -79,48 +74,50 @@ namespace dex
 						size_t occurenceCount;
 						size_t documentCount;
 
-						byte postType;
+						// Offsets from the beginning of the postsChunkArray to let us access the chunks we want.
+						size_t firstPostsChunkOffset;
+						size_t lastPostsChunkOffset;
+
+						// Keep track of the index of the last inserted word so that we can calculate the next delta.
+						size_t lastLocation;
 
 						struct synchronizationPoint
 							{
+							static const size_t npos = static_cast < size_t >( -1 );
+
 							size_t postsChunkArrayOffset;
 							size_t postsChunkOffset;
-							size_t location;
+							size_t inverseLocation;
 							};
 						// First 32 bits of each long long form the seek offset in posting. The last 32 bits are actual
 						// location of that post. We use a long long since it is (practically) guaranteed to be 64 bits.
 						static const size_t synchronizationPointCount = 1 << 8;
 						synchronizationPoint synchronizationPoints[ synchronizationPointCount ];
 
-						// Offsets from the beginning of the postsChunkArray to let us access the chunks we want.
-						size_t firstPostsChunkOffset;
-						size_t lastPostsChunkOffset;
-
-						// Keep track of the index of the last inserted word so that we can calculate the next delta.
-						size_t lastPostIndex;
-
 					public:
-						postsMetadata( size_t chunkOffset = 0, const byte typeOfToken = BODY );
+						postsMetadata( size_t chunkOffset );
 
-						bool append( size_t location, postsChunk *postsChunkArray,
-								postsMetadata *endOfDocumentPostsMetadata );
+						bool append( size_t location, postsChunk *postsChunkArray );
 					};
 
+			public:
+				// This is public so we can write the encoder and decoders. There might be a better way of doing this, but
+				// time is short.
 				struct endOfDocumentMetadataType
 					{
 					size_t documentLength;
 					size_t numberUniqueWords;
 					dex::string url;
 					dex::string title;
-					size_t numberIncomingLinks;
 
 					template < class T, class InputIt >
 					friend class dex::utf::decoder;
 
-					template < class T, class InputIt >
+					template < class T >
 					friend class dex::utf::encoder;
 					};
 
+				private:
 				// These consts can be adjusted if necessary.
 				static const size_t maxURLCount = 1L << 17;
 				static const size_t maxURLLength = 1L << 10;
@@ -161,6 +158,7 @@ namespace dex
 
 				// Number of tokens in the index.
 				size_t *location;
+				size_t *maxLocation;
 
 				// Use urls.size( ) to get how many documents there are in the index.
 				// The following two maps are effectively inverses of each other.
@@ -184,7 +182,8 @@ namespace dex
 				// InputIt should dereference to a string.
 				// Note: This has to be defined in the header due to the templating.
 				template < class InputIt >
-				bool append( InputIt first, InputIt last, const dex::string &decorator = "" )
+				bool append( InputIt first, InputIt last, dex::unorderedMap < dex::string, size_t > &postsMetadataChanges,
+						const dex::string &decorator = "" )
 					{
 					// Need to keep track of our old state in case the appendation fails.
 					dex::unorderedMap < dex::string, size_t > newWords;
@@ -192,6 +191,7 @@ namespace dex
 
 					for ( ;  first != last;  ++first, ++newLocation )
 						{
+						// std::cout << "About to stem: ->" << *first << "<-\n";
 						string wordToAdd = decorator + dex::porterStemmer::stem( *first );
 
 						if ( wordToAdd.size( ) > maxWordLength )
@@ -204,39 +204,37 @@ namespace dex
 								return false;
 
 							// Add a new postsMetaData.
-							// TODO: make this sensitive to non-BODY types. Idea: use enums and pass those in instead of a
-							// deocrator string.
-							wordMetadata = &postsMetadataArray[ dictionary.size( ) + newWords.size( ) ];
-							*wordMetadata = postsMetadata( *postsChunkCount, postsMetadata::BODY );
+							size_t newWordIndex = dictionary.size( ) + newWords.size( );
+							wordMetadata = &postsMetadataArray[ newWordIndex ];
+							*wordMetadata = postsMetadata( *postsChunkCount );
 
 							// Add a new postsChunk
 							size_t newPostsChunkOffset = ( *postsChunkCount )++;
-							postsChunkArray[ newPostsChunkOffset ] = postsChunk( 0 );
+							postsChunkArray[ newPostsChunkOffset ] = postsChunk( );
 							wordMetadata->firstPostsChunkOffset = newPostsChunkOffset;
 
-							newWords[ wordToAdd ] = dictionary.size( ) + newWords.size( );
+							newWords[ wordToAdd ] = newWordIndex;
 							}
 						else
 							{
 							if ( dictionary.count( wordToAdd ) )
-								{
 								wordMetadata = &postsMetadataArray[ dictionary[ wordToAdd ] ];
-								}
 							else
-								{
 								wordMetadata = &postsMetadataArray[ newWords[ wordToAdd ] ];
-								}
 							}
 
-						while ( !wordMetadata->append( newLocation, postsChunkArray, postsMetadataArray ) )
+						// This loop will exectue at most once, unless things go terribly wrong somehow.
+						while ( !wordMetadata->append( newLocation, postsChunkArray ) )
 							{
 							if ( *postsChunkCount == postsChunkArraySize )
 								return false;
 
 							postsChunkArray[ wordMetadata->lastPostsChunkOffset ].nextPostsChunkOffset = *postsChunkCount;
-							postsChunkArray[ *postsChunkCount ] = postsChunk( wordMetadata->lastPostsChunkOffset );
+							postsChunkArray[ *postsChunkCount ] = postsChunk( );
 							wordMetadata->lastPostsChunkOffset = ( *postsChunkCount )++;
 							}
+
+						postsMetadataChanges[ wordToAdd ]++;
 						}
 
 					// Copy over newWords into dict.
@@ -250,16 +248,15 @@ namespace dex
 					}
 
 			public:
-				bool addDocument( const dex::string &url, const dex::vector < dex::string > &anchorText,
-					const dex::vector < dex::string > &title, const dex::string &titleString,
-					const dex::vector < dex::string > &body );
+				bool addDocument( const dex::string &url, const dex::vector < dex::string > &title,
+						const dex::string &titleString, const dex::vector < dex::string > &body );
 
 				class indexStreamReader : dex::constraintSolver::ISR
 					{
 					private:
 						friend class indexChunk;
 
-						static const size_t npos = dex::constraintSolver::ISR::npos;
+						static const size_t npos = static_cast < size_t >( -1 );
 
 						byte *post;
 						byte *documentPost;
@@ -267,21 +264,13 @@ namespace dex
 						postsChunk *postsChunkum; // Bad naming to disambiguate chunk types
 						indexChunk *indexChunkum;
 						size_t absoluteLocation;
-						// For a word, will want
-						// 	the word (string)
-						// 	current postsChunk
-						// 	offset into the indexChunk where the current pointer is
 
 					public:
 						// An ISR for the empty string is just and end of document ISR.
-						indexStreamReader( indexChunk *indexChunk, dex::string word = "" );
+						indexStreamReader( indexChunk *indexChunk, dex::string word );
 						size_t seek( size_t target );
 						size_t next( );
-						size_t nextDocument( );	// This is called on a set of indexStream readers. It sets them all to their
-						// 	first occurences past the end of the current document
-
-						// size_t GetStartLocation( ); ??
-						// size_t GetEndLocation( ); ??
+						size_t nextDocument( );
 
 						// Need functions to get metadata for a word for entire posting list
 						// 	and for in the current document
@@ -313,14 +302,12 @@ namespace dex
 							( *localAdvancedEncoding, localAdvancedEncoding );
 					dex::string title = dex::utf::decoder < dex::string, InputIt >( )
 							( *localAdvancedEncoding, localAdvancedEncoding );
-					size_t numberIncomingLinks = dex::utf::decoder < unsigned, InputIt >( )
-							( *localAdvancedEncoding, localAdvancedEncoding );
 
 					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;
 
 					return dex::index::indexChunk::endOfDocumentMetadataType
-						{ documentLength, numberUniqueWords, url, title, numberIncomingLinks };
+						{ documentLength, numberUniqueWords, url, title };
 					}
 			};
 
@@ -335,7 +322,6 @@ namespace dex
 					it = dex::utf::encoder < size_t >( )( data.numberUniqueWords, it );
 					it = dex::utf::encoder < dex::string >( )( data.url, it );
 					it = dex::utf::encoder < dex::string >( )( data.title, it );
-					it = dex::utf::encoder < unsigned >( )( data.numberIncomingLinks, it );
 					return it;
 					}
 
@@ -349,8 +335,6 @@ namespace dex
 					encodedDataNext =  dex::utf::encoder < dex::string >( )( data.url );
 					encodedData.insert( encodedData.cend( ), encodedDataNext.cbegin( ), encodedDataNext.cend( ) );
 					encodedDataNext =  dex::utf::encoder < dex::string >( )( data.title );
-					encodedData.insert( encodedData.cend( ), encodedDataNext.cbegin( ), encodedDataNext.cend( ) );
-					encodedDataNext =  dex::utf::encoder < unsigned >( )( data.numberIncomingLinks );
 					encodedData.insert( encodedData.cend( ), encodedDataNext.cbegin( ), encodedDataNext.cend( ) );
 					return encodedData;
 					}

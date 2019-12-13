@@ -26,10 +26,7 @@ namespace dex
 
 	// CTRLF: enableIf
 	template < bool boolean, class classIfTrue = void >
-	struct enableIf
-		{
-		typedef void type;
-		};
+	struct enableIf { };
 
 	template < class classIfTrue >
 	struct enableIf < true, classIfTrue >
