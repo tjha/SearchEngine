@@ -7,7 +7,7 @@
 #define RANKER_OBJECTS_HPP
 
 #include "vector.hpp"
-#include "../spinarak/url.hpp"
+#include "url.hpp"
 namespace dex
 	{
 	class ISR

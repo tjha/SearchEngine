@@ -31,7 +31,7 @@
 #include "unorderedMap.hpp"
 #include "unorderedSet.hpp"
 #include "vector.hpp"
-#include "../spinarak/robots.hpp"
+#include "../crawler/robots.hpp"
 
 namespace dex
 	{
@@ -496,10 +496,11 @@ namespace dex
 			};*/
 
 		// We'll say a byte is a sentinel if it looks like 11111111
+		const unsigned char sentinel = 0xFF;
 		template < class InputIt >
-		bool isUTFSentinel( InputIt encoding )
+		bool isSentinel( InputIt encoding )
 			{
-			return *encoding == 0xFF;
+			return *encoding == sentinel;
 			}
 		}
 	}
