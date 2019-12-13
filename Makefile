@@ -18,7 +18,7 @@ endif
 SRC_PATH = src
 TEST_PATH = tst
 BUILD_PATH = build
-INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/crawler/ -I $(TEST_PATH) $(LDFLAGS) $(CPPFLAGS)
+INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/crawler/ -I $(SRC_PATH)/indexer/ -I $(TEST_PATH) $(LDFLAGS) $(CPPFLAGS)
 
 TEST_SOURCES := $(wildcard $(TEST_PATH)/*/*.cpp)
 TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(TEST_SOURCES))
