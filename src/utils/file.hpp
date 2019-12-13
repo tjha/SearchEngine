@@ -24,6 +24,8 @@
 #include "basicString.hpp"
 #include "unorderedSet.hpp"
 
+#include <iostream>
+
 namespace dex
 	{
 	// used internally
@@ -72,8 +74,8 @@ namespace dex
 			close( fd );
 			return -1;
 			}
-			
-		
+
+
 		result = write( fd, " ", 1 );
 
 		char *map = ( char * ) mmap( nullptr, length, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0 );
@@ -100,12 +102,30 @@ namespace dex
 		{
 		if ( offset % getPageSize( ) != 0 )
 			throw dex::invalidArgumentException( );
-			
+
 		int fd = open( filePath, O_RDONLY );
 		if ( fd == -1 )
 			throw outOfRangeException( );
 
 		size_t filesize = fileSize( fd );
+		char *map = ( char * ) mmap( nullptr, filesize, PROT_READ, MAP_SHARED, fd, offset );
+		close( fd );
+		return map;
+		}
+
+	char *readFromFileForIndex( const char *filePath, size_t &filesize, size_t offset = 0 )
+		{
+		if ( offset % getPageSize( ) != 0 )
+			throw dex::invalidArgumentException( );
+
+		int fd = open( filePath, O_RDONLY );
+		if ( fd == -1 )
+			throw outOfRangeException( );
+
+		filesize = fileSize( fd );
+
+		std::cerr << filesize << std::endl;
+
 		char *map = ( char * ) mmap( nullptr, filesize, PROT_READ, MAP_SHARED, fd, offset );
 		close( fd );
 		return map;
@@ -144,7 +164,7 @@ namespace dex
 				else
 					filename = directory + "/" + filename;
 
-				// Add subdirectory to Frontier 
+				// Add subdirectory to Frontier
 				if ( entry->d_type == DT_DIR )
 					{
 					Frontier.pushBack( filename );

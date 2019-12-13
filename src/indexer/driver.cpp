@@ -43,7 +43,7 @@ int main ( int argc, char ** argv )
 		{
 		outputFolder.pushBack( '/' );
 		}
-	dex::makeDirectory( outputFolder.cStr( ) );
+	//dex::makeDirectory( outputFolder.cStr( ) );
 	dex::vector < dex::string > toProcess;
 	toProcess = dex::matchingFilenames( batch, "_forIndexer" );
 
@@ -69,7 +69,7 @@ int main ( int argc, char ** argv )
 		// Decode the current file
 		unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( fileName.cStr( ), 0 ) );
 		unsigned char *ptr = savedHtml;
-
+		
 		while ( !dex::utf::isSentinel( ptr ) )
 			{
 			// retrieve the saved url + html pair

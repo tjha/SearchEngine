@@ -38,6 +38,10 @@ indexerDriver: src/indexer/driver.cpp src/indexer/index.cpp
 	make build
 	$(CXX) $(CXXFLAGS) src/indexer/driver.cpp src/indexer/index.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/indexerDriver.exe
 
+indexerEncodingTest: tst/indexer/indexerEncodingTests.cpp
+	make build
+	$(CXX) $(CXXFLAGS) tst/indexer/indexerEncodingTests.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/encodingTests.exe
+
 driverFinal: src/driver/driver.cpp
 	make build
 	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -o3 $(BUILD_PATH)/driver.exe

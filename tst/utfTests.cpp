@@ -11,6 +11,7 @@
 #include "../src/utils/unorderedSet.hpp"
 #include "../src/utils/utf.hpp"
 #include "../src/utils/vector.hpp"
+#include <iostream>
 
 using namespace dex;
 using namespace dex::utf;
@@ -336,6 +337,20 @@ TEST_CASE( "encode and decode", "[utf]" )
 		REQUIRE( s == decoder < string >( )( ( encoder < string >( )( s ) ).data( ) ) );
 		REQUIRE( encoder < string >( )( s, array ) - array == s.size( ) + 1 );
 		REQUIRE( s == decoder < string >( )( array ) );
+
+		string a = "a";
+		string b = "b";
+		string c = "c";
+
+		encoder < string > stringEncoder;
+		decoder < string > stringDecoder;
+
+		vector< unsigned char > encoded;
+		
+		encoded.pushBack( stringEncoder( a ).data( ) );
+		encoded.pushBack( stringEncoder( b ).data( ) );
+		encoded.pushBack( stringEncoder( c ).data( ) );
+		std::cout << encoded.data( );
 		}
 
 	SECTION( "unordered map" )
