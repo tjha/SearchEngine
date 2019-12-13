@@ -65,6 +65,8 @@ int main ( int argc, char ** argv )
 	time_t start = time( nullptr );
 	int statisticsFileDescriptor = open( ( outputFolder + "statistics.txt").cStr( ), O_RDWR | O_CREAT, 0777 );
 	
+	size_t totalDocumentsProcessed = 0;
+	size_t totalBytesProcessed = 0;
 	for ( unsigned index = 0;  index < toProcess.size( );  ++index )
 		{
 		dex::string fileName = toProcess[ index ];
@@ -81,7 +83,6 @@ int main ( int argc, char ** argv )
 			// retrieve the saved url + html pair
 			dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
 			dex::string html = stringDecoder( ptr, &ptr );
-			std::cout << "\tAbout to add url: " << url.completeUrl( ) << "\n";
 			// std::cout << "HTML: \n " << html << "\n";
 			try
 				{
@@ -94,8 +95,7 @@ int main ( int argc, char ** argv )
 					{
 					titleString += ( titleWord + " " );
 					}
-				std::cout << "\t\twith title: " << titleString << "\n";
-				
+
 				// TODO this should go in parser but didn't want to break dependent functionality
 				// TODO add default argument for anchorText in index.hpp
 				if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString, 
@@ -125,7 +125,7 @@ int main ( int argc, char ** argv )
 					documentsProcessed = 0;
 					start = time( nullptr );
 					}
-
+				totalDocumentsProcessed++;
 				}
 			catch ( ... )
 				{
@@ -133,7 +133,10 @@ int main ( int argc, char ** argv )
 				continue;
 				}
 			}
+		totalBytesProcessed += filesize;
 		std::cout << "processed " + fileName << std::endl;
+		std::cout << "total documents processed = " << totalDocumentsProcessed << std::endl << "total bytes processed = "
+				<< totalBytesProcessed << std::endl;
 		int renamed = rename( fileName.cStr( ) , ( fileName ).cStr( ) );
 		if ( renamed == -1 )
 			{
