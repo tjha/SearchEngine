@@ -423,12 +423,12 @@ namespace dex
 				dex::basicString < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					decoder < T, InputIt > TDecoder;
 					dex::basicString < T > decodedData;
 					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					decodedData.reserve( size );
 
-					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
-						decodedData.pushBack( TDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
+					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex, ++*localAdvancedEncoding )
+						decodedData.pushBack( static_cast < T >( **localAdvancedEncoding ) );
 
 					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;

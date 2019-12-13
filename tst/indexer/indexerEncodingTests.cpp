@@ -35,6 +35,7 @@ int saveHtml ( const dex::string &url, const dex::string &html, int fileDescript
 	toStorePointer = stringEncoder( url, toStorePointer );
 	toStorePointer = stringEncoder( html, toStorePointer );
 	int toReturn = write( fileDescriptor, toStore, toStorePointer - toStore );
+	std::cerr << "Wrote " << ( toStorePointer - toStore ) << " bytes of data" << std::endl;
 	delete[ ] toStore;
 	if ( toReturn == -1 )
 		{
@@ -87,8 +88,7 @@ int main ( )
 		// retrieve the saved url + html pair
 		dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
 		dex::string html = stringDecoder( ptr, &ptr );
-		std::cout << "\tAbout to add url: " << url.completeUrl( ) << "\n";
-		std::cout << "HTML: \n " << html << "\n";
+		std::cout << "<======URL: " << url.completeUrl( ) << "; SIZE: " << url.completeUrl( ).size( ) << " + " << html.size( ) << "\n " << html << "======>";
 		}
 	}
 
