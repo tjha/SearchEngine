@@ -222,7 +222,6 @@ namespace dex
 		{
 		return links;
 		}
-
 	vector < string > HTMLparser::ReturnWords ( )
 		{
 		return words;

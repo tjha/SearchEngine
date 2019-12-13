@@ -6,5 +6,6 @@ then
 fi
 cd $PATH_TO_SEARCH_ENGINE
 make driver
-./build/driver.exe > cronresult.txt &
+mkdir -p data/tmp
+./build/driver.exe > data/tmp/cronresult.txt &
 crontab scripts/runOnCron.txt

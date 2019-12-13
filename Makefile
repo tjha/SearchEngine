@@ -18,7 +18,7 @@ endif
 SRC_PATH = src
 TEST_PATH = tst
 BUILD_PATH = build
-INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/spinarak/ -I $(TEST_PATH) $(LDFLAGS) $(CPPFLAGS)
+INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/crawler/ -I $(SRC_PATH)/indexer/ -I $(SRC_PATH)/driver/ -I $(SRC_PATH)/ranker/ -I $(TEST_PATH) $(LDFLAGS) $(CPPFLAGS)
 
 TEST_SOURCES := $(wildcard $(TEST_PATH)/*/*.cpp)
 TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(TEST_SOURCES))
@@ -30,21 +30,16 @@ MODULE_TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,
 
 all: print_os $(TESTS)
 
-# TODO rename driver to crawlerDriver
-driver: src/mvp/driver.cpp
+driver: src/driver/driver.cpp
 	make build
-	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/driver.exe
+	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/driver.exe
 
-driverFinal: src/mvp/driver.cpp
+driverFinal: src/driver/driver.cpp
 	make build
-	$(CXX) $(CXXFLAGS) src/mvp/driver.cpp $(INCLUDES) -ltls -o3 $(BUILD_PATH)/driver.exe
+	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -o3 $(BUILD_PATH)/driver.exe
 
-indexDriver: src/indexer/driver.cpp
-	make build
-	$(CXX) $(CXXFLAGS) src/indexer/driver.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/indexDriver.exe
-
-multithreadingTest: src/mvp/multithreadingTest.cpp
-	$(CXX) $(CXXFLAGS) src/mvp/multithreadingTest.cpp $(INCLUDES) -ltls -o build/multithreadingTest.exe
+multithreadingTest: src/driver/multithreadingTest.cpp
+	$(CXX) $(CXXFLAGS) src/driver/multithreadingTest.cpp $(INCLUDES) -ltls -o build/multithreadingTest.exe
 
 cleanDriver:
 	@rm -rf data/tmp/logs/
