@@ -12,10 +12,10 @@
    }
    </style>
 	<script type="text/javascript">
-	  function searchResults(){
-		 window.location = "/results.html?query=" + document.getElementsByClassName("searchTerm")[0].value;;
-	  };
 	  var myBoolean = false;
+	  function searchResults(){
+		 window.location = "/results.html?query=" + document.getElementsByClassName("searchTerm")[0].value + "&toggle=" + myBoolean.toString();
+	  };
 	  function toggleBoolean() {
 			myBoolean = !myBoolean;
 	  }
