@@ -43,12 +43,12 @@ int main ( int argc, char ** argv )
 		{
 		outputFolder.pushBack( '/' );
 		}
-
+	dex::makeDirectory( outputFolder.cStr( ) );
 	dex::vector < dex::string > toProcess;
 	toProcess = dex::matchingFilenames( batch, "_forIndexer" );
 
 	dex::utf::decoder < dex::string > stringDecoder;
-
+	
 	int indexChunkCount = 0;
 	// TODO: What scheme will we use to name the files for the index chunks?
 	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
@@ -65,6 +65,7 @@ int main ( int argc, char ** argv )
 		dex::string fileName = toProcess[ index ];
 		// Decode the current file
 
+		std::cout << "About to read file: " << fileName << "\n";
 		// Decode the current file
 		unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( fileName.cStr( ), 0 ) );
 		unsigned char *ptr = savedHtml;
@@ -75,29 +76,40 @@ int main ( int argc, char ** argv )
 			dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
 			dex::string html = stringDecoder( ptr, &ptr );
 
-			dex::HTMLparser parser( url, html, true );
+			try
+				{
+				std::cout << "\tAbout to add url: " << url.completeUrl( ) << "\n";
+				dex::HTMLparser parser( url, html, true );
 
-			dex::string titleString;
-			titleString.reserve( 25 );
-			for ( auto &titleWord: parser.ReturnTitle( ) )
-				{
-				titleString += titleWord;
+				dex::string titleString;
+				titleString.reserve( 25 );
+				for ( auto &titleWord: parser.ReturnTitle( ) )
+					{
+					titleString += titleWord;
+					}
+				std::cout << "\t\twith title: " << titleString << "\n";
+				
+				// TODO this should go in parser but didn't want to break dependent functionality
+				// TODO add default argument for anchorText in index.hpp
+				if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString, 
+						parser.ReturnWords( ) ) )
+					{
+					close( fileDescriptor );
+					fileDescriptor = openFile( indexChunkCount++, outputFolder );
+					initializingIndexChunk = dex::index::indexChunk( fileDescriptor );
+					}
+				if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
+						parser.ReturnWords( ) ) )
+					{
+					// TODO: Throw an exception. Should not fail to add a document to a new index chunk
+					throw dex::fileWriteException( );
+					}
+
 				}
-			
-			// TODO this should go in parser but didn't want to break dependent functionality
-			// TODO add default argument for anchorText in index.hpp
-			if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString, 
-					parser.ReturnWords( ) ) )
+			catch ( ... )
 				{
-				close( fileDescriptor );
-				fileDescriptor = openFile( indexChunkCount++, outputFolder );
-				initializingIndexChunk = dex::index::indexChunk( fileDescriptor );
-				}
-			if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
-					parser.ReturnWords( ) ) )
-				{
-				// TODO: Throw an exception. Should not fail to add a document to a new index chunk
-				throw dex::fileWriteException( );
+				std::cout << "Skipping malformed html: " << url.completeUrl( ) << "\n";
+				continue;
 				}
 			}
 		std::cout << "processed " + fileName << std::endl;

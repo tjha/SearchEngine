@@ -168,10 +168,10 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	// TODO: This can be made more efficient by creating an auxillary vector of words we want to insert. At the same
 	// time, we would populate uniqueWords
 	dex::unorderedSet < const dex::string > uniqueWords( 2 * ( body.size( ) + title.size( ) ) );
-	for ( dex::vector < dex::string >::constIterator it = body.cbegin( );  it != body.cend( );  ++it )
-		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
-	for ( dex::vector < dex::string >::constIterator it = title.cbegin( );  it != title.cend( );  ++it )
-		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
+	// for ( dex::vector < dex::string >::constIterator it = body.cbegin( );  it != body.cend( );  ++it )
+		// uniqueWords.insert( dex::porterStemmer::stem( *it ) );
+	// for ( dex::vector < dex::string >::constIterator it = title.cbegin( );  it != title.cend( );  ++it )
+		// uniqueWords.insert( dex::porterStemmer::stem( *it ) );
 
 	// Update the count of how many documents each word appears in.
 	for ( dex::unorderedSet < const dex::string >::constIterator uniqueWord = uniqueWords.cbegin( );
