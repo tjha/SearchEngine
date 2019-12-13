@@ -32,7 +32,7 @@
 
 namespace dex
 	{
-	bool match( dex::string str, dex::string pattern )
+	inline bool match( dex::string str, dex::string pattern )
 		{
 		size_t lastFound = 0;
 		size_t lastLocation = 0;
@@ -416,8 +416,6 @@ namespace dex
 				return disallowedPaths;
 				}
 		};
-
-	const dex::string RobotTxt::userAgent = "jhirshey@umich.edu (Linux)";
 
 	template< >
 	struct hash< dex::RobotTxt >

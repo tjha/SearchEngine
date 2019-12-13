@@ -1111,7 +1111,7 @@ namespace dex
 
 	typedef dex::basicString < char > string;
 
-	string toString( long i )
+	inline string toString( long i )
 		{
 		if ( i == 0 )
 			return "0";
@@ -1131,7 +1131,7 @@ namespace dex
 		return string( toReturn.rbegin( ), toReturn.rend( ) );
 		}
 
-	int stoi( string s )
+	inline int stoi( string s )
 		{
 		int toRet = 0;
 		int base = 1;
@@ -1148,7 +1148,7 @@ namespace dex
 		}
 
 	// To be used for case insensitive finding
-	string toLower( string s )
+	inline string toLower( string s )
 		{
 		string toReturn;
 		toReturn.reserve( s.size( ) );

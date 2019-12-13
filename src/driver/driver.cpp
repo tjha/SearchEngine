@@ -22,11 +22,13 @@
 #include "frontier.hpp"
 #include "checkpointing.hpp"
 #include "parser.hpp"
+#include "robots.hpp"
 #include <time.h>
 #include <signal.h>
 #include <iostream>
 #include <pthread.h>
 
+const dex::string dex::RobotTxt::userAgent = "jhirshey@umich.edu (Linux)";
 //dex::string savePath = "/home/ec2-user/socket-html/";
 dex::string savePath = "../socket-html/";
 dex::string dataPath = "data/";
