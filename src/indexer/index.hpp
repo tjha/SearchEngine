@@ -13,6 +13,7 @@
 #define DEX_INDEX
 
 #include <cstddef>
+#include "../constraintSolver/constraintSolver.hpp"
 #include "../utils/basicString.hpp"
 #include "../utils/stemming.hpp"
 #include "../utils/unorderedMap.hpp"
@@ -199,7 +200,8 @@ namespace dex
 						postsMetadata *wordMetadata = nullptr;
 						if ( !dictionary.count( wordToAdd ) && !newWords.count( wordToAdd ) )
 							{
-							if ( dictionary.size( ) == postsMetadataArraySize || *postsChunkCount == postsChunkArraySize )
+							if ( dictionary.size( ) + newWords.size( ) == postsMetadataArraySize
+									|| *postsChunkCount == postsChunkArraySize )
 								return false;
 
 							// Add a new postsMetaData.
@@ -250,7 +252,7 @@ namespace dex
 				bool addDocument( const dex::string &url, const dex::vector < dex::string > &title,
 						const dex::string &titleString, const dex::vector < dex::string > &body );
 
-				class indexStreamReader
+				class indexStreamReader : dex::constraintSolver::ISR
 					{
 					private:
 						friend class indexChunk;
@@ -263,24 +265,23 @@ namespace dex
 						postsChunk *postsChunkum; // Bad naming to disambiguate chunk types
 						indexChunk *indexChunkum;
 						size_t absoluteLocation;
-						// For a word, will want
-						// 	the word (string)
-						// 	current postsChunk
-						// 	offset into the indexChunk where the current pointer is
 
 					public:
 						// An ISR for the empty string is just and end of document ISR.
-						indexStreamReader( indexChunk *indexChunk, dex::string word = "" );
+						indexStreamReader( indexChunk *indexChunk, dex::string word );
 						size_t seek( size_t target );
 						size_t next( );
-						size_t nextDocument( );	// This is called on a set of indexStream readers. It sets them all to their
-						// 	first occurences past the end of the current document
-
-						// size_t GetStartLocation( ); ??
-						// size_t GetEndLocation( ); ??
+						size_t nextDocument( );
 
 						// Need functions to get metadata for a word for entire posting list
 						// 	and for in the current document
+					};
+
+				class endOfDocumentIndexStreamReader
+						: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
+					{
+					public:
+						size_t documentSize( );
 					};
 			};
 		}
@@ -341,5 +342,4 @@ namespace dex
 			};
 		}
 	}
-
 #endif
