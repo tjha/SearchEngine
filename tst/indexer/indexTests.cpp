@@ -27,6 +27,26 @@ size_t getFileSize( int fileDescriptor )
 
 // TODO: Add test case for closing and reopening an indexChunk
 
+TEST_CASE( "lougheed's fun read indexChunk test" )
+	{
+	std::cout << "Running lougheed's fun read indexChunk test\n";
+	const char filePath[ ] = "1_in.dex";
+	int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+
+	if ( fd == -1 )
+		exit( 1 );
+	indexChunk initializingIndexChunk = indexChunk( fd, false );
+
+	indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+	int location = 0;
+	while ( location != -1 )
+		{
+		location = andISR.next( );
+		// std::cout << "\t-" << location << "\n";
+		}
+	close( fd );
+	}
+
 TEST_CASE( "create index chunk" )
 	{
 	const char filePath[ ] = "_in.dex";

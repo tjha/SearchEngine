@@ -125,10 +125,14 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		}
 	else
 		{
+		std::cout << "reading indexChunk from file\n";
+		std::cout << "filepointer: " << filePointer << "\n";
+		std::cout << "postsChunkCount: " << postsChunkCount << "\n*postsChunkCount" << *postsChunkCount << "\n";
 		urlsToOffsets = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedURLsToOffsets );
 		offsetsToEndOfDocumentMetadatas = dex::utf::decoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
 				( encodedOffsetsToEndOfDocumentMetadatas );
 		dictionary = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedDictionary );
+		std::cout << "number of unqiue words: " << dictionary.size( ) << "\n";
 		}
 	}
 
