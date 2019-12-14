@@ -1,6 +1,8 @@
 // ranker.hpp
 // This ranks the stuff
 
+// 2019-12-12 and 13: Get dynamic ranking working with the constraint solver interface
+//                    Also get static and dynamic scoring working in tandem: combsc
 // 2019-12-11: Implement more dynamic ranking: combsc
 // 2019-12-10: Implement topN: lougheem
 // 2019-12-10: Implement dynamic ranking + pthread stuff: combsc
@@ -461,58 +463,71 @@ namespace dex
 				return totalScores;
 				}
 			
-			// dex::vector < dex::searchResult > getTopN( size_t n, dex::string query )
-			// 	{
-			// 	dex::vector < dex::searchResult > results;
-			// 	results.reserve( n );
-			// 	// pass query to query compiler
-			// 	// pass compiled query to constraintSolver
+			dex::vector < dex::searchResult > getTopN( size_t n, dex::string query, bool printInfo = false )
+				{
+				dex::vector < dex::searchResult > results;
+				results.reserve( n );
+				// pass query to query compiler
+				// pass compiled query to constraintSolver
 				
-			// 	dex::vector < dex::matchedDocuments > documents;
-			// 	dex::vector < double > scores;
+				dex::vector < dex::matchedDocuments > documents;
+				dex::vector < double > scores;
+				vector < string > titles;
+				vector < Url > urls;
 
-			// 	pthread_t workerThreads [ chunkPointers.size( ) ];
-			// 	for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
-			// 		{
-			// 		dex::queryRequest request;
-			// 		request.query = query;
-			// 		request.chunkPointer = chunkPointers[ index ];
-			// 		pthread_create( &workerThreads[ index ], nullptr, getMatchingDocuments, ( void * ) &request );
-			// 		}
+				pthread_t workerThreads [ chunkPointers.size( ) ];
+				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+					{
+					dex::queryRequest request;
+					request.query = query;
+					request.chunkPointer = chunkPointers[ index ];
+					pthread_create( &workerThreads[ index ], nullptr, getMatchingDocuments, ( void * ) &request );
+					}
 
-			// 	for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
-			// 		{
-			// 		void *returnValue;
-			// 		pthread_join( workerThreads[ index ], &returnValue );
-			// 		vector < dex::document > returnDocuments = *( vector < dex::document > * ) returnValue;
-			// 		documents.reserve( documents.size( ) + returnDocuments.size( ) );
-			// 		for ( dex::vector< dex::document >::constIterator newDocumentIt = returnDocuments.cbegin( );
-			// 				newDocumentIt != returnDocuments.cend( );  documents.pushBack( *( newDocumentIt++ ) ) );
-			// 		}
-			// 	// loop this over all index chunks
-			// 		// Constraint Solver returns a vector of sets of ISRs?
-			// 		// Each document contains a vector of ISRs that correspond to the words in the query
-			// 		// Each index worker has its own constraint solver.
-					
-			// 	for ( size_t index = 0;  index < documents.size( );  ++index )
-			// 		{
-			// 		double score = getDynamicScore( documents[ index ] ) + getStaticScore( documents[ index ] );
-			// 		scores.pushBack( score );
-			// 		}
+				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+					{
+					void *returnValue;
+					pthread_join( workerThreads[ index ], &returnValue );
+					dex::matchedDocuments returnDocuments = *( dex::matchedDocuments* ) returnValue;
+					documents.pushBack( returnDocuments );
+					}
+				// loop this over all index chunks
+					// Constraint Solver returns a vector of sets of ISRs?
+					// Each document contains a vector of ISRs that correspond to the words in the query
+					// Each index worker has its own constraint solver.
+				
+				for ( size_t index = 0;  index < documents.size( );  ++index )
+					{
+					vector < double > currentScores = scoreDocuments( documents[ index ], printInfo );
+					vector < string > currentTitles = documents[ index ].titles;
+					vector < Url > currentUrls = documents[ index ].urls;
+					if ( currentScores.size( ) != currentTitles.size( ) || 
+							currentScores.size( ) != currentUrls.size( ) )
+						{
+						std::cout << "Sizes of urls, titles, and scores don't match." << std::endl;
+						throw dex::invalidArgumentException( );
+						}
+					for ( unsigned j = 0;  j < currentScores.size( );  ++j )
+						{
+						scores.pushBack( currentScores[ j ] );
+						titles.pushBack( currentTitles[ j ] );
+						urls.pushBack( currentUrls[ j ] );
+						}
+					}
 
-			// 	documentInfo **topN, *p;
-			// 	dex::vector< dex::document > topDocuments;
+				documentInfo **topN, *p;
+				dex::vector< dex::searchResult > topDocuments;
 
-			// 	topN = findTopN( scores, n );
+				topN = findTopN( scores, n );
 
-			// 	for ( int index = 0;  index < n && ( p = topN[ index ] );  index++ )
-			// 		{
-			// 		topDocuments.pushBack( documents[ p->documentIndex ] );
-			// 		std::cout << p->score << "\t" << documents[ p->documentIndex ].title << "\t"
-			// 				<< documents[ p->documentIndex ].url.completeUrl( ) << "\n";
-			// 		}
-			// 	return results;
-			// 	}
+				for ( int index = 0;  index < n && ( p = topN[ index ] );  index++ )
+					{
+					topDocuments.pushBack( documents[ p->documentIndex ] );
+					std::cout << p->score << "\t" << documents[ p->documentIndex ].title << "\t"
+							<< documents[ p->documentIndex ].url.completeUrl( ) << "\n";
+					}
+				return results;
+				}
 			
 		};
 	}
