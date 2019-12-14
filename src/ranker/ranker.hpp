@@ -201,21 +201,24 @@ namespace dex
 					vector < unsigned > current( size );
 					vector < unsigned > next( size );
 					currentWordCount.resize( size );
-
+					std::cout << "begin next: " << endDocument << std::endl;
 					for ( unsigned index = 0;  index < size;  ++index )
 						{
+						std::cout << "for index: " << index << std::endl;
 						currentWordCount[ index ] = 0;
 						// Check to see if the value found earlier is a part of this document.
 						// if it was, increment the words found.
 						if ( firstValues[ index ] < endDocument )
 							{
+							std::cout << firstValues[ index ] << std::endl;
 							currentWordCount[ index ]++;
-							}
-						unsigned result = isrs[ index ].next( );
-						while ( result < endDocument )
-							{
-							++currentWordCount[ index ];
-							result = isrs[ index ].next( );
+							unsigned result = isrs[ index ].next( );
+							while ( result < endDocument )
+								{
+								std::cout << result << std::endl;
+								++currentWordCount[ index ];
+								result = isrs[ index ].next( );
+								}
 							}
 						current[ index ] = isrs[ index ].seek( beginDocument );
 						}
@@ -329,19 +332,17 @@ namespace dex
 								}
 							}
 						current[ rarest ] = next[ rarest ];
-						next[ rarest ] = isrs[ rarest ].next( );
+						if ( next[ rarest ] < endDocument )
+							{
+							next[ rarest ] = isrs[ rarest ].next( );
+							}
 						}
 					for ( unsigned index = 0;  index < size;  ++index )
 						{
-						while ( next[ index ] < endDocument )
-							{
-							current[ index ] = next[ index ];
-							next[ index ] = isrs[ index ].next( ); 
-							}
-						firstValues[ index ] = next[ index ];
+						firstValues[ index ] = isrs[ index ].seek( endDocument );
 						}
 					documentSpans.pushBack( spansOccurances );
-
+					wordCount.pushBack( currentWordCount );
 					beginDocument = endDocument;
 					endDocument = ends.next( );
 					}
