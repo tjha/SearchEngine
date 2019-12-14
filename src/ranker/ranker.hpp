@@ -171,56 +171,55 @@ namespace dex
 				return titleScore + urlScore;
 				}
 
-			// When given bodyISRs return the rarest word index. Also keep track of the word count for this
-			// document.
 			// Body ISRs are assumed to be pointing to the beginning of the document.
-			// ISRs will seek back to the beginning after this function.
-			unsigned getRarestWord( vector < ISR > &bodyISRs, unsigned beginDocument, unsigned endDocument,
-					vector < unsigned > &wordCount )
-				{
-				for ( unsigned index = 0;  index < bodyISRs.size( );  ++index )
-					{
-					wordCount[ index ] = 0;
-					unsigned result = bodyISRs[ index ].next( );
-					while ( result < endDocument )
-						{
-						++wordCount[ index ];
-						result = bodyISRs[ index ].next( );
-						}
-					bodyISRs[ index ].reset( beginDocument );
-					}
-				unsigned minCount = wordCount[ 0 ];
-				unsigned minIndex = 0;
-				for ( unsigned index = 1;  index < wordCount.size( );  ++index )
-					{
-					if ( wordCount[ index ] < minCount )
-						{
-						minCount = wordCount[ index ];
-						minIndex = index;
-						}
-					}
-				return minIndex;
-				}
-
 			// Heuristics is a vector contianing the lengths of the spans you're looking for in the document
 			// Emphasized is a vector containing whether or not the word at that index was emphasized
 			// Vector of ISRs should be arranged such that the words of the ISRs line up with the order of the query
 			// rarest should be the index of the ISR of the rarest word in the query
 			// { 1, 2, 4, 8 }
 			// ISRs will not be moved back to the beginning
-			vector < unsigned > getDesiredSpans( vector < ISR > &isrs, unsigned rarest, 
+			vector < unsigned > getDesiredSpans( vector < ISR > &isrs, 
 					const vector < pair < unsigned, double > > &heuristics, unsigned maxNumSpans,
-					unsigned endDocument )
+					unsigned beginDocument, unsigned endDocument, vector < unsigned > &wordCount )
 				{
 				unsigned size = isrs.size( );
 				vector < unsigned > spansOccurances( heuristics.size( ) );
-
 				vector < unsigned > current( size );
 				vector < unsigned > next( size );
+				wordCount.resize( size );
+
+				for ( unsigned index = 0;  index < size;  ++index )
+					{
+					wordCount[ index ] = 0;
+					unsigned result = isrs[ index ].next( );
+					while ( result < endDocument )
+						{
+						++wordCount[ index ];
+						result = isrs[ index ].next( );
+						}
+					current[ index ] = isrs[ index ].seek( beginDocument );
+					}
+				unsigned minCount = wordCount[ 0 ];
+				unsigned minIndex = 0;
+				std::cout << "Index: " << 0 << std::endl;
+				std::cout << "Word Count: " << minCount << std::endl;
+				for ( unsigned index = 1;  index < size;  ++index )
+					{
+					std::cout << "Index: " << index << std::endl;
+					std::cout << "Word Count: " << wordCount[ index ] << std::endl;
+					if ( wordCount[ index ] < minCount )
+						{
+						minCount = wordCount[ index ];
+						minIndex = index;
+						}
+					}
+				unsigned rarest = minIndex;
+				std::cout << "rarest calculated to be " << rarest << std::endl;
+				
+				
 				for ( unsigned index = 0;  index < size;  ++index )
 					{
 					std::cout << "Initializing " << isrs[ index ].getWord ( ) << "\n";
-					current[ index ] = isrs[ index ].next( );
 					std::cout << "\t" << current[ index ];
 					next[ index ] = isrs[ index ].next( );
 					std::cout << "\t" << next[ index ] << "\n";
@@ -352,9 +351,8 @@ namespace dex
 			unsigned beginDocument, unsigned endDocument, vector < bool > emphasized, bool printInfo = false )
 				{
 				vector < unsigned > wordCount;
-				unsigned rarestWord = getRarestWord( bodyISRs, beginDocument, endDocument, wordCount );
-				vector < unsigned > bodySpans = getDesiredSpans( bodyISRs, rarestWord, 
-						dynamicBodySpanHeuristics, maxNumBodySpans, endDocument );
+				vector < unsigned > bodySpans = getDesiredSpans( bodyISRs, dynamicBodySpanHeuristics,
+						maxNumBodySpans, beginDocument, endDocument, wordCount );
 				double bodySpanScore = 0;
 				for ( unsigned index = 0;  index < bodySpans.size( );  ++index )
 					{
@@ -364,9 +362,10 @@ namespace dex
 					{
 					std::cout << "Body Span Score: " << bodySpanScore << std::endl;
 					}
+				wordCount.clear( );
 				vector < unsigned > titleWordCount;
-				vector < unsigned > titleSpans = getDesiredSpans( titleISRs, rarestWord, 
-						dynamicTitleSpanHeuristics, maxNumTitleSpans, endDocument );
+				vector < unsigned > titleSpans = getDesiredSpans( titleISRs, dynamicTitleSpanHeuristics,
+						maxNumTitleSpans, beginDocument, endDocument, wordCount );
 				double titleSpanScore = 0;
 				for ( unsigned index = 0;  index < titleSpans.size( );  ++index )
 					{

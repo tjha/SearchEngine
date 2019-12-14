@@ -71,18 +71,6 @@ namespace dex
 					}
 				return internal[ npos ];
 				}
-			void reset( size_t target )
-				{
-				for ( unsigned index = 0;  index < internal.size( );  ++index )
-					{
-					if ( internal[ index ] >= target )
-						{
-						pos = index;
-						return;
-						}
-					}
-				pos = internal.size( );
-				}
 			size_t seek( size_t target )
 				{
 				for ( unsigned index = 0;  index < internal.size( );  ++index )
@@ -139,20 +127,6 @@ namespace dex
 				internal = vecIn;
 				pos = 0;
 				ends = endsIn;
-				}
-
-			
-			void reset( size_t target )
-				{
-				for ( unsigned index = 0;  index < internal.size( );  ++index )
-					{
-					if ( internal[ index ] >= target )
-						{
-						pos = index;
-						return;
-						}
-					}
-				pos = internal.size( );
 				}
 			// Jump this ISR to the first instance of our pattern that is at or after target. Return the location of the
 			// instance, or -1 if there is none.

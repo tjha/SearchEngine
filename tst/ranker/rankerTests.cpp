@@ -106,7 +106,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		dex::vector < unsigned > end = { 902 };
 		dex::endOfDocumentISR endisr( end );
 		std::cout << "basic spanning, simple\n";
-		dex::vector < unsigned > duo = { 1, 3, 900 };
+		dex::vector < unsigned > duo = { 1, 3, 900, 950 };
 		dex::ISR duoISR( "duo", duo, endisr );
 		dex::vector < unsigned > mushu = { 2, 61, 901 };
 		dex::ISR mushuISR( "mushu", mushu, endisr );
@@ -119,8 +119,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
 			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
 		dex::vector < unsigned > wordCount;
-		unsigned rarest = judge.getRarestWord( isrs, 0, 902, wordCount );
-		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, 1, heuristics, 5, 902 );
+		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, heuristics, 5, 0, 951, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans.size( );  ++i )
@@ -131,7 +130,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		REQUIRE( spans[ 0 ] == 2 );
 		REQUIRE( spans[ 1 ] == 0 );
 		REQUIRE( spans[ 2 ] == 1 );
-		REQUIRE( wordCount[ 0 ] == 3 );
+		REQUIRE( wordCount[ 0 ] == 4 );
 		REQUIRE( wordCount[ 1 ] == 3 );
 		}
 	SECTION( "Quick Brown Fox" )
@@ -153,9 +152,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
 			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
 		dex::vector < unsigned > wordCount;
-		unsigned rarest = judge.getRarestWord( isrs, 0, 959, wordCount );
-		REQUIRE( rarest == 2 );
-		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, 1, heuristics, 5, 959 );
+		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, heuristics, 5, 0, 959, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans.size( );  ++i )
@@ -164,7 +161,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 			prevHeuristic = heuristics[ i ].first * isrs.size( );
 			}
 		REQUIRE( spans[ 0 ] == 2 );
-		REQUIRE( spans[ 1 ] == 2 );
+		REQUIRE( spans[ 1 ] == 1 );
 		REQUIRE( spans[ 2 ] == 0 );
 		REQUIRE( spans[ 3 ] == 1 );
 		REQUIRE( wordCount[ 0 ] == 10 );
@@ -202,9 +199,7 @@ TEST_CASE( "edge cases", "[ranker]" )
 		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
 			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
 		dex::vector < unsigned > wordCount;
-		unsigned rarest = judge.getRarestWord( isrs, 0, 959, wordCount );
-		REQUIRE( rarest == 0 );
-		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, 1, heuristics, 5, 959 );
+		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, heuristics, 5, 0, 959, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans.size( );  ++i )
@@ -238,9 +233,7 @@ TEST_CASE( "edge cases", "[ranker]" )
 		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
 			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
 		dex::vector < unsigned > wordCount;
-		unsigned rarest = judge.getRarestWord( isrs, 0, 959, wordCount );
-		REQUIRE( rarest == 0 );
-		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, 1, heuristics, 5, 959 );
+		dex::vector < unsigned > spans = judge.getDesiredSpans( isrs, heuristics, 5, 0, 959, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans.size( );  ++i )
