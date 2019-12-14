@@ -42,6 +42,8 @@ class Parser
    // Stream of tokens to consume input from
    TokenStream stream;
 
+   dex::index::indexChunk indexChunk;
+
    /**
     * Find the appropriate nonterminal
     *
@@ -57,7 +59,7 @@ class Parser
 
    Expression *FindEmph( );
 
-   Expression *FindPhrase( );
+   dex::constraintSolver::ISR *FindPhrase( );
 
 public:
 
@@ -70,7 +72,7 @@ public:
     * The public interface of the parser. Call this function,
     * rather than the private internal functions.
     */
-   Expression *Parse( );
+   dex::constraintSolver::ISR *Parse( );
    };
 // class Parser
 

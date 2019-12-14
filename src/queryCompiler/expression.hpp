@@ -18,6 +18,11 @@ class Expression
 	};
 // class Expression
 
+dex::constraintSolver::endOfDocumentISR * f( dex::index::indexChunk *chunk )
+	{
+	dex::index::indexChunk::endOfDocumentIndexStreamReader varName( chunk, "" );
+	}
+
 /**
  * <Neg> ::= '-' <AddSub>
  */
