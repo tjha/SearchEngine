@@ -178,148 +178,175 @@ namespace dex
 			// rarest should be the index of the ISR of the rarest word in the query
 			// { 1, 2, 4, 8 }
 			// ISRs will not be moved back to the beginning
-			vector < unsigned > getDesiredSpans( vector < ISR > &isrs, 
-					const vector < pair < unsigned, double > > &heuristics, unsigned maxNumSpans,
-					unsigned beginDocument, unsigned endDocument, vector < unsigned > &wordCount )
+			vector < vector < unsigned > > getDesiredSpans( vector < ISR > &isrs, endOfDocumentISR ends,
+					const vector < pair < unsigned, double > > &heuristics, unsigned maxNumSpans, vector < vector < unsigned > > &wordCount )
 				{
+				vector < vector < unsigned > > documentSpans;
+				
+				wordCount.clear( );
 				unsigned size = isrs.size( );
-				vector < unsigned > spansOccurances( heuristics.size( ) );
-				vector < unsigned > current( size );
-				vector < unsigned > next( size );
-				wordCount.resize( size );
-
+				vector < unsigned > firstValues;
+				firstValues.resize( size );
+				unsigned beginDocument = 0;
+				unsigned endDocument = ends.next( );
 				for ( unsigned index = 0;  index < size;  ++index )
 					{
-					wordCount[ index ] = 0;
-					unsigned result = isrs[ index ].next( );
-					while ( result < endDocument )
-						{
-						++wordCount[ index ];
-						result = isrs[ index ].next( );
-						}
-					current[ index ] = isrs[ index ].seek( beginDocument );
+					firstValues[ index ] = isrs[ index ].next( );
 					}
-				unsigned minCount = wordCount[ 0 ];
-				unsigned minIndex = 0;
-				std::cout << "Index: " << 0 << std::endl;
-				std::cout << "Word Count: " << minCount << std::endl;
-				for ( unsigned index = 1;  index < size;  ++index )
+				while ( endDocument != dex::endOfDocumentISR::npos )
 					{
-					std::cout << "Index: " << index << std::endl;
-					std::cout << "Word Count: " << wordCount[ index ] << std::endl;
-					if ( wordCount[ index ] < minCount )
-						{
-						minCount = wordCount[ index ];
-						minIndex = index;
-						}
-					}
-				unsigned rarest = minIndex;
-				std::cout << "rarest calculated to be " << rarest << std::endl;
-				
-				
-				for ( unsigned index = 0;  index < size;  ++index )
-					{
-					std::cout << "Initializing " << isrs[ index ].getWord ( ) << "\n";
-					std::cout << "\t" << current[ index ];
-					next[ index ] = isrs[ index ].next( );
-					std::cout << "\t" << next[ index ] << "\n";
-					}
-
-				dex::vector < unsigned > closestLocations( size );
-				while ( current[ rarest ] < endDocument )
-					{
-					std::cout << "Iteration: " << current[ rarest ] << "\n";
-					closestLocations[ rarest ] = current[ rarest ];
+					vector < unsigned > currentWordCount;
+					
+					vector < unsigned > spansOccurances( heuristics.size( ) );
+					vector < unsigned > current( size );
+					vector < unsigned > next( size );
+					currentWordCount.resize( size );
+					std::cout << "begin next: " << endDocument << std::endl;
 					for ( unsigned index = 0;  index < size;  ++index )
 						{
-						unsigned desiredPosition;
-						if ( current[ rarest ] + index < rarest )
-							desiredPosition = 0;
-						else
-							desiredPosition = current[ rarest ] + index - rarest;
-
-						std::cout << "\t -" << isrs[ index ].getWord( ) << " starts at " << current[ index ] 
-								<< " with desiredPosition of " << desiredPosition << "\n";
-						if ( index != rarest )
+						std::cout << "for index: " << index << std::endl;
+						currentWordCount[ index ] = 0;
+						// Check to see if the value found earlier is a part of this document.
+						// if it was, increment the words found.
+						if ( firstValues[ index ] < endDocument )
 							{
-							// Position our ISRs such that current is less than our desired position and next is greater than our
-							// desired position.
-							// next[ index ] - current[ rarest ] < index - rarest
-							while ( next[ index ] < endDocument && next[ index ] + rarest < current[ rarest ] + index )
+							std::cout << firstValues[ index ] << std::endl;
+							currentWordCount[ index ]++;
+							unsigned result = isrs[ index ].next( );
+							while ( result < endDocument )
 								{
-								current[ index ] = next[ index ];
-								next[ index ] = isrs[ index ].next( );
-								std::cout << "\t\t\t..." << current[ index ] << "\n";
+								std::cout << result << std::endl;
+								++currentWordCount[ index ];
+								result = isrs[ index ].next( );
 								}
+							}
+						current[ index ] = isrs[ index ].seek( beginDocument );
+						}
+					unsigned minCount = currentWordCount[ 0 ];
+					unsigned minIndex = 0;
+					std::cout << "Index: " << 0 << std::endl;
+					std::cout << "Word Count: " << minCount << std::endl;
+					for ( unsigned index = 1;  index < size;  ++index )
+						{
+						std::cout << "Index: " << index << std::endl;
+						std::cout << "Word Count: " << currentWordCount[ index ] << std::endl;
+						if ( currentWordCount[ index ] < minCount )
+							{
+							minCount = currentWordCount[ index ];
+							minIndex = index;
+							}
+						}
+					unsigned rarest = minIndex;
+					std::cout << "rarest calculated to be " << rarest << std::endl;
+					
+					
+					for ( unsigned index = 0;  index < size;  ++index )
+						{
+						std::cout << "Initializing " << isrs[ index ].getWord ( ) << "\n";
+						std::cout << "\t" << current[ index ];
+						next[ index ] = isrs[ index ].next( );
+						std::cout << "\t" << next[ index ] << "\n";
+						}
 
-							// Take the value that is closest to our desired position for this span.
-							unsigned closest;
-							// if ( desiredPosition - current[ index ] < next[ index ] - desiredPosition )
-							if ( desiredPosition + desiredPosition < next[ index ] + current[ index ] )
-								{
-								closest = current[ index ];
-								std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-										<< " and " << next[ index ] << "\n";
-								}
+					dex::vector < unsigned > closestLocations( size );
+					while ( current[ rarest ] < endDocument )
+						{
+						std::cout << "Iteration: " << current[ rarest ] << "\n";
+						closestLocations[ rarest ] = current[ rarest ];
+						for ( unsigned index = 0;  index < size;  ++index )
+							{
+							unsigned desiredPosition;
+							if ( current[ rarest ] + index < rarest )
+								desiredPosition = 0;
 							else
+								desiredPosition = current[ rarest ] + index - rarest;
+
+							std::cout << "\t -" << isrs[ index ].getWord( ) << " starts at " << current[ index ] 
+									<< " with desiredPosition of " << desiredPosition << "\n";
+							if ( index != rarest )
 								{
-								// if ( desiredPosition - current[ index ] > next[ index ] - desiredPosition || index > rarest )
-								if ( next[ index ] < endDocument && 
-										( 2 * desiredPosition > next[ index ] + current[ index ]  || index > rarest ) )
+								// Position our ISRs such that current is less than our desired position and next is greater than our
+								// desired position.
+								// next[ index ] - current[ rarest ] < index - rarest
+								while ( next[ index ] < endDocument && next[ index ] + rarest < current[ rarest ] + index )
 									{
-									closest = next[ index ];
-									std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-											<< " and " << next[ index ] << "\n";
+									current[ index ] = next[ index ];
+									next[ index ] = isrs[ index ].next( );
+									std::cout << "\t\t\t..." << current[ index ] << "\n";
 									}
-								else
+
+								// Take the value that is closest to our desired position for this span.
+								unsigned closest;
+								// if ( desiredPosition - current[ index ] < next[ index ] - desiredPosition )
+								if ( desiredPosition + desiredPosition < next[ index ] + current[ index ] )
 									{
 									closest = current[ index ];
 									std::cout << "\t\tChoose " << closest << " between " << current[ index ]
 											<< " and " << next[ index ] << "\n";
 									}
+								else
+									{
+									// if ( desiredPosition - current[ index ] > next[ index ] - desiredPosition || index > rarest )
+									if ( next[ index ] < endDocument && 
+											( 2 * desiredPosition > next[ index ] + current[ index ]  || index > rarest ) )
+										{
+										closest = next[ index ];
+										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+												<< " and " << next[ index ] << "\n";
+										}
+									else
+										{
+										closest = current[ index ];
+										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+												<< " and " << next[ index ] << "\n";
+										}
+									}
+								closestLocations[ index ] = closest;
 								}
-							closestLocations[ index ] = closest;
+							}
+						unsigned min = endDocument;
+						unsigned max = 0;
+						for ( unsigned index = 0;  index < size;  ++index )
+							{
+							if ( closestLocations[ index ] > max )
+								{
+								max = closestLocations[ index ];
+								}
+							if ( closestLocations[ index ] < min )
+								{
+								min = closestLocations[ index ];
+								}
+							}
+						// What if min/max weren't updated??
+						unsigned span = max - min + 1;
+						std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
+						for ( unsigned index = 0;  index < heuristics.size( );  ++index )
+							{
+							if ( span <= heuristics[ index ].first * size )
+								{
+								if ( spansOccurances[ index ] < maxNumSpans )
+									{
+									spansOccurances[ index ]++;
+									}
+								break;
+								}
+							}
+						current[ rarest ] = next[ rarest ];
+						if ( next[ rarest ] < endDocument )
+							{
+							next[ rarest ] = isrs[ rarest ].next( );
 							}
 						}
-					unsigned min = endDocument;
-					unsigned max = 0;
 					for ( unsigned index = 0;  index < size;  ++index )
 						{
-						if ( closestLocations[ index ] > max )
-							{
-							max = closestLocations[ index ];
-							}
-						if ( closestLocations[ index ] < min )
-							{
-							min = closestLocations[ index ];
-							}
+						firstValues[ index ] = isrs[ index ].seek( endDocument );
 						}
-					// What if min/max weren't updated??
-					unsigned span = max - min + 1;
-					std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
-					for ( unsigned index = 0;  index < heuristics.size( );  ++index )
-						{
-						if ( span <= heuristics[ index ].first * size )
-							{
-							if ( spansOccurances[ index ] < maxNumSpans )
-								{
-								spansOccurances[ index ]++;
-								}
-							break;
-							}
-						}
-					current[ rarest ] = next[ rarest ];
-					next[ rarest ] = isrs[ rarest ].next( );
+					documentSpans.pushBack( spansOccurances );
+					wordCount.pushBack( currentWordCount );
+					beginDocument = endDocument;
+					endDocument = ends.next( );
 					}
-				for ( unsigned index = 0;  index < size;  ++index )
-					{
-					while ( next[ index ] < endDocument )
-						{
-						current[ index ] = next[ index ];
-						next[ index ] = isrs[ index ].next( ); 
-						}
-					}
-				return spansOccurances;
+				return documentSpans;
 				}
 
 			double getDynamicWordScore( const vector < unsigned > &wordCount, unsigned documentLength, vector < bool > emphasized, 
@@ -347,44 +374,71 @@ namespace dex
 			// bodyISRs, titleISRs, and emphasized should be in the order of the flattened query
 			// ISRs will be shifted to the next position after the function ends, and begin after beginDocument
 			// beginDocument and endDocument keep track of the document boundaries
-			double getDynamicScore( vector < ISR > &bodyISRs, vector < ISR > &titleISRs,
-			unsigned beginDocument, unsigned endDocument, vector < bool > emphasized, bool printInfo = false )
+			vector < double > getDynamicScores( vector < ISR > &bodyISRs, vector < ISR > &titleISRs, endOfDocumentISR &ends,
+					vector < bool > emphasized, bool printInfo = false )
 				{
-				vector < unsigned > wordCount;
-				vector < unsigned > bodySpans = getDesiredSpans( bodyISRs, dynamicBodySpanHeuristics,
-						maxNumBodySpans, beginDocument, endDocument, wordCount );
-				double bodySpanScore = 0;
-				for ( unsigned index = 0;  index < bodySpans.size( );  ++index )
+				vector < vector < unsigned > > wordCount;
+				vector < vector < unsigned > > bodySpans = getDesiredSpans( bodyISRs, ends, dynamicBodySpanHeuristics,
+						maxNumBodySpans, wordCount );
+				vector < double > bodySpanScores;
+				
+				for ( unsigned i = 0;  i < bodySpans.size( );  ++i )
 					{
-					bodySpanScore += bodySpans[ index ] * dynamicBodySpanHeuristics[ index ].second;
+					double bodySpanScore = 0;
+					for ( unsigned j = 0;  j < bodySpans[ i ].size( );  ++j )
+						{
+						bodySpanScore += bodySpans[ i ][ j ] * dynamicBodySpanHeuristics[ j ].second;
+						}
+					bodySpanScores.pushBack( bodySpanScore );
+					if ( printInfo )
+						{
+						std::cout << "Index " << i << ", Body Span Score: " << bodySpanScore << std::endl;
+						}
 					}
-				if ( printInfo )
-					{
-					std::cout << "Body Span Score: " << bodySpanScore << std::endl;
-					}
+				
 				wordCount.clear( );
-				vector < unsigned > titleWordCount;
-				vector < unsigned > titleSpans = getDesiredSpans( titleISRs, dynamicTitleSpanHeuristics,
-						maxNumTitleSpans, beginDocument, endDocument, wordCount );
-				double titleSpanScore = 0;
-				for ( unsigned index = 0;  index < titleSpans.size( );  ++index )
+				ends.reset( );
+				vector < vector < unsigned > > titleWordCount;
+				vector < vector < unsigned > > titleSpans = getDesiredSpans( titleISRs, ends, dynamicTitleSpanHeuristics,
+						maxNumTitleSpans, wordCount );
+				vector < double > titleSpanScores;
+				
+				for ( unsigned i = 0;  i < titleSpans.size( );  ++i )
 					{
-					titleSpanScore += titleSpans[ index ] * dynamicTitleSpanHeuristics[ index ].second;
+					double titleSpanScore = 0;
+					for ( unsigned j = 0;  j < titleSpans[ i ].size( );  ++j )
+						{
+						titleSpanScore += titleSpans[ i ][ j ] * dynamicTitleSpanHeuristics[ j ].second;
+						}
+					titleSpanScores.pushBack( titleSpanScore );
+					if ( printInfo )
+						{
+						std::cout << "Index: " << i << ", Title Span Score: " << titleSpanScore << std::endl;
+						}
 					}
-				if ( printInfo )
+				vector < double > dynamicWordScores;
+				ends.reset( );
+				unsigned beginDocument = 0;
+				unsigned endDocument = ends.next( );
+				for ( unsigned i = 0;  i < wordCount.size( );  ++i )
 					{
-					std::cout << "Title Span Score: " << titleSpanScore << std::endl;
-					}
-				double dynamicWordScore = 0;
-				unsigned docLength = beginDocument - endDocument;
-				dynamicWordScore = getDynamicWordScore( wordCount, docLength, emphasized,
+					unsigned dynamicWordScore = getDynamicWordScore( wordCount[ i ], endDocument - beginDocument, emphasized,
 						emphasizedWeight, proportionCap );
-				if ( printInfo )
-					{
-					std::cout << "Dynamic Word Score: " << dynamicWordScore << std::endl;
+					dynamicWordScores.pushBack( dynamicWordScore );
+					if ( printInfo )
+						{
+						std::cout << "Index: " << i << ", Dynamic Word Score: " << dynamicWordScore << std::endl;
+						}
+					beginDocument = endDocument;
+					endDocument = ends.next( );
 					}
-
-				return bodySpanScore + titleSpanScore + dynamicWordScore;
+				
+				vector < double > totalScores;
+				for ( unsigned i = 0;  i < dynamicWordScores.size( );  ++i )
+					{
+					totalScores.pushBack( bodySpanScores[ i ] + titleSpanScores[ i ] + dynamicWordScores[ i ] );
+					}
+				return totalScores;
 				}
 			
 			// dex::vector < dex::searchResult > getTopN( size_t n, dex::string query )

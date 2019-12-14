@@ -63,6 +63,10 @@ namespace dex
 				pos = 0;
 				}
 			const static unsigned npos = unsigned ( -1 );
+			void reset( )
+				{
+				pos = 0;
+				}
 			size_t current( )
 				{
 				if ( pos == internal.size( ) )
