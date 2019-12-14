@@ -28,6 +28,7 @@ struct RankerConfiguration
 	constexpr static const unsigned MaxBodySpans = 5;
 	// Maximum number of spans we measure for title ISRs
 	constexpr static const unsigned MaxTitleSpans = 1;
+	constexpr static const double wordWeight = 1000;
 	};
 
 const dex::vector < dex::pair < unsigned, double > > RankerConfiguration::StaticTitleWeights = 

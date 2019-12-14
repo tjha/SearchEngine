@@ -32,6 +32,7 @@ namespace dex
 			unsigned maxNumTitleSpans;
 			double emphasizedWeight;
 			double proportionCap;
+			double wordsWeight;
 			dex::vector < dex::indexChunkObject * > chunkPointers;
 			
 
@@ -40,7 +41,7 @@ namespace dex
 					dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics, 
 					dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics,
 					double emphasizedWeightIn, double proportionCapIn,
-					unsigned bodySpans, unsigned titleSpans, dex::vector < dex::indexChunkObject * > someChunks )
+					unsigned bodySpans, unsigned titleSpans, double wordsWeightIn, dex::vector < dex::indexChunkObject * > someChunks )
 				{
 				staticTitleWeights = titleWeights;
 				staticUrlWeight = urlWeight;
@@ -51,6 +52,7 @@ namespace dex
 				maxNumTitleSpans = titleSpans;
 				emphasizedWeight = emphasizedWeightIn;
 				proportionCap = proportionCapIn;
+				wordsWeight = wordsWeightIn;
 				}
 			
 			ranker ( dex::vector < dex::indexChunkObject * > someChunks )
@@ -65,6 +67,7 @@ namespace dex
 				maxNumTitleSpans = config.MaxTitleSpans;
 				emphasizedWeight = config.EmphasizedWeight;
 				proportionCap = config.ProportionCap;
+				wordsWeight = config.wordWeight;
 				}
 
 			double staticScoreUrl( const dex::Url &url )
@@ -201,21 +204,21 @@ namespace dex
 					vector < unsigned > current( size );
 					vector < unsigned > next( size );
 					currentWordCount.resize( size );
-					std::cout << "begin next: " << endDocument << std::endl;
+					//std::cout << "begin next: " << endDocument << std::endl;
 					for ( unsigned index = 0;  index < size;  ++index )
 						{
-						std::cout << "for index: " << index << std::endl;
+						//std::cout << "for index: " << index << std::endl;
 						currentWordCount[ index ] = 0;
 						// Check to see if the value found earlier is a part of this document.
 						// if it was, increment the words found.
 						if ( firstValues[ index ] < endDocument )
 							{
-							std::cout << firstValues[ index ] << std::endl;
+							//std::cout << firstValues[ index ] << std::endl;
 							currentWordCount[ index ]++;
 							unsigned result = isrs[ index ].next( );
 							while ( result < endDocument )
 								{
-								std::cout << result << std::endl;
+								//std::cout << result << std::endl;
 								++currentWordCount[ index ];
 								result = isrs[ index ].next( );
 								}
@@ -224,12 +227,12 @@ namespace dex
 						}
 					unsigned minCount = currentWordCount[ 0 ];
 					unsigned minIndex = 0;
-					std::cout << "Index: " << 0 << std::endl;
-					std::cout << "Word Count: " << minCount << std::endl;
+					//std::cout << "Index: " << 0 << std::endl;
+					//std::cout << "Word Count: " << minCount << std::endl;
 					for ( unsigned index = 1;  index < size;  ++index )
 						{
-						std::cout << "Index: " << index << std::endl;
-						std::cout << "Word Count: " << currentWordCount[ index ] << std::endl;
+						//std::cout << "Index: " << index << std::endl;
+						//std::cout << "Word Count: " << currentWordCount[ index ] << std::endl;
 						if ( currentWordCount[ index ] < minCount )
 							{
 							minCount = currentWordCount[ index ];
@@ -237,21 +240,21 @@ namespace dex
 							}
 						}
 					unsigned rarest = minIndex;
-					std::cout << "rarest calculated to be " << rarest << std::endl;
+					//std::cout << "rarest calculated to be " << rarest << std::endl;
 					
 					
 					for ( unsigned index = 0;  index < size;  ++index )
 						{
-						std::cout << "Initializing " << isrs[ index ].getWord ( ) << "\n";
-						std::cout << "\t" << current[ index ];
+						//std::cout << "Initializing " << isrs[ index ].getWord ( ) << "\n";
+						//std::cout << "\t" << current[ index ];
 						next[ index ] = isrs[ index ].next( );
-						std::cout << "\t" << next[ index ] << "\n";
+						//std::cout << "\t" << next[ index ] << "\n";
 						}
 
 					dex::vector < unsigned > closestLocations( size );
 					while ( current[ rarest ] < endDocument )
 						{
-						std::cout << "Iteration: " << current[ rarest ] << "\n";
+						//std::cout << "Iteration: " << current[ rarest ] << "\n";
 						closestLocations[ rarest ] = current[ rarest ];
 						for ( unsigned index = 0;  index < size;  ++index )
 							{
@@ -261,8 +264,8 @@ namespace dex
 							else
 								desiredPosition = current[ rarest ] + index - rarest;
 
-							std::cout << "\t -" << isrs[ index ].getWord( ) << " starts at " << current[ index ] 
-									<< " with desiredPosition of " << desiredPosition << "\n";
+							//std::cout << "\t -" << isrs[ index ].getWord( ) << " starts at " << current[ index ] 
+							//		<< " with desiredPosition of " << desiredPosition << "\n";
 							if ( index != rarest )
 								{
 								// Position our ISRs such that current is less than our desired position and next is greater than our
@@ -272,7 +275,7 @@ namespace dex
 									{
 									current[ index ] = next[ index ];
 									next[ index ] = isrs[ index ].next( );
-									std::cout << "\t\t\t..." << current[ index ] << "\n";
+									//std::cout << "\t\t\t..." << current[ index ] << "\n";
 									}
 
 								// Take the value that is closest to our desired position for this span.
@@ -281,8 +284,8 @@ namespace dex
 								if ( desiredPosition + desiredPosition < next[ index ] + current[ index ] )
 									{
 									closest = current[ index ];
-									std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-											<< " and " << next[ index ] << "\n";
+									//std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+									//		<< " and " << next[ index ] << "\n";
 									}
 								else
 									{
@@ -291,14 +294,14 @@ namespace dex
 											( 2 * desiredPosition > next[ index ] + current[ index ]  || index > rarest ) )
 										{
 										closest = next[ index ];
-										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-												<< " and " << next[ index ] << "\n";
+										//std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+										//		<< " and " << next[ index ] << "\n";
 										}
 									else
 										{
 										closest = current[ index ];
-										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-												<< " and " << next[ index ] << "\n";
+										//std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+										//		<< " and " << next[ index ] << "\n";
 										}
 									}
 								closestLocations[ index ] = closest;
@@ -319,7 +322,7 @@ namespace dex
 							}
 						// What if min/max weren't updated??
 						unsigned span = max - min + 1;
-						std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
+						//std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
 						for ( unsigned index = 0;  index < heuristics.size( );  ++index )
 							{
 							if ( span <= heuristics[ index ].first * size )
@@ -350,7 +353,7 @@ namespace dex
 				}
 
 			double getDynamicWordScore( const vector < unsigned > &wordCount, unsigned documentLength, vector < bool > emphasized, 
-					double emphasizedWeight, double proportionCap )
+					double emphasizedWeight, double proportionCap, double wordWeight )
 				{
 				double score = 0;
 				for ( unsigned index = 0;  index < wordCount.size( );  ++index )
@@ -364,12 +367,12 @@ namespace dex
 						score += wordCount[ index ];
 						}
 					}
-				score /= documentLength;
+				score /= double ( documentLength );
 				if ( score > proportionCap )
 					{
 					score = proportionCap;
 					}
-				return proportionCap;
+				return score * wordWeight;
 				}
 			// bodyISRs, titleISRs, and emphasized should be in the order of the flattened query
 			// ISRs will be shifted to the next position after the function ends, and begin after beginDocument
@@ -395,6 +398,27 @@ namespace dex
 						std::cout << "Index " << i << ", Body Span Score: " << bodySpanScore << std::endl;
 						}
 					}
+
+				vector < double > dynamicWordScores;
+				ends.reset( );
+				unsigned beginDocument = 0;
+				unsigned endDocument = ends.next( );
+				for ( unsigned i = 0;  i < wordCount.size( );  ++i )
+					{
+					for ( unsigned j = 0; j < wordCount[ i ]. size( ); ++j )
+						{
+						std::cout << wordCount[ i ][ j ] << " " << std::endl;
+						}
+					double dynamicWordScore = getDynamicWordScore( wordCount[ i ], endDocument - beginDocument, emphasized,
+						emphasizedWeight, proportionCap, wordsWeight );
+					dynamicWordScores.pushBack( dynamicWordScore );
+					if ( printInfo )
+						{
+						std::cout << "Index: " << i << ", Dynamic Word Score: " << dynamicWordScore << std::endl;
+						}
+					beginDocument = endDocument;
+					endDocument = ends.next( );
+					}
 				
 				wordCount.clear( );
 				ends.reset( );
@@ -416,27 +440,23 @@ namespace dex
 						std::cout << "Index: " << i << ", Title Span Score: " << titleSpanScore << std::endl;
 						}
 					}
-				vector < double > dynamicWordScores;
-				ends.reset( );
-				unsigned beginDocument = 0;
-				unsigned endDocument = ends.next( );
-				for ( unsigned i = 0;  i < wordCount.size( );  ++i )
-					{
-					unsigned dynamicWordScore = getDynamicWordScore( wordCount[ i ], endDocument - beginDocument, emphasized,
-						emphasizedWeight, proportionCap );
-					dynamicWordScores.pushBack( dynamicWordScore );
-					if ( printInfo )
-						{
-						std::cout << "Index: " << i << ", Dynamic Word Score: " << dynamicWordScore << std::endl;
-						}
-					beginDocument = endDocument;
-					endDocument = ends.next( );
-					}
+				
 				
 				vector < double > totalScores;
 				for ( unsigned i = 0;  i < dynamicWordScores.size( );  ++i )
 					{
 					totalScores.pushBack( bodySpanScores[ i ] + titleSpanScores[ i ] + dynamicWordScores[ i ] );
+					}
+				return totalScores;
+				}
+
+			vector < double > scoreDocuments( matchedDocuments documents, bool printinfo = false )
+				{
+				vector < double > totalScores = getDynamicScores( documents.bodyISRs, documents.titleISRs,
+						documents.endISR, documents.emphasizedWords, printinfo );
+				for ( int i = 0;  i < documents.titles.size( );  ++i )
+					{
+					totalScores[ i ] += getStaticScore( documents.titles[ i ], documents.urls[ i ], printinfo );
 					}
 				return totalScores;
 				}

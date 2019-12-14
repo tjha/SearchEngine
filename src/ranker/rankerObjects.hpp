@@ -62,6 +62,12 @@ namespace dex
 				internal = vecIn;
 				pos = 0;
 				}
+			endOfDocumentISR &operator =( const endOfDocumentISR other )
+				{
+				internal = other.internal;
+				pos = other.pos;
+				return *this;
+				}
 			const static unsigned npos = unsigned ( -1 );
 			void reset( )
 				{
@@ -199,6 +205,7 @@ namespace dex
 		// All four vectors should be in the order of the flattened query
 		dex::vector < dex::ISR > titleISRs;
 		dex::vector < dex::ISR > bodyISRs;
+		dex::endOfDocumentISR endISR;
 		dex::ISR *matchingDocumentISR;
 		// next of matchingDocumentISR returns the offset of the end document that you care about
 		dex::index::indexChunk *chunk;
