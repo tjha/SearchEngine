@@ -127,6 +127,7 @@ bool pathIsLegal( dex::string path )
 
 void *Talk( void *p )
 	{
+	std::cout << "start Talk" << std::endl;
 	size_t bufferSize = 10240;
 	char buffer[ bufferSize ];
 	int bytes;
@@ -170,6 +171,15 @@ void *Talk( void *p )
 		spacePos = query.find( "%20" );
 		}
 
+	// Redirect to Easter Egg Page
+	if ( query == "Team Socket" )
+		{
+		dex::string responseHeader = "HTTP/1.1 301 Moved Permanently\r\nLocation: /team.html\r\nConnection: close\r\n\r\n";
+		send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
+		return nullptr;
+		}
+		
+
 	std::cout << "Path: " << path << std::endl;
 	std::cout << "Query: " << query << std::endl;
 	std::cout << "Trigger: " << toggle << std::endl << std::endl;
@@ -179,6 +189,7 @@ void *Talk( void *p )
 		{
 		dex::string responseHeader = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
 		send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
+		return nullptr;
 		}
 
 	// ranker stuff
@@ -214,9 +225,9 @@ void *Talk( void *p )
 	if ( map == MAP_FAILED )
 		return nullptr;
 
-	int totalSize = fileInfo.st_size + query.size( ) + results.size( );
-	char buff[ sizeof(int) + 1 ];
-	sprintf( buff, "%d", totalSize );
+	long int totalSize = fileInfo.st_size + query.size( ) + results.size( );
+	char buff[ sizeof(long int) + 1 ];
+	snprintf( buff, sizeof( buff ), "%d", totalSize );
 	dex::string responseHeader = "HTTP/1.1 200 OK\r\nContent-Length: "
 		+ dex::string( buff )
 		+ "\r\nConnection: close\r\nContent-Type: " + Mimetype( path ) + "\r\n\r\n";
@@ -227,11 +238,14 @@ void *Talk( void *p )
 		send( socket, content.data( ), content.size( ), 0 );
 	else
 		{
+		int sent = 0;
 		for ( int i = 0;  i != fileInfo.st_size / bufferSize;  ++i )
 			send( socket, map + i * bufferSize, bufferSize, 0 );
+			sent += bufferSize;
 
 		send( socket, map + bufferSize * ( fileInfo.st_size / bufferSize ), fileInfo.st_size % bufferSize, 0 );
 		}
+
 
 
 	close( file );
