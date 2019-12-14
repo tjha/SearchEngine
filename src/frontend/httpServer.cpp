@@ -15,7 +15,7 @@
 
 #include "file.hpp"
 #include "index.hpp"
-#include "ranker.hpp"
+//#include "ranker.hpp"
 #include "basicString.hpp"
 
 //  Multipurpose Internet Mail Extensions (MIME) types
@@ -162,6 +162,14 @@ void *Talk( void *p )
 		path = "results.html";
 		}
 
+	// Loop through and convert %20 to spaces
+	size_t spacePos = query.find( "%20" );
+	while ( spacePos != dex::string::npos )
+		{
+		query.replace( spacePos, 3, " " );
+		spacePos = query.find( "%20" );
+		}
+
 	std::cout << "Path: " << path << std::endl;
 	std::cout << "Query: " << query << std::endl;
 	std::cout << "Trigger: " << toggle << std::endl << std::endl;
@@ -172,7 +180,6 @@ void *Talk( void *p )
 		dex::string responseHeader = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
 		send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
 		}
-
 
 	// ranker stuff
 	// TODO: have a structure to store and change these easily. Maybe in a file?
@@ -189,7 +196,7 @@ void *Talk( void *p )
 	dex::vector < dex::searchResult > searchResults = rankerObject.getTopN( 10, query );*/
 	
 	// TODO: populate webpage with content
-
+	std::cout << request << std::endl;
 
 	struct stat fileInfo;
 	fstat( file, &fileInfo );
@@ -233,7 +240,7 @@ void *Talk( void *p )
 
 
 // Global variables for ranker
-dex::vector < dex::indexChunkObject * > indexChunkObjects;
+//dex::vector < dex::indexChunkObject * > indexChunkObjects;
 
 int main( int argc, char **argv )
 	{
@@ -306,8 +313,9 @@ int main( int argc, char **argv )
 		pthread_create( &child, nullptr, Talk, new int( talkSockfd ) );
 		pthread_detach( child );
 		}
-
+	/*
 	for ( dex::vector < dex::indexChunkObject * >::constIterator indexChunkObjectIterator = indexChunkObjects.cbegin( );
 			indexChunkObjectIterator != indexChunkObjects.cend( );  indexChunkObjectIterator++ )
 		delete *indexChunkObjectIterator;
+	*/
 	}
