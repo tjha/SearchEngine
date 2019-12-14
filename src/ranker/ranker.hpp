@@ -345,7 +345,7 @@ namespace dex
 					beginDocument = endDocument;
 					endDocument = ends.next( );
 					}
-				
+				return documentSpans;
 				}
 
 			double getDynamicWordScore( const vector < unsigned > &wordCount, unsigned documentLength, vector < bool > emphasized, 

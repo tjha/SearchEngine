@@ -122,7 +122,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, endisr, heuristics, 5, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
-		for ( unsigned i = 0;  i < spans.size( );  ++i )
+		for ( unsigned i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
 			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic + 1 << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
 			prevHeuristic = heuristics[ i ].first * isrs.size( );
@@ -155,7 +155,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, endisr, heuristics, 5, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
-		for ( unsigned i = 0;  i < spans.size( );  ++i )
+		for ( unsigned i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
 			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic + 1 << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
 			prevHeuristic = heuristics[ i ].first * isrs.size( );
@@ -202,7 +202,7 @@ TEST_CASE( "edge cases", "[ranker]" )
 		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, endisr, heuristics, 5, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
-		for ( unsigned i = 0;  i < spans.size( );  ++i )
+		for ( unsigned i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
 			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
 			prevHeuristic = heuristics[ i ].first;
@@ -236,7 +236,7 @@ TEST_CASE( "edge cases", "[ranker]" )
 		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, endisr, heuristics, 5, wordCount );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
-		for ( unsigned i = 0;  i < spans.size( );  ++i )
+		for ( unsigned i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
 			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
 			prevHeuristic = heuristics[ i ].first;
