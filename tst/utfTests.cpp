@@ -11,6 +11,7 @@
 #include "../src/utils/unorderedSet.hpp"
 #include "../src/utils/utf.hpp"
 #include "../src/utils/vector.hpp"
+#include <iostream>
 
 using namespace dex;
 using namespace dex::utf;
@@ -325,7 +326,7 @@ TEST_CASE( "encode and decode", "[utf]" )
 
 	SECTION( "string" )
 		{
-		unsigned char array[ 100 ];
+		unsigned char array[ 1 << 19 ];
 
 		string s = "I am a string!";
 		REQUIRE( s == decoder < string >( )( ( encoder < string >( )( s ) ).data( ) ) );
@@ -336,6 +337,27 @@ TEST_CASE( "encode and decode", "[utf]" )
 		REQUIRE( s == decoder < string >( )( ( encoder < string >( )( s ) ).data( ) ) );
 		REQUIRE( encoder < string >( )( s, array ) - array == s.size( ) + 1 );
 		REQUIRE( s == decoder < string >( )( array ) );
+
+		vector < string > words = {
+			// string( 1 << 17, '1' ),
+			string( 1 << 4, 203 ),
+			// string( 1 << 13, 'a' ),
+			// string( 1 << 12, 1 ),
+			// string( 1 << 3, 'r' ),
+			// string( 1 << 14, 'u' )
+		};
+
+		encoder < string > stringEncoder;
+		decoder < string > stringDecoder;
+
+		unsigned char *readerHead = array;
+
+		for ( unsigned i = 0;  i < words.size( );  ++i )
+			readerHead = stringEncoder( words[ i ], readerHead );
+
+		readerHead = array;
+		for ( unsigned i = 0;  i < words.size( );  ++i )
+			REQUIRE( words[ i ] == stringDecoder( readerHead, &readerHead ) );
 		}
 
 	SECTION( "unordered map" )

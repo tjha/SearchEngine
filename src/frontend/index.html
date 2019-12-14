@@ -1,49 +1,58 @@
-<!DOCTYPE html>                                                                 
-<html lang="en">                                                                
-                                                                                
-    <head>
-    
-    <style>
-    .center {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        width: 50%;
-    }
-    </style>
-                                                                                
-    <meta charset="utf-8" />                                                    
-    <meta name="viewport" content="width=device-width, initial-scale=1" />         
-                                                                                
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-                                                                                
-    <title>Team Socket Search</title>                                                       
-                                                                                
-    </head>                                                                     
-                                                                                
-    <body>                                                                      
-                                                                                
-    <br><br><br><br><br><br>
-    <div class="container-fluid">                                               
-        <div class="row">                                                       
-        <div class="center">
-            <h1 class="center">Team Socket Search</h1>
-            <br>
-            <img src="./imgs/logo.png" alt="Team Logo",
-style="width:150px;margin-left:330px;">
+<!DOCTYPE html>
+<html lang="en">
 
-            <form class="center", action="/results.html">
-              <br><br>
-              <input type="text" name="query" value="" size="40">
-              <br>
-              <div class="center" style="width:150px">
-                <input type="submit" value="Search">
-              </div>
-            </form>
-        </div>                                                                  
-        </div>                                                                  
-    </div>
-                                                                                
-    </body>                                                                     
-                                                                                
+   <head>
+
+   <style>
+   .center {
+       display: block;
+       margin-left: auto;
+       margin-right: auto;
+       width: 50%;
+   }
+   </style>
+	<script type="text/javascript">
+	  var myBoolean = false;
+	  function searchResults(){
+		 window.location = "/results.html?query=" + document.getElementsByClassName("searchTerm")[0].value + "&toggle=" + myBoolean.toString();
+	  };
+	  function toggleBoolean() {
+			myBoolean = !myBoolean;
+	  }
+	</script>
+
+   <meta charset="utf-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+   <link rel="stylesheet" type="text/css" href="style.css">    
+
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+                                                                               
+   <title>Team Socket Search</title>
+
+   </head>
+
+   <body style="background:url(./imgs/bg.jpg);">
+
+	<h1 class=header>Team Socket</h1>
+                                                                               
+	<div class="wrap">
+		<div class="search" action="/results.html">
+			<input type="text" class="searchTerm" placeholder="What are you searching for?" onKeyDown="if(event.keyCode==13) searchResults();">
+			<button type="submit" class="searchButton" onclick="searchResults();">
+			Search
+		  </button>
+		</div>
+	</div>
+    
+
+   
+	<div class="toggle">
+	  <input type="checkbox" class="check" onclick="toggleBoolean();">
+	  <b class="b switch"></b>
+	  <b class="b track"></b>
+	</div>
+ 
+    </body>
 </html>
+

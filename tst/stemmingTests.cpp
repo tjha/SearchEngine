@@ -1,6 +1,7 @@
 // stemmingTests
 // test[s] for the Port[er] stem[mer]. Taken from http://snowball.tartarus.org/algorithms/porter/stemmer.html
 //
+// 2019-12-13: Add esoteric cases: jasina
 // 2019-11-04: File created: jasina
 
 #include "catch.hpp"
@@ -93,7 +94,11 @@ TEST_CASE( "test stems", "[stemmer]" )
 		{ "rate", "rate" },
 		// Step 5b
 		{ "controll", "control" },
-		{ "roll", "roll" }
+		{ "roll", "roll" },
+		// Others
+		{ "s", "s" },
+		{ "ess", "ess" },
+		{ "", "" }
 	};
 
 	for ( const string *wordPair : wordPairs)
