@@ -38,42 +38,42 @@
  * The actual expression parser
  */
 class Parser
-   {
-   // Stream of tokens to consume input from
-   TokenStream stream;
+	{
+	// Stream of tokens to consume input from
+	TokenStream stream;
 
-   dex::index::indexChunk indexChunk;
+	dex::index::indexChunk *chunk;
 
-   /**
-    * Find the appropriate nonterminal
-    *
-    * Return nullptr if it could not be found
-    */
-   Expression *FindAND( );
+	/**
+	 * Find the appropriate nonterminal
+	 *
+	 * Return nullptr if it could not be found
+	 */
+	Expression *FindAND( );
 
-   Expression *FindFactor( );
+	Expression *FindFactor( );
 
-   Expression *FindNot( );
+	Expression *FindNot( );
 
-   Expression *FindOR( );
+	Expression *FindOR( );
 
-   Expression *FindEmph( );
+	Expression *FindEmph( );
 
-   dex::constraintSolver::ISR *FindPhrase( );
+	Expression *FindPhrase( );
 
 public:
 
-   /**
-    * Construct parser based on given input
-    */
-   Parser( const dex::string &in );
+	/**
+	 * Construct parser based on given input
+	 */
+	Parser( const dex::string &in );
 
-   /**
-    * The public interface of the parser. Call this function,
-    * rather than the private internal functions.
-    */
-   dex::constraintSolver::ISR *Parse( );
-   };
+	/**
+	 * The public interface of the parser. Call this function,
+	 * rather than the private internal functions.
+	 */
+	Expression *Parse( );
+	};
 // class Parser
 
 #endif /* PARSER_H_ */

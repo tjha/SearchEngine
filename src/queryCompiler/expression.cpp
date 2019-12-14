@@ -49,23 +49,26 @@ dex::constraintSolver::ISR * OrExpression::eval( ) const
 	return new dex::constraintSolver::orISR( isrs, endOfDocISR );
 	}
 
-AndExpression::AndExpression( ) { }
+AndExpression::AndExpression( dex::vector < dex::constraintSolver::ISR * > terms) : terms( terms ) { }
 
 AndExpression::~AndExpression( )
 	{
-	for ( Expression *expression : terms )
-		delete expression;
+	for ( dex::constraintSolver::ISR *isr : terms )
+		delete isr;
 	}
 
-dex::constraintSolver::ISR * AndExpression::eval( ) const
+dex::constraintSolver::ISR *AndExpression::eval( ) const
 	{
 	dex::constraintSolver::endOfDocumentISR *endDocISR;
-	dex::vector < dex::constraintSolver::ISR * > isrs;
-	for ( size_t i =0; i < terms.size(); i++)
-		{
-		isrs.pushBack( terms[ i ]->eval( ) );
-		}
-	dex::constraintSolver::andISR retIsr( isrs, endOfDocISR );
+	dex::constraintSolver::andISR retIsr( terms, endOfDocISR );
+	return &retIsr;
+	}
+
+
+dex::constraintSolver::ISR *PhraseExpression::eval( ) const
+	{
+	dex::constraintSolver::endOfDocumentISR *endDocISR;
+	dex::constraintSolver::andISR retIsr( words, endOfDocISR );
 	return &retIsr;
 	}
 

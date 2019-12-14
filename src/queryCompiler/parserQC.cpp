@@ -13,22 +13,21 @@
 #include "expression.hpp"
 #include "parserQC.hpp"
 
-dex::constraintSolver::ISR *Parser::FindPhrase( )
+Expression *Parser::FindPhrase( )
 	{
 	if ( stream.AllConsumed( ) )
 		return nullptr;
 	if ( stream.Match( '"' ) )
 		{
-      dex::vector<dex::constraintSolver::ISR *> phraseIS = stream.ParsePhrase( );
-      dex::index::indexChunk::endOfDocumentIndexStreamReader* endOfDocISR = f( &indexChunk );
-      dex::constraintSolver::phraseISR p( phraseIS, endOfDocISR );   
-		if ( stream.Match( '"' ) )      
-         return p;
-		if ( p )
-			delete p;
+		dex::vector < dex::constraintSolver::ISR * > isrs = stream.ParsePhrase( );
+		PhraseExpression *phrase = new PhraseExpression( isrs );
+		if ( stream.Match( '"' ) )
+			return phrase;
+		if ( phrase )
+			delete phrase;
 		return nullptr;
 		}
-   return FindOR( )->eval( );
+	return new AndExpression( stream.ParsePhrase( ) );
 	}
 
 Expression *Parser::FindFactor( )
@@ -118,16 +117,12 @@ Expression *Parser::FindAND( )
 	return nullptr;
 	}
 
-dex::constraintSolver::ISR *Parser::Parse( )
+Expression *Parser::Parse( )
 	{
 	Expression *root = FindOR( );
-   dex::constraintSolver::ISR * fpResult = FindPhrase( );
-   dex::index::indexChunk::endOfDocumentIndexStreamReader* endOfDocISR = f( &indexChunk );
-		
-   dex::constraintSolver::orISR ret( dex::vector< dex::constraintSolver::ISR * >( { fpResult, root->eval()} ), endOfDocISR );
 	if ( root )
 		if ( stream.AllConsumed( ) )
-			return &ret;
+			return root;
 		delete root;
 	return nullptr;
 	}

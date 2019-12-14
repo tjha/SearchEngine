@@ -14,13 +14,13 @@ class Expression
 	{
 	public:
 		virtual ~Expression( );
-		virtual dex::constraintSolver::ISR *eval(  ) const = 0;
+		virtual dex::constraintSolver::ISR *eval( ) const = 0;
 	};
 // class Expression
 
-dex::constraintSolver::endOfDocumentISR * f( dex::index::indexChunk *chunk )
+dex::index::indexChunk::endOfDocumentIndexStreamReader *getEndOfDocumentISR( dex::index::indexChunk *chunk )
 	{
-	dex::index::indexChunk::endOfDocumentIndexStreamReader varName( chunk, "" );
+	return new dex::index::indexChunk::endOfDocumentIndexStreamReader( chunk, "" );
 	}
 
 /**
@@ -30,10 +30,10 @@ dex::constraintSolver::endOfDocumentISR * f( dex::index::indexChunk *chunk )
 class PhraseExpression : public Expression
 	{
 	protected:
-		dex::vector < dex::string > words;
+		dex::vector < dex::constraintSolver::ISR * > words;
 		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
 	public:
-		PhraseExpression( );
+		PhraseExpression( dex::vector < dex::constraintSolver::ISR * > );
 		~PhraseExpression( );
 		dex::constraintSolver::ISR *eval( ) const override;
 	};
@@ -52,7 +52,7 @@ class NotExpression: public Expression
 class OrExpression: public Expression
 	{
 	protected:
-		dex::vector < Expression * > terms;
+		dex::vector < dex::vector < dex::constraintSolver::ISR * > > terms;
 		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
 		friend class Parser;
 	public:
@@ -64,11 +64,11 @@ class OrExpression: public Expression
 class AndExpression: public Expression
 	{
 	protected:
-		dex::vector < Expression * > terms;
+		dex::vector < dex::constraintSolver::ISR * > terms;
 		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
 		friend class Parser;
 	public:
-		AndExpression( );
+		AndExpression( dex::vector < dex::constraintSolver::ISR * > );
 		~AndExpression( );
 		dex::constraintSolver::ISR *eval( ) const override;
 	};
