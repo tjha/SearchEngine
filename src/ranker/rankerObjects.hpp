@@ -88,7 +88,7 @@ namespace dex
 					if ( internal[ index ] >= target )
 						{
 						pos = index;
-						return next( );
+						return internal[ pos ];
 						}
 					}
 				pos = internal.size( );
@@ -115,7 +115,7 @@ namespace dex
 					{
 					return internal[ pos ];
 					}
-				return internal[ pos ] - internal[ pos ] - 1;
+				return internal[ pos ] - internal[ pos - 1 ] - 1;
 				}
 		};
 	
@@ -127,6 +127,7 @@ namespace dex
 			unsigned pos;
 			dex::endOfDocumentISR ends;
 		public:
+			
 			const static unsigned npos = unsigned ( -1 );
 			ISR( )
 				{
@@ -137,6 +138,11 @@ namespace dex
 				internal = vecIn;
 				pos = 0;
 				ends = endsIn;
+				}
+
+			void reset( )
+				{
+				pos = 0;
 				}
 			// Jump this ISR to the first instance of our pattern that is at or after target. Return the location of the
 			// instance, or -1 if there is none.
@@ -174,23 +180,11 @@ namespace dex
 				{
 				if ( pos == internal.size( ) )
 					{
+					std::cout << "CALLED NEXT DOCUMENT, POS AT END OF INTERNAL" << std::endl;
 					return npos;
 					}
 				ends.seek( internal[ pos ] );
 				return seek( ends.next( ) );
-				}
-			// seek to the first instance in this document
-			size_t beginDocument( )
-				{
-				if ( pos == internal.size( ) )
-					{
-					ends.seek( internal[ pos - 1 ] );
-					}
-				else
-					{
-					ends.seek( internal[ pos ] );
-					}
-				return seek( ends.current( ) - ends.documentSize( ) );
 				}
 			dex::string getWord( )
 				{
@@ -205,7 +199,6 @@ namespace dex
 		// All four vectors should be in the order of the flattened query
 		dex::vector < dex::ISR > titleISRs;
 		dex::vector < dex::ISR > bodyISRs;
-		dex::endOfDocumentISR endISR;
 		dex::ISR *matchingDocumentISR;
 		// next of matchingDocumentISR returns the offset of the end document that you care about
 		dex::index::indexChunk *chunk;
