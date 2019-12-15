@@ -22,6 +22,9 @@ dex::queryCompiler::notExpression::~notExpression( )
 
 dex::constraintSolver::ISR *dex::queryCompiler::notExpression::eval( ) const
 	{
+	if ( !chunk )
+		return nullptr;
+
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::constraintSolver::ISR *temp = value->eval( );
 	return new dex::constraintSolver::notISR( temp, endDocISR );
@@ -47,6 +50,9 @@ dex::queryCompiler::orExpression::~orExpression( )
 
 dex::constraintSolver::ISR *dex::queryCompiler::orExpression::eval( ) const
 	{
+	if ( !chunk )
+		return nullptr;
+
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector < dex::constraintSolver::ISR * > isrs;
 	for ( size_t i = 0;  i < terms.size( );  ++i )
@@ -83,6 +89,9 @@ dex::queryCompiler::andExpression::~andExpression( )
 
 dex::constraintSolver::ISR *dex::queryCompiler::andExpression::eval( ) const
 	{
+	if ( !chunk )
+		return nullptr;
+
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector < dex::constraintSolver::ISR * > isrs;
 	for ( size_t i = 0;  i < terms.size( );  ++i )
@@ -119,6 +128,9 @@ dex::queryCompiler::phraseExpression::~phraseExpression( )
 
 dex::constraintSolver::ISR *dex::queryCompiler::phraseExpression::eval( ) const
 	{
+	if ( !chunk )
+		return nullptr;
+
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector < dex::constraintSolver::ISR * > isrs;
 	for ( size_t i = 0;  i < terms.size( );  ++i )
@@ -148,6 +160,9 @@ dex::queryCompiler::word::word( dex::string str, dex::index::indexChunk *chunk )
 
 dex::constraintSolver::ISR *dex::queryCompiler::word::eval( ) const
 	{
+	if ( !chunk )
+		return nullptr;
+
 	return new dex::constraintSolver::orISR( dex::vector < dex::constraintSolver::ISR * >{
 			new dex::index::indexChunk::indexStreamReader( chunk, str ),
 			new dex::index::indexChunk::indexStreamReader( chunk, "#" + str ) }, getEndOfDocumentISR( chunk ) );

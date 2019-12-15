@@ -15,8 +15,6 @@
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
 
-#include <iostream>
-
 bool dex::queryCompiler::isAlpha ( char c )
 	 {
 	 return ( c >= 'A' && c <= 'Z' ) || ( c >= 'a' && c <= 'z' );
@@ -88,6 +86,18 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 		if ( inPhrase && charIsSymbol && in[ index ] != ' ' )
 			continue;
 
+		if ( in[ index ] == '(' )
+			{
+			if ( isAlpha( previousCharacter ) || previousCharacter == ')' || previousCharacter == '"' )
+				semiparsed.pushBack( '&' );
+			else
+				if ( previousCharacter == ' ' )
+					{
+					semiparsed.back( ) = '&';
+					previousCharacter = '&';
+					}
+			}
+
 		if ( previousCharacter == ' ' )
 			{
 			if ( charIsSymbol )
@@ -124,7 +134,8 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 			dex::string word = semiparsed.substr(
 					index + 1, semiparsed.findFirstOf( "|&$\"~() ", index + 1, 8 ) - index - 1 );
 			emphasizedWords.insert( word );
-			if( index != 0 )
+			if( index != 0 && semiparsed[ index - 1] != '(' && semiparsed[ index - 1] != '|'
+					&& semiparsed[ index - 1] != '&' && semiparsed[ index - 1] != '~' )
 				input.pushBack( '&' );
 			}
 		else
@@ -132,8 +143,6 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 
 	if ( semiparsed.back( ) != '$' )
 		input.pushBack( semiparsed.back( ) );
-
-	std::cout << '[' << in << "] -> [" << semiparsed << "] -> [" << input << ']' << std::endl;
 	}
 
 bool dex::queryCompiler::tokenStream::match( char c )
@@ -158,17 +167,14 @@ bool dex::queryCompiler::tokenStream::allConsumed( ) const
 dex::queryCompiler::word *dex::queryCompiler::tokenStream::parseWord( )
 	{
 	if ( location >= input.size( ) )
-		{
 		return nullptr;
-		}
 
 	size_t nextSymbolLocation = input.findFirstOf( "|&$\"~() ", location, 8 );
 
 	if ( nextSymbolLocation == location )
 		return nullptr;
-
 	dex::string word = input.substr( location, nextSymbolLocation - location );
-	location = nextSymbolLocation;
+	location = dex::min( nextSymbolLocation, input.size( ) );
 
 	return new dex::queryCompiler::word( word, chunk );
 	}

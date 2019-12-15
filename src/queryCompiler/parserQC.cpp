@@ -26,7 +26,15 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findFactor( )
 			{
 			dex::queryCompiler::phraseExpression *phrase = new dex::queryCompiler::phraseExpression( chunk );
 			while ( !stream.match( '"' ) && !stream.allConsumed( ) )
+				{
 				phrase->terms.pushBack( stream.parseWord( ) );
+				if ( !stream.match( ' ' ) && !stream.allConsumed( ) )
+					{
+					if ( phrase )
+						delete phrase;
+					return nullptr;
+					}
+				}
 			return phrase;
 			if ( phrase )
 				delete phrase;
@@ -101,7 +109,8 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 	return nullptr;
 	}
 
-dex::queryCompiler::parser::parser( const dex::string &in, dex::index::indexChunk *chunkIn ) : stream( in, chunkIn ) { }
+dex::queryCompiler::parser::parser( const dex::string &in, dex::index::indexChunk *chunkIn )
+		: stream( in, chunkIn ), chunk( chunkIn ) { }
 
 dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 	{
@@ -111,19 +120,14 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 		if ( stream.allConsumed( ) )
 			{
 			const dex::vector < dex::string > &flattenedQuery = root->flattenedQuery( ).first;
+
 			dex::vector < bool > emphasizedWords;
 			emphasizedWords.reserve( flattenedQuery.size( ) );
 
 			if ( flattenedQuery.empty( ) )
 				{
 				delete root;
-				return new dex::matchedDocuments
-					{
-					flattenedQuery,
-					nullptr,
-					chunk,
-					emphasizedWords
-					};
+				return nullptr;
 				}
 
 			for( size_t index = 0;  index < flattenedQuery.size( );  ++index )
@@ -134,10 +138,10 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 
 			return new dex::matchedDocuments
 				{
-				flattenedQuery,  // flattened query vector of strings
-				matchingDocumentISR,   // matching document ISR
-				chunk,           // index chunk
-				emphasizedWords  // emphasized words in order of flattenedQuery.
+				flattenedQuery,       // flattened query vector of strings
+				matchingDocumentISR,  // matching document ISR
+				chunk,                // index chunk
+				emphasizedWords       // emphasized words in order of flattenedQuery.
 				};
 			}
 		delete root;
