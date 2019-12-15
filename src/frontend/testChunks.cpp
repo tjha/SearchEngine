@@ -39,7 +39,7 @@ int main( int argc, char **argv )
 		indexChunkObjects.pushBack( new dex::index::indexChunk( fd, false ) );	
 		}
 	dex::string query = argv[ 2 ];
-	for ( unsigned i  = 3;  i < argc;  ++i )
+	for ( int i  = 3;  i < argc;  ++i )
 		{
 		query += " ";
 		query += argv[ i ];

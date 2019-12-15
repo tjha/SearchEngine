@@ -47,6 +47,7 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findNot( )
 		dex::queryCompiler::expression *factor = dex::queryCompiler::parser::findFactor( );
 		if ( factor )
 			return new dex::queryCompiler::notExpression( factor, chunk );
+		std::cerr << "not returned nullptr" << std::endl;
 		return nullptr;
 		}
 	}
@@ -65,7 +66,11 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findOr( )
 				{
 				left = dex::queryCompiler::parser::findAnd( );
 				if ( !left )
+					{
+					std::cerr << "And returned nullptr because of !left" << std::endl;
 					return nullptr;
+					}
+					
 				self->terms.pushBack( left );
 				}
 			else
@@ -73,6 +78,7 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findOr( )
 			}
 		return self;
 		}
+	std::cerr << "Or returned nullptr because left was nullptr" << std::endl;
 	return nullptr;
 	}
 
@@ -90,7 +96,11 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 				{
 				left = dex::queryCompiler::parser::findNot( );
 				if ( !left )
+					{
+					std::cerr << "And returned nullptr because of !left" << std::endl;
 					return nullptr;
+					}
+					
 				self->terms.pushBack( left );
 				}
 			else
@@ -98,6 +108,7 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 			}
 		return self;
 		}
+	std::cerr << "And returned nullptr because left was nullptr" << std::endl;
 	return nullptr;
 	}
 
