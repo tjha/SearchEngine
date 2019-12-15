@@ -166,6 +166,7 @@ void *Talk( void *p )
 	/*dex::ranker rankerObject( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, emphasizedWeight, 
 			proportionCap, bodySpans, titleSpans, indexChunkObjects );
 	dex::vector < dex::searchResult > searchResults = rankerObject.getTopN( 10, query );*/
+	//dex::ranker rankerObject( )
 	
 	// TODO: populate webpage with content
 	std::cout << request << std::endl;

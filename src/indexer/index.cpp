@@ -256,6 +256,24 @@ size_t dex::index::indexChunk::indexStreamReader::nextDocument( )
 	return seek( endOfDocumentLocation );
 	}
 
+dex::index::indexChunk::endOfDocumentIndexStreamReader::endOfDocumentIndexStreamReader( indexChunk *chunk, dex::string )
+		: dex::index::indexChunk::indexStreamReader( chunk, "" ) { }
+
+size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::seek( size_t target )
+	{
+	return dex::index::indexChunk::indexStreamReader::seek( target );
+	}
+
+size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::next( )
+	{
+	return dex::index::indexChunk::indexStreamReader::next( );
+	}
+
+size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::nextDocument( )
+	{
+	return dex::index::indexChunk::indexStreamReader::nextDocument( );
+	}
+
 size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::documentSize( )
 	{
 	if ( indexChunkum->offsetsToEndOfDocumentMetadatas.count( absoluteLocation ) )

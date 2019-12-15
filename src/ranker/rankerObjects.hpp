@@ -48,7 +48,7 @@
 
 namespace dex
 	{
-	class endOfDocumentISR
+	class endOfDocumentISR : public constraintSolver::endOfDocumentISR
 		{
 		private:
 			dex::vector < unsigned > internal;
@@ -73,14 +73,14 @@ namespace dex
 				{
 				pos = 0;
 				}
-			size_t current( )
-				{
-				if ( pos == internal.size( ) )
-					{
-					return npos;
-					}
-				return internal[ npos ];
-				}
+			// size_t current( )
+			// 	{
+			// 	if ( pos == internal.size( ) )
+			// 		{
+			// 		return npos;
+			// 		}
+			// 	return internal[ npos ];
+			// 	}
 			size_t seek( size_t target )
 				{
 				for ( unsigned index = 0;  index < internal.size( );  ++index )
@@ -119,7 +119,7 @@ namespace dex
 				}
 		};
 	
-	class ISR
+	class ISR : public constraintSolver::ISR
 		{
 		private:
 			dex::vector < unsigned > internal;
@@ -197,22 +197,11 @@ namespace dex
 		{
 		// Constraint solver needs to make sure to not return pornographic results
 		// All four vectors should be in the order of the flattened query
-		dex::vector < dex::ISR > titleISRs;
-		dex::vector < dex::ISR > bodyISRs;
-		dex::ISR *matchingDocumentISR;
+		dex::vector < dex::constraintSolver::ISR * > titleISRs;
+		dex::vector < dex::constraintSolver::ISR * > bodyISRs;
+		dex::constraintSolver::ISR *matchingDocumentISR;
 		// next of matchingDocumentISR returns the offset of the end document that you care about
 		dex::index::indexChunk *chunk;
-
-		
-		// void example( ) {
-		// 	size_t nextDocEndOffset = matchingDocumentISR->nextDocument( );
-		// 	dex::string title = chunk->offsetsToEndOfDocumentMetadatas[ nextDocEndOffset ].title;
-		// 	dex::string url = chunk->offsetsToEndOfDocumentMetadatas[ nextDocEndOffset ].url;
-		// }
-
-		// void example2( ) {
-		// 	dex::index::indexChunk::endOfDocumentIndexStreamReader eodisr( chunk, "" );
-		// }
 
 		dex::vector < bool > emphasizedWords;
 		dex::vector < dex::string > titles;

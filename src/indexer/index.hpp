@@ -277,11 +277,17 @@ namespace dex
 					};
 
 				class endOfDocumentIndexStreamReader
-						: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
-					{
-					public:
-						size_t documentSize( );
-					};
+								: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
+							{
+							private:
+								indexChunk *chunk;
+							public:
+								endOfDocumentIndexStreamReader( indexChunk *chunk, dex::string );
+								size_t seek( size_t target );
+								size_t next( );
+								size_t nextDocument( );
+								size_t documentSize( );
+							};
 			};
 		}
 
