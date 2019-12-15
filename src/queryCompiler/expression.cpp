@@ -1,8 +1,6 @@
-/*
- * expression.cpp
- *
- * Class implementations for expression functionality
- */
+// expression.cpp
+//
+// 2019-12-15: Done (desperate times): jasina, medhak
 
 #include <cstddef>
 #include "basicString.hpp"
@@ -11,17 +9,18 @@
 #include "index.hpp"
 
 
-Expression::~Expression( ) { }
+dex::queryCompiler::expression::~expression( ) { }
 
 
-NotExpression::NotExpression( Expression *value, dex::index::indexChunk *chunk ) : value( value ), chunk( chunk ) { }
+dex::queryCompiler::notExpression::notExpression( expression *value, dex::index::indexChunk *chunk )
+		: value( value ), chunk( chunk ) { }
 
-NotExpression::~NotExpression( )
+dex::queryCompiler::notExpression::~notExpression( )
 	{
 	delete value;
 	}
 
-dex::constraintSolver::ISR *NotExpression::eval( ) const
+dex::constraintSolver::ISR *dex::queryCompiler::notExpression::eval( ) const
 	{
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::constraintSolver::ISR *temp = value->eval( );
@@ -29,15 +28,15 @@ dex::constraintSolver::ISR *NotExpression::eval( ) const
 	}
 
 
-OrExpression::OrExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
+dex::queryCompiler::orExpression::orExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
 
-OrExpression::~OrExpression( )
+dex::queryCompiler::orExpression::~orExpression( )
 	{
-	for ( Expression *expression : terms )
+	for ( expression *expression : terms )
 		delete expression;
 	}
 
-dex::constraintSolver::ISR *OrExpression::eval( ) const
+dex::constraintSolver::ISR *dex::queryCompiler::orExpression::eval( ) const
 	{
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector < dex::constraintSolver::ISR * > isrs;
@@ -48,15 +47,15 @@ dex::constraintSolver::ISR *OrExpression::eval( ) const
 	}
 
 
-AndExpression::AndExpression( dex::index::indexChunk *chunk ) { }
+dex::queryCompiler::andExpression::andExpression( dex::index::indexChunk *chunk ) { }
 
-AndExpression::~AndExpression( )
+dex::queryCompiler::andExpression::~andExpression( )
 	{
-	for ( Expression *isr : terms )
+	for ( expression *isr : terms )
 		delete isr;
 	}
 
-dex::constraintSolver::ISR *AndExpression::eval( ) const
+dex::constraintSolver::ISR *dex::queryCompiler::andExpression::eval( ) const
 	{
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector < dex::constraintSolver::ISR * > isrs;
@@ -67,15 +66,15 @@ dex::constraintSolver::ISR *AndExpression::eval( ) const
 	}
 
 
-PhraseExpression::PhraseExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
+dex::queryCompiler::phraseExpression::phraseExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
 
-PhraseExpression::~PhraseExpression( )
+dex::queryCompiler::phraseExpression::~phraseExpression( )
 	{
-	for ( Expression *isr : terms )
+	for ( expression *isr : terms )
 		delete isr;
 	}
 
-dex::constraintSolver::ISR *PhraseExpression::eval( ) const
+dex::constraintSolver::ISR *dex::queryCompiler::phraseExpression::eval( ) const
 	{
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector < dex::constraintSolver::ISR * > isrs;
@@ -85,9 +84,9 @@ dex::constraintSolver::ISR *PhraseExpression::eval( ) const
 	return new dex::constraintSolver::andISR( isrs, endDocISR );
 	}
 
-Word::Word( dex::string word, dex::index::indexChunk *chunk ) : word( word ), chunk( chunk ) { }
+dex::queryCompiler::word::word( dex::string str, dex::index::indexChunk *chunk ) : str( str ), chunk( chunk ) { }
 
-dex::constraintSolver::ISR *Word::eval( ) const
+dex::constraintSolver::ISR *dex::queryCompiler::word::eval( ) const
 	{
-	return new dex::index::indexChunk::indexStreamReader( chunk, word );
+	return new dex::index::indexChunk::indexStreamReader( chunk, str );
 	}

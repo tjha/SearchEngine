@@ -12,7 +12,7 @@
 #include "../utils/algorithm.hpp"
 #include "../utils/basicString.hpp"
 #include "expression.hpp"
-#include "tokenstream.hpp"
+#include "tokenStream.hpp"
 
 bool isAlpha ( char c )
 	 {
@@ -38,7 +38,7 @@ bool isSymbol( char c )
 	}
 
 
-TokenStream::TokenStream( const dex::string &in, dex::index::indexChunk *chunk ) : chunk( chunk )
+dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index::indexChunk *chunk ) : chunk( chunk )
 	{
 	input.reserve( in.size( ) );
 
@@ -99,7 +99,7 @@ TokenStream::TokenStream( const dex::string &in, dex::index::indexChunk *chunk )
 		}
 	}
 
-bool TokenStream::Match( char c )
+bool dex::queryCompiler::tokenStream::match( char c )
 	{
 	if ( location >= input.size( ) )
 		{
@@ -113,12 +113,12 @@ bool TokenStream::Match( char c )
 	return false;
 	}
 
-bool TokenStream::AllConsumed( ) const
+bool dex::queryCompiler::tokenStream::allConsumed( ) const
 	{
 	return location == input.size( );
 	}
 
-Word *TokenStream::ParseWord( )
+dex::queryCompiler::word *dex::queryCompiler::tokenStream::parseWord( )
 	{
 	if ( location >= input.size( ) )
 		{
@@ -133,5 +133,5 @@ Word *TokenStream::ParseWord( )
 	dex::string word = input.substr( location, nextSymbolLocation - location );
 	location = nextSymbolLocation;
 
-	return new Word( word, chunk );
+	return new dex::queryCompiler::word( word, chunk );
 	}

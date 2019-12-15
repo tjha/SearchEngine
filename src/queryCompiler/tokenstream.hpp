@@ -1,14 +1,9 @@
-/*
- * tokenstream.h
- *
- * Declaration of a stream of tokens that you can read from
- *
- * Lab3: You do not have to modify this file, but you may choose to do so
- */
+// tokenstream.hpp
+//
+// 2019-12-15: Done: jasina, medhak
 
-#ifndef TOKENSTREAM_H_
-#define TOKENSTREAM_H_
-
+#ifndef DEX_TOKENSTREAM
+#define DEX_TOKENSTREAM
 
 #include "expression.hpp"
 
@@ -16,67 +11,51 @@
 #include "../indexer/index.hpp"
 #include "../utils/basicString.hpp"
 
-/**
- * Check if a character is relevant to a math expression
- *
- * Relevant characters are defined as
- * +
- * -
- * *
- * (
- * )
- *
- * and all digits
- */
-bool CharIsRelevant( char c );
-
-/**
- * Opposite of char is relevant. Needed for filtering the input
- */
-bool CharIsIrrelevant( char c );
-
-/**
- * The token stream, which you can both Match( ) a single character from,
- * or ParseNumber( ) to consume a whole int64_t
- *
- * The input string by default is filtered of any characters that are
- * deemed "irrelevant" by the CharIsIrrelevant function above
- */
-class TokenStream
+namespace dex
 	{
-	// The input we receive, with only relevant characters left
-	dex::string input;
-	// Where we currently are in the input
-	size_t location { 0 };
+	namespace queryCompiler
+		{
+		bool isAlpha ( char c );
 
-	dex::index::indexChunk *chunk;
+		// Check if character is one of the symbols from our language
+		bool isSymbol( char c );
 
-public:
 
-	/**
-	 * Construct a token stream that uses a copy of the input
-	 * that contains only characters relevant to math expressions
-	 */
-	TokenStream( const dex::string &in, dex::index::indexChunk *chunk );
+		class tokenStream
+			{
+			// The input we receive, with only relevant characters left
+			dex::string input;
+			// Where we currently are in the input
+			size_t location { 0 };
 
-	/**
-	 * Attempt to match and consume a specific character
-	 *
-	 * Returns true if the char was matched and consumed, false otherwise
-	 */
-	bool Match( char c );
+			dex::index::indexChunk *chunk;
 
-	/**
-	 * Check whether all the input was consumed
-	 */
-	bool AllConsumed( ) const;
+			public:
+				/**
+				 * Construct a token stream that uses a copy of the input
+				 * that contains only characters relevant to math expressions
+				 */
+				tokenStream( const dex::string &in, dex::index::indexChunk *chunk );
 
-	/**
-	 * Attempt to match and consume a whole word
-	 *
-	 * Return a dynamically allocated Word if successful, nullptr otherwise
-	 */
-	Word *ParseWord( );
-	};
+				/**
+				 * Attempt to match and consume a specific character
+				 *
+				 * Returns true if the char was matched and consumed, false otherwise
+				 */
+				bool match( char c );
 
-#endif /* TOKENSTREAM_H_ */
+				/**
+				 * Check whether all the input was consumed
+				 */
+				bool allConsumed( ) const;
+
+				/**
+				 * Attempt to match and consume a whole word
+				 *
+				 * Return a dynamically allocated Word if successful, nullptr otherwise
+				 */
+				dex::queryCompiler::word *parseWord( );
+			};
+		}
+	}
+#endif

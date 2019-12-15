@@ -6,63 +6,63 @@
 #include "expression.hpp"
 #include "parserQC.hpp"
 
-Expression *Parser::FindFactor( )
+dex::queryCompiler::expression *dex::queryCompiler::parser::findFactor( )
 	{
-	if ( stream.AllConsumed( ) )
+	if ( stream.allConsumed( ) )
 		return nullptr;
 
-	if ( stream.Match( '(' ) )
+	if ( stream.match( '(' ) )
 		{
-		Expression *add = FindOR( );
-		if ( stream.Match( ')' ) )
+		dex::queryCompiler::expression *add = dex::queryCompiler::parser::findOr( );
+		if ( stream.match( ')' ) )
 			return add;
 		if ( add )
 			delete add;
 		return nullptr;
 		}
 	else
-		if ( stream.Match( '"' ) )
+		if ( stream.match( '"' ) )
 			{
-			PhraseExpression *phrase = new PhraseExpression( chunk );
-			while ( !stream.Match( '"' ) && !stream.AllConsumed( ) )
-				phrase->terms.pushBack( stream.ParseWord( ) );
+			dex::queryCompiler::phraseExpression *phrase = new dex::queryCompiler::phraseExpression( chunk );
+			while ( !stream.match( '"' ) && !stream.allConsumed( ) )
+				phrase->terms.pushBack( stream.parseWord( ) );
 			return phrase;
 			if ( phrase )
 				delete phrase;
 			return nullptr;
 			}
-	return stream.ParseWord( );
+	return stream.parseWord( );
 	}
 
-Expression *Parser::FindNot( )
+dex::queryCompiler::expression *dex::queryCompiler::parser::findNot( )
 	{
 	size_t count;
-	for ( count = 0;  stream.Match( '~' );  ++count );
+	for ( count = 0;  stream.match( '~' );  ++count );
 
 	if ( count % 2 == 0 )
-		return FindFactor( );
+		return dex::queryCompiler::parser::findFactor( );
 	else
 		{
-		Expression *factor = FindFactor( );
+		dex::queryCompiler::expression *factor = dex::queryCompiler::parser::findFactor( );
 		if ( factor )
-			return new NotExpression( factor, chunk );
+			return new dex::queryCompiler::notExpression( factor, chunk );
 		return nullptr;
 		}
 	}
 
-Expression *Parser::FindOR( )
+dex::queryCompiler::expression *dex::queryCompiler::parser::findOr( )
 	{
-	Expression *left = FindAND( );
+	dex::queryCompiler::expression *left = dex::queryCompiler::parser::findAnd( );
 	if ( left )
 		{
-		OrExpression *self = new OrExpression( chunk );
+		dex::queryCompiler::orExpression *self = new dex::queryCompiler::orExpression( chunk );
 		self->terms.pushBack( left );
 		bool termAdded = true;
 		while ( termAdded )
 			{
-			if ( stream.Match( '|' ) )
+			if ( stream.match( '|' ) )
 				{
-				left = FindAND( );
+				left = dex::queryCompiler::parser::findAnd( );
 				if ( !left )
 					return nullptr;
 				self->terms.pushBack( left );
@@ -75,19 +75,19 @@ Expression *Parser::FindOR( )
 	return nullptr;
 	}
 
-Expression *Parser::FindAND( )
+dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 	{
-	Expression *left = FindNot( );
+	dex::queryCompiler::expression *left = dex::queryCompiler::parser::findNot( );
 	if ( left )
 		{
-		AndExpression *self = new AndExpression( chunk );
+		dex::queryCompiler::andExpression *self = new dex::queryCompiler::andExpression( chunk );
 		self->terms.pushBack( left );
 		bool termAdded = true;
 		while ( termAdded )
 			{
-			if ( stream.Match( '&' ) )
+			if ( stream.match( '&' ) )
 				{
-				left = FindNot( );
+				left = dex::queryCompiler::parser::findNot( );
 				if ( !left )
 					return nullptr;
 				self->terms.pushBack( left );
@@ -100,15 +100,15 @@ Expression *Parser::FindAND( )
 	return nullptr;
 	}
 
-Expression *Parser::Parse( )
+dex::queryCompiler::expression *dex::queryCompiler::parser::parse( )
 	{
-	Expression *root = FindOR( );
+	dex::queryCompiler::expression *root = dex::queryCompiler::parser::findOr( );
 	if ( root )
-		if ( stream.AllConsumed( ) )
+		if ( stream.allConsumed( ) )
 			return root;
 		delete root;
 
 	return nullptr;
 	}
 
-Parser::Parser( const dex::string &in ) : stream( in, chunk ) { }
+dex::queryCompiler::parser::parser( const dex::string &in ) : stream( in, chunk ) { }

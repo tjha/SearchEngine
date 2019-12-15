@@ -2,54 +2,53 @@
 //
 // Define interface for our parser based off of the third lab.
 
-#ifndef PARSER_H_
-#define PARSER_H_
+#ifndef DEX_PARSER
+#define DEX_PARSER
 
 #include <string>
 #include "expression.hpp"
 #include "../constraintSolver/constraintSolver.hpp"
-#include "tokenstream.hpp"
+#include "tokenStream.hpp"
 
-/**
- * The actual expression parser
- */
-class Parser
+namespace dex
 	{
-	// Stream of tokens to consume input from
-	TokenStream stream;
+	namespace queryCompiler
+		{
+		class parser
+			{
+				// Stream of tokens to consume input from
+				tokenStream stream;
 
-	dex::index::indexChunk *chunk;
+				dex::index::indexChunk *chunk;
 
-	/**
-	 * Find the appropriate nonterminal
-	 *
-	 * Return nullptr if it could not be found
-	 */
-	Expression *FindAND( );
+				/**
+				 * Find the appropriate nonterminal
+				 *
+				 * Return nullptr if it could not be found
+				 */
+				expression *findAnd( );
 
-	Expression *FindFactor( );
+				expression *findFactor( );
 
-	Expression *FindNot( );
+				expression *findNot( );
 
-	Expression *FindOR( );
+				expression *findOr( );
 
-	Expression *FindEmph( );
+				expression *findEmph( );
 
-	Expression *FindPhrase( );
+			public:
+				/**
+				 * Construct parser based on given input
+				 */
+				parser( const dex::string &in );
 
-public:
+				/**
+				 * The public interface of the parser. Call this function,
+				 * rather than the private internal functions.
+				 */
+				expression *parse( );
+			};
+		}
+	}
 
-	/**
-	 * Construct parser based on given input
-	 */
-	Parser( const dex::string &in );
-
-	/**
-	 * The public interface of the parser. Call this function,
-	 * rather than the private internal functions.
-	 */
-	Expression *Parse( );
-	};
-// class Parser
-
-#endif /* PARSER_H_ */
+#endif
