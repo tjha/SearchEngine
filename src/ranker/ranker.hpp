@@ -46,7 +46,7 @@ namespace dex
 					dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics, 
 					dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics,
 					double emphasizedWeightIn, double proportionCapIn,
-					unsigned bodySpans, unsigned titleSpans, double wordsWeightIn, dex::vector < dex::indexChunkObject * > someChunks )
+					unsigned bodySpans, unsigned titleSpans, double wordsWeightIn, dex::vector < dex::index::indexChunk * > someChunks )
 				{
 				staticTitleWeights = titleWeights;
 				staticUrlWeight = urlWeight;
@@ -475,7 +475,7 @@ namespace dex
 				}
 
 			// returns a pair. First is the scores. second is error code. if error code is -1, you messed up.
-			pair < vector < double >, int > scoreDocuments( matchedDocuments &documents, constraintSolver::endOfDocumentISR *ends,
+			pair < vector < double >, int > scoreDocuments( matchedDocuments *documents, constraintSolver::endOfDocumentISR *ends,
 					vector < string > &titles, vector < string > &urls, bool printinfo = false )
 				{
 				// if the query is bad...

@@ -7,7 +7,7 @@
 
 #include <string>
 #include "expression.hpp"
-#include "tokenStream.hpp"
+#include "tokenstream.hpp"
 #include "../constraintSolver/constraintSolver.hpp"
 #include "../ranker/rankerObjects.hpp"
 
