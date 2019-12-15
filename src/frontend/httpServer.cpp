@@ -155,7 +155,12 @@ void *Talk( void *p )
 
 	// ranker stuff
 	dex::ranker rankerObject( indexChunkObjects );
-	dex::vector < dex::searchResult > searchResults = rankerObject.getTopN( 10, query );
+	dex::pair < dex::vector < dex::searchResult >, int > searchResults = rankerObject.getTopN( 10, query );
+	if ( searchResults.second == -1 )
+		{
+		// THE QUERY PASSED IN WAS BAD, DO SOMETHING
+		return nullptr;
+		}
 	
 	// TODO: populate webpage with content
 	std::cout << request << std::endl;

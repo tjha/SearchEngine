@@ -474,19 +474,26 @@ namespace dex
 				return totalScores;
 				}
 
-			vector < double > scoreDocuments( matchedDocuments &documents, constraintSolver::endOfDocumentISR *ends,
-			vector < string > &titles, vector < string > &urls, bool printinfo = false )
+			// returns a pair. First is the scores. second is error code. if error code is -1, you messed up.
+			pair < vector < double >, int > scoreDocuments( matchedDocuments &documents, constraintSolver::endOfDocumentISR *ends,
+					vector < string > &titles, vector < string > &urls, bool printinfo = false )
 				{
+				// if the query is bad...
+				if ( !documents.matchingDocumentISR )
+					{
+					vector < double > scores;
+					return { scores, -1 };
+					}
 				vector < double > totalScores = getDynamicScores( documents.bodyISRs, documents.titleISRs,
 						documents.matchingDocumentISR, ends, documents.chunk, documents.emphasizedWords, titles, urls, printinfo );
 				for ( int i = 0;  i < documents.titles.size( );  ++i )
 					{
 					totalScores[ i ] += getStaticScore( documents.titles[ i ], documents.urls[ i ], printinfo );
 					}
-				return totalScores;
+				return { totalScores, 0 };
 				}
-			
-			dex::vector < dex::searchResult > getTopN( size_t n, dex::string query, bool printInfo = false )
+			// second is error, if -1 there was a bad query.
+			pair < dex::vector < dex::searchResult >, int > getTopN( size_t n, dex::string query, bool printInfo = false )
 				{
 				dex::vector < dex::searchResult > results;
 				results.reserve( n );
@@ -518,13 +525,17 @@ namespace dex
 				for ( size_t index = 0;  index < documents.size( );  ++index )
 					{
 					// need to get the end ISR from the chunk
-					//dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr = 
-					//		new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents[ index ].chunk, "" );
-					dex::endOfDocumentISR *eodisr = new dex::endOfDocumentISR( );
+					dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr = 
+							new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents[ index ].chunk, "" );
 					vector < string > currentTitles;
 					vector < string > currentUrls;
-					vector < double > currentScores = scoreDocuments( documents[ index ], eodisr,
+					pair < vector < double >, int > currentScoresPair = scoreDocuments( documents[ index ], eodisr,
 					currentTitles, currentUrls, printInfo );
+					vector < double > currentScores = currentScoresPair.first;
+					if ( currentScoresPair.second == -1 )
+						{
+						return { results, -1 };
+						}
 					// Now that we're done with these ISRs we delete them
 					for ( unsigned isr = 0;  isr < documents[ index ].bodyISRs.size( );  ++isr )
 						{
@@ -566,7 +577,7 @@ namespace dex
 								<< titles[ p->documentIndex ] << "\n";
 						}
 					}
-				return results;
+				return { results, 0 };
 				}
 			
 		};
