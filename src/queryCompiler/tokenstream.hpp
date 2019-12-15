@@ -72,11 +72,11 @@ public:
 	bool AllConsumed( ) const;
 
 	/**
-	 * Attempt to match and consume a whole number
+	 * Attempt to match and consume a whole word
 	 *
-	 * Return a dynamically allocated Number if successful, nullptr otherwise
+	 * Return a dynamically allocated Word if successful, nullptr otherwise
 	 */
-	dex::vector < dex::constraintSolver::ISR * > ParsePhrase( );
+	Word *ParsePhrase( );
 	};
 
 #endif /* TOKENSTREAM_H_ */

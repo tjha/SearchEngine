@@ -8,20 +8,18 @@
 
 //  #include <assert.h>  - - -Why do we need this?
 
+#include <cstddef>
 #include "../utils/algorithm.hpp"
 #include "../utils/basicString.hpp"
-#include <cstddev>
 #include "expression.hpp"
 #include "tokenstream.hpp"
 
-bool isalpha ( char c )
+bool isAlpha ( char c )
 	 {
-	 if ( ( c > 64 && c < 91 ) || ( c > 96 && c < 123 ) )
-		  return true;
-	 return false;
+	 return ( c >= 'A' && c <= 'Z' ) || ( c >= 'a' && c <= 'z' );
 	 }
 
-bool CharIsRelevant( char c )
+bool isSymbol( char c )
 	{
 	switch ( c )
 		{
@@ -35,22 +33,57 @@ bool CharIsRelevant( char c )
 		case ' ':
 			return true;
 		default:
-			return isalpha( c );
+			return false;
 		}
 	}
 
-bool CharIsIrrelevant( char c )
-	{
-	return !CharIsRelevant( c );
-	}
 
-TokenStream::TokenStream( const dex::string &in )
+TokenStream::TokenStream( const dex::string &in, dex::index::indexChunk *chunk ) : chunk( chunk )
 	{
-	// Erase irrelevant chars using algorithm
 	input.reserve( in.size( ) );
+
+	// Erase irrelevant chars using algorithm --- gasp!!
+
+	bool charIsAlpha;
+	bool charIsSymbol;
+	bool inPhrase = false;
+	char previousCharacter = 'a';
+
 	for ( size_t index = 0;  index < in.size( );  ++index )
-		if ( CharIsRelevant( in[ index ] ) )
-			input.pushBack( in[ index ] );
+		{
+		charIsAlpha = isAlpha( in[ index ] );
+		charIsSymbol = isSymbol( in[ index ] );
+
+		if ( !( isAlpha || isSymbol ) )
+			continue;
+
+		if ( in[ index ] == '\"' )
+			inPhrase = !inPhrase;
+
+		if ( inPhrase && charIsSymbol && in[ index ] != ' ' )
+			continue;
+
+		if ( previousCharacter == ' ' )
+			{
+			if ( charIsSymbol )
+				input.back( ) = in[ index ];
+			else
+				{
+				if ( !inPhrase )
+					input.back( ) = '&';
+
+				input.pushBack( in[ index ] );
+				}
+
+			previousCharacter = in[ index ];
+			continue;
+			}
+
+		if ( isSymbol( previousCharacter ) && in[ index ] == ' ' )
+			continue;
+
+		input.pushBack( in[ index ] );
+		}
 	}
 
 bool TokenStream::Match( char c )
@@ -72,33 +105,20 @@ bool TokenStream::AllConsumed( ) const
 	return location == input.size( );
 	}
 
-dex::vector < dex::constraintSolver::ISR * > TokenStream::ParsePhrase( )
+Word *TokenStream::ParsePhrase( )
 	{
-	dex::vector < dex::constraintSolver::ISR * > isrs;
-	size_t nextSymbolLocation = input.findFirstOf( "|&$\"~()", location, 7 );
-	string word;
-
-	while ( true )
+	if ( location >= input.size( ) )
 		{
-		size_t nextWordEnd = input.findFirstOf( ' ', location );
-
-		if ( nextWordEnd >= nextSymbolLocation )
-			{
-			if ( nextSymbolLocation != location )
-				{
-				isrs.pushBack( new dex::index::indexChunk::indexStreamReader
-						( chunk, input.substr( location, nextSymbolLocation - location ) ) );
-				location = nextSymbolLocation;
-				}
-
-			return isrs;
-			}
-
-		// update location and isrs
-
-		if ( nextWordEnd - location > 1 )
-			isrs.pushBack( new dex::index::indexChunk::indexStreamReader
-					( chunk, input.substr( location, nextWordEnd - location ) ) );
-		location = nextWordEnd + 1;
+		return nullptr;
 		}
+
+	size_t nextSymbolLocation = input.findFirstOf( "|&$\"~() ", location, 7 );
+
+	if ( nextSymbolLocation == location )
+		return nullptr;
+
+	dex::string word = input.substr( location, nextSymbolLocation - location );
+	location = nextSymbolLocation;
+
+	return new Word( word, chunk );
 	}
