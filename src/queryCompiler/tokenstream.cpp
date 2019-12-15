@@ -9,11 +9,13 @@
 //  #include <assert.h>  - - -Why do we need this?
 
 #include <cstddef>
+#include "expression.hpp"
+#include "tokenstream.hpp"
 #include "../utils/algorithm.hpp"
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
-#include "expression.hpp"
-#include "tokenstream.hpp"
+
+#include <iostream>
 
 bool dex::queryCompiler::isAlpha ( char c )
 	 {
@@ -50,7 +52,7 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 	bool charIsAlpha;
 	bool charIsSymbol;
 	bool inPhrase = false;
-	char previousCharacter = 'a';
+	char previousCharacter = '\0';
 
 	for ( size_t index = 0;  index < in.size( );  ++index )
 		{
@@ -64,6 +66,9 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 			{
 			inPhrase = !inPhrase;
 
+			if ( previousCharacter == ' ' && inPhrase )
+				semiparsed.back( ) = '&';
+
 			if ( previousCharacter == '"' )
 				{
 				if ( inPhrase )
@@ -74,6 +79,10 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 					continue;
 					}
 				}
+
+			semiparsed.pushBack( '"' );
+			previousCharacter = '"';
+			continue;
 			}
 
 		if ( inPhrase && charIsSymbol && in[ index ] != ' ' )
@@ -98,19 +107,33 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 		if ( isSymbol( previousCharacter ) && in[ index ] == ' ' )
 			continue;
 
+		if ( !inPhrase && previousCharacter == '"' && charIsAlpha )
+			semiparsed.pushBack( '&' );
+
 		semiparsed.pushBack( in[ index ] );
+		previousCharacter = in[ index ];
 		}
+	if ( !in.empty( ) && !semiparsed.empty( ) && in.front( ) == ' ' && semiparsed.front( ) == '&' )
+		semiparsed = semiparsed.substr( 1 );
+	if ( !in.empty( ) && !semiparsed.empty( ) && semiparsed.back( ) == ' ' )
+		semiparsed.popBack( );
 
 	for( size_t index = 0;  index < semiparsed.size( ) - 1;  ++index )
 		if ( semiparsed[ index ] == '$' )
 			{
-			dex::string word = semiparsed.substr( index + 1, semiparsed.findFirstOf( "|&$\"~() ", index, 8 ) - index - 1 );
+			dex::string word = semiparsed.substr(
+					index + 1, semiparsed.findFirstOf( "|&$\"~() ", index + 1, 8 ) - index - 1 );
 			emphasizedWords.insert( word );
+			if( index != 0 )
+				input.pushBack( '&' );
 			}
 		else
 			input.pushBack( semiparsed[ index ] );
+
 	if ( semiparsed.back( ) != '$' )
 		input.pushBack( semiparsed.back( ) );
+
+	std::cout << '[' << in << "] -> [" << semiparsed << "] -> [" << input << ']' << std::endl;
 	}
 
 bool dex::queryCompiler::tokenStream::match( char c )

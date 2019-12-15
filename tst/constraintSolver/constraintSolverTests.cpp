@@ -11,18 +11,6 @@
 #include "../../src/constraintSolver/constraintSolver.hpp"
 #include "../../src/utils/vector.hpp"
 
-dex::vector < size_t > locationsToDeltas( const dex::vector < size_t > &locations )
-	{
-	dex::vector < size_t> deltas;
-	deltas.resize( locations.size( ) );
-
-	deltas[ 0 ] = locations[ 0 ];
-	for ( size_t index = 1;  index != locations.size( );  ++index )
-		deltas[ index ] = locations[ index ] - locations[ index - 1 ];
-
-	return deltas;
-	}
-
 TEST_CASE( "testISRs" )
 	{
 	SECTION( "next" )

@@ -6,7 +6,6 @@
 #define DEX_TOKENSTREAM
 
 #include "expression.hpp"
-
 #include "../constraintSolver/constraintSolver.hpp"
 #include "../indexer/index.hpp"
 #include "../utils/basicString.hpp"
@@ -24,7 +23,7 @@ namespace dex
 
 		class tokenStream
 			{
-			private:
+			public:
 				// The input we receive, with only relevant characters left
 				dex::string input;
 				// Where we currently are in the input

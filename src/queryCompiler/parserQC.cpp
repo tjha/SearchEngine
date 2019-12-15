@@ -101,6 +101,8 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 	return nullptr;
 	}
 
+dex::queryCompiler::parser::parser( const dex::string &in, dex::index::indexChunk *chunkIn ) : stream( in, chunkIn ) { }
+
 dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 	{
 	dex::queryCompiler::expression *root = dex::queryCompiler::parser::findOr( );
@@ -142,5 +144,3 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 		}
 	return nullptr;
 	}
-
-dex::queryCompiler::parser::parser( const dex::string &in, dex::index::indexChunk *chunkIn ) : stream( in, chunkIn ) { }

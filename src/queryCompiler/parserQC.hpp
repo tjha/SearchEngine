@@ -5,7 +5,6 @@
 #ifndef DEX_PARSER
 #define DEX_PARSER
 
-#include <string>
 #include "expression.hpp"
 #include "tokenstream.hpp"
 #include "../constraintSolver/constraintSolver.hpp"

@@ -3,10 +3,10 @@
 // 2019-12-15: Done (desperate times): jasina, medhak
 
 #include <cstddef>
-#include "basicString.hpp"
-#include "constraintSolver.hpp"
-#include "expression.hpp"
-#include "index.hpp"
+#include "../constraintSolver/constraintSolver.hpp"
+#include "../indexer/index.hpp"
+#include "../queryCompiler/expression.hpp"
+#include "../utils/basicString.hpp"
 
 
 dex::queryCompiler::expression::~expression( ) { }
@@ -155,5 +155,6 @@ dex::constraintSolver::ISR *dex::queryCompiler::word::eval( ) const
 
 dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > dex::queryCompiler::word::flattenedQuery( ) const
 	{
-	return dex::pair( dex::vector < dex::string >{ str }, dex::vector < dex::string >( ) );
+	return dex::pair  < dex::vector < dex::string >, dex::vector < dex::string > >(
+			dex::vector < dex::string >{ str }, dex::vector < dex::string >( ) );
 	}
