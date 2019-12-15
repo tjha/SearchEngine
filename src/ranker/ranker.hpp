@@ -557,6 +557,10 @@ namespace dex
 				for ( size_t index = 0;  index < documents.size( );  ++index )
 					{
 					// need to get the end ISR from the chunk
+					if ( !documents[ index ] )
+						{
+						return { results, -1 };
+						}
 					dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr = 
 							new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents[ index ]->chunk, "" );
 					vector < string > currentTitles;

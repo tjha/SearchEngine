@@ -39,6 +39,10 @@ int main( int argc, char **argv )
 		indexChunkObjects.pushBack( new dex::index::indexChunk( fd, false ) );	
 		}
 	dex::string query = argv[ 2 ];
+	for ( unsigned i  = 3;  i < argc;  ++i )
+		{
+		query += dex::string ( " " + argv[ i ] );
+		}
 	dex::pair < dex::vector < dex::searchResult >, int > results = processChunks( query );
 	if ( results.second == -1 )
 		{
