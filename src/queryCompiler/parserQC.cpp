@@ -140,6 +140,7 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 			}
 		delete root;
 		}
+	std::cerr << "root returned nullptr" << std::endl;
 	return nullptr;
 	}
 
