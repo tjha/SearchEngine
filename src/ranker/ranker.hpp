@@ -537,13 +537,15 @@ namespace dex
 				vector < string > titles;
 				vector < Url > urls;
 
+				dex::vector < dex::queryRequest > requests;
+				requests.resize( chunkPointers.size( ) );
+
 				pthread_t workerThreads [ chunkPointers.size( ) ];
 				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
 					{
-					dex::queryRequest request;
-					request.query = query;
-					request.chunkPointer = chunkPointers[ index ];
-					pthread_create( &workerThreads[ index ], nullptr, parseAndScore, ( void * ) &request );
+					requests[ index ].query = query;
+					requests[ index ].chunkPointer = chunkPointers[ index ];
+					pthread_create( &workerThreads[ index ], nullptr, parseAndScore, ( void * ) &requests[ index ] );
 					}
 
 				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
@@ -557,6 +559,10 @@ namespace dex
 				for ( size_t index = 0;  index < documents.size( );  ++index )
 					{
 					// need to get the end ISR from the chunk
+					if ( !documents[ index ] )
+						{
+						return { results, -1 };
+						}
 					dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr = 
 							new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents[ index ]->chunk, "" );
 					vector < string > currentTitles;
