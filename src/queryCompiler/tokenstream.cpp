@@ -57,8 +57,21 @@ TokenStream::TokenStream( const dex::string &in, dex::index::indexChunk *chunk )
 		if ( !( isAlpha || isSymbol ) )
 			continue;
 
-		if ( in[ index ] == '\"' )
+		if ( in[ index ] == '"' )
+			{
 			inPhrase = !inPhrase;
+
+			if ( previousCharacter == '"' )
+				{
+				if ( inPhrase )
+					input.pushBack( '&' );
+				else
+					{
+					input.popBack( );
+					continue;
+					}
+				}
+			}
 
 		if ( inPhrase && charIsSymbol && in[ index ] != ' ' )
 			continue;
@@ -105,7 +118,7 @@ bool TokenStream::AllConsumed( ) const
 	return location == input.size( );
 	}
 
-Word *TokenStream::ParsePhrase( )
+Word *TokenStream::ParseWord( )
 	{
 	if ( location >= input.size( ) )
 		{

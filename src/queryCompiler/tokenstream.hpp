@@ -76,7 +76,7 @@ public:
 	 *
 	 * Return a dynamically allocated Word if successful, nullptr otherwise
 	 */
-	Word *ParsePhrase( );
+	Word *ParseWord( );
 	};
 
 #endif /* TOKENSTREAM_H_ */

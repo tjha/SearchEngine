@@ -31,10 +31,9 @@ class NotExpression: public Expression
 
 class OrExpression: public Expression
 	{
-	protected:
+	public:
 		dex::vector < Expression * > terms;
 		dex::index::indexChunk *chunk;
-	public:
 		OrExpression( dex::index::indexChunk *chunk );
 		~OrExpression( );
 		dex::constraintSolver::ISR *eval( ) const override;
@@ -42,10 +41,9 @@ class OrExpression: public Expression
 
 class AndExpression: public Expression
 	{
-	protected:
+	public:
 		dex::vector < Expression * > terms;
 		dex::index::indexChunk *chunk;
-	public:
 		AndExpression( dex::index::indexChunk *chunk );
 		~AndExpression( );
 		dex::constraintSolver::ISR *eval( ) const override;
@@ -53,10 +51,9 @@ class AndExpression: public Expression
 
 class PhraseExpression : public Expression
 	{
-	protected:
+	public:
 		dex::vector < Expression * > terms;
 		dex::index::indexChunk *chunk;
-	public:
 		PhraseExpression( dex::index::indexChunk *chunk );
 		~PhraseExpression( );
 		dex::constraintSolver::ISR *eval( ) const override;
@@ -64,12 +61,11 @@ class PhraseExpression : public Expression
 
 class Word: public Expression
 	{
-	protected:
+	public:
 		dex::string word;
 		dex::index::indexChunk *chunk;
-	public:
 		Word( dex::string word, dex::index::indexChunk *chunk );
 		dex::constraintSolver::ISR *eval( ) const override;
-	}
+	};
 
-#endif /* EXPRESSION_H_ */
+#endif

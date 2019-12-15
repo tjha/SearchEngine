@@ -1,39 +1,16 @@
-/*
- * parser.cpp
- *
- * Implementation of parser.h
- *
- * See parser.h for a full BNF of the grammar to implement
- *
- * Lab3: You should implement the different Find( ) functions,
- * as well as any additional functions you declare in parser.h
- */
+// parserQC.cpp
+//
+// Implementation of the parser class.
 
 #include "../constraintSolver/constraintSolver.hpp"
 #include "expression.hpp"
 #include "parserQC.hpp"
 
-Expression *Parser::FindPhrase( )
-	{
-	if ( stream.AllConsumed( ) )
-		return nullptr;
-	if ( stream.Match( '"' ) )
-		{
-		dex::vector < dex::constraintSolver::ISR * > isrs = stream.ParsePhrase( );
-		PhraseExpression *phrase = new PhraseExpression( isrs );
-		if ( stream.Match( '"' ) )
-			return phrase;
-		if ( phrase )
-			delete phrase;
-		return nullptr;
-		}
-	return new AndExpression( stream.ParsePhrase( ) );
-	}
-
 Expression *Parser::FindFactor( )
 	{
 	if ( stream.AllConsumed( ) )
 		return nullptr;
+
 	if ( stream.Match( '(' ) )
 		{
 		Expression *add = FindOR( );
@@ -43,7 +20,18 @@ Expression *Parser::FindFactor( )
 			delete add;
 		return nullptr;
 		}
-	return FindOR( );
+	else
+		if ( stream.Match( '"' ) )
+			{
+			PhraseExpression *phrase = new PhraseExpression( chunk );
+			while ( !stream.Match( '"' ) && !stream.AllConsumed( ) )
+				phrase->terms.pushBack( stream.ParseWord( ) );
+			return phrase;
+			if ( phrase )
+				delete phrase;
+			return nullptr;
+			}
+	return stream.ParseWord( );
 	}
 
 Expression *Parser::FindNot( )
@@ -55,9 +43,9 @@ Expression *Parser::FindNot( )
 		return FindFactor( );
 	else
 		{
-		Expression *factor;// = FindPhrase( );
+		Expression *factor = FindFactor( );
 		if ( factor )
-			return new NotExpression( factor );
+			return new NotExpression( factor, chunk );
 		return nullptr;
 		}
 	}
@@ -67,9 +55,8 @@ Expression *Parser::FindOR( )
 	Expression *left = FindAND( );
 	if ( left )
 		{
-		OrExpression *self = new OrExpression( );
+		OrExpression *self = new OrExpression( chunk );
 		self->terms.pushBack( left );
-
 		bool termAdded = true;
 		while ( termAdded )
 			{
@@ -81,9 +68,7 @@ Expression *Parser::FindOR( )
 				self->terms.pushBack( left );
 				}
 			else
-				{
-					termAdded = false;
-				}
+				termAdded = false;
 			}
 		return self;
 		}
@@ -95,7 +80,7 @@ Expression *Parser::FindAND( )
 	Expression *left = FindNot( );
 	if ( left )
 		{
-		AndExpression *self = new AndExpression( );
+		AndExpression *self = new AndExpression( chunk );
 		self->terms.pushBack( left );
 		bool termAdded = true;
 		while ( termAdded )
@@ -108,9 +93,7 @@ Expression *Parser::FindAND( )
 				self->terms.pushBack( left );
 				}
 			else
-				{
-					termAdded = false;
-				}
+				termAdded = false;
 			}
 		return self;
 		}
@@ -124,7 +107,8 @@ Expression *Parser::Parse( )
 		if ( stream.AllConsumed( ) )
 			return root;
 		delete root;
+
 	return nullptr;
 	}
 
-Parser::Parser( const dex::string &in ) : stream( in ) { }
+Parser::Parser( const dex::string &in ) : stream( in, chunk ) { }

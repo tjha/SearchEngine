@@ -1,30 +1,6 @@
-/*
- * parser.h
- *
- * Basic math expression parser that supports addition and multiplication
- *
- * A basic BNF of our language (you can implement either, or your own):
- *
- * ---------------------------------------------------------------------------
- *
- * <AddSub>    ::=   <MulDiv> { '+' <MulDiv> }
- *
- * <MulDiv>    ::=   <Factor> { '*' <Factor> }
- *
- * <Factor>    ::=   '(' <AddSub> ')' | int
- *
- * ---------------------------------------------------------------------------
- *
- * <AddSub>    ::=   <MulDiv> [ '+' <AddSub> ]
- *
- * <MulDiv>    ::=   <Factor> [ '*' <MulDiv> ]
- *
- * <Factor>    ::=   '(' <AddSub> ')' | int
- *
- * ---------------------------------------------------------------------------
- *
- * Lab3: You do not have to modify this file, but you may choose to do so
- */
+// parserQC.hpp
+//
+// Define interface for our parser based off of the third lab.
 
 #ifndef PARSER_H_
 #define PARSER_H_
