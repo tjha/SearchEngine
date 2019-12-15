@@ -105,6 +105,7 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 	{
 	dex::queryCompiler::expression *root = dex::queryCompiler::parser::findOr( );
 	if ( root )
+		{
 		if ( stream.allConsumed( ) )
 			{
 			const dex::vector < dex::string > &flattenedQuery = root->flattenedQuery( ).first;
@@ -138,6 +139,7 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 				};
 			}
 		delete root;
+		}
 	return nullptr;
 	}
 
