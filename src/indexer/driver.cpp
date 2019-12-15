@@ -50,12 +50,12 @@ int main ( int argc, char ** argv )
 		}
 	//dex::makeDirectory( outputFolder.cStr( ) );
 	dex::vector < dex::string > toProcess;
-	dex::vector < dex::string > toDelete;
 	toProcess = dex::matchingFilenames( batch, "_forIndexer" );
+	dex::vector < dex::string > toDelete;
 	toDelete = dex::matchingFilenames( batch, "_processed" );
 	for ( int index = 0;  index < toDelete.size( );  index++ )
 		{
-		if ( remove( toDelete[ index ] ) != 0 )
+		if ( remove( toDelete[ index ].cStr( ) ) != 0 )
 			std::cout << "error deleting " << toDelete[ index ] << "\n";
 		}
 
@@ -108,6 +108,12 @@ int main ( int argc, char ** argv )
 				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString, 
 						parser.ReturnWords( ) ) )
 					{
+					toDelete = dex::matchingFilenames( batch, "_processed" );
+					for ( int index = 0;  index < toDelete.size( );  index++ )
+						{
+						if ( remove( toDelete[ index ].cStr( ) ) != 0 )
+							std::cout << "error deleting " << toDelete[ index ] << "\n";
+						}
 					close( fileDescriptor );
 					fileDescriptor = openFile( indexChunkCount++, outputFolder );
 					delete initializingIndexChunk;
