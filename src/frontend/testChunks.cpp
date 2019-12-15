@@ -19,7 +19,7 @@ int main( int argc, char **argv )
 	{
 	if ( argc < 2 )
 		{
-		std::cerr << "Usage: testChunks.exe pathToChunks query" << std::endl;
+		std::cerr << "Usage: build/chunkDriver.exe pathToChunks query" << std::endl;
 		return 1;
 		}
 
@@ -39,7 +39,19 @@ int main( int argc, char **argv )
 		indexChunkObjects.pushBack( new dex::index::indexChunk( fd, false ) );	
 		}
 	dex::string query = argv[ 2 ];
-	processChunks( query );
+	dex::pair < dex::vector < dex::searchResult >, int > results = processChunks( query );
+	if ( results.second == -1 )
+		{
+		std::cout << "YOU MESSED UP, results returned -1" << std::endl;
+		}
+	else
+		{
+		for ( unsigned i = 0;  i < results.first.size( );  ++i )
+			{
+			std::cout << results.first[ i ].title << std::endl;
+			std::cout << results.first[ i ].url.completeUrl( ) << std::endl;
+			}
+		}
 
 	for ( dex::vector < dex::index::indexChunk * >::constIterator indexChunkObjectIterator = indexChunkObjects.cbegin( );
 			indexChunkObjectIterator != indexChunkObjects.cend( );  indexChunkObjectIterator++ )

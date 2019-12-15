@@ -296,7 +296,7 @@ namespace dex
 		
 		};
 
-	bool operator==( const dex::Url &lhs, const dex::Url &rhs )
+	inline bool operator==( const dex::Url &lhs, const dex::Url &rhs )
 		{
 		return lhs.completeUrl( ) == rhs.completeUrl( );
 		}

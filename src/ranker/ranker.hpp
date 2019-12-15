@@ -20,6 +20,7 @@
 #include "rankerObjects.hpp"
 #include "rankerConfig.hpp"
 #include "index.hpp"
+#include <cstddef>
 #include <pthread.h>
 
 namespace dex
@@ -30,8 +31,7 @@ namespace dex
 			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
 			dex::queryCompiler::parser parser( queryRequest.query, queryRequest.chunkPointer );
 			dex::matchedDocuments *documents = parser.parse( );
-			dex::matchedDocuments documents;
-			return ( void * ) &documents;
+			return ( void * ) documents;
 			}
 	class ranker
 		{
@@ -497,26 +497,26 @@ namespace dex
 					}
 				vector < constraintSolver::ISR * > bodyISRs;
 				vector < constraintSolver::ISR * > titleISRs;
-				for ( int i = 0;  i < documents->flattenedQuery.size( );  ++i )
+				for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
 					{
 					bodyISRs.pushBack( new index::indexChunk::indexStreamReader( documents->chunk, documents->flattenedQuery[ i ] ) );
 					}
-				for ( int i = 0;  i < documents->flattenedQuery.size( );  ++i )
+				for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
 					{
 					bodyISRs.pushBack( new index::indexChunk::indexStreamReader( documents->chunk, '#' + documents->flattenedQuery[ i ] ) );
 					}
 				vector < double > totalScores = getDynamicScores( bodyISRs, titleISRs,
 						documents->matchingDocumentISR, ends, documents->chunk, documents->emphasizedWords, titles, urls, printinfo );
-				for ( int i = 0;  i < titles.size( );  ++i )
+				for ( size_t i = 0;  i < titles.size( );  ++i )
 					{
 					totalScores[ i ] += getStaticScore( titles[ i ], urls[ i ], printinfo );
 					}
-				for ( int i = 0;  i < bodyISRs.size( );  ++i )
+				for ( size_t i = 0;  i < bodyISRs.size( );  ++i )
 					{
 					if ( bodyISRs[ i ] )
 						delete bodyISRs[ i ];
 					}
-				for ( int i = 0;  i < titleISRs.size( );  ++i )
+				for ( size_t i = 0;  i < titleISRs.size( );  ++i )
 					{
 					if ( titleISRs[ i ] )
 						delete titleISRs[ i ];
@@ -600,7 +600,7 @@ namespace dex
 
 				topN = findTopN( scores, n );
 
-				for ( int index = 0;  index < n && ( p = topN[ index ] );  index++ )
+				for ( size_t index = 0;  index < n && ( p = topN[ index ] );  index++ )
 					{
 					topDocuments.pushBack( { urls[ p->documentIndex ], titles[ p->documentIndex ] } );
 					if ( printInfo )

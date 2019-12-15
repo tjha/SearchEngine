@@ -293,7 +293,7 @@ namespace dex
 						: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
 					{
 					private:
-						indexChunk *chunk;
+						//indexChunk *chunk;
 					public:
 						endOfDocumentIndexStreamReader( indexChunk *chunk, dex::string );
 						size_t seek( size_t target );
