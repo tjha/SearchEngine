@@ -27,7 +27,6 @@ size_t getFileSize( int fileDescriptor )
 
 // TODO: Add test case for closing and reopening an indexChunk
 
-/*
 TEST_CASE( "lougheed's fun read indexChunk test" )
 	{
 	std::cout << "Running lougheed's fun read indexChunk test ;)\n";
@@ -47,7 +46,6 @@ TEST_CASE( "lougheed's fun read indexChunk test" )
 		}
 	close( fd );
 	}
-*/
 
 TEST_CASE( "create index chunk" )
 	{

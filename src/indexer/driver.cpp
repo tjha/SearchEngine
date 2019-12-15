@@ -50,7 +50,14 @@ int main ( int argc, char ** argv )
 		}
 	//dex::makeDirectory( outputFolder.cStr( ) );
 	dex::vector < dex::string > toProcess;
+	dex::vector < dex::string > toDelete;
 	toProcess = dex::matchingFilenames( batch, "_forIndexer" );
+	toDelete = dex::matchingFilenames( batch, "_processed" );
+	for ( int index = 0;  index < toDelete.size( );  index++ )
+		{
+		if ( remove( toDelete[ index ] ) != 0 )
+			std::cout << "error deleting " << toDelete[ index ] << "\n";
+		}
 
 	dex::utf::decoder < dex::string > stringDecoder;
 	
