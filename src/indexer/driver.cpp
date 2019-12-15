@@ -57,7 +57,7 @@ int main ( int argc, char ** argv )
 	dex::vector < dex::string > existingIndexChunks = dex::matchingFilenames( outputFolder, "_in.dex");
 	int indexChunkCount = existingIndexChunks.size( );
 	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
-	dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fileDescriptor );
+	dex::index::indexChunk *initializingIndexChunk = new dex::index::indexChunk( fileDescriptor );
 
 
 	unsigned documentsProcessed = 0;
@@ -98,14 +98,15 @@ int main ( int argc, char ** argv )
 
 				// TODO this should go in parser but didn't want to break dependent functionality
 				// TODO add default argument for anchorText in index.hpp
-				if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString, 
+				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString, 
 						parser.ReturnWords( ) ) )
 					{
 					close( fileDescriptor );
 					fileDescriptor = openFile( indexChunkCount++, outputFolder );
-					initializingIndexChunk = dex::index::indexChunk( fileDescriptor );
+					delete initializingIndexChunk;
+					initializingIndexChunk = new dex::index::indexChunk( fileDescriptor );
 					}
-				if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
+				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{
 					// TODO: Throw an exception. Should not fail to add a document to a new index chunk
@@ -129,7 +130,7 @@ int main ( int argc, char ** argv )
 				}
 			catch ( ... )
 				{
-				std::cout << "Skipping malformed html: " << url.completeUrl( ) << "\n";
+				// std::cout << "Skipping malformed html: " << url.completeUrl( ) << "\n";
 				continue;
 				}
 			}
@@ -137,7 +138,10 @@ int main ( int argc, char ** argv )
 		std::cout << "processed " + fileName << std::endl;
 		std::cout << "total documents processed = " << totalDocumentsProcessed << std::endl << "total bytes processed = "
 				<< totalBytesProcessed << std::endl;
-		int renamed = rename( fileName.cStr( ) , ( fileName ).cStr( ) );
+		string newFilename( fileName );
+		newFilename.erase( newFilename.end( ) - sizeof( "forIndexer" ) + 1 );
+		newFilename += "processed";
+		int renamed = rename( fileName.cStr( ) , ( newFilename ).cStr( ) );
 		if ( renamed == -1 )
 			{
 			std::cout << "Failed to rename " + fileName << std::endl;
