@@ -1,10 +1,14 @@
 // rankerTests.cpp
 // tests for the ranker class
 //
+// 2019-12-10 - 14: Wrote everything else: combsc
 // 2019-12-09: Init Commit: combsc + lougheem
 
 #include "catch.hpp"
-#include "../src/ranker/ranker.hpp"
+#include "ranker.hpp"
+#include "rankerObjects.hpp"
+#include "constraintSolver.hpp"
+#include "index.hpp"
 #include <iostream>
 
 TEST_CASE( "static ranking", "[ranker]" )
@@ -17,9 +21,11 @@ TEST_CASE( "static ranking", "[ranker]" )
 	double proportionCap = 0;
 	unsigned maxNumBodySpans = 0;
 	unsigned maxNumTitleSpans = 0;
+	double wordsWeight = 1000;
 	dex::vector < dex::indexChunkObject * > someChunks;
+	someChunks.pushBack( nullptr );
 	dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
 
 	SECTION( "static title scoring" )
 		{
@@ -44,6 +50,53 @@ TEST_CASE( "static ranking", "[ranker]" )
 			REQUIRE( judge.staticScoreUrl( urls[ i ] ) < judge.staticScoreUrl( urls[ i + 1 ] ) );
 			}
 		}
+	}
+
+TEST_CASE( "begin document" )
+	{
+	dex::vector < dex::pair < unsigned, double > > titleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
+	double urlWeight = 1;
+	dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics;
+	dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics;
+	double emphasizedWeight = 0;
+	double proportionCap = 0;
+	unsigned maxNumBodySpans = 0;
+	unsigned maxNumTitleSpans = 0;
+	double wordsWeight = 1000;
+	dex::vector < dex::indexChunkObject * > someChunks;
+	someChunks.pushBack( nullptr );
+
+	dex::vector < unsigned > ends = { 959, 6000, 7000 };
+	dex::endOfDocumentISR endisr( ends );
+	dex::ISR matchingISR( "", ends, endisr );
+	dex::vector < unsigned > quick = { 62, 69, 84, 311, 421, 430, 566, 619, 794, 952,
+			3500, 5500,
+			6500 };
+	dex::ISR quickISR( "quick", quick, endisr );
+	dex::vector < unsigned > brown = { 83, 94, 170, 179, 216, 227, 400, 417, 422, 575, 795, 826, 828, 957,
+			3501, 5501,
+			6504 };
+	dex::ISR brownISR( "brown", brown, endisr );
+	dex::vector < unsigned > fox = { 284, 423, 580, 612, 796, 912, 958,
+			3502, 5502,
+			6508 };
+	dex::ISR foxISR( "fox", fox, endisr );
+	unsigned beginDocument = 0;
+	unsigned endDocument = matchingISR.next( );
+	REQUIRE( endDocument == 959 );
+
+	endDocument = matchingISR.next( );
+	endisr.seek( endDocument );
+	beginDocument = endDocument - endisr.documentSize( );
+	REQUIRE( endDocument == 6000 );
+	REQUIRE( beginDocument == 960 );
+
+	endDocument = matchingISR.next( );
+	endisr.seek( endDocument );
+	beginDocument = endDocument - endisr.documentSize( );
+	REQUIRE( endDocument == 7000 );
+	REQUIRE( beginDocument == 6001 );
+	
 	}
 
 TEST_CASE( "sudo ISR", "[ranker]" )
@@ -98,33 +151,40 @@ TEST_CASE( "basic spanning", "[ranker]" )
 	double proportionCap = 0;
 	unsigned maxNumBodySpans = 0;
 	unsigned maxNumTitleSpans = 0;
+	double wordsWeight = 1000;
 	dex::vector < dex::indexChunkObject * > someChunks;
+	someChunks.pushBack( nullptr );
 	
 	
 	SECTION ( "simple" )
 		{
 		dex::vector < unsigned > end = { 951 };
 		dex::endOfDocumentISR endisr( end );
+		dex::ISR matchingISR( "", end, endisr );
 		std::cout << "basic spanning, simple\n";
 		dex::vector < unsigned > duo = { 1, 3, 900, 950 };
 		dex::ISR duoISR( "duo", duo, endisr );
 		dex::vector < unsigned > mushu = { 2, 61, 901 };
 		dex::ISR mushuISR( "mushu", mushu, endisr );
 
-		dex::vector < dex::ISR > isrs;
-		isrs.pushBack( duoISR );
-		isrs.pushBack( mushuISR );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &duoISR );
+		isrs.pushBack( &mushuISR );
 		
 		dex::vector < dex::pair < unsigned, double > > heuristics = { { 1, 1 }, { 20, 1 }, { 60, 1 } };
 		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
 		dex::vector < dex::vector < unsigned > > wordCount;
-		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, endisr, heuristics, 5, wordCount );
+		dex::vector < dex::string > titles;
+		dex::vector < dex::string > urls;
+		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, &matchingISR, &endisr,
+				nullptr, heuristics, 5, wordCount, titles, urls );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
-			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic + 1 << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
+			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic + 1 << " and "
+					<< heuristics[ i ].first * isrs.size( ) << std::endl;
 			prevHeuristic = heuristics[ i ].first * isrs.size( );
 			}
 		REQUIRE( spans[ 0 ][ 0 ] == 2 );
@@ -137,27 +197,32 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		{
 		dex::vector < unsigned > ends = { 959 };
 		dex::endOfDocumentISR endisr( ends );
+		dex::ISR matchingISR( "", ends, endisr );
 		dex::vector < unsigned > quick = { 62, 69, 84, 311, 421, 430, 566, 619, 794, 952 };
 		dex::ISR quickISR( "quick", quick, endisr );
 		dex::vector < unsigned > brown = { 83, 94, 170, 179, 216, 227, 400, 417, 422, 575, 795, 826, 828, 957 };
 		dex::ISR brownISR( "brown", brown, endisr );
 		dex::vector < unsigned > fox = { 284, 423, 580, 612, 796, 912, 958 };
 		dex::ISR foxISR( "fox", fox, endisr );
-		dex::vector < dex::ISR > isrs;
-		isrs.pushBack( quickISR );
-		isrs.pushBack( brownISR );
-		isrs.pushBack( foxISR );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &quickISR );
+		isrs.pushBack( &brownISR );
+		isrs.pushBack( &foxISR );
 		
 		dex::vector < dex::pair < unsigned, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
 		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
 		dex::vector < dex::vector < unsigned > > wordCount;
-		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, endisr, heuristics, 5, wordCount );
+		dex::vector < dex::string > titles;
+		dex::vector < dex::string > urls;
+		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, &matchingISR, &endisr,
+				nullptr, heuristics, 5, wordCount, titles, urls );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
-			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic + 1 << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
+			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic + 1 << " and "
+					<< heuristics[ i ].first * isrs.size( ) << std::endl;
 			prevHeuristic = heuristics[ i ].first * isrs.size( );
 			}
 		REQUIRE( spans[ 0 ][ 0 ] == 2 );
@@ -180,31 +245,38 @@ TEST_CASE( "edge cases", "[ranker]" )
 	double proportionCap = 0;
 	unsigned maxNumBodySpans = 0;
 	unsigned maxNumTitleSpans = 0;
+	double wordsWeight = 1000;
 	dex::vector < dex::indexChunkObject * > someChunks;
+	someChunks.pushBack( nullptr );
 	SECTION( "Short ISR" )
 		{
 		dex::vector < unsigned > ends = { 959 };
 		dex::endOfDocumentISR endisr( ends );
+		dex::ISR matchingISR( "", ends, endisr );
 		dex::vector < unsigned > quick = { 300 };
 		dex::ISR quickISR( "quick", quick, endisr );
 		dex::vector < unsigned > brown = { 83, 94, 170, 179, 216, 227, 400, 417, 422, 516, 795, 826, 828, 957 };
 		dex::ISR brownISR( "brown", brown, endisr );
 		dex::vector < unsigned > fox = { 284, 423, 580, 612, 796, 912, 958 };
 		dex::ISR foxISR( "fox", fox, endisr );
-		dex::vector < dex::ISR > isrs;
-		isrs.pushBack( quickISR );
-		isrs.pushBack( brownISR );
-		isrs.pushBack( foxISR );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &quickISR );
+		isrs.pushBack( &brownISR );
+		isrs.pushBack( &foxISR );
 		dex::vector < dex::pair < unsigned, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
 		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
 		dex::vector < dex::vector < unsigned > > wordCount;
-		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, endisr, heuristics, 5, wordCount );
+		dex::vector < dex::string > titles;
+		dex::vector < dex::string > urls;
+		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, &matchingISR, &endisr,
+				nullptr, heuristics, 5, wordCount, titles, urls );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
-			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
+			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic << " and "
+					<< heuristics[ i ].first * isrs.size( ) << std::endl;
 			prevHeuristic = heuristics[ i ].first;
 			}
 		REQUIRE( spans[ 0 ][ 0 ] == 0 );
@@ -219,26 +291,31 @@ TEST_CASE( "edge cases", "[ranker]" )
 		{
 		dex::vector < unsigned > ends = { 959 };
 		dex::endOfDocumentISR endisr( ends );
+		dex::ISR matchingISR( "", ends, endisr );
 		dex::vector < unsigned > quick;
 		dex::ISR quickISR( "quick", quick, endisr );
 		dex::vector < unsigned > brown = { 83, 94, 170, 179, 216, 227, 400, 417, 422, 516, 795, 826, 828, 957 };
 		dex::ISR brownISR( "brown", brown, endisr );
 		dex::vector < unsigned > fox = { 284, 423, 580, 612, 796, 912, 958 };
 		dex::ISR foxISR( "fox", fox, endisr );
-		dex::vector < dex::ISR > isrs;
-		isrs.pushBack( quickISR );
-		isrs.pushBack( brownISR );
-		isrs.pushBack( foxISR );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &quickISR );
+		isrs.pushBack( &brownISR );
+		isrs.pushBack( &foxISR );
 		dex::vector < dex::pair < unsigned, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
 		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
 		dex::vector < dex::vector < unsigned > > wordCount;
-		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, endisr, heuristics, 5, wordCount );
+		dex::vector < dex::string > titles;
+		dex::vector < dex::string > urls;
+		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, &matchingISR, &endisr,
+				nullptr, heuristics, 5, wordCount, titles, urls );
 		std::cout << "Finished spanning\n";
 		unsigned prevHeuristic = 0;
 		for ( unsigned i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
-			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic << " and " << heuristics[ i ].first * isrs.size( ) << std::endl;
+			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic << " and " <<
+					heuristics[ i ].first * isrs.size( ) << std::endl;
 			prevHeuristic = heuristics[ i ].first;
 			}
 		REQUIRE( spans[ 0 ][ 0 ] == 0 );
@@ -262,12 +339,15 @@ TEST_CASE( "spanning multiple documents" )
 	double proportionCap = 0;
 	unsigned maxNumBodySpans = 0;
 	unsigned maxNumTitleSpans = 0;
+	double wordsWeight = 1000;
 	dex::vector < dex::indexChunkObject * > someChunks;
+	someChunks.pushBack( nullptr );
 
 	SECTION( "quick brown fox simple" )
 		{
 		dex::vector < unsigned > ends = { 959, 6000, 7000 };
 		dex::endOfDocumentISR endisr( ends );
+		dex::ISR matchingISR( "", ends, endisr );
 		dex::vector < unsigned > quick = { 62, 69, 84, 311, 421, 430, 566, 619, 794, 952,
 				3500, 5500,
 				6500 };
@@ -280,16 +360,19 @@ TEST_CASE( "spanning multiple documents" )
 				3502, 5502,
 				6508 };
 		dex::ISR foxISR( "fox", fox, endisr );
-		dex::vector < dex::ISR > isrs;
-		isrs.pushBack( quickISR );
-		isrs.pushBack( brownISR );
-		isrs.pushBack( foxISR );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &quickISR );
+		isrs.pushBack( &brownISR );
+		isrs.pushBack( &foxISR );
 		
 		dex::vector < dex::pair < unsigned, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
 		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
 		dex::vector < dex::vector < unsigned > > wordCount;
-		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, endisr, heuristics, 5, wordCount );
+		dex::vector < dex::string > titles;
+		dex::vector < dex::string > urls;
+		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, &matchingISR, &endisr,
+				nullptr, heuristics, 5, wordCount, titles, urls );
 
 
 		REQUIRE( spans[ 0 ][ 0 ] == 2 );
@@ -321,6 +404,7 @@ TEST_CASE( "spanning multiple documents" )
 		{
 		dex::vector < unsigned > ends = { 959, 6000, 7000, 8000, 9000 };
 		dex::endOfDocumentISR endisr( ends );
+		dex::ISR matchingISR( "", ends, endisr );
 		dex::vector < unsigned > quick = { 
 				62, 69, 84, 311, 421, 430, 566, 619, 794, 952,
 				3500, 5500,
@@ -342,16 +426,19 @@ TEST_CASE( "spanning multiple documents" )
 				7051, 7061,
 				8003, 8008, 8024, 8090, 8100 };
 		dex::ISR foxISR( "fox", fox, endisr );
-		dex::vector < dex::ISR > isrs;
-		isrs.pushBack( quickISR );
-		isrs.pushBack( brownISR );
-		isrs.pushBack( foxISR );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &quickISR );
+		isrs.pushBack( &brownISR );
+		isrs.pushBack( &foxISR );
 		
 		dex::vector < dex::pair < unsigned, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
 		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, someChunks );
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
 		dex::vector < dex::vector < unsigned > > wordCount;
-		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, endisr, heuristics, 5, wordCount );
+		dex::vector < dex::string > titles;
+		dex::vector < dex::string > urls;
+		dex::vector < dex::vector < unsigned > > spans = judge.getDesiredSpans( isrs, &matchingISR, &endisr,
+				nullptr, heuristics, 5, wordCount, titles, urls );
 
 
 		REQUIRE( spans[ 0 ][ 0 ] == 2 );
@@ -393,5 +480,218 @@ TEST_CASE( "spanning multiple documents" )
 		REQUIRE( wordCount[ 4 ][ 0 ] == 4 );
 		REQUIRE( wordCount[ 4 ][ 1 ] == 3 );
 		REQUIRE( wordCount[ 4 ][ 2 ] == 5 );
+		}
+	}
+
+TEST_CASE( "scoring" )
+	{
+	dex::vector < dex::pair < unsigned, double > > titleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
+	double urlWeight = 1;
+	dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics = { { 1, 50 }, { 3, 25 }, { 4, 20 }, { 5, 5 } };
+	dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics = { { 1, 250 }, { 2, 50 } };
+	double emphasizedWeight = 3;
+	double proportionCap = 0.15;
+	unsigned maxNumBodySpans = 5;
+	unsigned maxNumTitleSpans = 1;
+	double wordsWeight = 1000;
+	dex::vector < dex::indexChunkObject * > someChunks;
+	someChunks.pushBack( nullptr );
+	SECTION( "simple dynamic scoring" )
+		{
+		dex::vector < unsigned > ends = { 1000, 6000, 7000 };
+		dex::endOfDocumentISR endisr( ends );
+		dex::ISR matchingISR( "", ends, endisr );
+		dex::vector < unsigned > quick = { 
+				62, 69, 84, 311, 421, 430, 566, 619, 794, 952,
+				3500, 5500,
+				6500 };
+		dex::ISR quickISR( "quick", quick, endisr );
+		dex::vector < unsigned > brown = { 
+				83, 94, 170, 179, 216, 227, 400, 417, 422, 575, 795, 826, 828, 957,
+				3501, 5501,
+				6504 };
+		dex::ISR brownISR( "brown", brown, endisr );
+		dex::vector < unsigned > fox = { 
+				284, 423, 580, 612, 796, 912, 958,
+				3502, 5502,
+				6508 };
+		dex::ISR foxISR( "fox", fox, endisr );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &quickISR );
+		isrs.pushBack( &brownISR );
+		isrs.pushBack( &foxISR );
+
+		dex::vector < unsigned > titlequick = { 
+				60,
+				2000,
+				6500 };
+		dex::ISR titlequickISR( "quick", titlequick, endisr );
+		dex::vector < unsigned > titlebrown = { 
+				61,
+				2002,
+				6504 };
+		dex::ISR titlebrownISR( "brown", titlebrown, endisr );
+		dex::vector < unsigned > titlefox = { 
+				62,
+				2004,
+				6508 };
+		dex::ISR titlefoxISR( "fox", titlefox, endisr );
+		dex::vector < dex::constraintSolver::ISR * > titleisrs;
+		titleisrs.pushBack( &titlequickISR );
+		titleisrs.pushBack( &titlebrownISR );
+		titleisrs.pushBack( &titlefoxISR );
+		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
+		dex::vector < bool > emphasized = { false, false, false };
+		dex::vector < dex::string > titles;
+		dex::vector < dex::string > urls;
+		dex::vector < double > dynamicScores = judge.getDynamicScores( isrs, titleisrs, &matchingISR, &endisr, nullptr,
+				emphasized, titles, urls, true );
+		std::cout << dynamicScores[ 0 ] << std::endl;
+		std::cout << dynamicScores[ 1 ] << std::endl;
+		std::cout << dynamicScores[ 2 ] << std::endl;
+		REQUIRE( dynamicScores[ 0 ] > dynamicScores[ 1 ] );
+		REQUIRE( dynamicScores[ 1 ] > dynamicScores[ 2 ] );
+		}
+
+	SECTION( "total scoring" )
+		{
+		dex::vector < unsigned > ends = { 1000, 6000, 7000 };
+		dex::endOfDocumentISR endisr( ends );
+		dex::ISR matchingISR( "", ends, endisr );
+		dex::vector < dex::Url > urls = { "https://www.good.com", "http://www.good.com/somethingabitlonger", "http://bad.good.bad" };
+		dex::vector < unsigned > quick = { 
+				62, 69, 84, 311, 421, 430, 566, 619, 794, 952,
+				3500, 5500,
+				6500 };
+		dex::ISR quickISR( "quick", quick, endisr );
+		dex::vector < unsigned > brown = { 
+				83, 94, 170, 179, 216, 227, 400, 417, 422, 575, 795, 826, 828, 957,
+				3501, 5501,
+				6504 };
+		dex::ISR brownISR( "brown", brown, endisr );
+		dex::vector < unsigned > fox = { 
+				284, 423, 580, 612, 796, 912, 958,
+				3502, 5502,
+				6508 };
+		dex::ISR foxISR( "fox", fox, endisr );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &quickISR );
+		isrs.pushBack( &brownISR );
+		isrs.pushBack( &foxISR );
+		dex::vector < dex::string > titles = { "good title", "slightly longer but reasonable",
+				"much longer and insanely unreasonable by any standard for a title" };
+		dex::vector < unsigned > titlequick = { 
+				60,
+				2000,
+				6500 };
+		dex::ISR titlequickISR( "quick", titlequick, endisr );
+		dex::vector < unsigned > titlebrown = { 
+				61,
+				2002,
+				6504 };
+		dex::ISR titlebrownISR( "brown", titlebrown, endisr );
+		dex::vector < unsigned > titlefox = { 
+				62,
+				2004,
+				6508 };
+		dex::ISR titlefoxISR( "fox", titlefox, endisr );
+		dex::vector < dex::constraintSolver::ISR * > titleisrs;
+		titleisrs.pushBack( &titlequickISR );
+		titleisrs.pushBack( &titlebrownISR );
+		titleisrs.pushBack( &titlefoxISR );
+		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
+		dex::vector < bool > emphasized = { false, false, false };
+
+
+		dex::matchedDocuments documents;
+		documents.titleISRs = titleisrs;
+		documents.bodyISRs = isrs;
+		documents.matchingDocumentISR = &matchingISR;
+		documents.emphasizedWords = emphasized;
+		documents.urls = urls;
+		documents.titles = titles;
+		documents.chunk = nullptr;
+		dex::vector < dex::string > nulltitles;
+		dex::vector < dex::string > nullurls;
+		dex::pair < dex::vector < double >, int > totalScoresPair = judge.scoreDocuments( documents, &endisr, nulltitles, nullurls, true );
+		dex::vector < double > totalScores = totalScoresPair.first;
+		std::cout << totalScores[ 0 ] << std::endl;
+		std::cout << totalScores[ 1 ] << std::endl;
+		std::cout << totalScores[ 2 ] << std::endl;
+		REQUIRE( totalScores[ 0 ] > totalScores[ 1 ] );
+		REQUIRE( totalScores[ 1 ] > totalScores[ 2 ] );
+		}
+
+	SECTION( "total scoring w/ more ends than matching" )
+		{
+		dex::vector < unsigned > ends = { 1000, 2000, 3000, 4000, 5000, 6000, 7000 };
+		dex::vector < unsigned > matching = { 1000, 6000, 7000 };
+		dex::endOfDocumentISR endisr( ends );
+		dex::ISR matchingISR( "", matching, endisr );
+		dex::vector < dex::Url > urls = { "https://www.good.com", "http://www.good.com/somethingabitlonger", "http://bad.good.bad" };
+		dex::vector < unsigned > quick = { 
+				62, 69, 84, 311, 421, 430, 566, 619, 794, 952,
+				3500, 5500,
+				6500 };
+		dex::ISR quickISR( "quick", quick, endisr );
+		dex::vector < unsigned > brown = { 
+				83, 94, 170, 179, 216, 227, 400, 417, 422, 575, 795, 826, 828, 957,
+				3501, 5501,
+				6504 };
+		dex::ISR brownISR( "brown", brown, endisr );
+		dex::vector < unsigned > fox = { 
+				284, 423, 580, 612, 796, 912, 958,
+				3502, 5502,
+				6508 };
+		dex::ISR foxISR( "fox", fox, endisr );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &quickISR );
+		isrs.pushBack( &brownISR );
+		isrs.pushBack( &foxISR );
+		dex::vector < dex::string > titles = { "good title", "slightly longer but reasonable",
+				"much longer and insanely unreasonable by any standard for a title" };
+		dex::vector < unsigned > titlequick = { 
+				60,
+				2000,
+				6500 };
+		dex::ISR titlequickISR( "quick", titlequick, endisr );
+		dex::vector < unsigned > titlebrown = { 
+				61,
+				2002,
+				6504 };
+		dex::ISR titlebrownISR( "brown", titlebrown, endisr );
+		dex::vector < unsigned > titlefox = { 
+				62,
+				2004,
+				6508 };
+		dex::ISR titlefoxISR( "fox", titlefox, endisr );
+		dex::vector < dex::constraintSolver::ISR * > titleisrs;
+		titleisrs.pushBack( &titlequickISR );
+		titleisrs.pushBack( &titlebrownISR );
+		titleisrs.pushBack( &titlefoxISR );
+		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
+		dex::vector < bool > emphasized = { false, false, false };
+
+
+		dex::matchedDocuments documents;
+		documents.titleISRs = titleisrs;
+		documents.bodyISRs = isrs;
+		documents.matchingDocumentISR = &matchingISR;
+		documents.emphasizedWords = emphasized;
+		documents.urls = urls;
+		documents.titles = titles;
+		documents.chunk = nullptr;
+		dex::vector < dex::string > nulltitles;
+		dex::vector < dex::string > nullurls;
+		dex::pair < dex::vector < double >, int > totalScoresPair = judge.scoreDocuments( documents, &endisr, nulltitles, nullurls, true );
+		dex::vector < double > totalScores = totalScoresPair.first;
+		std::cout << totalScores[ 0 ] << std::endl;
+		std::cout << totalScores[ 1 ] << std::endl;
+		std::cout << totalScores[ 2 ] << std::endl;
+		REQUIRE( totalScores[ 0 ] > totalScores[ 1 ] );
+		REQUIRE( totalScores[ 1 ] > totalScores[ 2 ] );
 		}
 	}

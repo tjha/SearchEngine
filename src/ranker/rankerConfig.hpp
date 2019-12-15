@@ -14,7 +14,7 @@ struct RankerConfiguration
 	// pair of < maximum length of title, score awarded to title >
 	static const dex::vector < dex::pair < unsigned, double > > StaticTitleWeights;
 	// score weighting for URL
-	constexpr static const double StaticUrlWeight = 1.5;
+	constexpr static const double StaticUrlWeight = 1;
 	// pair of < inclusive upper bound on body span range, score weighting of that range >
 	static const dex::vector < dex::pair < unsigned, double > > BodySpanHeuristics;
 	// pair of < inclusive upper bound on title span range, score weighting of that range >
@@ -28,6 +28,7 @@ struct RankerConfiguration
 	constexpr static const unsigned MaxBodySpans = 5;
 	// Maximum number of spans we measure for title ISRs
 	constexpr static const unsigned MaxTitleSpans = 1;
+	constexpr static const double wordWeight = 1000;
 	};
 
 const dex::vector < dex::pair < unsigned, double > > RankerConfiguration::StaticTitleWeights = 
@@ -40,8 +41,9 @@ const dex::vector < dex::pair < unsigned, double > > RankerConfiguration::Static
 const dex::vector < dex::pair < unsigned, double > > RankerConfiguration::BodySpanHeuristics =
 		{
 		{ 1, 50 },
-		{ 2, 25 },
-		{ 5, 10 }
+		{ 3, 25 },
+		{ 4, 15 },
+		{ 5, 5 }
 		};
 
 const dex::vector < dex::pair < unsigned, double > > RankerConfiguration::TitleSpanHeuristics =

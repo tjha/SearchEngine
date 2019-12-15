@@ -48,7 +48,7 @@
 
 namespace dex
 	{
-	class endOfDocumentISR
+	class endOfDocumentISR : public constraintSolver::endOfDocumentISR
 		{
 		private:
 			dex::vector < unsigned > internal;
@@ -62,19 +62,13 @@ namespace dex
 				internal = vecIn;
 				pos = 0;
 				}
+			endOfDocumentISR &operator =( const endOfDocumentISR other )
+				{
+				internal = other.internal;
+				pos = other.pos;
+				return *this;
+				}
 			const static unsigned npos = unsigned ( -1 );
-			void reset( )
-				{
-				pos = 0;
-				}
-			size_t current( )
-				{
-				if ( pos == internal.size( ) )
-					{
-					return npos;
-					}
-				return internal[ npos ];
-				}
 			size_t seek( size_t target )
 				{
 				for ( unsigned index = 0;  index < internal.size( );  ++index )
@@ -82,7 +76,7 @@ namespace dex
 					if ( internal[ index ] >= target )
 						{
 						pos = index;
-						return next( );
+						return internal[ pos ];
 						}
 					}
 				pos = internal.size( );
@@ -109,11 +103,11 @@ namespace dex
 					{
 					return internal[ pos ];
 					}
-				return internal[ pos ] - internal[ pos ] - 1;
+				return internal[ pos ] - internal[ pos - 1 ] - 1;
 				}
 		};
 	
-	class ISR
+	class ISR : public constraintSolver::ISR
 		{
 		private:
 			dex::vector < unsigned > internal;
@@ -121,6 +115,7 @@ namespace dex
 			unsigned pos;
 			dex::endOfDocumentISR ends;
 		public:
+			
 			const static unsigned npos = unsigned ( -1 );
 			ISR( )
 				{
@@ -131,6 +126,11 @@ namespace dex
 				internal = vecIn;
 				pos = 0;
 				ends = endsIn;
+				}
+
+			void reset( )
+				{
+				pos = 0;
 				}
 			// Jump this ISR to the first instance of our pattern that is at or after target. Return the location of the
 			// instance, or -1 if there is none.
@@ -168,23 +168,11 @@ namespace dex
 				{
 				if ( pos == internal.size( ) )
 					{
+					std::cout << "CALLED NEXT DOCUMENT, POS AT END OF INTERNAL" << std::endl;
 					return npos;
 					}
 				ends.seek( internal[ pos ] );
 				return seek( ends.next( ) );
-				}
-			// seek to the first instance in this document
-			size_t beginDocument( )
-				{
-				if ( pos == internal.size( ) )
-					{
-					ends.seek( internal[ pos - 1 ] );
-					}
-				else
-					{
-					ends.seek( internal[ pos ] );
-					}
-				return seek( ends.current( ) - ends.documentSize( ) );
 				}
 			dex::string getWord( )
 				{
@@ -197,22 +185,11 @@ namespace dex
 		{
 		// Constraint solver needs to make sure to not return pornographic results
 		// All four vectors should be in the order of the flattened query
-		dex::vector < dex::ISR > titleISRs;
-		dex::vector < dex::ISR > bodyISRs;
-		dex::ISR *matchingDocumentISR;
+		dex::vector < dex::constraintSolver::ISR * > titleISRs;
+		dex::vector < dex::constraintSolver::ISR * > bodyISRs;
+		dex::constraintSolver::ISR *matchingDocumentISR;
 		// next of matchingDocumentISR returns the offset of the end document that you care about
 		dex::index::indexChunk *chunk;
-
-		
-		// void example( ) {
-		// 	size_t nextDocEndOffset = matchingDocumentISR->nextDocument( );
-		// 	dex::string title = chunk->offsetsToEndOfDocumentMetadatas[ nextDocEndOffset ].title;
-		// 	dex::string url = chunk->offsetsToEndOfDocumentMetadatas[ nextDocEndOffset ].url;
-		// }
-
-		// void example2( ) {
-		// 	dex::index::indexChunk::endOfDocumentIndexStreamReader eodisr( chunk, "" );
-		// }
 
 		dex::vector < bool > emphasizedWords;
 		dex::vector < dex::string > titles;

@@ -39,20 +39,27 @@
 	<div class="wrap">
 		<div class="search" action="/results.html">
 			<input type="text" class="searchTerm" placeholder="What are you searching for?" onKeyDown="if(event.keyCode==13) searchResults();">
-			<button type="submit" class="searchButton" onclick="searchResults();">
-			Search
-		  </button>
+                <div class="toggle">
+                    <input type="checkbox" class="check" onclick="toggleBoolean();">
+                    <b class="b switch"></b>
+                    <b class="b track"></b>
+                </div>
+            <button type="submit" class="searchButton" onclick="searchResults();">
+                Search
+		    </button>
 		</div>
 	</div>
     
 
    
+<!--
 	<div class="toggle">
 	  <input type="checkbox" class="check" onclick="toggleBoolean();">
 	  <b class="b switch"></b>
 	  <b class="b track"></b>
 	</div>
  
+-->
     </body>
 </html>
 

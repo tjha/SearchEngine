@@ -32,7 +32,7 @@ documentInfo **findTopN( dex::vector< double > scores, size_t N )
 	for ( size_t index = 0;  index < scores.size( );  index++ )
 		{
 		documentsInformation.pushBack( documentInfo{ index, scores[ index ] } );
-		std::cout << "pushing on " << index << "\t" << scores[ index ] << "\n";
+		//std::cout << "pushing on " << index << "\t" << scores[ index ] << "\n";
 		}
 
 	if ( documentsInformation.size( ) == 0 )
@@ -50,11 +50,11 @@ documentInfo **findTopN( dex::vector< double > scores, size_t N )
 	for ( dex::vector< documentInfo >::iterator documentIt = documentsInformation.begin( );
 			documentIt != documentsInformation.cend( );  documentIt++ )
 		{
-		std::cout << "Looking at " << documentIt->score << "\n";
+		//std::cout << "Looking at " << documentIt->score << "\n";
 		node *currentNode = list;
 		if ( !currentNode )
 			{
-			std::cout << "!currentNode\n";
+			//std::cout << "!currentNode\n";
 			list = new node{ nullptr, nullptr, &( *documentIt ) };
 			listCount++;
 			continue;
@@ -62,7 +62,7 @@ documentInfo **findTopN( dex::vector< double > scores, size_t N )
 
 		if( !currentNode->next )
 			{
-			std::cout << "!currentNode->next\n";
+			//std::cout << "!currentNode->next\n";
 			node *newNode = new node{ nullptr, nullptr, &( *documentIt ) };
 			node *greater;
 			node *lesser;
@@ -76,8 +76,8 @@ documentInfo **findTopN( dex::vector< double > scores, size_t N )
 				greater = currentNode;
 				lesser = newNode;
 				}
-			std::cout << "greater: " << greater->doc->score << "\n";
-			std::cout << "lesser: " << lesser->doc->score << "\n";
+			//std::cout << "greater: " << greater->doc->score << "\n";
+			//std::cout << "lesser: " << lesser->doc->score << "\n";
 			greater->prev = lesser;
 			lesser->next = greater;
 			list = lesser;
@@ -89,7 +89,7 @@ documentInfo **findTopN( dex::vector< double > scores, size_t N )
 
 		while ( currentNode && documentIt->score > currentNode->doc->score )
 			{
-			std::cout << "\tcurrentNode: " << currentNode->doc->score << "\n";
+			//std::cout << "\tcurrentNode: " << currentNode->doc->score << "\n";
 			if ( currentNode == list )
 				prevNode = list;
 			else
@@ -99,7 +99,7 @@ documentInfo **findTopN( dex::vector< double > scores, size_t N )
 
 		if ( !prevNode )
 			{
-			std::cout << "!prevNode\n";
+			//std::cout << "!prevNode\n";
 			if ( listCount == N )
 				continue;
 			node *newNode = new node{ currentNode, nullptr, &( *documentIt ) };
@@ -110,7 +110,7 @@ documentInfo **findTopN( dex::vector< double > scores, size_t N )
 			}
 		else
 			{
-			std::cout << "insert at " << prevNode->doc->score << "\n";
+			//std::cout << "insert at " << prevNode->doc->score << "\n";
 			node *newNode = new node{ currentNode, prevNode, &( *documentIt ) };
 			if ( currentNode )
 				currentNode->prev = newNode;
@@ -136,7 +136,7 @@ documentInfo **findTopN( dex::vector< double > scores, size_t N )
 
 	while ( top )
 		{
-		std::cout << "docs[" << index << "] = " << top->doc->score << "\n";
+		//std::cout << "docs[" << index << "] = " << top->doc->score << "\n";
 		docs[ index ] = top->doc;
 		top = top->prev;
 		index++;

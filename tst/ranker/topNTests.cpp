@@ -11,24 +11,21 @@ TEST_CASE( "topN" )
 	{
 	dex::vector< double > scores;
 	dex::vector< double > topScores;
-	int n = 4;
+	int m = 1000;
 
-	for ( double index = 0;  index < n + 1;  index++ )
+	for ( double index = 0;  index < m + 1;  index++ )
 		{
 		scores.pushBack( index );
-		std::cout << "score: " << index << "\n";
+		//std::cout << "score: " << index << "\n";
 		}
 	
-	REQUIRE( scores.size( ) >= n );
-
+	REQUIRE( scores.size( ) >= m );
+	int n = m/10;
 	documentInfo **topN, *p;
 	topN = findTopN( scores, n );
-	for ( int index = 0;  index < n && ( p = topN[ index ] );  index++ )
+	for ( int index = 0;  index < n - 1;  index++ )
 		{
-		std::cout << "index: " << index;
-		REQUIRE( p );
-		topScores.pushBack( scores[ p->documentIndex ] );
-		std::cout << "\t" << scores[ p->documentIndex ] << "\n";
+		REQUIRE( topN[ index ]->score > topN[ index + 1 ]->score );
 		}
 
 	}

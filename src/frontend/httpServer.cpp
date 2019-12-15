@@ -15,8 +15,17 @@
 
 #include "file.hpp"
 #include "index.hpp"
-//#include "ranker.hpp"
+#include "ranker.hpp"
 #include "basicString.hpp"
+
+// Temporary searchResults
+
+dex::vector< dex::searchResult > tmpSearchResults = 
+	{
+	{ "http://www.apple.com/", "The new iphone" },
+	{ "http://www.amazon.com/", "Tejas' work place" },
+	{ "http://www.nicolehamilton.com/", "#1 teacher" }
+	};
 
 //  Multipurpose Internet Mail Extensions (MIME) types
 
@@ -30,72 +39,13 @@ const MimetypeMap MimeTable[ ] =
 	{
 	// List of some of the most common MIME types.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types
-	".aac",     "audio/aac",
-	".abw",     "application/x-abiword",
-	".arc",     "application/octet-stream",
-	".avi",     "video/x-msvideo",
-	".azw",     "application/vnd.amazon.ebook",
-	".bin",     "application/octet-stream",
-	".bz",      "application/x-bzip",
-	".bz2",     "application/x-bzip2",
-	".csh",     "application/x-csh",
 	".css",     "text/css",
-	".csv",     "text/csv",
-	".doc",     "application/msword",
-	".docx",    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-	".eot",     "application/vnd.ms-fontobject",
-	".epub",    "application/epub+zip",
-	".gif",     "image/gif",
 	".htm",     "text/html",
 	".html",    "text/html",
-	".ico",     "image/x-icon",
-	".ics",     "text/calendar",
-	".jar",     "application/java-archive",
 	".jpeg",    "image/jpeg",
 	".jpg",     "image/jpeg",
-	".js",      "application/javascript",
-	".json",    "application/json",
-	".mid",     "audio/midi",
-	".midi",    "audio/midi",
-	".mpeg",    "video/mpeg",
-	".mpkg",    "application/vnd.apple.installer+xml",
-	".odp",     "application/vnd.oasis.opendocument.presentation",
-	".ods",     "application/vnd.oasis.opendocument.spreadsheet",
-	".odt",     "application/vnd.oasis.opendocument.text",
-	".oga",     "audio/ogg",
-	".ogv",     "video/ogg",
-	".ogx",     "application/ogg",
-	".otf",     "font/otf",
 	".png",     "image/png",
-	".pdf",     "application/pdf",
-	".ppt",     "application/vnd.ms-powerpoint",
-	".pptx",    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-	".rar",     "application/x-rar-compressed",
-	".rtf",     "application/rtf",
-	".sh",      "application/x-sh",
 	".svg",     "image/svg+xml",
-	".swf",     "application/x-shockwave-flash",
-	".tar",     "application/x-tar",
-	".tif",     "image/tiff",
-	".tiff",    "image/tiff",
-	".ts",      "application/typescript",
-	".ttf",     "font/ttf",
-	".vsd",     "application/vnd.visio",
-	".wav",     "audio/x-wav",
-	".weba",    "audio/webm",
-	".webm",    "video/webm",
-	".webp",    "image/webp",
-	".woff",    "font/woff",
-	".woff2",   "font/woff2",
-	".xhtml",   "application/xhtml+xml",
-	".xls",     "application/vnd.ms-excel",
-	".xlsx",    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-	".xml",     "application/xml",
-	".xul",     "application/vnd.mozilla.xul+xml",
-	".zip",     "application/zip",
-	".3gp",     "video/3gpp",
-	".3g2",     "video/3gpp2",
-	".7z",      "application/x-7z-compressed"
 	};
 
 const char *Mimetype( const dex::string filename )
@@ -111,7 +61,6 @@ const char *Mimetype( const dex::string filename )
 	return "application/octet-stream";
 	}
 
-
 // Use to determine Content Length
 off_t FileSize( int f )
 	{
@@ -125,8 +74,15 @@ bool pathIsLegal( dex::string path )
 	return path.find( "/../" ) == dex::string::npos && ( path.size( ) < 3 || path.substr( path.size( ) - 3, 3) != "/.." ); // TODO ask stephen about path
 	}
 
+dex::string outputResult( dex::searchResult &result )
+	{
+	return "<li class=\"result\"><a href=" + result.url.completeUrl( ) +
+			"\">" + result.url.getDomain( ) + "</a> " + result.title + "</li>";
+	}
+
 void *Talk( void *p )
 	{
+	std::cout << "New Request" << std::endl;
 	size_t bufferSize = 10240;
 	char buffer[ bufferSize ];
 	int bytes;
@@ -138,7 +94,10 @@ void *Talk( void *p )
 	request.append( buffer, buffer + bytes );
 
 	if ( request.substr( 0, 3 ) != "GET" )
+		{
+		std::cout << "Invalid Request, can only serve get requests." << std::endl;
 		return nullptr;
+		}
 
 	size_t typeEnd = request.find( " /" ), pathEnd, protocolEnd = request.find( "\r\n" );
 	pathEnd = request.find( ' ', typeEnd + 1 );
@@ -148,7 +107,7 @@ void *Talk( void *p )
 	dex::string query;
 	bool toggle = false;
 
-	size_t r = path.find( "results.html");
+	size_t r = path.find( "results.html" );
 	size_t q = path.find( "?query=" );
 	size_t t = path.find( "&toggle=" );
 	if ( r != dex::string::npos && q != dex::string::npos &&
@@ -170,30 +129,38 @@ void *Talk( void *p )
 		spacePos = query.find( "%20" );
 		}
 
+	// Redirect to Easter Egg Page
+	if ( query == "Team Socket" )
+		{
+		dex::string responseHeader = "HTTP/1.1 301 Moved Permanently\r\nLocation: /team.html\r\nConnection: close\r\n\r\n";
+		send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
+		return nullptr;
+		}
+
 	std::cout << "Path: " << path << std::endl;
 	std::cout << "Query: " << query << std::endl;
 	std::cout << "Trigger: " << toggle << std::endl << std::endl;
-	
+
+	// reroute no path to index.html
+	if ( path.empty( ) )
+		path = "index.html";
+
 	int file;
 	if ( !pathIsLegal( path ) || ( file = open( path.cStr( ), O_RDONLY ) ) == -1 )
 		{
 		dex::string responseHeader = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
 		send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
+		return nullptr;
 		}
 
 	// ranker stuff
-	// TODO: have a structure to store and change these easily. Maybe in a file?
-	dex::vector < dex::pair < unsigned, double > > titleWeights;
-	double urlWeight;
-	dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics;
-	dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics;
-	double emphasizedWeight = 0;
-	double proportionCap = 0;
-	double bodySpans = 0;
-	double titleSpans = 0;
-	/*dex::ranker rankerObject( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, emphasizedWeight, 
-			proportionCap, bodySpans, titleSpans, indexChunkObjects );
-	dex::vector < dex::searchResult > searchResults = rankerObject.getTopN( 10, query );*/
+	dex::ranker rankerObject( indexChunkObjects );
+	dex::pair < dex::vector < dex::searchResult >, int > searchResults = rankerObject.getTopN( 10, query );
+	if ( searchResults.second == -1 )
+		{
+		// THE QUERY PASSED IN WAS BAD, DO SOMETHING
+		return nullptr;
+		}
 	
 	// TODO: populate webpage with content
 	std::cout << request << std::endl;
@@ -201,38 +168,45 @@ void *Talk( void *p )
 	struct stat fileInfo;
 	fstat( file, &fileInfo );
 	char *map = ( char * )mmap( nullptr, fileInfo.st_size, PROT_READ, MAP_PRIVATE, file, 0 );
-	dex::string results;
 	dex::string content;
+	size_t resultsSize = 0;
 	if ( path == "results.html" )
 		{
-		results = "Results 1 - 10 populated here";
 		content = dex::string( map );
-		content.insert( content.find( "query=" ) + 6, query );
-		content.insert( content.find( "results=" ) + 8, results );
+		content.insert( content.find( "placeholder=" ) + 13, query );
+		for ( size_t i = 0;  i < tmpSearchResults.size( );  ++i )
+			{
+			std::cout << "i = " << i << std::endl;
+			dex::string searchRes( outputResult( tmpSearchResults[ tmpSearchResults.size( ) - i - 1 ] ) );
+			resultsSize += searchRes.size( );
+			content.insert( content.find( "class=\"results\">" ) + 16, searchRes );
+			}
 		}
+
+	std::cout << "Inserting results complete." << std::endl;
 
 	if ( map == MAP_FAILED )
 		return nullptr;
 
-	int totalSize = fileInfo.st_size + query.size( ) + results.size( );
-	char buff[ sizeof(int) + 1 ];
-	sprintf( buff, "%d", totalSize );
+	long int totalSize = fileInfo.st_size + query.size( ) + resultsSize;
+	char buff[ sizeof(long int) + 1 ];
+	snprintf( buff, sizeof( buff ), "%ld", totalSize );
 	dex::string responseHeader = "HTTP/1.1 200 OK\r\nContent-Length: "
 		+ dex::string( buff )
 		+ "\r\nConnection: close\r\nContent-Type: " + Mimetype( path ) + "\r\n\r\n";
 	send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
 
-
 	if ( path == "results.html" )
 		send( socket, content.data( ), content.size( ), 0 );
 	else
 		{
+		int sent = 0;
 		for ( int i = 0;  i != fileInfo.st_size / bufferSize;  ++i )
 			send( socket, map + i * bufferSize, bufferSize, 0 );
+			sent += bufferSize;
 
 		send( socket, map + bufferSize * ( fileInfo.st_size / bufferSize ), fileInfo.st_size % bufferSize, 0 );
 		}
-
 
 	close( file );
 	return nullptr;
@@ -240,7 +214,7 @@ void *Talk( void *p )
 
 
 // Global variables for ranker
-//dex::vector < dex::indexChunkObject * > indexChunkObjects;
+dex::vector < dex::indexChunkObject * > indexChunkObjects;
 
 int main( int argc, char **argv )
 	{

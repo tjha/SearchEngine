@@ -2,6 +2,7 @@
 //
 // Defines ISR interface and some specializations.
 //
+// 2019-12-15: Add reset function: combsc
 // 2019-12-12: Fix inheritance: jasina, medhak
 // 2019-12-11: File created: jasina, medhak
 
