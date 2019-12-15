@@ -44,7 +44,6 @@ int main( int argc, char **argv )
 		query += " ";
 		query += argv[ i ];
 		}
-	std::cout << "Query is: " << query << std::endl;
 	dex::pair < dex::vector < dex::searchResult >, int > results = processChunks( query );
 	if ( results.second == -1 )
 		{
