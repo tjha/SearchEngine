@@ -41,7 +41,7 @@ namespace dex
 				/**
 				 * Construct parser based on given input
 				 */
-				parser( const dex::string &in );
+				parser( const dex::string &in, dex::index::indexChunk *chunkIn );
 
 				/**
 				 * The public interface of the parser. Call this function,

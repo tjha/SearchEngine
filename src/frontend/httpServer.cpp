@@ -214,7 +214,7 @@ void *Talk( void *p )
 
 
 // Global variables for ranker
-dex::vector < dex::indexChunkObject * > indexChunkObjects;
+dex::vector < dex::index::indexChunk * > indexChunkObjects;
 
 int main( int argc, char **argv )
 	{
@@ -269,15 +269,24 @@ int main( int argc, char **argv )
 
 	// Create indexChunkObjects
 	// TODO: have Stephen take a look at this :)
-	/*
-	dex::string indexChunkDirector = "./data/indexChunks/"; // Top directory of search
+	
+	dex::string indexChunkDirector = "../smallerIndexChunks/"; // Top directory of search
 	dex::string pattern = "_in.dex";
 	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirector, pattern );
 	indexChunkObjects.reserve( indexChunkFilenames.size( ) );
 	for ( dex::vector< dex::string >::constIterator filenameIterator = indexChunkFilenames.cbegin( );
 			filenameIterator != indexChunkFilenames.cend( );  filenameIterator++ )
-		indexChunkObjects.pushBack( new dex::indexChunkObject( *filenameIterator ) );	
-	*/
+		{
+		int fd = open( filenameIterator->cStr( ), O_RDWR );
+		if ( fd == -1 )
+			{
+			std::cerr << "fd is -1 for " << *filenameIterator << " something's gone wrong" << std::endl;
+			return 1;
+			}
+		indexChunkObjects.pushBack( new dex::index::indexChunk( fd, false ) );	
+		}
+		
+	
 
 	while ( ( talkAddressLength = sizeof( talkAddress ),
 			talkSockfd = accept( listenSockfd, ( struct sockaddr * )&talkAddress, &talkAddressLength ) )
@@ -287,9 +296,9 @@ int main( int argc, char **argv )
 		pthread_create( &child, nullptr, Talk, new int( talkSockfd ) );
 		pthread_detach( child );
 		}
-	/*
-	for ( dex::vector < dex::indexChunkObject * >::constIterator indexChunkObjectIterator = indexChunkObjects.cbegin( );
+	
+	for ( dex::vector < dex::index::indexChunk * >::constIterator indexChunkObjectIterator = indexChunkObjects.cbegin( );
 			indexChunkObjectIterator != indexChunkObjects.cend( );  indexChunkObjectIterator++ )
 		delete *indexChunkObjectIterator;
-	*/
+	
 	}

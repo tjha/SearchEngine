@@ -108,7 +108,8 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 		if ( stream.allConsumed( ) )
 			{
 			const dex::vector < dex::string > &flattenedQuery = root->flattenedQuery( ).first;
-			dex::vector < bool > emphasizedWords.reserve( flattenedQuery.size( ) );
+			dex::vector < bool > emphasizedWords;
+			emphasizedWords.reserve( flattenedQuery.size( ) );
 
 			if ( flattenedQuery.empty( ) )
 				{
@@ -140,4 +141,4 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 	return nullptr;
 	}
 
-dex::queryCompiler::parser::parser( const dex::string &in ) : stream( in, chunk ) { }
+dex::queryCompiler::parser::parser( const dex::string &in, dex::index::indexChunk *chunkIn ) : stream( in, chunkIn ) { }
