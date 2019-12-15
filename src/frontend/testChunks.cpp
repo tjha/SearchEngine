@@ -19,11 +19,11 @@ int main( int argc, char **argv )
 	{
 	if ( argc < 2 )
 		{
-		std::cerr << "Usage: testChunks.exe query" << std::endl;
+		std::cerr << "Usage: testChunks.exe pathToChunks query" << std::endl;
 		return 1;
 		}
 
-	dex::string indexChunkDirector = "../smallerIndexChunks/"; // Top directory of search
+	dex::string indexChunkDirector = argv[ 1 ]; // Top directory of search
 	dex::string pattern = "_in.dex";
 	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirector, pattern );
 	indexChunkObjects.reserve( indexChunkFilenames.size( ) );
@@ -38,7 +38,7 @@ int main( int argc, char **argv )
 			}
 		indexChunkObjects.pushBack( new dex::index::indexChunk( fd, false ) );	
 		}
-	dex::string query = argv[ 1 ];
+	dex::string query = argv[ 2 ];
 	processChunks( query );
 
 	for ( dex::vector < dex::index::indexChunk * >::constIterator indexChunkObjectIterator = indexChunkObjects.cbegin( );
