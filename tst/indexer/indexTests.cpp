@@ -30,7 +30,7 @@ size_t getFileSize( int fileDescriptor )
 TEST_CASE( "lougheed's fun read indexChunk test" )
 	{
 	std::cout << "Running lougheed's fun read indexChunk test ;)\n";
-	const char filePath[ ] = "2_in.dex";
+	const char filePath[ ] = "0_in.dex";
 	int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
 
 	if ( fd == -1 )
