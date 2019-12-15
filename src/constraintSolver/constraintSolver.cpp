@@ -75,7 +75,7 @@ dex::constraintSolver::andISR::~andISR( )
 size_t dex::constraintSolver::andISR::seek( size_t target )
 	{
 	size_t max = 0;
-	for ( size_t index = 0;  index < locations.size();  ++index )
+	for ( size_t index = 0;  index < locations.size( );  ++index )
 		{
 		locations[ index ] = factors[ index ]->seek( target );
 		if ( locations[ index ] < max )
@@ -225,7 +225,7 @@ dex::constraintSolver::phraseISR::~phraseISR( )
 size_t dex::constraintSolver::phraseISR::seek( size_t target )
 	{
 	size_t max = 0;
-	for ( size_t index = 0;  index < locations.size();  ++index )
+	for ( size_t index = 0;  index < locations.size( );  ++index )
 		{
 		locations[ index ] = words[ index ]->seek( target );
 		if ( locations[ index ] < max )

@@ -109,13 +109,29 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 			{
 			const dex::vector < dex::string > &flattenedQuery = root->flattenedQuery( ).first;
 			dex::vector < bool > emphasizedWords.reserve( flattenedQuery.size( ) );
+
+			if ( flattenedQuery.empty( ) )
+				{
+				delete root;
+				return new dex::matchedDocuments
+					{
+					flattenedQuery,
+					nullptr,
+					chunk,
+					emphasizedWords
+					}
+				}
+
 			for( size_t index = 0;  index < flattenedQuery.size( );  ++index )
 				emphasizedWords.pushBack( stream.emphasizedWords.count( flattenedQuery[ index ] ) );
+			dex::constraintSolver::ISR *matchingDocumentISR = root->eval( );
+
+			delete root;
 
 			return new dex::matchedDocuments
 				{
 				flattenedQuery,  // flattened query vector of strings
-				root->eval( ),   // matching document ISR
+				matchingDocumentISR,   // matching document ISR
 				chunk,           // index chunk
 				emphasizedWords  // emphasized words in order of flattenedQuery.
 				};
