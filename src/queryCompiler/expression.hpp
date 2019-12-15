@@ -6,45 +6,25 @@
 #include "vector.hpp"
 #include "constraintSolver.hpp"
 
-/**
- * Just a plain old expression
- */
-
 class Expression
 	{
 	public:
 		virtual ~Expression( );
 		virtual dex::constraintSolver::ISR *eval( ) const = 0;
 	};
-// class Expression
 
 dex::index::indexChunk::endOfDocumentIndexStreamReader *getEndOfDocumentISR( dex::index::indexChunk *chunk )
 	{
 	return new dex::index::indexChunk::endOfDocumentIndexStreamReader( chunk, "" );
 	}
 
-/**
- * <Neg> ::= '-' <AddSub>
- */
-
-class PhraseExpression : public Expression
-	{
-	protected:
-		dex::vector < dex::constraintSolver::ISR * > words;
-		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
-	public:
-		PhraseExpression( dex::vector < dex::constraintSolver::ISR * > );
-		~PhraseExpression( );
-		dex::constraintSolver::ISR *eval( ) const override;
-	};
-
 class NotExpression: public Expression
 	{
 	protected:
 		Expression* value;
-		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
+		dex::index::indexChunk *chunk;
 	public:
-		NotExpression( Expression *value );
+		NotExpression( Expression *value, dex::index::indexChunk *chunk );
 		~NotExpression( );
 		dex::constraintSolver::ISR *eval( ) const override;
 	};
@@ -52,11 +32,10 @@ class NotExpression: public Expression
 class OrExpression: public Expression
 	{
 	protected:
-		dex::vector < dex::vector < dex::constraintSolver::ISR * > > terms;
-		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
-		friend class Parser;
+		dex::vector < Expression * > terms;
+		dex::index::indexChunk *chunk;
 	public:
-		OrExpression( );
+		OrExpression( dex::index::indexChunk *chunk );
 		~OrExpression( );
 		dex::constraintSolver::ISR *eval( ) const override;
 	};
@@ -64,14 +43,33 @@ class OrExpression: public Expression
 class AndExpression: public Expression
 	{
 	protected:
-		dex::vector < dex::constraintSolver::ISR * > terms;
-		dex::index::indexChunk::endOfDocumentIndexStreamReader *endOfDocISR;
-		friend class Parser;
+		dex::vector < Expression * > terms;
+		dex::index::indexChunk *chunk;
 	public:
-		AndExpression( dex::vector < dex::constraintSolver::ISR * > );
+		AndExpression( dex::index::indexChunk *chunk );
 		~AndExpression( );
 		dex::constraintSolver::ISR *eval( ) const override;
 	};
-// class MultDiv
+
+class PhraseExpression : public Expression
+	{
+	protected:
+		dex::vector < Expression * > terms;
+		dex::index::indexChunk *chunk;
+	public:
+		PhraseExpression( dex::index::indexChunk *chunk );
+		~PhraseExpression( );
+		dex::constraintSolver::ISR *eval( ) const override;
+	};
+
+class Word: public Expression
+	{
+	protected:
+		dex::string word;
+		dex::index::indexChunk *chunk;
+	public:
+		Word( dex::string word, dex::index::indexChunk *chunk );
+		dex::constraintSolver::ISR *eval( ) const override;
+	}
 
 #endif /* EXPRESSION_H_ */

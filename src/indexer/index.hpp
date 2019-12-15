@@ -251,7 +251,7 @@ namespace dex
 				bool addDocument( const dex::string &url, const dex::vector < dex::string > &title,
 						const dex::string &titleString, const dex::vector < dex::string > &body );
 
-				class indexStreamReader : dex::constraintSolver::ISR
+				class indexStreamReader : public dex::constraintSolver::ISR
 					{
 					private:
 						friend class indexChunk;

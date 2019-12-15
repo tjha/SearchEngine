@@ -5,15 +5,16 @@
  */
 
 #include <cstddef>
+#include "basicString.hpp"
 #include "constraintSolver.hpp"
 #include "expression.hpp"
-
-// using namespace std;
+#include "index.hpp"
 
 
 Expression::~Expression( ) { }
 
-NotExpression::NotExpression( Expression *value ) : value( value ) { }
+
+NotExpression::NotExpression( Expression *value, dex::index::indexChunk *chunk ) : value( value ), chunk( chunk ) { }
 
 NotExpression::~NotExpression( )
 	{
@@ -22,55 +23,71 @@ NotExpression::~NotExpression( )
 
 dex::constraintSolver::ISR *NotExpression::eval( ) const
 	{
-	dex::constraintSolver::endOfDocumentISR *endDocISR;
-	//Get that somehow ;;
-	dex::constraintSolver::ISR * temp = value->eval( );
+	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
+	dex::constraintSolver::ISR *temp = value->eval( );
 	return &dex::constraintSolver::notISR( temp, endDocISR );
 	}
 
-OrExpression::OrExpression( ) { }
+
+OrExpression::OrExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
 
 OrExpression::~OrExpression( )
 	{
-	for ( dex::constraintSolver::ISR  *expression : terms )
+	for ( Expression *expression : terms )
 		delete expression;
 	}
 
-dex::constraintSolver::ISR * OrExpression::eval( ) const
+dex::constraintSolver::ISR *OrExpression::eval( ) const
 	{
-	// dex::vector < dex::constraintSolver::ISR * > isrs;
-	dex::constraintSolver::endOfDocumentISR *endDocISR;
-	//somehow get the endofDocISRs
+	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector < dex::constraintSolver::ISR * > isrs;
-	for ( size_t i =0; i < terms.size(); i++)
-		{
-		isrs.pushBack( terms[ i ]->eval() );
-		}
-	return new dex::constraintSolver::orISR( isrs, endOfDocISR );
+	for ( size_t i = 0;  i < terms.size( );  ++i )
+		isrs.pushBack( terms[ i ]->eval( ) );
+
+	return new dex::constraintSolver::orISR( isrs, endDocISR );
 	}
 
-AndExpression::AndExpression( dex::vector < dex::constraintSolver::ISR * > terms) : terms( terms ) { }
+
+AndExpression::AndExpression( dex::index::indexChunk *chunk ) { }
 
 AndExpression::~AndExpression( )
 	{
-	for ( dex::constraintSolver::ISR *isr : terms )
+	for ( Expression *isr : terms )
 		delete isr;
 	}
 
 dex::constraintSolver::ISR *AndExpression::eval( ) const
 	{
-	dex::constraintSolver::endOfDocumentISR *endDocISR;
-	dex::constraintSolver::andISR retIsr( terms, endOfDocISR );
-	return &retIsr;
+	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
+	dex::vector < dex::constraintSolver::ISR * > isrs;
+	for ( size_t i = 0;  i < terms.size( );  ++i )
+		isrs.pushBack( terms[ i ]->eval( ) );
+
+	return new dex::constraintSolver::andISR( isrs, endDocISR );
 	}
 
+
+PhraseExpression::PhraseExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
+
+PhraseExpression::~PhraseExpression( )
+	{
+	for ( Expression *isr : terms )
+		delete isr;
+	}
 
 dex::constraintSolver::ISR *PhraseExpression::eval( ) const
 	{
-	dex::constraintSolver::endOfDocumentISR *endDocISR;
-	dex::constraintSolver::andISR retIsr( words, endOfDocISR );
-	return &retIsr;
+	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
+	dex::vector < dex::constraintSolver::ISR * > isrs;
+	for ( size_t i = 0;  i < terms.size( );  ++i )
+		isrs.pushBack( terms[ i ]->eval( ) );
+
+	return new dex::constraintSolver::andISR( isrs, endDocISR );
 	}
 
+Word::Word( dex::string word, dex::index::indexChunk *chunk ) : word( word ), chunk( chunk ) { }
 
-	
+dex::constraintSolver::ISR *Word::eval( ) const
+	{
+	return new dex::index::indexChunk::indexStreamReader( chunk, word );
+	}
