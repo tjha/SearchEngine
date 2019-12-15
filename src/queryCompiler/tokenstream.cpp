@@ -11,6 +11,7 @@
 #include <cstddef>
 #include "../utils/algorithm.hpp"
 #include "../utils/basicString.hpp"
+#include "../utils/unorderedSet.hpp"
 #include "expression.hpp"
 #include "tokenStream.hpp"
 
@@ -40,6 +41,8 @@ bool isSymbol( char c )
 
 dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index::indexChunk *chunk ) : chunk( chunk )
 	{
+	dex::string semiparsed;
+	semiparsed.reserve( in.size( ) );
 	input.reserve( in.size( ) );
 
 	// Erase irrelevant chars using algorithm --- gasp!!
@@ -64,10 +67,10 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 			if ( previousCharacter == '"' )
 				{
 				if ( inPhrase )
-					input.pushBack( '&' );
+					semiparsed.pushBack( '&' );
 				else
 					{
-					input.popBack( );
+					semiparsed.popBack( );
 					continue;
 					}
 				}
@@ -79,13 +82,13 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 		if ( previousCharacter == ' ' )
 			{
 			if ( charIsSymbol )
-				input.back( ) = in[ index ];
+				semiparsed.back( ) = in[ index ];
 			else
 				{
 				if ( !inPhrase )
-					input.back( ) = '&';
+					semiparsed.back( ) = '&';
 
-				input.pushBack( in[ index ] );
+				semiparsed.pushBack( in[ index ] );
 				}
 
 			previousCharacter = in[ index ];
@@ -95,8 +98,19 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 		if ( isSymbol( previousCharacter ) && in[ index ] == ' ' )
 			continue;
 
-		input.pushBack( in[ index ] );
+		semiparsed.pushBack( in[ index ] );
 		}
+
+	for( size_t index = 0;  index < semiparsed.size( ) - 1;  ++index )
+		if ( semiparsed[ index ] = '$' )
+			{
+			dex::string word = semiparsed.substr( index + 1, semiparsed.findFirstOf( "|&$\"~() ", index, 8 ) - index - 1 );
+			emphasizedWords.insert( word );
+			}
+		else
+			input.pushBack( semiparsed[ index ] );
+	if ( semiparsed.back( ) != '$' )
+		input.pushBack( semiparsed.back( ) );
 	}
 
 bool dex::queryCompiler::tokenStream::match( char c )
@@ -125,7 +139,7 @@ dex::queryCompiler::word *dex::queryCompiler::tokenStream::parseWord( )
 		return nullptr;
 		}
 
-	size_t nextSymbolLocation = input.findFirstOf( "|&$\"~() ", location, 7 );
+	size_t nextSymbolLocation = input.findFirstOf( "|&$\"~() ", location, 8 );
 
 	if ( nextSymbolLocation == location )
 		return nullptr;

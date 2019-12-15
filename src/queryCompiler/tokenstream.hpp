@@ -10,6 +10,7 @@
 #include "../constraintSolver/constraintSolver.hpp"
 #include "../indexer/index.hpp"
 #include "../utils/basicString.hpp"
+#include "../utils/unorderedSet.hpp"
 
 namespace dex
 	{
@@ -29,6 +30,7 @@ namespace dex
 			size_t location { 0 };
 
 			dex::index::indexChunk *chunk;
+			dex::unorderedSet < dex::string > emphasizedWords;
 
 			public:
 				/**
