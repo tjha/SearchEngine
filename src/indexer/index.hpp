@@ -251,7 +251,7 @@ namespace dex
 				bool addDocument( const dex::string &url, const dex::vector < dex::string > &title,
 						const dex::string &titleString, const dex::vector < dex::string > &body );
 
-				class indexStreamReader : dex::constraintSolver::ISR
+				class indexStreamReader : public dex::constraintSolver::ISR
 					{
 					private:
 						friend class indexChunk;
@@ -267,7 +267,7 @@ namespace dex
 
 					public:
 						// An ISR for the empty string is just and end of document ISR.
-						indexStreamReader( indexChunk *indexChunk, dex::string word );
+						indexStreamReader( indexChunk *chunk, dex::string word = "" );
 						size_t seek( size_t target );
 						size_t next( );
 						size_t nextDocument( );
@@ -277,17 +277,17 @@ namespace dex
 					};
 
 				class endOfDocumentIndexStreamReader
-								: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
-							{
-							private:
-								indexChunk *chunk;
-							public:
-								endOfDocumentIndexStreamReader( indexChunk *chunk, dex::string );
-								size_t seek( size_t target );
-								size_t next( );
-								size_t nextDocument( );
-								size_t documentSize( );
-							};
+						: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
+					{
+					private:
+						indexChunk *chunk;
+					public:
+						endOfDocumentIndexStreamReader( indexChunk *chunk, dex::string );
+						size_t seek( size_t target );
+						size_t next( );
+						size_t nextDocument( );
+						size_t documentSize( );
+					};
 			};
 		}
 

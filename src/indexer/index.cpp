@@ -189,8 +189,8 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	return true;
 	}
 
-dex::index::indexChunk::indexStreamReader::indexStreamReader( indexChunk *indexChunk, dex::string word ) :
-		indexChunkum( indexChunk ), absoluteLocation( 0 )
+dex::index::indexChunk::indexStreamReader::indexStreamReader( indexChunk *chunk, dex::string word ) :
+		indexChunkum( chunk ), absoluteLocation( 0 )
 	{
 	postsMetadatum = indexChunkum->postsMetadataArray + indexChunkum->dictionary[ dex::porterStemmer::stem( word ) ];
 	postsChunkum = indexChunkum->postsChunkArray + postsMetadatum->firstPostsChunkOffset;
