@@ -24,7 +24,7 @@ dex::constraintSolver::ISR *dex::queryCompiler::notExpression::eval( ) const
 	{
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::constraintSolver::ISR *temp = value->eval( );
-	return &dex::constraintSolver::notISR( temp, endDocISR );
+	return new dex::constraintSolver::notISR( temp, endDocISR );
 	}
 
 dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >
@@ -73,7 +73,7 @@ dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >
 	}
 
 
-dex::queryCompiler::andExpression::andExpression( dex::index::indexChunk *chunk ) { }
+dex::queryCompiler::andExpression::andExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
 
 dex::queryCompiler::andExpression::~andExpression( )
 	{

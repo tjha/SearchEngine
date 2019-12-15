@@ -51,13 +51,20 @@ int main ( int argc, char ** argv )
 	//dex::makeDirectory( outputFolder.cStr( ) );
 	dex::vector < dex::string > toProcess;
 	toProcess = dex::matchingFilenames( batch, "_forIndexer" );
+	dex::vector < dex::string > toDelete;
+	toDelete = dex::matchingFilenames( batch, "_processed" );
+	for ( int index = 0;  index < toDelete.size( );  index++ )
+		{
+		if ( remove( toDelete[ index ].cStr( ) ) != 0 )
+			std::cout << "error deleting " << toDelete[ index ] << "\n";
+		}
 
 	dex::utf::decoder < dex::string > stringDecoder;
 	
-	int indexChunkCount = 0;
-	// TODO: What scheme will we use to name the files for the index chunks?
+	dex::vector < dex::string > existingIndexChunks = dex::matchingFilenames( outputFolder, "_in.dex");
+	int indexChunkCount = existingIndexChunks.size( );
 	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
-	dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fileDescriptor );
+	dex::index::indexChunk *initializingIndexChunk = new dex::index::indexChunk( fileDescriptor );
 
 
 	unsigned documentsProcessed = 0;
@@ -65,6 +72,8 @@ int main ( int argc, char ** argv )
 	time_t start = time( nullptr );
 	int statisticsFileDescriptor = open( ( outputFolder + "statistics.txt").cStr( ), O_RDWR | O_CREAT, 0777 );
 	
+	size_t totalDocumentsProcessed = 0;
+	size_t totalBytesProcessed = 0;
 	for ( unsigned index = 0;  index < toProcess.size( );  ++index )
 		{
 		dex::string fileName = toProcess[ index ];
@@ -81,7 +90,6 @@ int main ( int argc, char ** argv )
 			// retrieve the saved url + html pair
 			dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
 			dex::string html = stringDecoder( ptr, &ptr );
-			std::cout << "\tAbout to add url: " << url.completeUrl( ) << "\n";
 			// std::cout << "HTML: \n " << html << "\n";
 			try
 				{
@@ -92,55 +100,67 @@ int main ( int argc, char ** argv )
 				titleString.reserve( 25 );
 				for ( auto &titleWord: parser.ReturnTitle( ) )
 					{
-					titleString += titleWord;
+					titleString += ( titleWord + " " );
 					}
-				std::cout << "\t\twith title: " << titleString << "\n";
-				
+
 				// TODO this should go in parser but didn't want to break dependent functionality
 				// TODO add default argument for anchorText in index.hpp
-				if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString, 
+				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString, 
 						parser.ReturnWords( ) ) )
 					{
+					toDelete = dex::matchingFilenames( batch, "_processed" );
+					for ( int index = 0;  index < toDelete.size( );  index++ )
+						{
+						if ( remove( toDelete[ index ].cStr( ) ) != 0 )
+							std::cout << "error deleting " << toDelete[ index ] << "\n";
+						}
 					close( fileDescriptor );
 					fileDescriptor = openFile( indexChunkCount++, outputFolder );
-					initializingIndexChunk = dex::index::indexChunk( fileDescriptor );
+					delete initializingIndexChunk;
+					initializingIndexChunk = new dex::index::indexChunk( fileDescriptor );
 					}
-				if ( !initializingIndexChunk.addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
+				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{
 					// TODO: Throw an exception. Should not fail to add a document to a new index chunk
 					throw dex::fileWriteException( );
 					}
-
+				documentsProcessed++;
+				if ( documentsProcessed % checkpoint == 0 )
+					{
+					dex::string toWrite = dex::toString( documentsProcessed ) + " documents processed in " +
+										dex::toString( time( nullptr ) - start ) + " seconds\n";
+					int error = write( statisticsFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
+					if ( error == -1 )
+						{
+						std::cout << "Failed to write to statistics file " << std::endl;
+						throw dex::fileWriteException( );
+						}
+					documentsProcessed = 0;
+					start = time( nullptr );
+					}
+				totalDocumentsProcessed++;
 				}
 			catch ( ... )
 				{
-				std::cout << "Skipping malformed html: " << url.completeUrl( ) << "\n";
+				// std::cout << "Skipping malformed html: " << url.completeUrl( ) << "\n";
 				continue;
 				}
 			}
+		totalBytesProcessed += filesize;
 		std::cout << "processed " + fileName << std::endl;
-		documentsProcessed++;
-		int renamed = rename( fileName.cStr( ) , ( fileName ).cStr( ) );
+		std::cout << "total documents processed = " << totalDocumentsProcessed << std::endl << "total bytes processed = "
+				<< totalBytesProcessed << std::endl;
+		string newFilename( fileName );
+		newFilename.erase( newFilename.end( ) - sizeof( "forIndexer" ) + 1 );
+		newFilename += "processed";
+		int renamed = rename( fileName.cStr( ) , ( newFilename ).cStr( ) );
 		if ( renamed == -1 )
 			{
 			std::cout << "Failed to rename " + fileName << std::endl;
 			throw dex::fileWriteException( );
 			}
 		close( fileDescriptor );
-
-		if ( documentsProcessed % checkpoint == 0 || documentsProcessed == toProcess.size( ) )
-			{
-			dex::string toWrite = dex::toString( documentsProcessed ) + " documents processed in " + 
-					dex::toString( time( nullptr ) - start ) + " seconds\n";
-			int error = write( statisticsFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
-			if ( error == -1 )
-				{
-				std::cout << "Failed to write to statistics file " << std::endl;
-				throw dex::fileWriteException( );
-				}
-			start = time( nullptr );
-			}
 		}
 	
 

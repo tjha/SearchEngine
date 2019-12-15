@@ -27,6 +27,26 @@ size_t getFileSize( int fileDescriptor )
 
 // TODO: Add test case for closing and reopening an indexChunk
 
+TEST_CASE( "lougheed's fun read indexChunk test" )
+	{
+	std::cout << "Running lougheed's fun read indexChunk test ;)\n";
+	const char filePath[ ] = "0_in.dex";
+	int fd = open( filePath, O_RDWR | O_CREAT, 0777 );
+
+	if ( fd == -1 )
+		exit( 1 );
+	indexChunk initializingIndexChunk = indexChunk( fd, false );
+
+	indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+	int location = 0;
+	while ( location != -1 )
+		{
+		location = andISR.next( );
+		std::cout << "\t-" << location << "\n";
+		}
+	close( fd );
+	}
+
 TEST_CASE( "create index chunk" )
 	{
 	const char filePath[ ] = "_in.dex";
@@ -82,6 +102,10 @@ TEST_CASE( "ISR functions on one document" )
 	REQUIRE( andISR.seek( 3 ) == 5 );
 	REQUIRE( andISR.seek( 6 ) == static_cast < size_t >( -1 ) );
 
+	REQUIRE( andISR.seek( 4 ) == 5 );
+	REQUIRE( andISR.seek( 1 ) == 2 );
+	REQUIRE( andISR.seek( 0 ) == 2 );
+
 	close( fd );
 	}
 
@@ -130,24 +154,10 @@ TEST_CASE( "ISR functions on two documents" )
 
 	REQUIRE( andISR.nextDocument( ) == 13 );
 
+	REQUIRE( andISR.seek( 6 ) == 13 );
+
 	close( fd );
 	}
-
-/*
-string quickBinaryToStringReversed( unsigned n )
-	{
-	string toReturn;
-	toReturn.reserve( 32 );
-	while ( n != 0 )
-		{
-		if ( n % 2 )
-			toReturn.append( '0' );
-		else
-			toReturn.append( '1' );
-		n /= 2;
-		}
-	}
-	*/
 
 TEST_CASE( "ONE BIG DOC" )
 	{
@@ -211,11 +221,6 @@ TEST_CASE( "ONE BIG DOC" )
 		for ( ;  location < (1<<11);  location++ )
 			REQUIRE( dosISR.next( ) == location + title.size( ) + ( 1<<11 ) );
 
-		/*
-		REQUIRE( wordISR.next( ) == ( 1<<12 ) - 2 );
-		REQUIRE( wordISR.next( ) == ( 1<<12 ) - 1 );
-		REQUIRE( wordISR.next( ) == -1 );
-		*/
 		}
 
 	SECTION( "Read indexChunk from a file" )
@@ -305,3 +310,4 @@ TEST_CASE( "ONE BIG DOC" )
 
 		}
 	}
+

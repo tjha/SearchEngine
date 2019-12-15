@@ -15,14 +15,24 @@
 #define RANKER_HPP
 
 #include "topN.hpp"
+#include "parserQC.hpp"
 #include "constraintSolver.hpp"
 #include "rankerObjects.hpp"
 #include "rankerConfig.hpp"
 #include "index.hpp"
+#include <cstddef>
 #include <pthread.h>
 
 namespace dex
 	{
+	
+	void *parseAndScore( void *args )
+			{
+			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
+			dex::queryCompiler::parser parser( queryRequest.query, queryRequest.chunkPointer );
+			dex::matchedDocuments *documents = parser.parse( );
+			return ( void * ) documents;
+			}
 	class ranker
 		{
 		private:
@@ -38,7 +48,7 @@ namespace dex
 			double emphasizedWeight;
 			double proportionCap;
 			double wordsWeight;
-			dex::vector < dex::indexChunkObject * > chunkPointers;
+			dex::vector < dex::index::indexChunk * > chunkPointers;
 			
 
 		public:
@@ -46,7 +56,7 @@ namespace dex
 					dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics, 
 					dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics,
 					double emphasizedWeightIn, double proportionCapIn,
-					unsigned bodySpans, unsigned titleSpans, double wordsWeightIn, dex::vector < dex::indexChunkObject * > someChunks )
+					unsigned bodySpans, unsigned titleSpans, double wordsWeightIn, dex::vector < dex::index::indexChunk * > someChunks )
 				{
 				staticTitleWeights = titleWeights;
 				staticUrlWeight = urlWeight;
@@ -60,7 +70,7 @@ namespace dex
 				wordsWeight = wordsWeightIn;
 				}
 			
-			ranker ( dex::vector < dex::indexChunkObject * > someChunks )
+			ranker ( dex::vector < dex::index::indexChunk * > someChunks )
 				{
 				chunkPointers = someChunks;
 				RankerConfiguration config;
@@ -475,23 +485,45 @@ namespace dex
 				}
 
 			// returns a pair. First is the scores. second is error code. if error code is -1, you messed up.
-			pair < vector < double >, int > scoreDocuments( matchedDocuments &documents, constraintSolver::endOfDocumentISR *ends,
+			pair < vector < double >, int > scoreDocuments( matchedDocuments *documents, constraintSolver::endOfDocumentISR *ends,
 					vector < string > &titles, vector < string > &urls, bool printinfo = false )
 				{
 				// if the query is bad...
-				if ( !documents.matchingDocumentISR )
+
+				if ( !documents->matchingDocumentISR )
 					{
 					vector < double > scores;
 					return { scores, -1 };
 					}
-				vector < double > totalScores = getDynamicScores( documents.bodyISRs, documents.titleISRs,
-						documents.matchingDocumentISR, ends, documents.chunk, documents.emphasizedWords, titles, urls, printinfo );
-				for ( int i = 0;  i < documents.titles.size( );  ++i )
+				vector < constraintSolver::ISR * > bodyISRs;
+				vector < constraintSolver::ISR * > titleISRs;
+				for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
 					{
-					totalScores[ i ] += getStaticScore( documents.titles[ i ], documents.urls[ i ], printinfo );
+					bodyISRs.pushBack( new index::indexChunk::indexStreamReader( documents->chunk, documents->flattenedQuery[ i ] ) );
+					}
+				for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
+					{
+					bodyISRs.pushBack( new index::indexChunk::indexStreamReader( documents->chunk, '#' + documents->flattenedQuery[ i ] ) );
+					}
+				vector < double > totalScores = getDynamicScores( bodyISRs, titleISRs,
+						documents->matchingDocumentISR, ends, documents->chunk, documents->emphasizedWords, titles, urls, printinfo );
+				for ( size_t i = 0;  i < titles.size( );  ++i )
+					{
+					totalScores[ i ] += getStaticScore( titles[ i ], urls[ i ], printinfo );
+					}
+				for ( size_t i = 0;  i < bodyISRs.size( );  ++i )
+					{
+					if ( bodyISRs[ i ] )
+						delete bodyISRs[ i ];
+					}
+				for ( size_t i = 0;  i < titleISRs.size( );  ++i )
+					{
+					if ( titleISRs[ i ] )
+						delete titleISRs[ i ];
 					}
 				return { totalScores, 0 };
 				}
+
 			// second is error, if -1 there was a bad query.
 			pair < dex::vector < dex::searchResult >, int > getTopN( size_t n, dex::string query, bool printInfo = false )
 				{
@@ -500,7 +532,7 @@ namespace dex
 				// pass query to query compiler
 				// pass compiled query to constraintSolver
 				
-				dex::vector < dex::matchedDocuments > documents;
+				dex::vector < dex::matchedDocuments * > documents;
 				dex::vector < double > scores;
 				vector < string > titles;
 				vector < Url > urls;
@@ -511,14 +543,14 @@ namespace dex
 					dex::queryRequest request;
 					request.query = query;
 					request.chunkPointer = chunkPointers[ index ];
-					pthread_create( &workerThreads[ index ], nullptr, getMatchingDocuments, ( void * ) &request );
+					pthread_create( &workerThreads[ index ], nullptr, parseAndScore, ( void * ) &request );
 					}
 
 				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
 					{
 					void *returnValue;
 					pthread_join( workerThreads[ index ], &returnValue );
-					dex::matchedDocuments returnDocuments = *( dex::matchedDocuments* ) returnValue;
+					dex::matchedDocuments *returnDocuments = ( dex::matchedDocuments * ) returnValue;
 					documents.pushBack( returnDocuments );
 					}
 				
@@ -526,7 +558,7 @@ namespace dex
 					{
 					// need to get the end ISR from the chunk
 					dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr = 
-							new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents[ index ].chunk, "" );
+							new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents[ index ]->chunk, "" );
 					vector < string > currentTitles;
 					vector < string > currentUrls;
 					pair < vector < double >, int > currentScoresPair = scoreDocuments( documents[ index ], eodisr,
@@ -537,20 +569,16 @@ namespace dex
 						return { results, -1 };
 						}
 					// Now that we're done with these ISRs we delete them
-					for ( unsigned isr = 0;  isr < documents[ index ].bodyISRs.size( );  ++isr )
+					if ( documents[ index ] )
 						{
-						if ( documents[ index ].bodyISRs[ isr ] )
-							delete documents[ index ].bodyISRs[ isr ];
+						if ( documents[ index ]->matchingDocumentISR )
+							delete documents[ index ]->matchingDocumentISR;
+						if ( documents[ index ]->chunk )
+							delete documents[ index ]->chunk;
+						delete documents[ index ];
 						}
-					for ( unsigned isr = 0;  isr < documents[ index ].titleISRs.size( );  ++isr )
-						{
-						if ( documents[ index ].titleISRs[ isr ] )
-							delete documents[ index ].titleISRs[ isr ];
-						}
-					if ( documents[ index ].matchingDocumentISR )
-						delete documents[ index ].matchingDocumentISR;
-					if ( documents[ index ].chunk )
-						delete documents[ index ].chunk;
+					
+					
 
 					// We will be receiving the things in matched documents!
 					if ( currentScores.size( ) != currentTitles.size( ) || 
@@ -572,7 +600,7 @@ namespace dex
 
 				topN = findTopN( scores, n );
 
-				for ( int index = 0;  index < n && ( p = topN[ index ] );  index++ )
+				for ( size_t index = 0;  index < n && ( p = topN[ index ] );  index++ )
 					{
 					topDocuments.pushBack( { urls[ p->documentIndex ], titles[ p->documentIndex ] } );
 					if ( printInfo )

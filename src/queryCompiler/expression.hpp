@@ -23,7 +23,7 @@ namespace dex
 				virtual dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const = 0;
 			};
 
-		dex::index::indexChunk::endOfDocumentIndexStreamReader *getEndOfDocumentISR( dex::index::indexChunk *chunk )
+		inline dex::index::indexChunk::endOfDocumentIndexStreamReader *getEndOfDocumentISR( dex::index::indexChunk *chunk )
 			{
 			return new dex::index::indexChunk::endOfDocumentIndexStreamReader( chunk, "" );
 			}

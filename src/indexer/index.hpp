@@ -22,6 +22,8 @@
 #include "../utils/utility.hpp"
 #include "../utils/vector.hpp"
 
+#include <iostream>
+
 namespace dex
 	{
 	namespace index
@@ -51,7 +53,7 @@ namespace dex
 						friend class indexStreamReader;
 
 						// Posting list is size 2^16 for now.
-						static const size_t postsChunkSize = 1 << 12;
+						static const size_t postsChunkSize = 1 << 10;
 						byte posts[ postsChunkSize ];
 
 						// This is 0 if they do not "point" to anything meaningful.
@@ -123,18 +125,18 @@ namespace dex
 				static const size_t maxURLLength = 1L << 10;
 				static const size_t maxTitleLength = 1 << 10;
 				static const size_t maxWordLength = 64;
-				static const size_t postsChunkArraySize = 1L << 26;
-				static const size_t postsMetadataArraySize = 1L << 25;
+				static const size_t postsChunkArraySize = 1L << 19;
+				static const size_t postsMetadataArraySize = 1L << 19;
 
 				// TODO: Double check these very carefully.
 				// Note: these sizes should be such that they are block-aligned. The required offest for block alignment
 				// is surrounded by parentheses.
 				static const size_t endOfDocumentMetadataTypeMemorySize = 2 * sizeof( size_t )
 						+ ( 7 + maxURLLength + ( 1 ) )
-						+ ( 7 + maxTitleLength + ( 1 ) ) + sizeof( unsigned );
-				static const size_t urlsToOffsetsMemorySize = 7 + maxURLCount * ( 7 + maxURLLength + ( 1 ) ) + ( 1 );
+						+ ( 7 + maxTitleLength + ( 1 ) );
+				static const size_t urlsToOffsetsMemorySize = 7 + maxURLCount * ( 7 + maxURLLength + ( 1 ) + 7 + ( 1 ) ) + ( 1 );
 				static const size_t offsetsToEndOfDocumentMetadatasMemorySize =
-						7 + maxURLCount * endOfDocumentMetadataTypeMemorySize + ( 1 );
+						7 + maxURLCount * ( 7 + endOfDocumentMetadataTypeMemorySize + ( 1 ) ) + ( 1 );
 				static const size_t dictionaryMemorySize = 7
 						+ ( 7 + maxWordLength + 7 + ( 2 ) ) * postsMetadataArraySize + ( 1 );
 				static const size_t postsMetadataArrayMemorySize = postsMetadataArraySize * sizeof( postsMetadata );
@@ -142,13 +144,13 @@ namespace dex
 
 				static const size_t urlsToOffsetsMemoryOffset = 200;
 				static const size_t offsetsToEndOfDocumentMetadatasMemoryOffset =
-						urlsToOffsetsMemoryOffset + urlsToOffsetsMemorySize;
+						urlsToOffsetsMemoryOffset + 2 * urlsToOffsetsMemorySize;
 				static const size_t dictionaryOffset =
-						offsetsToEndOfDocumentMetadatasMemoryOffset + offsetsToEndOfDocumentMetadatasMemorySize;
-				static const size_t postsMetadataArrayMemoryOffset = dictionaryOffset + dictionaryMemorySize;
+						offsetsToEndOfDocumentMetadatasMemoryOffset + 2 * offsetsToEndOfDocumentMetadatasMemorySize;
+				static const size_t postsMetadataArrayMemoryOffset = dictionaryOffset + 2 * dictionaryMemorySize;
 				static const size_t postsChunkArrayMemoryOffset =
-						postsMetadataArrayMemoryOffset + postsMetadataArrayMemorySize;
-				static const size_t fileSize = postsChunkArrayMemoryOffset + postsChunkArrayMemorySize;
+						postsMetadataArrayMemoryOffset + 2 * postsMetadataArrayMemorySize;
+				static const size_t fileSize = postsChunkArrayMemoryOffset + 2 * postsChunkArrayMemorySize;
 
 				// Our mmaped file.
 				void *filePointer;
@@ -200,7 +202,8 @@ namespace dex
 						postsMetadata *wordMetadata = nullptr;
 						if ( !dictionary.count( wordToAdd ) && !newWords.count( wordToAdd ) )
 							{
-							if ( dictionary.size( ) == postsMetadataArraySize || *postsChunkCount == postsChunkArraySize )
+							if ( dictionary.size( ) + newWords.size( ) >= postsMetadataArraySize
+									|| *postsChunkCount >= postsChunkArraySize )
 								return false;
 
 							// Add a new postsMetaData.
@@ -210,6 +213,7 @@ namespace dex
 
 							// Add a new postsChunk
 							size_t newPostsChunkOffset = ( *postsChunkCount )++;
+							// std::cout << "postsChunkCount: " << *postsChunkCount << "\n";
 							postsChunkArray[ newPostsChunkOffset ] = postsChunk( );
 							wordMetadata->firstPostsChunkOffset = newPostsChunkOffset;
 
@@ -218,20 +222,29 @@ namespace dex
 						else
 							{
 							if ( dictionary.count( wordToAdd ) )
+								{
 								wordMetadata = &postsMetadataArray[ dictionary[ wordToAdd ] ];
+								if ( dictionary[ wordToAdd ] > postsMetadataArraySize )
+									std::cout << "dictionary[ " << wordToAdd << " ]: " << dictionary[ wordToAdd ] << "\n";
+								}
 							else
+								{
 								wordMetadata = &postsMetadataArray[ newWords[ wordToAdd ] ];
+								if ( newWords[ wordToAdd ] > postsMetadataArraySize )
+									std::cout << "newWords[ " << wordToAdd << " ]: " << newWords[ wordToAdd ] << "\n";
+								}
 							}
 
 						// This loop will exectue at most once, unless things go terribly wrong somehow.
 						while ( !wordMetadata->append( newLocation, postsChunkArray ) )
 							{
-							if ( *postsChunkCount == postsChunkArraySize )
+							if ( *postsChunkCount >= postsChunkArraySize )
 								return false;
 
 							postsChunkArray[ wordMetadata->lastPostsChunkOffset ].nextPostsChunkOffset = *postsChunkCount;
 							postsChunkArray[ *postsChunkCount ] = postsChunk( );
 							wordMetadata->lastPostsChunkOffset = ( *postsChunkCount )++;
+							// std::cout << "new LastPostsChunkOffset: " << *postsChunkCount << "\n";
 							}
 
 						postsMetadataChanges[ wordToAdd ]++;
@@ -280,7 +293,7 @@ namespace dex
 						: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
 					{
 					private:
-						indexChunk *chunk;
+						//indexChunk *chunk;
 					public:
 						endOfDocumentIndexStreamReader( indexChunk *chunk, dex::string );
 						size_t seek( size_t target );

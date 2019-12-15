@@ -183,30 +183,16 @@ namespace dex
 
 	struct matchedDocuments
 		{
-		// Constraint solver needs to make sure to not return pornographic results
-		// All four vectors should be in the order of the flattened query
-		dex::vector < dex::constraintSolver::ISR * > titleISRs;
-		dex::vector < dex::constraintSolver::ISR * > bodyISRs;
+		dex::vector < dex::string > flattenedQuery;
 		dex::constraintSolver::ISR *matchingDocumentISR;
-		// next of matchingDocumentISR returns the offset of the end document that you care about
 		dex::index::indexChunk *chunk;
-
 		dex::vector < bool > emphasizedWords;
-		dex::vector < dex::string > titles;
-		dex::vector < dex::Url > urls;
-		};
-
-	class indexChunkObject
-		{
-		// Whatever matt and stephen put in here
-		public:
-			indexChunkObject( dex::string filename );
 		};
 
 	struct queryRequest
 		{
 		dex::string query;
-		dex::indexChunkObject *chunkPointer;
+		dex::index::indexChunk *chunkPointer;
 		};
 
 	struct searchResult
@@ -214,17 +200,6 @@ namespace dex
 		dex::Url url;
 		dex::string title;
 		};
-
-	void *getMatchingDocuments( void *args )
-		{
-		dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
-		// Also need to pass list of index chunk pointers
-		/*we expect this to be a function that we pass a query that we get from the get request
-		This function runs the query compiler and constraint solver and returns
-		a vector of documents that match the query given.*/
-		vector < dex::matchedDocuments > someVec;
-		return nullptr;
-		}
 	}
 
 #endif

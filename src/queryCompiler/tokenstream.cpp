@@ -13,14 +13,14 @@
 #include "../utils/basicString.hpp"
 #include "../utils/unorderedSet.hpp"
 #include "expression.hpp"
-#include "tokenStream.hpp"
+#include "tokenstream.hpp"
 
-bool isAlpha ( char c )
+bool dex::queryCompiler::isAlpha ( char c )
 	 {
 	 return ( c >= 'A' && c <= 'Z' ) || ( c >= 'a' && c <= 'z' );
 	 }
 
-bool isSymbol( char c )
+bool dex::queryCompiler::isSymbol( char c )
 	{
 	switch ( c )
 		{
@@ -57,7 +57,7 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 		charIsAlpha = isAlpha( in[ index ] );
 		charIsSymbol = isSymbol( in[ index ] );
 
-		if ( !( isAlpha || isSymbol ) )
+		if ( !( charIsAlpha || charIsSymbol ) )
 			continue;
 
 		if ( in[ index ] == '"' )
@@ -102,7 +102,7 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 		}
 
 	for( size_t index = 0;  index < semiparsed.size( ) - 1;  ++index )
-		if ( semiparsed[ index ] = '$' )
+		if ( semiparsed[ index ] == '$' )
 			{
 			dex::string word = semiparsed.substr( index + 1, semiparsed.findFirstOf( "|&$\"~() ", index, 8 ) - index - 1 );
 			emphasizedWords.insert( word );
