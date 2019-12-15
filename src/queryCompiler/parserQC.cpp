@@ -67,7 +67,7 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findOr( )
 				left = dex::queryCompiler::parser::findAnd( );
 				if ( !left )
 					{
-					std::cerr << "And returned nullptr because of !left" << std::endl;
+					std::cerr << "Or returned nullptr because of !left" << std::endl;
 					return nullptr;
 					}
 					
@@ -76,6 +76,7 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findOr( )
 			else
 				termAdded = false;
 			}
+		std::cerr << "Or returned self" << std::endl;
 		return self;
 		}
 	std::cerr << "Or returned nullptr because left was nullptr" << std::endl;
@@ -106,6 +107,7 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 			else
 				termAdded = false;
 			}
+		std::cerr << "And returned self" << std::endl;
 		return self;
 		}
 	std::cerr << "And returned nullptr because left was nullptr" << std::endl;
