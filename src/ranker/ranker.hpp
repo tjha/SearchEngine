@@ -543,6 +543,7 @@ namespace dex
 					dex::queryRequest request;
 					request.query = query;
 					request.chunkPointer = chunkPointers[ index ];
+					std::cout << request.query << std::endl;
 					pthread_create( &workerThreads[ index ], nullptr, parseAndScore, ( void * ) &request );
 					}
 
