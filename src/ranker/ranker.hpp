@@ -29,8 +29,19 @@ namespace dex
 	void *parseAndScore( void *args )
 			{
 			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
+			std::cout << "[" << queryRequest.query << "]" << std::endl;
 			dex::queryCompiler::parser parser( queryRequest.query, queryRequest.chunkPointer );
 			dex::matchedDocuments *documents = parser.parse( );
+			std::cout << "Parse and Score isr: ";
+			std::cout << documents->matchingDocumentISR << std::endl;
+			unsigned endDoc = documents->matchingDocumentISR->next( );
+			for ( int i = 0;  i < 10; ++i )
+				{
+				std::cout << " Matched document found that ends at: " << endDoc << std::endl;
+				endDoc = documents->matchingDocumentISR->next( );
+				}
+			documents->matchingDocumentISR->seek( 0 );
+			std::cout << "NPOS: " << dex::constraintSolver::ISR::npos << std::endl;
 			return ( void * ) documents;
 			}
 	class ranker
@@ -553,6 +564,7 @@ namespace dex
 					void *returnValue;
 					pthread_join( workerThreads[ index ], &returnValue );
 					dex::matchedDocuments *returnDocuments = ( dex::matchedDocuments * ) returnValue;
+					std::cout << "main matchingISR: " << returnDocuments->matchingDocumentISR << std::endl;
 					documents.pushBack( returnDocuments );
 					}
 				
@@ -567,6 +579,12 @@ namespace dex
 							new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents[ index ]->chunk, "" );
 					vector < string > currentTitles;
 					vector < string > currentUrls;
+					unsigned endDoc = documents[ index ]->matchingDocumentISR->next( );
+					for ( int i = 0;  i < 10; ++i )
+						{
+						std::cout << " Matched document found that ends at: " << endDoc << std::endl;
+						endDoc = documents[ index ]->matchingDocumentISR->next( );
+						}
 					pair < vector < double >, int > currentScoresPair = scoreDocuments( documents[ index ], eodisr,
 					currentTitles, currentUrls, printInfo );
 					vector < double > currentScores = currentScoresPair.first;
@@ -579,10 +597,10 @@ namespace dex
 						{
 						if ( documents[ index ]->matchingDocumentISR )
 							delete documents[ index ]->matchingDocumentISR;
-						if ( documents[ index ]->chunk )
-							delete documents[ index ]->chunk;
 						delete documents[ index ];
 						}
+					if ( eodisr )
+						delete eodisr;
 					
 					
 
@@ -595,6 +613,9 @@ namespace dex
 						}
 					for ( unsigned j = 0;  j < currentScores.size( );  ++j )
 						{
+						std::cout << "Title: " << currentTitles[ j ] << std::endl;
+						std::cout << "Url: " << currentUrls[ j ] << std::endl;
+						std::cout << "Score: " << currentScores[ j ] << std::endl;
 						scores.pushBack( currentScores[ j ] );
 						titles.pushBack( currentTitles[ j ] );
 						urls.pushBack( currentUrls[ j ] );
