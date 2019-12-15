@@ -1,10 +1,9 @@
 # SearchEngine
 ## Team Socket - EECS 398 F19 Major Design Experience
 
-This repository contains the source code for our search engine which we
-designed for our capstone project.
-
-This is not a comprehensive readme. Our team is behind and is putting the pieces together. This will be updated as will the final report.
+This repository contains the source code for our capstone project where we
+built a search engine. We implemented our own implementations of string,
+vector, unordered set, unordered map, encoding, and more.
 
 ## Repo Structure
 
@@ -19,6 +18,7 @@ This is not a comprehensive readme. Our team is behind and is putting the pieces
 
 * `data` contains the necessary files to start crawling from scratch
 
+## Components
 ### Crawler
 
 All aspects of the crawler live in `src/driver/` and `src/crawler/`. The files
