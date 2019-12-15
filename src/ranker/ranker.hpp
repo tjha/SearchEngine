@@ -29,6 +29,7 @@ namespace dex
 	void *parseAndScore( void *args )
 			{
 			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
+			std::cout << "Parse and score query: " << queryRequest.query << std::endl;
 			dex::queryCompiler::parser parser( queryRequest.query, queryRequest.chunkPointer );
 			dex::matchedDocuments *documents = parser.parse( );
 			return ( void * ) documents;
@@ -543,7 +544,7 @@ namespace dex
 					dex::queryRequest request;
 					request.query = query;
 					request.chunkPointer = chunkPointers[ index ];
-					std::cout << request.query << std::endl;
+					std::cout << "request query: " << request.query << std::endl;
 					pthread_create( &workerThreads[ index ], nullptr, parseAndScore, ( void * ) &request );
 					}
 
