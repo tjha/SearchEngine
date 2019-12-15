@@ -612,6 +612,7 @@ TEST_CASE( "scoring" )
 		documents.emphasizedWords = emphasized;
 		documents.urls = urls;
 		documents.titles = titles;
+		documents.chunk = nullptr;
 		dex::vector < dex::string > nulltitles;
 		dex::vector < dex::string > nullurls;
 		dex::pair < dex::vector < double >, int > totalScoresPair = judge.scoreDocuments( documents, &endisr, nulltitles, nullurls, true );
@@ -682,6 +683,7 @@ TEST_CASE( "scoring" )
 		documents.emphasizedWords = emphasized;
 		documents.urls = urls;
 		documents.titles = titles;
+		documents.chunk = nullptr;
 		dex::vector < dex::string > nulltitles;
 		dex::vector < dex::string > nullurls;
 		dex::pair < dex::vector < double >, int > totalScoresPair = judge.scoreDocuments( documents, &endisr, nulltitles, nullurls, true );
