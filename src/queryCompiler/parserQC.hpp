@@ -7,8 +7,9 @@
 
 #include <string>
 #include "expression.hpp"
-#include "../constraintSolver/constraintSolver.hpp"
 #include "tokenStream.hpp"
+#include "../constraintSolver/constraintSolver.hpp"
+#include "../ranker/rankerObjects.hpp"
 
 namespace dex
 	{
@@ -46,7 +47,7 @@ namespace dex
 				 * The public interface of the parser. Call this function,
 				 * rather than the private internal functions.
 				 */
-				expression *parse( );
+				dex::matchedDocuments *parse( );
 			};
 		}
 	}

@@ -2,9 +2,10 @@
 //
 // Implementation of the parser class.
 
-#include "../constraintSolver/constraintSolver.hpp"
 #include "expression.hpp"
 #include "parserQC.hpp"
+#include "../constraintSolver/constraintSolver.hpp"
+#include "../ranker/rankerObjects.hpp"
 
 dex::queryCompiler::expression *dex::queryCompiler::parser::findFactor( )
 	{
@@ -100,14 +101,26 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 	return nullptr;
 	}
 
-dex::queryCompiler::expression *dex::queryCompiler::parser::parse( )
+dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 	{
 	dex::queryCompiler::expression *root = dex::queryCompiler::parser::findOr( );
 	if ( root )
 		if ( stream.allConsumed( ) )
-			return root;
-		delete root;
+			{
+			const dex::vector < dex::string > &flattenedQuery = root->flattenedQuery( ).first;
+			dex::vector < bool > emphasizedWords.reserve( flattenedQuery.size( ) );
+			for( size_t index = 0;  index < flattenedQuery.size( );  ++index )
+				emphasizedWords.pushBack( stream.emphasizedWords.count( flattenedQuery[ index ] ) );
 
+			return new dex::matchedDocuments
+				{
+				flattenedQuery,  // flattened query vector of strings
+				root->eval( ),   // matching document ISR
+				chunk,           // index chunk
+				emphasizedWords  // emphasized words in order of flattenedQuery.
+				};
+			}
+		delete root;
 	return nullptr;
 	}
 

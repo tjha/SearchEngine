@@ -148,7 +148,9 @@ dex::queryCompiler::word::word( dex::string str, dex::index::indexChunk *chunk )
 
 dex::constraintSolver::ISR *dex::queryCompiler::word::eval( ) const
 	{
-	return new dex::index::indexChunk::indexStreamReader( chunk, str );
+	return new dex::constraintSolver::orISR( dex::vector < dex::constraintSolver::ISR * >{
+			new dex::index::indexChunk::indexStreamReader( chunk, str ),
+			new dex::index::indexChunk::indexStreamReader( chunk, "#" + str ) }, getEndOfDocumentISR( chunk ) );
 	}
 
 dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > dex::queryCompiler::word::flattenedQuery( ) const

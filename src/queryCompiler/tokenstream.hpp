@@ -24,15 +24,16 @@ namespace dex
 
 		class tokenStream
 			{
-			// The input we receive, with only relevant characters left
-			dex::string input;
-			// Where we currently are in the input
-			size_t location { 0 };
+			private:
+				// The input we receive, with only relevant characters left
+				dex::string input;
+				// Where we currently are in the input
+				size_t location { 0 };
 
-			dex::index::indexChunk *chunk;
-			dex::unorderedSet < dex::string > emphasizedWords;
+				dex::index::indexChunk *chunk;
 
 			public:
+				dex::unorderedSet < dex::string > emphasizedWords;
 				/**
 				 * Construct a token stream that uses a copy of the input
 				 * that contains only characters relevant to math expressions
