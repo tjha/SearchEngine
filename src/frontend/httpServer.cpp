@@ -154,19 +154,8 @@ void *Talk( void *p )
 		}
 
 	// ranker stuff
-	// TODO: have a structure to store and change these easily. Maybe in a file?
-	dex::vector < dex::pair < unsigned, double > > titleWeights;
-	double urlWeight;
-	dex::vector < dex::pair < unsigned, double > > bodySpanHeuristics;
-	dex::vector < dex::pair < unsigned, double > > titleSpanHeuristics;
-	double emphasizedWeight = 0;
-	double proportionCap = 0;
-	double bodySpans = 0;
-	double titleSpans = 0;
-	/*dex::ranker rankerObject( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, emphasizedWeight, 
-			proportionCap, bodySpans, titleSpans, indexChunkObjects );
-	dex::vector < dex::searchResult > searchResults = rankerObject.getTopN( 10, query );*/
-	//dex::ranker rankerObject( )
+	dex::ranker rankerObject( indexChunkObjects );
+	dex::vector < dex::searchResult > searchResults = rankerObject.getTopN( 10, query );
 	
 	// TODO: populate webpage with content
 	std::cout << request << std::endl;
@@ -220,7 +209,7 @@ void *Talk( void *p )
 
 
 // Global variables for ranker
-//dex::vector < dex::indexChunkObject * > indexChunkObjects;
+dex::vector < dex::indexChunkObject * > indexChunkObjects;
 
 int main( int argc, char **argv )
 	{
