@@ -227,8 +227,8 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 			= postsMetadatum->synchronizationPoints + ( target >> ( sizeof( target ) - 8 ) );
 
 	// TODO: Maybe remove?
-	if ( target < absoluteLocation )
-		throw dex::invalidArgumentException( );
+	// if ( target < absoluteLocation )
+		// throw dex::invalidArgumentException( );
 
 	if ( target > *( indexChunkum->maxLocation ) )
 		throw dex::outOfRangeException( );
@@ -237,7 +237,8 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 		return ( npos );
 
 	// Jump to the point the synchronization table tells us to.
-	if ( ~syncPoint->inverseLocation > absoluteLocation )
+	// if ( ~syncPoint->inverseLocation > absoluteLocation )
+	if ( ~syncPoint->inverseLocation != absoluteLocation )
 		{
 		postsChunkum = indexChunkum->postsChunkArray + syncPoint->postsChunkArrayOffset;
 		post = postsChunkum->posts + syncPoint->postsChunkOffset;

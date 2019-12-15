@@ -27,6 +27,7 @@ size_t getFileSize( int fileDescriptor )
 
 // TODO: Add test case for closing and reopening an indexChunk
 
+/*
 TEST_CASE( "lougheed's fun read indexChunk test" )
 	{
 	std::cout << "Running lougheed's fun read indexChunk test ;)\n";
@@ -46,8 +47,8 @@ TEST_CASE( "lougheed's fun read indexChunk test" )
 		}
 	close( fd );
 	}
+*/
 
-/*
 TEST_CASE( "create index chunk" )
 	{
 	const char filePath[ ] = "_in.dex";
@@ -103,6 +104,10 @@ TEST_CASE( "ISR functions on one document" )
 	REQUIRE( andISR.seek( 3 ) == 5 );
 	REQUIRE( andISR.seek( 6 ) == static_cast < size_t >( -1 ) );
 
+	REQUIRE( andISR.seek( 4 ) == 5 );
+	REQUIRE( andISR.seek( 1 ) == 2 );
+	REQUIRE( andISR.seek( 0 ) == 2 );
+
 	close( fd );
 	}
 
@@ -150,6 +155,8 @@ TEST_CASE( "ISR functions on two documents" )
 	andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
 	REQUIRE( andISR.nextDocument( ) == 13 );
+
+	REQUIRE( andISR.seek( 6 ) == 13 );
 
 	close( fd );
 	}
@@ -306,4 +313,3 @@ TEST_CASE( "ONE BIG DOC" )
 		}
 	}
 
-*/
