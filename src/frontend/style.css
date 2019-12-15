@@ -98,7 +98,7 @@ html, body {
 .toggle {
   position: absolute;
   top: 50%;
-  left: 73%;
+  right: 140px;
   width: 60px;
   height: 40px;
   border-radius: 100px;
@@ -111,7 +111,7 @@ html, body {
 .toggle2 {
   position: absolute;
   top: 2.75%;
-  left: 73%;
+  right: 125px;
   width: 60px;
   height: 40px;
   border-radius: 100px;
@@ -200,6 +200,5 @@ html, body {
     max-width: 1500px;
     margin-bottom: 40px;
 };
-
 
 /* Extra toggle style for results page */

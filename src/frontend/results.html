@@ -28,7 +28,12 @@
             <div id="search_bar" class="searchBarResultsPageWrap">
                 <div class="search" action="/results.html">
 			<input type="text" class="searchTerm" placeholder="" onKeyDown="if(event.keyCode==13) searchResults2();">
-			<button type="submit" class="searchButton" onclick="searchResults2();">
+			<div class="toggle">
+                    <input type="checkbox" class="check" onclick="toggleBoolean();">
+                    <b class="b switch"></b>
+                    <b class="b track"></b>
+                </div>
+            <button type="submit" class="searchButton" onclick="searchResults2();">
 			Search
 		  </button>
 		</div>
@@ -39,13 +44,6 @@
                 </ul>
             </div>
         </div>
-
-			<div class="toggle2">                                                        
-			  <input type="checkbox" class="check" onclick="toggleBoolean();">           
-			  <b class="b switch"></b>                                                   
-			  <b class="b track"></b>                                                    
-			</div> 
-
     </body>
                                                                                 
 </html>
