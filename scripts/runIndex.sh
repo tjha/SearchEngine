@@ -3,8 +3,8 @@
 # jhirsh
 # restart the indexerDriver script
 
-batchName=../matthew-batch0
-outputFolder=indexChunks
+batchName=~/lougheeds_fun_test_directory/
+outputFolder=~/mediumIndexChunks/
 
-watch -n 30 "if ps -e | grep -q indexerDriver; then ./build/indexerDriver.exe $batchName $outputFolder; fi"
+watch -n 30 "if ps -e | grep indexerDriver; then ./build/indexerDriver.exe $batchName $outputFolder; fi"
 
