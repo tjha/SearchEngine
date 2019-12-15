@@ -27,6 +27,15 @@ dex::constraintSolver::ISR *dex::queryCompiler::notExpression::eval( ) const
 	return &dex::constraintSolver::notISR( temp, endDocISR );
 	}
 
+dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >
+		dex::queryCompiler::notExpression::flattenedQuery( ) const
+	{
+	const dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > &valueFlattenedQuery
+			= value->flattenedQuery( );
+	return dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >(
+			valueFlattenedQuery.second, valueFlattenedQuery.first );
+	}
+
 
 dex::queryCompiler::orExpression::orExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
 
@@ -44,6 +53,23 @@ dex::constraintSolver::ISR *dex::queryCompiler::orExpression::eval( ) const
 		isrs.pushBack( terms[ i ]->eval( ) );
 
 	return new dex::constraintSolver::orISR( isrs, endDocISR );
+	}
+
+dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >
+		dex::queryCompiler::orExpression::flattenedQuery( ) const
+	{
+	dex::vector < dex::string > left, right;
+	for ( size_t index = 0;  index < terms.size( );  ++index )
+		{
+		const dex::vector < dex::string > &subLeft = terms[ index ]->flattenedQuery( ).first;
+		const dex::vector < dex::string > &subRight = terms[ index ]->flattenedQuery( ).second;
+		for ( size_t jndex = 0;  jndex < subLeft.size( );  ++jndex )
+			left.pushBack( subLeft[ jndex ] );
+		for ( size_t jndex = 0;  jndex < subRight.size( );  ++jndex )
+			right.pushBack( subRight[ jndex ] );
+		}
+
+	return dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >( left, right );
 	}
 
 
@@ -65,6 +91,23 @@ dex::constraintSolver::ISR *dex::queryCompiler::andExpression::eval( ) const
 	return new dex::constraintSolver::andISR( isrs, endDocISR );
 	}
 
+dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >
+		dex::queryCompiler::andExpression::flattenedQuery( ) const
+	{
+	dex::vector < dex::string > left, right;
+	for ( size_t index = 0;  index < terms.size( );  ++index )
+		{
+		const dex::vector < dex::string > &subLeft = terms[ index ]->flattenedQuery( ).first;
+		const dex::vector < dex::string > &subRight = terms[ index ]->flattenedQuery( ).second;
+		for ( size_t jndex = 0;  jndex < subLeft.size( );  ++jndex )
+			left.pushBack( subLeft[ jndex ] );
+		for ( size_t jndex = 0;  jndex < subRight.size( );  ++jndex )
+			right.pushBack( subRight[ jndex ] );
+		}
+
+	return dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >( left, right );
+	}
+
 
 dex::queryCompiler::phraseExpression::phraseExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
 
@@ -84,9 +127,31 @@ dex::constraintSolver::ISR *dex::queryCompiler::phraseExpression::eval( ) const
 	return new dex::constraintSolver::andISR( isrs, endDocISR );
 	}
 
+dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >
+		dex::queryCompiler::phraseExpression::flattenedQuery( ) const
+	{
+	dex::vector < dex::string > left, right;
+	for ( size_t index = 0;  index < terms.size( );  ++index )
+		{
+		const dex::vector < dex::string > &subLeft = terms[ index ]->flattenedQuery( ).first;
+		const dex::vector < dex::string > &subRight = terms[ index ]->flattenedQuery( ).second;
+		for ( size_t jndex = 0;  jndex < subLeft.size( );  ++jndex )
+			left.pushBack( subLeft[ jndex ] );
+		for ( size_t jndex = 0;  jndex < subRight.size( );  ++jndex )
+			right.pushBack( subRight[ jndex ] );
+		}
+
+	return dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >( left, right );
+	}
+
 dex::queryCompiler::word::word( dex::string str, dex::index::indexChunk *chunk ) : str( str ), chunk( chunk ) { }
 
 dex::constraintSolver::ISR *dex::queryCompiler::word::eval( ) const
 	{
 	return new dex::index::indexChunk::indexStreamReader( chunk, str );
+	}
+
+dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > dex::queryCompiler::word::flattenedQuery( ) const
+	{
+	return dex::pair( dex::vector < dex::string >{ str }, dex::vector < dex::string >( ) );
 	}

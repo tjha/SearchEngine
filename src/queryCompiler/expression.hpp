@@ -5,10 +5,11 @@
 #ifndef DEX_EXPRESSION
 #define DEX_EXPRESSION
 
-#include "basicString.hpp"
-#include "index.hpp"
-#include "vector.hpp"
-#include "constraintSolver.hpp"
+#include "../constraintSolver/constraintSolver.hpp"
+#include "../indexer/index.hpp"
+#include "../utils/basicString.hpp"
+#include "../utils/utility.hpp"
+#include "../utils/vector.hpp"
 
 namespace dex
 	{
@@ -19,6 +20,7 @@ namespace dex
 			public:
 				virtual ~expression( );
 				virtual dex::constraintSolver::ISR *eval( ) const = 0;
+				virtual dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const = 0;
 			};
 
 		dex::index::indexChunk::endOfDocumentIndexStreamReader *getEndOfDocumentISR( dex::index::indexChunk *chunk )
@@ -28,13 +30,13 @@ namespace dex
 
 		class notExpression: public expression
 			{
-			protected:
-				expression* value;
-				dex::index::indexChunk *chunk;
 			public:
+				expression *value;
+				dex::index::indexChunk *chunk;
 				notExpression( expression *value, dex::index::indexChunk *chunk );
 				~notExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
 			};
 
 		class orExpression: public expression
@@ -45,6 +47,7 @@ namespace dex
 				orExpression( dex::index::indexChunk *chunk );
 				~orExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
 			};
 
 		class andExpression: public expression
@@ -55,6 +58,7 @@ namespace dex
 				andExpression( dex::index::indexChunk *chunk );
 				~andExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
 			};
 
 		class phraseExpression : public expression
@@ -65,6 +69,7 @@ namespace dex
 				phraseExpression( dex::index::indexChunk *chunk );
 				~phraseExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
 			};
 
 		class word: public expression
@@ -74,6 +79,7 @@ namespace dex
 				dex::index::indexChunk *chunk;
 				word( dex::string str, dex::index::indexChunk *chunk );
 				dex::constraintSolver::ISR *eval( ) const override;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
 			};
 		}
 	}
