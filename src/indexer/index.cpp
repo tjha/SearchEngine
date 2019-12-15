@@ -155,6 +155,8 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 dex::index::indexChunk::~indexChunk( )
 	{
+	std::cout << "urlsToOffsets.size( ) == " << urlsToOffsets.size( ) << std::endl;
+	std::cout << "offsetsToEndOfDocumentMetadatas.size( ) == " << offsetsToEndOfDocumentMetadatas.size( ) << std::endl;
 	dex::utf::encoder < dex::unorderedMap < dex::string, size_t > >( )( urlsToOffsets, encodedURLsToOffsets );
 	dex::utf::encoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
 			( offsetsToEndOfDocumentMetadatas, encodedOffsetsToEndOfDocumentMetadatas );
@@ -231,7 +233,7 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 		// throw dex::invalidArgumentException( );
 
 	if ( target > *( indexChunkum->maxLocation ) )
-		throw dex::outOfRangeException( );
+		return ( npos );
 
 	if ( ~syncPoint->inverseLocation == syncPoint->npos )
 		return ( npos );
