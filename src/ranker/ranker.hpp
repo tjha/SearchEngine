@@ -423,7 +423,7 @@ namespace dex
 					}
 
 				vector < double > dynamicWordScores;
-				matching->reset( );
+				matching->seek( 0 );
 				unsigned beginDocument = 0;
 				unsigned endDocument = matching->next( );
 				for ( unsigned i = 0;  i < wordCount.size( );  ++i )
@@ -444,7 +444,7 @@ namespace dex
 					}
 				
 				wordCount.clear( );
-				matching->reset( );
+				matching->seek( 0 );
 				vector < vector < unsigned > > titleWordCount;
 				// No need to get the titles and urls again, so just pass a nullptr.
 				vector < vector < unsigned > > titleSpans = getDesiredSpans( titleISRs, matching, ends, nullptr, dynamicTitleSpanHeuristics,
@@ -539,14 +539,18 @@ namespace dex
 					// Now that we're done with these ISRs we delete them
 					for ( unsigned isr = 0;  isr < documents[ index ].bodyISRs.size( );  ++isr )
 						{
-						delete documents[ index ].bodyISRs[ isr ];
+						if ( documents[ index ].bodyISRs[ isr ] )
+							delete documents[ index ].bodyISRs[ isr ];
 						}
 					for ( unsigned isr = 0;  isr < documents[ index ].titleISRs.size( );  ++isr )
 						{
-						delete documents[ index ].titleISRs[ isr ];
+						if ( documents[ index ].titleISRs[ isr ] )
+							delete documents[ index ].titleISRs[ isr ];
 						}
-					delete documents[ index ].matchingDocumentISR;
-					delete documents[ index ].chunk;
+					if ( documents[ index ].matchingDocumentISR )
+						delete documents[ index ].matchingDocumentISR;
+					if ( documents[ index ].chunk )
+						delete documents[ index ].chunk;
 
 					// We will be receiving the things in matched documents!
 					if ( currentScores.size( ) != currentTitles.size( ) || 

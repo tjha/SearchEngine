@@ -69,18 +69,6 @@ namespace dex
 				return *this;
 				}
 			const static unsigned npos = unsigned ( -1 );
-			void reset( )
-				{
-				pos = 0;
-				}
-			// size_t current( )
-			// 	{
-			// 	if ( pos == internal.size( ) )
-			// 		{
-			// 		return npos;
-			// 		}
-			// 	return internal[ npos ];
-			// 	}
 			size_t seek( size_t target )
 				{
 				for ( unsigned index = 0;  index < internal.size( );  ++index )

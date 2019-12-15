@@ -614,7 +614,8 @@ TEST_CASE( "scoring" )
 		documents.titles = titles;
 		dex::vector < dex::string > nulltitles;
 		dex::vector < dex::string > nullurls;
-		dex::vector < double > totalScores = judge.scoreDocuments( documents, &endisr, nulltitles, nullurls, true );
+		dex::pair < dex::vector < double >, int > totalScoresPair = judge.scoreDocuments( documents, &endisr, nulltitles, nullurls, true );
+		dex::vector < double > totalScores = totalScoresPair.first;
 		std::cout << totalScores[ 0 ] << std::endl;
 		std::cout << totalScores[ 1 ] << std::endl;
 		std::cout << totalScores[ 2 ] << std::endl;
@@ -683,7 +684,8 @@ TEST_CASE( "scoring" )
 		documents.titles = titles;
 		dex::vector < dex::string > nulltitles;
 		dex::vector < dex::string > nullurls;
-		dex::vector < double > totalScores = judge.scoreDocuments( documents, &endisr, nulltitles, nullurls, true );
+		dex::pair < dex::vector < double >, int > totalScoresPair = judge.scoreDocuments( documents, &endisr, nulltitles, nullurls, true );
+		dex::vector < double > totalScores = totalScoresPair.first;
 		std::cout << totalScores[ 0 ] << std::endl;
 		std::cout << totalScores[ 1 ] << std::endl;
 		std::cout << totalScores[ 2 ] << std::endl;

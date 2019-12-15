@@ -22,9 +22,6 @@ namespace dex
 			public:
 				static const size_t npos;
 
-				// Jump this ISR back to the beginning
-				virtual void reset( ) = 0;
-
 				// Jump this ISR to the first instance of our pattern that is at or after target. Return the location of the
 				// instance, or -1 if there is none.
 				virtual size_t seek( size_t target ) = 0;
@@ -43,7 +40,6 @@ namespace dex
 		class endOfDocumentISR : public dex::constraintSolver::ISR
 			{
 			public:
-				void reset( );
 				virtual size_t seek( size_t target ) = 0;
 				virtual size_t next( ) = 0;
 				virtual size_t nextDocument( ) = 0;
