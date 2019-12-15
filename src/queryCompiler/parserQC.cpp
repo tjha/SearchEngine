@@ -119,7 +119,7 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 					nullptr,
 					chunk,
 					emphasizedWords
-					}
+					};
 				}
 
 			for( size_t index = 0;  index < flattenedQuery.size( );  ++index )
