@@ -41,6 +41,23 @@ TEST_CASE( "testISRs" )
 		REQUIRE( isr.nextDocument( ) == testingISR::npos );
 		REQUIRE( isr.nextDocument( ) == testingISR::npos );
 		}
+
+	SECTION( "overlapping nextDocument" )
+		{
+		testingEndOfDocumentISR *isrEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+		testingISR isr( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ), isrEnd );
+
+		REQUIRE( isr.nextDocument( ) == 3 );
+		REQUIRE( isr.nextDocument( ) == 7 );
+		REQUIRE( isr.nextDocument( ) == 8 );
+		REQUIRE( isr.nextDocument( ) == 12 );
+		REQUIRE( isr.nextDocument( ) == 13 );
+		REQUIRE( isr.nextDocument( ) == 14 );
+		REQUIRE( isr.nextDocument( ) == 16 );
+		REQUIRE( isr.nextDocument( ) == testingISR::npos );
+		REQUIRE( isr.nextDocument( ) == testingISR::npos );
+		}
 	}
 
 TEST_CASE( "andISR" )
@@ -515,6 +532,42 @@ TEST_CASE( "notISR" )
 
 TEST_CASE( "nested ISRs" )
 	{
+	SECTION( "OR with alignment" )
+		{
+		testingEndOfDocumentISR *isrEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+		testingEndOfDocumentISR *isrOrEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+
+		testingISR *isr = new testingISR( locationsToDeltas( dex::vector < size_t >( { 7, 8, 13, 16 } ) ), isrEnd );
+		dex::constraintSolver::orISR orISR( dex::vector < dex::constraintSolver::ISR * >{ isr }, isrOrEnd );
+
+		REQUIRE( orISR.nextDocument( ) == 7 );
+		REQUIRE( orISR.nextDocument( ) == 8 );
+		REQUIRE( orISR.nextDocument( ) == 13 );
+		REQUIRE( orISR.nextDocument( ) == 16 );
+		REQUIRE( orISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( orISR.nextDocument( ) == testingISR::npos );
+		}
+
+	SECTION( "AND with alignment" )
+		{
+		testingEndOfDocumentISR *isrEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+		testingEndOfDocumentISR *isrAndEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+
+		testingISR *isr = new testingISR( locationsToDeltas( dex::vector < size_t >( { 7, 8, 13, 16 } ) ), isrEnd );
+		dex::constraintSolver::andISR andISR( dex::vector < dex::constraintSolver::ISR * >{ isr }, isrAndEnd );
+
+		REQUIRE( andISR.nextDocument( ) == 7 );
+		REQUIRE( andISR.nextDocument( ) == 8 );
+		REQUIRE( andISR.nextDocument( ) == 13 );
+		REQUIRE( andISR.nextDocument( ) == 16 );
+		REQUIRE( andISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( andISR.nextDocument( ) == testingISR::npos );
+		}
+
 	SECTION( "one word in OR in OR" )
 		{
 		testingEndOfDocumentISR *isrEnd

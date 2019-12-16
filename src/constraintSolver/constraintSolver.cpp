@@ -105,7 +105,7 @@ dex::constraintSolver::orISR::orISR( dex::vector < dex::constraintSolver::ISR * 
 		endOfDocumentISR *endOfDocISR ) : summands( summands ), endOfDocISR( endOfDocISR )
 	{
 	locations.resize( summands.size( ) );
-	for ( size_t index = 1;  index < summands.size( );  ++index )
+	for ( size_t index = 0;  index < summands.size( );  ++index )
 		locations[ index ] = summands[ index ]->next( );
 
 	endOfDocLocation = endOfDocISR->next( );
@@ -134,28 +134,17 @@ size_t dex::constraintSolver::orISR::next(  )
 size_t dex::constraintSolver::orISR::nextDocument( )
 	{
 	size_t minIndex = argMin( locations );
-	size_t previousMin = locations[ minIndex ];
+	size_t previousMinLocation = locations[ minIndex ];
+	size_t endOfDocLocation = endOfDocISR->seek( locations[ argMin( locations ) ] );
 
-	endOfDocLocation = endOfDocISR->seek( locations[ minIndex ] );
-
-	if ( endOfDocLocation == npos )
+	while ( locations[ minIndex ] <= endOfDocLocation && locations[ minIndex ] != npos )
 		{
-		while ( locations[ minIndex ] == previousMin && locations[ minIndex ] != npos )
-			{
-			locations[ minIndex ] = summands[ minIndex ]->nextDocument( );
-			minIndex = argMin( locations );
-			}
-		return locations[ minIndex ];
-		}
-
-	while ( locations[ minIndex ] <= endOfDocLocation )
-		{
-		previousMin = locations[ minIndex ];
+		previousMinLocation = locations[ minIndex ];
 		locations[ minIndex ] = summands[ minIndex ]->nextDocument( );
 		minIndex = argMin( locations );
 		}
-
-	return endOfDocISR->seek( previousMin );
+	endOfDocLocation = endOfDocISR->seek( previousMinLocation );
+	return endOfDocLocation;
 	}
 
 

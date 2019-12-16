@@ -17,20 +17,18 @@ class testingEndOfDocumentISR : public dex::constraintSolver::endOfDocumentISR
 
 	public:
 		testingEndOfDocumentISR( const dex::vector <size_t> &deltas )
-				: deltas( deltas ), index( -1 ), location( 0 ) { }
+				: deltas( deltas ), index( 0 ), location( 0 ) { }
 
 		size_t seek( size_t target )
 			{
-			if ( index == static_cast < size_t >( -1 ) )
-				next( );
+			index = 0;
+			location = 0;
 
-			while ( index < deltas.size( ) && location < target )
-				if ( index < deltas.size( ) - 1 )
-					location += deltas[ ++index ];
-				else
-					++index;
+			do
+				location += deltas[ index++ ];
+			while ( index < deltas.size( ) && location < target );
 
-			if ( index >= deltas.size( ) )
+			if ( location < target )
 				return npos;
 
 			return location;
@@ -38,9 +36,10 @@ class testingEndOfDocumentISR : public dex::constraintSolver::endOfDocumentISR
 
 		size_t next( )
 			{
-			if ( index != static_cast < size_t >( -1 ) && index >= deltas.size( ) - 1 )
+			if ( index >= deltas.size( ) )
 				return npos;
-			location += deltas[ ++index ];
+
+			location += deltas[ index++ ];
 			return location;
 			}
 
@@ -51,10 +50,10 @@ class testingEndOfDocumentISR : public dex::constraintSolver::endOfDocumentISR
 
 		size_t documentSize( )
 			{
-			if ( index == static_cast < size_t >( -1 ) || index >= deltas.size( ) )
+			if ( index == 0 || index > deltas.size( ) )
 				return npos;
 
-			return deltas[ index ];
+			return deltas[ index - 1 ];
 			}
 	};
 
@@ -69,7 +68,7 @@ class testingISR : public dex::constraintSolver::ISR
 
 	public:
 		testingISR( const dex::vector <size_t> &deltas, testingEndOfDocumentISR *endOfDocumentISR )
-				: deltas( deltas ), endOfDocumentISR( endOfDocumentISR ), index( -1 ), location( 0 ) { }
+				: deltas( deltas ), endOfDocumentISR( endOfDocumentISR ), index( 0 ), location( 0 ) { }
 
 		~testingISR( )
 			{
@@ -78,35 +77,43 @@ class testingISR : public dex::constraintSolver::ISR
 
 		size_t seek( size_t target )
 			{
-			if ( index == static_cast < size_t >( -1 ) )
-				next( );
+			index = 0;
+			location = 0;
 
-			while ( index < deltas.size( ) && location < target )
-				if ( index < deltas.size( ) - 1 )
-					location += deltas[ ++index ];
-				else
-					++index;
-			if ( index >= deltas.size( ) )
+			do
+				location += deltas[ index++ ];
+			while ( index < deltas.size( ) && location < target );
+
+			if ( location < target )
 				return npos;
 
-			endOfDocumentISR->seek( location );
 			return location;
 			}
 
 		size_t next( )
 			{
-			if ( index != static_cast < size_t >( -1 ) && index >= deltas.size( ) - 1 )
+			if ( index >= deltas.size( ) )
 				return npos;
-			location += deltas[ ++index ];
+
+			location += deltas[ index++ ];
 			return location;
 			}
 
 		size_t nextDocument( )
 			{
-			seek( endOfDocumentISR->location );
+			if ( index == 0 )
+				return next( );
+
 			if ( index >= deltas.size( ) )
 				return npos;
+
 			endOfDocumentISR->seek( location );
+			if ( seek( endOfDocumentISR->location ) == npos )
+				return npos;
+
+			if ( location == endOfDocumentISR->location )
+				return next( );
+
 			return location;
 			}
 	};
