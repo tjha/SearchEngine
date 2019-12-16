@@ -512,3 +512,46 @@ TEST_CASE( "notISR" )
 		REQUIRE( isrNotB.next( ) == dex::constraintSolver::ISR::npos );
 		}
 	}
+
+TEST_CASE( "nested ISRs" )
+	{
+	SECTION( "one word in OR in OR" )
+		{
+		testingEndOfDocumentISR *isrEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+		testingEndOfDocumentISR *isrOrEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+		testingEndOfDocumentISR *isrOrOrEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+
+		testingISR *isr = new testingISR( locationsToDeltas( dex::vector < size_t >( { 0, 4, 5, 9, 10, 11 } ) ), isrEnd );
+		dex::constraintSolver::orISR *orISR = new dex::constraintSolver::orISR( dex::vector < dex::constraintSolver::ISR * >{ isr }, isrOrEnd );
+		dex::constraintSolver::orISR orOrISR( dex::vector < dex::constraintSolver::ISR * >{ orISR }, isrOrOrEnd );
+
+		REQUIRE( orOrISR.nextDocument( ) == 3 );
+		REQUIRE( orOrISR.nextDocument( ) == 7 );
+		REQUIRE( orOrISR.nextDocument( ) == 12 );
+		REQUIRE( orOrISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( orOrISR.nextDocument( ) == testingISR::npos );
+		}
+
+	SECTION( "one word in AND in AND" )
+		{
+		testingEndOfDocumentISR *isrEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+		testingEndOfDocumentISR *isrAndEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+		testingEndOfDocumentISR *isrAndAndEnd
+				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
+
+		testingISR *isr = new testingISR( locationsToDeltas( dex::vector < size_t >( { 0, 4, 5, 9, 10, 11 } ) ), isrEnd );
+		dex::constraintSolver::andISR *orISR = new dex::constraintSolver::andISR( dex::vector < dex::constraintSolver::ISR * >{ isr }, isrAndEnd );
+		dex::constraintSolver::andISR orOrISR( dex::vector < dex::constraintSolver::ISR * >{ orISR }, isrAndAndEnd );
+
+		REQUIRE( orOrISR.nextDocument( ) == 3 );
+		REQUIRE( orOrISR.nextDocument( ) == 7 );
+		REQUIRE( orOrISR.nextDocument( ) == 12 );
+		REQUIRE( orOrISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( orOrISR.nextDocument( ) == testingISR::npos );
+		}
+	}

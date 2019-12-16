@@ -134,13 +134,28 @@ size_t dex::constraintSolver::orISR::next(  )
 size_t dex::constraintSolver::orISR::nextDocument( )
 	{
 	size_t minIndex = argMin( locations );
+	size_t previousMin = locations[ minIndex ];
+
 	endOfDocLocation = endOfDocISR->seek( locations[ minIndex ] );
-	while ( locations[ minIndex ] < endOfDocLocation )
+
+	if ( endOfDocLocation == npos )
 		{
+		while ( locations[ minIndex ] == previousMin && locations[ minIndex ] != npos )
+			{
+			locations[ minIndex ] = summands[ minIndex ]->nextDocument( );
+			minIndex = argMin( locations );
+			}
+		return locations[ minIndex ];
+		}
+
+	while ( locations[ minIndex ] <= endOfDocLocation )
+		{
+		previousMin = locations[ minIndex ];
 		locations[ minIndex ] = summands[ minIndex ]->nextDocument( );
 		minIndex = argMin( locations );
 		}
-	return endOfDocLocation;
+
+	return endOfDocISR->seek( previousMin );
 	}
 
 
