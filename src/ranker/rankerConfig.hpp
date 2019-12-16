@@ -12,33 +12,33 @@
 struct RankerConfiguration
 	{
 	// pair of < maximum length of title, score awarded to title >
-	static const dex::vector < dex::pair < unsigned, double > > StaticTitleWeights;
+	static const dex::vector < dex::pair < size_t, double > > StaticTitleWeights;
 	// score weighting for URL
 	constexpr static const double StaticUrlWeight = 1;
 	// pair of < inclusive upper bound on body span range, score weighting of that range >
-	static const dex::vector < dex::pair < unsigned, double > > BodySpanHeuristics;
+	static const dex::vector < dex::pair < size_t, double > > BodySpanHeuristics;
 	// pair of < inclusive upper bound on title span range, score weighting of that range >
-	static const dex::vector < dex::pair < unsigned, double > > TitleSpanHeuristics;
+	static const dex::vector < dex::pair < size_t, double > > TitleSpanHeuristics;
 	// double for the weighting applied to emphasized words
 	constexpr static const double EmphasizedWeight = 3.0;
 	// double for the maximum word occurance proportion measured for a document
 	// this should be quite low.
 	constexpr static const double ProportionCap = 0.06;
 	// Maximum number of spans we measure for body ISRs
-	constexpr static const unsigned MaxBodySpans = 5;
+	constexpr static const size_t MaxBodySpans = 5;
 	// Maximum number of spans we measure for title ISRs
-	constexpr static const unsigned MaxTitleSpans = 1;
+	constexpr static const size_t MaxTitleSpans = 1;
 	constexpr static const double wordWeight = 1000;
 	};
 
-const dex::vector < dex::pair < unsigned, double > > RankerConfiguration::StaticTitleWeights = 
+const dex::vector < dex::pair < size_t, double > > RankerConfiguration::StaticTitleWeights = 
 		{
 		{ 15, 50 },
 		{ 25, 40 },
 		{ 50, 20 }
 		};
 
-const dex::vector < dex::pair < unsigned, double > > RankerConfiguration::BodySpanHeuristics =
+const dex::vector < dex::pair < size_t, double > > RankerConfiguration::BodySpanHeuristics =
 		{
 		{ 1, 50 },
 		{ 3, 25 },
@@ -46,7 +46,7 @@ const dex::vector < dex::pair < unsigned, double > > RankerConfiguration::BodySp
 		{ 5, 5 }
 		};
 
-const dex::vector < dex::pair < unsigned, double > > RankerConfiguration::TitleSpanHeuristics =
+const dex::vector < dex::pair < size_t, double > > RankerConfiguration::TitleSpanHeuristics =
 		{
 		{ 1, 250 },
 		{ 2, 100 }

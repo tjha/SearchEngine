@@ -52,7 +52,7 @@ namespace dex
 						friend class indexChunk;
 						friend class indexStreamReader;
 
-						// Posting list is size 2^16 for now.
+						// Posting list is size 2^10 for now.
 						static const size_t postsChunkSize = 1 << 10;
 						byte posts[ postsChunkSize ];
 
@@ -119,7 +119,6 @@ namespace dex
 					friend class dex::utf::encoder;
 					};
 
-				
 				// These consts can be adjusted if necessary.
 				static const size_t maxURLCount = 1L << 17;
 				static const size_t maxURLLength = 1L << 10;
@@ -131,7 +130,7 @@ namespace dex
 				// TODO: Double check these very carefully.
 				// Note: these sizes should be such that they are block-aligned. The required offest for block alignment
 				// is surrounded by parentheses.
-				static const size_t endOfDocumentMetadataTypeMemorySize = 2 * sizeof( size_t )
+				static const size_t endOfDocumentMetadataTypeMemorySize = 7 + ( 1 ) + 7 + ( 1 )
 						+ ( 7 + maxURLLength + ( 1 ) )
 						+ ( 7 + maxTitleLength + ( 1 ) );
 				static const size_t urlsToOffsetsMemorySize = 7 + maxURLCount * ( 7 + maxURLLength + ( 1 ) + 7 + ( 1 ) ) + ( 1 );
@@ -194,13 +193,14 @@ namespace dex
 					for ( ;  first != last;  ++first, ++newLocation )
 						{
 						// std::cout << "About to stem: ->" << *first << "<-\n";
-						string wordToAdd = decorator + dex::porterStemmer::stem( *first );
+						string wordToAdd = dex::porterStemmer::stem( *first );
+						string decoratedWordToAdd = decorator + wordToAdd;
 
 						if ( wordToAdd.size( ) > maxWordLength )
 							continue;
 
 						postsMetadata *wordMetadata = nullptr;
-						if ( !dictionary.count( wordToAdd ) && !newWords.count( wordToAdd ) )
+						if ( !dictionary.count( decoratedWordToAdd ) && !newWords.count( decoratedWordToAdd ) )
 							{
 							if ( dictionary.size( ) + newWords.size( ) >= postsMetadataArraySize
 									|| *postsChunkCount >= postsChunkArraySize )
@@ -217,21 +217,21 @@ namespace dex
 							postsChunkArray[ newPostsChunkOffset ] = postsChunk( );
 							wordMetadata->firstPostsChunkOffset = newPostsChunkOffset;
 
-							newWords[ wordToAdd ] = newWordIndex;
+							newWords[ decoratedWordToAdd ] = newWordIndex;
 							}
 						else
 							{
-							if ( dictionary.count( wordToAdd ) )
+							if ( dictionary.count( decoratedWordToAdd ) )
 								{
-								wordMetadata = &postsMetadataArray[ dictionary[ wordToAdd ] ];
-								if ( dictionary[ wordToAdd ] > postsMetadataArraySize )
-									std::cout << "dictionary[ " << wordToAdd << " ]: " << dictionary[ wordToAdd ] << "\n";
+								wordMetadata = &postsMetadataArray[ dictionary[ decoratedWordToAdd ] ];
+								if ( dictionary[ decoratedWordToAdd ] > postsMetadataArraySize )
+									std::cout << "dictionary[ " << decoratedWordToAdd << " ]: " << dictionary[ decoratedWordToAdd ] << "\n";
 								}
 							else
 								{
-								wordMetadata = &postsMetadataArray[ newWords[ wordToAdd ] ];
-								if ( newWords[ wordToAdd ] > postsMetadataArraySize )
-									std::cout << "newWords[ " << wordToAdd << " ]: " << newWords[ wordToAdd ] << "\n";
+								wordMetadata = &postsMetadataArray[ newWords[ decoratedWordToAdd ] ];
+								if ( newWords[ decoratedWordToAdd ] > postsMetadataArraySize )
+									std::cout << "newWords[ " << decoratedWordToAdd << " ]: " << newWords[ decoratedWordToAdd ] << "\n";
 								}
 							}
 
@@ -247,7 +247,7 @@ namespace dex
 							// std::cout << "new LastPostsChunkOffset: " << *postsChunkCount << "\n";
 							}
 
-						postsMetadataChanges[ wordToAdd ]++;
+						++postsMetadataChanges[ wordToAdd ];
 						}
 
 					// Copy over newWords into dict.
@@ -272,7 +272,6 @@ namespace dex
 						static const size_t npos = static_cast < size_t >( -1 );
 
 						byte *post;
-						byte *documentPost;
 						postsMetadata *postsMetadatum;
 						postsChunk *postsChunkum; // Bad naming to disambiguate chunk types
 						indexChunk *indexChunkum;

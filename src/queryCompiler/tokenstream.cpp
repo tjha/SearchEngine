@@ -1,18 +1,13 @@
-/*
- * tokenstream.cpp
- *
- * Implementation of tokenstream.h
- *
- * Lab3: You do not have to modify this file, but you may choose to do so
- */
-
-//  #include <assert.h>  - - -Why do we need this?
+// tokenstream.cpp
+//
+// 2019-12-15: Done: jasina, medhak
 
 #include <cstddef>
 #include "expression.hpp"
 #include "tokenstream.hpp"
 #include "../utils/algorithm.hpp"
 #include "../utils/basicString.hpp"
+#include "../utils/stemming.hpp"
 #include "../utils/unorderedSet.hpp"
 
 bool dex::queryCompiler::isAlpha ( char c )
@@ -133,7 +128,7 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 			{
 			dex::string word = semiparsed.substr(
 					index + 1, semiparsed.findFirstOf( "|&$\"~() ", index + 1, 8 ) - index - 1 );
-			emphasizedWords.insert( word );
+			emphasizedWords.insert( dex::porterStemmer::stem( word ) );
 			if( index != 0 && semiparsed[ index - 1] != '(' && semiparsed[ index - 1] != '|'
 					&& semiparsed[ index - 1] != '&' && semiparsed[ index - 1] != '~' )
 				input.pushBack( '&' );
@@ -176,5 +171,5 @@ dex::queryCompiler::word *dex::queryCompiler::tokenStream::parseWord( )
 	dex::string word = input.substr( location, nextSymbolLocation - location );
 	location = dex::min( nextSymbolLocation, input.size( ) );
 
-	return new dex::queryCompiler::word( word, chunk );
+	return new dex::queryCompiler::word( dex::porterStemmer::stem( word ), chunk );
 	}

@@ -7,6 +7,7 @@
 #include "../indexer/index.hpp"
 #include "../queryCompiler/expression.hpp"
 #include "../utils/basicString.hpp"
+#include "../utils/stemming.hpp"
 
 
 dex::queryCompiler::expression::~expression( ) { }
@@ -163,9 +164,11 @@ dex::constraintSolver::ISR *dex::queryCompiler::word::eval( ) const
 	if ( !chunk )
 		return nullptr;
 
-	return new dex::constraintSolver::orISR( dex::vector < dex::constraintSolver::ISR * >{
-			new dex::index::indexChunk::indexStreamReader( chunk, str ),
-			new dex::index::indexChunk::indexStreamReader( chunk, "#" + str ) }, getEndOfDocumentISR( chunk ) );
+	dex::string stemmedStr = dex::porterStemmer::stem( str );
+
+	return new dex::constraintSolver::orISR( dex::vector < dex::constraintSolver::ISR * > {
+			new dex::index::indexChunk::indexStreamReader( chunk, stemmedStr ),
+			new dex::index::indexChunk::indexStreamReader( chunk, "#" + stemmedStr ) }, getEndOfDocumentISR( chunk ) );
 	}
 
 dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > dex::queryCompiler::word::flattenedQuery( ) const

@@ -10,6 +10,7 @@
 #include "../utils/basicString.hpp"
 #include "../utils/utility.hpp"
 #include "../utils/vector.hpp"
+#include <iostream>
 
 namespace dex
 	{
@@ -21,6 +22,7 @@ namespace dex
 				virtual ~expression( );
 				virtual dex::constraintSolver::ISR *eval( ) const = 0;
 				virtual dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const = 0;
+				virtual void print( size_t depth = 0 ) const = 0;
 			};
 
 		inline dex::index::indexChunk::endOfDocumentIndexStreamReader *getEndOfDocumentISR( dex::index::indexChunk *chunk )
@@ -37,6 +39,14 @@ namespace dex
 				~notExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
+				void print( size_t depth = 0 ) const override
+					{
+					for ( size_t i = 0;  i != depth;  ++i )
+						std::cout << '\t';
+					std::cout << "NOT" << std::endl;
+					if ( value )
+						value->print( depth + 1 );
+					}
 			};
 
 		class orExpression: public expression
@@ -48,6 +58,14 @@ namespace dex
 				~orExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
+				void print( size_t depth = 0 ) const override
+					{
+					for ( size_t i = 0;  i != depth;  ++i )
+						std::cout << '\t';
+					std::cout << "OR" << std::endl;
+					for ( size_t index = 0;  index != terms.size( );  ++index )
+						terms[ index ]->print( depth + 1 );
+					}
 			};
 
 		class andExpression: public expression
@@ -59,6 +77,14 @@ namespace dex
 				~andExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
+				void print( size_t depth = 0 ) const override
+					{
+					for ( size_t i = 0;  i != depth;  ++i )
+						std::cout << '\t';
+					std::cout << "OR" << std::endl;
+					for ( size_t index = 0;  index != terms.size( );  ++index )
+						terms[ index ]->print( depth + 1 );
+					}
 			};
 
 		class phraseExpression : public expression
@@ -70,6 +96,14 @@ namespace dex
 				~phraseExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
+				void print( size_t depth = 0 ) const override
+					{
+					for ( size_t i = 0;  i != depth;  ++i )
+						std::cout << '\t';
+					std::cout << "OR" << std::endl;
+					for ( size_t index = 0;  index != terms.size( );  ++index )
+						terms[ index ]->print( depth + 1 );
+					}
 			};
 
 		class word: public expression
@@ -80,6 +114,12 @@ namespace dex
 				word( dex::string str, dex::index::indexChunk *chunk );
 				dex::constraintSolver::ISR *eval( ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
+				void print( size_t depth = 0 ) const override
+					{
+					for ( size_t i = 0;  i != depth;  ++i )
+						std::cout << '\t';
+					std::cout << '[' << str << ']' << std::endl;
+					}
 			};
 		}
 	}

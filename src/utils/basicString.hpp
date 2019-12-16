@@ -1181,6 +1181,26 @@ namespace dex
 				return hash;
 				}
 		};
+
+	template < > struct hash < const dex::string >
+		{
+		private:
+			static const unsigned long prime = 16777619;
+			static const unsigned long offsetBasis = 2166136261;
+		public:
+			unsigned long operator( )( const dex::string &str ) const
+				{
+				// Compute hash using FNV-1a algorithm
+				unsigned long hash = offsetBasis;
+				for ( size_t index = 0;  index != str.length( );  ++index )
+					hash = ( hash ^ str[ index ] ) * prime;
+
+				// Constrain our hash to 32 bits
+				hash &= 0xFFFFFFFF;
+
+				return hash;
+				}
+		};
 	}
 
 #endif

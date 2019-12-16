@@ -51,6 +51,7 @@ int main( int argc, char **argv )
 		}
 	else
 		{
+		std::cout << "Got back " << results.first.size( ) << " results\n";
 		for ( unsigned i = 0;  i < results.first.size( );  ++i )
 			{
 			std::cout << results.first[ i ].title << std::endl;
