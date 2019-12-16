@@ -51,13 +51,13 @@ namespace dex
 	class endOfDocumentISR : public constraintSolver::endOfDocumentISR
 		{
 		private:
-			dex::vector < unsigned > internal;
-			unsigned pos;
+			dex::vector < size_t > internal;
+			size_t pos;
 		public:
 			endOfDocumentISR( )
 				{
 				}
-			endOfDocumentISR( dex::vector < unsigned > vecIn )
+			endOfDocumentISR( dex::vector < size_t > vecIn )
 				{
 				internal = vecIn;
 				pos = 0;
@@ -68,10 +68,10 @@ namespace dex
 				pos = other.pos;
 				return *this;
 				}
-			const static unsigned npos = unsigned ( -1 );
+			const static size_t npos = size_t ( -1 );
 			size_t seek( size_t target )
 				{
-				for ( unsigned index = 0;  index < internal.size( );  ++index )
+				for ( size_t index = 0;  index < internal.size( );  ++index )
 					{
 					if ( internal[ index ] >= target )
 						{
@@ -110,17 +110,17 @@ namespace dex
 	class ISR : public constraintSolver::ISR
 		{
 		private:
-			dex::vector < unsigned > internal;
+			dex::vector < size_t > internal;
 			dex::string word;
-			unsigned pos;
+			size_t pos;
 			dex::endOfDocumentISR ends;
 		public:
 			
-			const static unsigned npos = unsigned ( -1 );
+			const static size_t npos = size_t ( -1 );
 			ISR( )
 				{
 				}
-			ISR( dex::string word, dex::vector < unsigned > vecIn, dex::endOfDocumentISR endsIn )
+			ISR( dex::string word, dex::vector < size_t > vecIn, dex::endOfDocumentISR endsIn )
 				{
 				this->word = word;
 				internal = vecIn;
@@ -136,7 +136,7 @@ namespace dex
 			// instance, or -1 if there is none.
 			size_t seek( size_t target )
 				{
-				for ( unsigned index = 0;  index < internal.size( );  ++index )
+				for ( size_t index = 0;  index < internal.size( );  ++index )
 					{
 					if ( internal[ index ] >= target )
 						{
@@ -179,7 +179,6 @@ namespace dex
 				return word;
 				}
 		};
-	
 
 	struct matchedDocuments
 		{

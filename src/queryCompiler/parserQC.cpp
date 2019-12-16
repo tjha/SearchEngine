@@ -134,6 +134,8 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 				emphasizedWords.pushBack( stream.emphasizedWords.count( flattenedQuery[ index ] ) );
 			dex::constraintSolver::ISR *matchingDocumentISR = root->eval( );
 
+			root->print( );
+
 			delete root;
 
 			return new dex::matchedDocuments
