@@ -3,8 +3,8 @@
 // 2019-12-15: File created: jasina
 
 #include <cstddef>
-#include "../../src/constraintSolver/constraintSolver.hpp"
-#include "../../src/utils/vector.hpp"
+#include "constraintSolver/constraintSolver.hpp"
+#include "utils/vector.hpp"
 
 class testingEndOfDocumentISR : public dex::constraintSolver::endOfDocumentISR
 	{

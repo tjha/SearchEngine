@@ -7,9 +7,9 @@
 
 #include <cstddef>
 #include "testingISRs.hpp"
-#include "../catch.hpp"
-#include "../../src/constraintSolver/constraintSolver.hpp"
-#include "../../src/utils/vector.hpp"
+#include "catch.hpp"
+#include "constraintSolver/constraintSolver.hpp"
+#include "utils/vector.hpp"
 
 TEST_CASE( "testISRs" )
 	{
