@@ -14,7 +14,7 @@ HOME=/home/ec2-user
 # |  |  |  |  |
 # *  *  *  *  * user-name  command to be executed
 
-* * * * * source $HOME/.bashrc; source $PATH_TO_SEARCH_ENGINE/scripts/cronScript.sh >> $PATH_TO_SEARCH_ENGINE/data/tmp/cronresult.txt
+* * * * * source $HOME/.bashrc; source $PATH_TO_SEARCH_ENGINE/scripts/cronScript.sh > $PATH_TO_SEARCH_ENGINE/data/tmp/cronresult.txt
 
 0 */6 * * * source $HOME/.bashrc; rm $PATH_TO_SEARCH_ENGINE/data/tmp/logs/* >/dev/null 2>&1
 0 */6 * * * source $HOME/.bashrc; rm $PATH_TO_SEARCH_ENGINE/data/tmp/performance/* >/dev/null 2>&1

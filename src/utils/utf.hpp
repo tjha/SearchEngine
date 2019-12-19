@@ -155,6 +155,7 @@ namespace dex
 					}
 			};
 
+		// Assume that strings are ASCII only.
 		template < class T >
 		class encoder < dex::basicString < T > >
 			{
@@ -162,23 +163,17 @@ namespace dex
 				template < class InputIt >
 				InputIt operator( )( const dex::basicString < T > &data, InputIt it ) const
 					{
-					encoder < T > TEncoder;
 					it = encoder< size_t >( )( data.size( ), it );
 					for ( typename dex::basicString < T >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );
-							++dataIt )
-						it = TEncoder( *dataIt, it );
+							*( it++ ) = *( dataIt++ ) );
 					return it;
 					}
 
 				dex::vector < unsigned char > operator( )( const dex::basicString < T > &data ) const
 					{
-					encoder < T > TEncoder;
 					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
 					for ( typename dex::basicString < T >::constIterator it = data.cbegin( );  it != data.cend( );  ++it )
-						{
-						dex::vector < unsigned char > encodedDatum = TEncoder( *it );
-						encodedData.insert( encodedData.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
-						}
+						encodedData.pushBack( static_cast < T >( *it ) );
 					return encodedData;
 					}
 			};
@@ -423,12 +418,12 @@ namespace dex
 				dex::basicString < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					decoder < T, InputIt > TDecoder;
 					dex::basicString < T > decodedData;
 					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					decodedData.reserve( size );
 
-					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
-						decodedData.pushBack( TDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
+					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex, ++*localAdvancedEncoding )
+						decodedData.pushBack( static_cast < T >( **localAdvancedEncoding ) );
 
 					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;

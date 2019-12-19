@@ -199,17 +199,21 @@ namespace dex
 			pageLink.popBack( );
 			}
 		//htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
-		GetLinks( html, isIndex );
-      if ( isIndex )
-         { 
-         lenAnchors = words.size();
-         buildAnchors();
+		//GetLinks( html, isIndex );
+      		if ( isIndex )
+         		{ 
+		         lenAnchors = words.size();
+		         buildAnchors();
          
-         GetTitle( html );
-         buildTitle();
+         		GetTitle( html );
+         		buildTitle();
          
-         GetWords( html );
-         }
+         		GetWords( html );
+         		}
+     		else
+			{
+			GetLinks( html, isIndex );
+			}
 		}
 
 	
@@ -217,11 +221,11 @@ namespace dex
 		{
 		return lenAnchors;
 		}
+
 	vector < dex::Url > HTMLparser::ReturnLinks ( )
 		{
 		return links;
 		}
-
 	vector < string > HTMLparser::ReturnWords ( )
 		{
 		return words;
@@ -231,6 +235,7 @@ namespace dex
 		{
 		return anchors;
 		}
+	
 	vector < string > HTMLparser::ReturnTitle ( )
 		{
 		return title ;

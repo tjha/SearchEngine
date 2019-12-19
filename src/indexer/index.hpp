@@ -13,6 +13,7 @@
 #define DEX_INDEX
 
 #include <cstddef>
+#include "../constraintSolver/constraintSolver.hpp"
 #include "../utils/basicString.hpp"
 #include "../utils/stemming.hpp"
 #include "../utils/unorderedMap.hpp"
@@ -20,6 +21,8 @@
 #include "../utils/utf.hpp"
 #include "../utils/utility.hpp"
 #include "../utils/vector.hpp"
+
+#include <iostream>
 
 namespace dex
 	{
@@ -49,8 +52,8 @@ namespace dex
 						friend class indexChunk;
 						friend class indexStreamReader;
 
-						// Posting list is size 2^16 for now.
-						static const size_t postsChunkSize = 1 << 12;
+						// Posting list is size 2^10 for now.
+						static const size_t postsChunkSize = 1 << 10;
 						byte posts[ postsChunkSize ];
 
 						// This is 0 if they do not "point" to anything meaningful.
@@ -86,9 +89,7 @@ namespace dex
 
 							size_t postsChunkArrayOffset;
 							size_t postsChunkOffset;
-							size_t location;
-
-							synchronizationPoint( );
+							size_t inverseLocation;
 							};
 						// First 32 bits of each long long form the seek offset in posting. The last 32 bits are actual
 						// location of that post. We use a long long since it is (practically) guaranteed to be 64 bits.
@@ -118,24 +119,23 @@ namespace dex
 					friend class dex::utf::encoder;
 					};
 
-				private:
 				// These consts can be adjusted if necessary.
 				static const size_t maxURLCount = 1L << 17;
 				static const size_t maxURLLength = 1L << 10;
 				static const size_t maxTitleLength = 1 << 10;
 				static const size_t maxWordLength = 64;
-				static const size_t postsChunkArraySize = 1L << 26;
-				static const size_t postsMetadataArraySize = 1L << 25;
+				static const size_t postsChunkArraySize = 1L << 19;
+				static const size_t postsMetadataArraySize = 1L << 19;
 
 				// TODO: Double check these very carefully.
 				// Note: these sizes should be such that they are block-aligned. The required offest for block alignment
 				// is surrounded by parentheses.
-				static const size_t endOfDocumentMetadataTypeMemorySize = 2 * sizeof( size_t )
+				static const size_t endOfDocumentMetadataTypeMemorySize = 7 + ( 1 ) + 7 + ( 1 )
 						+ ( 7 + maxURLLength + ( 1 ) )
-						+ ( 7 + maxTitleLength + ( 1 ) ) + sizeof( unsigned );
-				static const size_t urlsToOffsetsMemorySize = 7 + maxURLCount * ( 7 + maxURLLength + ( 1 ) ) + ( 1 );
+						+ ( 7 + maxTitleLength + ( 1 ) );
+				static const size_t urlsToOffsetsMemorySize = 7 + maxURLCount * ( 7 + maxURLLength + ( 1 ) + 7 + ( 1 ) ) + ( 1 );
 				static const size_t offsetsToEndOfDocumentMetadatasMemorySize =
-						7 + maxURLCount * endOfDocumentMetadataTypeMemorySize + ( 1 );
+						7 + maxURLCount * ( 7 + endOfDocumentMetadataTypeMemorySize + ( 1 ) ) + ( 1 );
 				static const size_t dictionaryMemorySize = 7
 						+ ( 7 + maxWordLength + 7 + ( 2 ) ) * postsMetadataArraySize + ( 1 );
 				static const size_t postsMetadataArrayMemorySize = postsMetadataArraySize * sizeof( postsMetadata );
@@ -143,13 +143,13 @@ namespace dex
 
 				static const size_t urlsToOffsetsMemoryOffset = 200;
 				static const size_t offsetsToEndOfDocumentMetadatasMemoryOffset =
-						urlsToOffsetsMemoryOffset + urlsToOffsetsMemorySize;
+						urlsToOffsetsMemoryOffset + 2 * urlsToOffsetsMemorySize;
 				static const size_t dictionaryOffset =
-						offsetsToEndOfDocumentMetadatasMemoryOffset + offsetsToEndOfDocumentMetadatasMemorySize;
-				static const size_t postsMetadataArrayMemoryOffset = dictionaryOffset + dictionaryMemorySize;
+						offsetsToEndOfDocumentMetadatasMemoryOffset + 2 * offsetsToEndOfDocumentMetadatasMemorySize;
+				static const size_t postsMetadataArrayMemoryOffset = dictionaryOffset + 2 * dictionaryMemorySize;
 				static const size_t postsChunkArrayMemoryOffset =
-						postsMetadataArrayMemoryOffset + postsMetadataArrayMemorySize;
-				static const size_t fileSize = postsChunkArrayMemoryOffset + postsChunkArrayMemorySize;
+						postsMetadataArrayMemoryOffset + 2 * postsMetadataArrayMemorySize;
+				static const size_t fileSize = postsChunkArrayMemoryOffset + 2 * postsChunkArrayMemorySize;
 
 				// Our mmaped file.
 				void *filePointer;
@@ -192,15 +192,18 @@ namespace dex
 
 					for ( ;  first != last;  ++first, ++newLocation )
 						{
-						string wordToAdd = decorator + dex::porterStemmer::stem( *first );
+						// std::cout << "About to stem: ->" << *first << "<-\n";
+						string wordToAdd = dex::porterStemmer::stem( *first );
+						string decoratedWordToAdd = decorator + wordToAdd;
 
 						if ( wordToAdd.size( ) > maxWordLength )
 							continue;
 
 						postsMetadata *wordMetadata = nullptr;
-						if ( !dictionary.count( wordToAdd ) && !newWords.count( wordToAdd ) )
+						if ( !dictionary.count( decoratedWordToAdd ) && !newWords.count( decoratedWordToAdd ) )
 							{
-							if ( dictionary.size( ) == postsMetadataArraySize || *postsChunkCount == postsChunkArraySize )
+							if ( dictionary.size( ) + newWords.size( ) >= postsMetadataArraySize
+									|| *postsChunkCount >= postsChunkArraySize )
 								return false;
 
 							// Add a new postsMetaData.
@@ -210,31 +213,41 @@ namespace dex
 
 							// Add a new postsChunk
 							size_t newPostsChunkOffset = ( *postsChunkCount )++;
+							// std::cout << "postsChunkCount: " << *postsChunkCount << "\n";
 							postsChunkArray[ newPostsChunkOffset ] = postsChunk( );
 							wordMetadata->firstPostsChunkOffset = newPostsChunkOffset;
 
-							newWords[ wordToAdd ] = newWordIndex;
+							newWords[ decoratedWordToAdd ] = newWordIndex;
 							}
 						else
 							{
-							if ( dictionary.count( wordToAdd ) )
-								wordMetadata = &postsMetadataArray[ dictionary[ wordToAdd ] ];
+							if ( dictionary.count( decoratedWordToAdd ) )
+								{
+								wordMetadata = &postsMetadataArray[ dictionary[ decoratedWordToAdd ] ];
+								if ( dictionary[ decoratedWordToAdd ] > postsMetadataArraySize )
+									std::cout << "dictionary[ " << decoratedWordToAdd << " ]: " << dictionary[ decoratedWordToAdd ] << "\n";
+								}
 							else
-								wordMetadata = &postsMetadataArray[ newWords[ wordToAdd ] ];
+								{
+								wordMetadata = &postsMetadataArray[ newWords[ decoratedWordToAdd ] ];
+								if ( newWords[ decoratedWordToAdd ] > postsMetadataArraySize )
+									std::cout << "newWords[ " << decoratedWordToAdd << " ]: " << newWords[ decoratedWordToAdd ] << "\n";
+								}
 							}
 
 						// This loop will exectue at most once, unless things go terribly wrong somehow.
 						while ( !wordMetadata->append( newLocation, postsChunkArray ) )
 							{
-							if ( *postsChunkCount == postsChunkArraySize )
+							if ( *postsChunkCount >= postsChunkArraySize )
 								return false;
 
 							postsChunkArray[ wordMetadata->lastPostsChunkOffset ].nextPostsChunkOffset = *postsChunkCount;
 							postsChunkArray[ *postsChunkCount ] = postsChunk( );
 							wordMetadata->lastPostsChunkOffset = ( *postsChunkCount )++;
+							// std::cout << "new LastPostsChunkOffset: " << *postsChunkCount << "\n";
 							}
 
-						postsMetadataChanges[ wordToAdd ]++;
+						++postsMetadataChanges[ wordToAdd ];
 						}
 
 					// Copy over newWords into dict.
@@ -251,7 +264,7 @@ namespace dex
 				bool addDocument( const dex::string &url, const dex::vector < dex::string > &title,
 						const dex::string &titleString, const dex::vector < dex::string > &body );
 
-				class indexStreamReader
+				class indexStreamReader : public dex::constraintSolver::ISR
 					{
 					private:
 						friend class indexChunk;
@@ -259,29 +272,33 @@ namespace dex
 						static const size_t npos = static_cast < size_t >( -1 );
 
 						byte *post;
-						byte *documentPost;
 						postsMetadata *postsMetadatum;
 						postsChunk *postsChunkum; // Bad naming to disambiguate chunk types
 						indexChunk *indexChunkum;
 						size_t absoluteLocation;
-						// For a word, will want
-						// 	the word (string)
-						// 	current postsChunk
-						// 	offset into the indexChunk where the current pointer is
 
 					public:
 						// An ISR for the empty string is just and end of document ISR.
-						indexStreamReader( indexChunk *indexChunk, dex::string word = "" );
+						indexStreamReader( indexChunk *chunk, dex::string word = "" );
 						size_t seek( size_t target );
 						size_t next( );
-						size_t nextDocument( );	// This is called on a set of indexStream readers. It sets them all to their
-						// 	first occurences past the end of the current document
-
-						// size_t GetStartLocation( ); ??
-						// size_t GetEndLocation( ); ??
+						size_t nextDocument( );
 
 						// Need functions to get metadata for a word for entire posting list
 						// 	and for in the current document
+					};
+
+				class endOfDocumentIndexStreamReader
+						: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
+					{
+					private:
+						//indexChunk *chunk;
+					public:
+						endOfDocumentIndexStreamReader( indexChunk *chunk, dex::string );
+						size_t seek( size_t target );
+						size_t next( );
+						size_t nextDocument( );
+						size_t documentSize( );
 					};
 			};
 		}
@@ -342,5 +359,4 @@ namespace dex
 			};
 		}
 	}
-
 #endif

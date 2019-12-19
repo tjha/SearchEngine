@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+	 <script type="text/javascript">
+     var myBoolean = false;
+     function searchResults(){
+       window.location.href = "/results.html?query=" + document.getElementsByClassName("searchTerm")[0].value + "&toggle=" + myBoolean.toString();
+     };                                                                         
+     function toggleBoolean() {                                                 
+         myBoolean = !myBoolean;                                                
+     }                                                                          
+     function searchResults2() {
+       window.location.href = "/results.html?query=" + document.getElementsByClassName("searchTerm")[0].value + "&toggle=" + myBoolean.toString();
+     };                                                                         
+   </script>
+        
+    <title>Team Socket Search</title>                            
+    </head>                 
+    
+    <body>                                                       
+        <div id="result_page" class="leftIndent">
+            <div id="search_bar" class="searchBarResultsPageWrap">
+                <div class="search" action="/results.html">
+			<input type="text" class="searchTerm" placeholder="" onKeyDown="if(event.keyCode==13) searchResults2();">
+			<div class="toggle">
+                    <input type="checkbox" class="check" onclick="toggleBoolean();">
+                    <b class="b switch"></b>
+                    <b class="b track"></b>
+                </div>
+            <button type="submit" class="searchButton" onclick="searchResults2();">
+			Search
+		  </button>
+		</div>
+            </div>
+            <div id="search_results">
+                <b>Results</b>
+                <ul style="list-style-type: none" class="results">
+                </ul>
+            </div>
+        </div>
+    </body>
+                                                                                
+</html>

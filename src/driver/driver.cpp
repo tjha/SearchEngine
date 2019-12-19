@@ -22,11 +22,13 @@
 #include "frontier.hpp"
 #include "checkpointing.hpp"
 #include "parser.hpp"
+#include "robots.hpp"
 #include <time.h>
 #include <signal.h>
 #include <iostream>
 #include <pthread.h>
 
+const dex::string dex::RobotTxt::userAgent = "jhirshey@umich.edu (Linux)";
 //dex::string savePath = "/home/ec2-user/socket-html/";
 dex::string savePath = "../socket-html/";
 dex::string dataPath = "data/";
@@ -293,16 +295,12 @@ void *worker( void *args )
 			}
 
 		int errorCode = dex::crawler::crawlUrl( toCrawl, result, robotsCache );
-		addToCrawled( toCrawl );
 		log( name + ": crawled domain: " + toCrawl.completeUrl( ) + " error code: " + dex::toString( errorCode ) + "\n" );
 		// If we get a response from the url, nice. We've hit an endpoint that gives us some HTML.
 		if ( errorCode == 0 || errorCode == dex::NOT_HTML )
 			{
 			if ( errorCode == dex::NOT_HTML )
-				{
 				print( toCrawl.completeUrl( ) + " is not html " );
-				}
-				
 
 			if ( errorCode == 0 )
 				{
@@ -319,6 +317,8 @@ void *worker( void *args )
 				pthread_mutex_lock( &crawledLinksLock );
 				numCrawledLinks++;
 				pthread_mutex_unlock( &crawledLinksLock );
+
+				addToCrawled( toCrawl );
 
 				
 				dex::vector < dex::Url > links;
@@ -403,6 +403,7 @@ void *worker( void *args )
 		// This link doesn't lead anywhere, we need to add it to our broken links
 		if ( errorCode >= 400 || errorCode == dex::DISALLOWED_ERROR || errorCode == dex::RESPONSE_TOO_LARGE )
 			{
+			addToCrawled( toCrawl );
 			}
 		}
 	return nullptr;

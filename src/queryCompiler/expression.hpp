@@ -1,0 +1,127 @@
+// expression.hpp
+//
+// 2019-12-15: Done (Desperate times): jasina, medhak
+
+#ifndef DEX_EXPRESSION
+#define DEX_EXPRESSION
+
+#include "../constraintSolver/constraintSolver.hpp"
+#include "../indexer/index.hpp"
+#include "../utils/basicString.hpp"
+#include "../utils/utility.hpp"
+#include "../utils/vector.hpp"
+#include <iostream>
+
+namespace dex
+	{
+	namespace queryCompiler
+		{
+		class expression
+			{
+			public:
+				virtual ~expression( );
+				virtual dex::constraintSolver::ISR *eval( ) const = 0;
+				virtual dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const = 0;
+				virtual void print( size_t depth = 0 ) const = 0;
+			};
+
+		inline dex::index::indexChunk::endOfDocumentIndexStreamReader *getEndOfDocumentISR( dex::index::indexChunk *chunk )
+			{
+			return new dex::index::indexChunk::endOfDocumentIndexStreamReader( chunk, "" );
+			}
+
+		class notExpression: public expression
+			{
+			public:
+				expression *value;
+				dex::index::indexChunk *chunk;
+				notExpression( expression *value, dex::index::indexChunk *chunk );
+				~notExpression( );
+				dex::constraintSolver::ISR *eval( ) const override;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
+				void print( size_t depth = 0 ) const override
+					{
+					for ( size_t i = 0;  i != depth;  ++i )
+						std::cout << '\t';
+					std::cout << "NOT" << std::endl;
+					if ( value )
+						value->print( depth + 1 );
+					}
+			};
+
+		class orExpression: public expression
+			{
+			public:
+				dex::vector < expression * > terms;
+				dex::index::indexChunk *chunk;
+				orExpression( dex::index::indexChunk *chunk );
+				~orExpression( );
+				dex::constraintSolver::ISR *eval( ) const override;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
+				void print( size_t depth = 0 ) const override
+					{
+					for ( size_t i = 0;  i != depth;  ++i )
+						std::cout << '\t';
+					std::cout << "OR" << std::endl;
+					for ( size_t index = 0;  index != terms.size( );  ++index )
+						terms[ index ]->print( depth + 1 );
+					}
+			};
+
+		class andExpression: public expression
+			{
+			public:
+				dex::vector < expression * > terms;
+				dex::index::indexChunk *chunk;
+				andExpression( dex::index::indexChunk *chunk );
+				~andExpression( );
+				dex::constraintSolver::ISR *eval( ) const override;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
+				void print( size_t depth = 0 ) const override
+					{
+					for ( size_t i = 0;  i != depth;  ++i )
+						std::cout << '\t';
+					std::cout << "OR" << std::endl;
+					for ( size_t index = 0;  index != terms.size( );  ++index )
+						terms[ index ]->print( depth + 1 );
+					}
+			};
+
+		class phraseExpression : public expression
+			{
+			public:
+				dex::vector < expression * > terms;
+				dex::index::indexChunk *chunk;
+				phraseExpression( dex::index::indexChunk *chunk );
+				~phraseExpression( );
+				dex::constraintSolver::ISR *eval( ) const override;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
+				void print( size_t depth = 0 ) const override
+					{
+					for ( size_t i = 0;  i != depth;  ++i )
+						std::cout << '\t';
+					std::cout << "OR" << std::endl;
+					for ( size_t index = 0;  index != terms.size( );  ++index )
+						terms[ index ]->print( depth + 1 );
+					}
+			};
+
+		class word: public expression
+			{
+			public:
+				dex::string str;
+				dex::index::indexChunk *chunk;
+				word( dex::string str, dex::index::indexChunk *chunk );
+				dex::constraintSolver::ISR *eval( ) const override;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
+				void print( size_t depth = 0 ) const override
+					{
+					for ( size_t i = 0;  i != depth;  ++i )
+						std::cout << '\t';
+					std::cout << '[' << str << ']' << std::endl;
+					}
+			};
+		}
+	}
+
+#endif

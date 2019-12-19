@@ -1111,7 +1111,7 @@ namespace dex
 
 	typedef dex::basicString < char > string;
 
-	string toString( long i )
+	inline string toString( long i )
 		{
 		if ( i == 0 )
 			return "0";
@@ -1131,7 +1131,7 @@ namespace dex
 		return string( toReturn.rbegin( ), toReturn.rend( ) );
 		}
 
-	int stoi( string s )
+	inline int stoi( string s )
 		{
 		int toRet = 0;
 		int base = 1;
@@ -1148,7 +1148,7 @@ namespace dex
 		}
 
 	// To be used for case insensitive finding
-	string toLower( string s )
+	inline string toLower( string s )
 		{
 		string toReturn;
 		toReturn.reserve( s.size( ) );
@@ -1163,6 +1163,26 @@ namespace dex
 		}
 
 	template < > struct hash < dex::string >
+		{
+		private:
+			static const unsigned long prime = 16777619;
+			static const unsigned long offsetBasis = 2166136261;
+		public:
+			unsigned long operator( )( const dex::string &str ) const
+				{
+				// Compute hash using FNV-1a algorithm
+				unsigned long hash = offsetBasis;
+				for ( size_t index = 0;  index != str.length( );  ++index )
+					hash = ( hash ^ str[ index ] ) * prime;
+
+				// Constrain our hash to 32 bits
+				hash &= 0xFFFFFFFF;
+
+				return hash;
+				}
+		};
+
+	template < > struct hash < const dex::string >
 		{
 		private:
 			static const unsigned long prime = 16777619;

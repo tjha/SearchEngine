@@ -18,7 +18,7 @@ endif
 SRC_PATH = src
 TEST_PATH = tst
 BUILD_PATH = build
-INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/crawler/ -I $(SRC_PATH)/indexer/ -I $(TEST_PATH) $(LDFLAGS) $(CPPFLAGS)
+INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/crawler/ -I $(SRC_PATH)/indexer/ -I $(SRC_PATH)/driver/ -I $(SRC_PATH)/ranker/ -I $(SRC_PATH)/constraintSolver/ -I $(SRC_PATH)/queryCompiler/ -I $(TEST_PATH) $(LDFLAGS) $(CPPFLAGS)
 
 TEST_SOURCES := $(wildcard $(TEST_PATH)/*/*.cpp)
 TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(TEST_SOURCES))
@@ -30,13 +30,29 @@ MODULE_TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,
 
 all: print_os $(TESTS)
 
-driver: src/driver/driver.cpp
+crawlerDriver: src/driver/driver.cpp
 	make build
-	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -o3 -o $(BUILD_PATH)/driver.exe
+	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/driver.exe
+
+chunkTest: src/frontend/testChunks.cpp
+	make build
+	$(CXX) $(CXXFLAGS) src/frontend/testChunks.cpp src/indexer/index.cpp src/constraintSolver/constraintSolver.cpp src/queryCompiler/parserQC.cpp src/queryCompiler/expression.cpp src/queryCompiler/tokenstream.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/chunkDriver.exe
+
+indexerDriver: src/indexer/driver.cpp src/indexer/index.cpp
+	make build
+	$(CXX) $(CXXFLAGS) src/indexer/driver.cpp src/indexer/index.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/indexerDriver.exe
+
+indexerEncodingTest: tst/indexer/indexerEncodingTests.cpp
+	make build
+	$(CXX) $(CXXFLAGS) tst/indexer/indexerEncodingTests.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/encodingTests.exe
+
+indexerTest: tst/indexer/indexTests.cpp
+	make build
+	$(CXX) $(CXXFLAGS) tst/indexer/indexTests.cpp $(INCLUDES) tst/main.cpp -O3 -o $(BUILD_PATH)/indexTests.exe
 
 driverFinal: src/driver/driver.cpp
 	make build
-	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -o3 $(BUILD_PATH)/driver.exe
+	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -O3 $(BUILD_PATH)/driver.exe
 
 multithreadingTest: src/driver/multithreadingTest.cpp
 	$(CXX) $(CXXFLAGS) src/driver/multithreadingTest.cpp $(INCLUDES) -ltls -o build/multithreadingTest.exe
