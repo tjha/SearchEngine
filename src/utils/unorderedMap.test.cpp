@@ -6,9 +6,9 @@
 // 2019-10-26: file created, constructors, assignment, element access, element removal: jasina
 
 #include "catch.hpp"
-#include "basicString.hpp"
-#include "exception.hpp"
-#include "unorderedMap.hpp"
+#include "utils/basicString.hpp"
+#include "utils/exception.hpp"
+#include "utils/unorderedMap.hpp"
 
 using dex::string;
 using dex::unorderedMap;

@@ -5,11 +5,11 @@
 // 2019-11-20: add appendToFile tests: combsc
 // 2019-11-2: Initial Commit: combsc
 
-#include "catch.hpp"
-#include "file.hpp"
-#include "basicString.hpp"
-#include "vector.hpp"
 #include <iostream>
+#include "catch.hpp"
+#include "utils/basicString.hpp"
+#include "utils/file.hpp"
+#include "utils/vector.hpp"
 
 TEST_CASE( "write to file", "[file]")
 	{
@@ -65,18 +65,18 @@ TEST_CASE( "gether matching Filenames", "[file]" )
 	{
 	SECTION ( "test with slash" )
 		{
-		dex::string directory = "./tst/utils/fileTestsFolder/"; // Top Directory of SearchEngine
+		dex::string directory = "./src/utils/fileTestsFolder/"; // Top Directory of SearchEngine
 		dex::string pattern = ".cpp";
 		dex::vector< dex::string > filenames = dex::matchingFilenames( directory, pattern );
 
 		dex::unorderedSet< dex::string > correct;
-		correct.insert("./tst/utils/fileTestsFolder/1.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/2.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/3.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/alpha/4.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/alpha/5.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/beta/6.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/beta/delta/7.cpp");
+		correct.insert("./src/utils/fileTestsFolder/1.cpp");
+		correct.insert("./src/utils/fileTestsFolder/2.cpp");
+		correct.insert("./src/utils/fileTestsFolder/3.cpp");
+		correct.insert("./src/utils/fileTestsFolder/alpha/4.cpp");
+		correct.insert("./src/utils/fileTestsFolder/alpha/5.cpp");
+		correct.insert("./src/utils/fileTestsFolder/beta/6.cpp");
+		correct.insert("./src/utils/fileTestsFolder/beta/delta/7.cpp");
 		REQUIRE( filenames.size( ) == correct.size( ) );
 		for ( size_t i = 0; i < filenames.size( ); i++ )
 			REQUIRE( correct.count( filenames[ i ] ) == 1 );
@@ -84,18 +84,18 @@ TEST_CASE( "gether matching Filenames", "[file]" )
 
 	SECTION ( "test with no slash" )
 		{
-		dex::string directory = "./tst/utils/fileTestsFolder"; // Top Directory of SearchEngine
+		dex::string directory = "./src/utils/fileTestsFolder"; // Top Directory of SearchEngine
 		dex::string pattern = ".cpp";
 		dex::vector< dex::string > filenames = dex::matchingFilenames( directory, pattern );
 
 		dex::unorderedSet< dex::string > correct;
-		correct.insert("./tst/utils/fileTestsFolder/1.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/2.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/3.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/alpha/4.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/alpha/5.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/beta/6.cpp");
-		correct.insert("./tst/utils/fileTestsFolder/beta/delta/7.cpp");
+		correct.insert("./src/utils/fileTestsFolder/1.cpp");
+		correct.insert("./src/utils/fileTestsFolder/2.cpp");
+		correct.insert("./src/utils/fileTestsFolder/3.cpp");
+		correct.insert("./src/utils/fileTestsFolder/alpha/4.cpp");
+		correct.insert("./src/utils/fileTestsFolder/alpha/5.cpp");
+		correct.insert("./src/utils/fileTestsFolder/beta/6.cpp");
+		correct.insert("./src/utils/fileTestsFolder/beta/delta/7.cpp");
 		REQUIRE( filenames.size( ) == correct.size( ) );
 		for ( size_t i = 0; i < filenames.size( ); i++ )
 			REQUIRE( correct.count( filenames[ i ] ) == 1 );

@@ -8,11 +8,11 @@
 #ifndef DEX_ENCODE
 #define DEX_ENCODE
 
-#include "exception.hpp"
-#include "vector.hpp"
-#include "basicString.hpp"
-#include "../src/crawler/robots.hpp"
-#include "../src/crawler/url.hpp"
+#include "crawler/robots.hpp"
+#include "crawler/url.hpp"
+#include "utils/exception.hpp"
+#include "utils/vector.hpp"
+#include "utils/basicString.hpp"
 
 namespace dex
 	{

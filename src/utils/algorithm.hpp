@@ -1,7 +1,7 @@
 // algorithm.hpp
 // Artisan crafted version of <algorithm> that keeps all of the interfaces.
 //
-// 2019-11-18: Add lower_bound: lougheem
+// 2019-11-18: Add lowerBound: lougheem
 // 2019-10-27: Fix lexicographicalCompare return statement: jasina
 // 2019-10-24: Add lexicographicalCompare: jasina
 // 2019-10-17: Disambiguate call to search, add include guard: jasina
@@ -114,7 +114,7 @@ namespace dex
 		}
 
 	template < class ForwardIt, class T >
-	ForwardIt lower_bound( ForwardIt first, ForwardIt last, const T &value )
+	ForwardIt lowerBound( ForwardIt first, ForwardIt last, const T &value )
 		{
 		size_t rangeHigh = 0, rangeLow = 0;
 		ForwardIt firstCopy = first;
@@ -126,7 +126,7 @@ namespace dex
 			size_t rangeMid = rangeLow + ( rangeHigh - rangeLow ) / 2;
 			if ( *( first + rangeMid ) < value )
 				rangeLow = rangeMid + 1;
-			else 
+			else
 				rangeHigh = rangeMid;
 			}
 		return first + rangeLow;

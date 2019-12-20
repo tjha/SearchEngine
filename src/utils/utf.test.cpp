@@ -6,12 +6,12 @@
 // 2019-11-03: File created: jasina, lougheem
 
 #include "catch.hpp"
-#include "../src/utils/exception.hpp"
-#include "../src/utils/unorderedMap.hpp"
-#include "../src/utils/unorderedSet.hpp"
-#include "../src/utils/utf.hpp"
-#include "../src/utils/vector.hpp"
 #include <iostream>
+#include "utils/exception.hpp"
+#include "utils/unorderedMap.hpp"
+#include "utils/unorderedSet.hpp"
+#include "utils/utf.hpp"
+#include "utils/vector.hpp"
 
 using namespace dex;
 using namespace dex::utf;

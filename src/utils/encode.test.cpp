@@ -4,14 +4,14 @@
 // 2019-12-01: Vector encode/decode tests: jhirsh
 // 2019-11-20: File created and testing integer encode: jhirsh
 
-#include "catch.hpp"
-#include "exception.hpp"
-#include "unorderedMap.hpp"
-#include "vector.hpp"
-#include "encode.hpp"
-#include "basicString.hpp"
-#include "url.hpp"
 #include <iostream>
+#include "catch.hpp"
+#include "crawler/url.hpp"
+#include "utils/basicString.hpp"
+#include "utils/encode.hpp"
+#include "utils/exception.hpp"
+#include "utils/unorderedMap.hpp"
+#include "utils/vector.hpp"
 
 using namespace dex;
 using namespace dex::encode;

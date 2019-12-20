@@ -1,21 +1,21 @@
 // algorithmTests.cpp
 // Testing for the algorithm library
 //
-// 2019-11-18: Add lower_bound tests: lougheem
+// 2019-11-18: Add lowerBound tests: lougheem
 // 2019-10-24: Add lexicographicalCompare tests: jasina
 // 2019-10-17: Get tests to all compile and pass: jasina
 // 2019-10-13: Write copy, fill, find, search, and findEnd tests: jasina
 // 2019-9-19: Write min and max tests: combsc
 
 #include "catch.hpp"
-#include "algorithm.hpp"
-#include <vector>
+#include "utils/algorithm.hpp"
+#include "utils/vector.hpp"
 
 TEST_CASE( "test find" )
 	{
-	std::vector < int > a;
+	dex::vector < int > a;
 	for ( int i = 0;  i != 10;  ++i )
-		a.push_back( i );
+		a.pushBack( i );
 	REQUIRE( dex::find( a.begin( ), a.end( ), 0) == a.begin( ) );
 	REQUIRE( dex::find( a.begin( ), a.end( ), 4) == a.begin( ) + 4 );
 	REQUIRE( dex::find( a.begin( ), a.end( ), 9) == a.begin( ) + 9 );
@@ -24,64 +24,64 @@ TEST_CASE( "test find" )
 
 TEST_CASE( "test search" )
 	{
-	std::vector < int > a, b;
+	dex::vector < int > a, b;
 	for ( int i = 0;  i != 10;  ++i )
-		a.push_back( i % 5 );
+		a.pushBack( i % 5 );
 
 	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) );
 
-	b.push_back(0);
-	b.push_back(1);
-	b.push_back(2);
+	b.pushBack(0);
+	b.pushBack(1);
+	b.pushBack(2);
 	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) );
 
-	b.push_back(4);
+	b.pushBack(4);
 	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
 
 	b.clear( );
-	b.push_back(1);
-	b.push_back(2);
+	b.pushBack(1);
+	b.pushBack(2);
 	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) + 1 );
 
 	b.clear( );
 	for ( int i = 0;  i != 11;  ++i )
-		b.push_back( i );
+		b.pushBack( i );
 	REQUIRE( dex::search( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
 	}
 
 TEST_CASE( "test findEnd" )
 	{
-	std::vector < int > a, b;
+	dex::vector < int > a, b;
 	for ( int i = 0;  i != 10;  ++i )
-		a.push_back( i % 5 );
+		a.pushBack( i % 5 );
 
 	REQUIRE( dex::findEnd( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
 
-	b.push_back(0);
-	b.push_back(1);
-	b.push_back(2);
+	b.pushBack(0);
+	b.pushBack(1);
+	b.pushBack(2);
 	REQUIRE( dex::findEnd( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) + 5 );
 
-	b.push_back(4);
+	b.pushBack(4);
 	REQUIRE( dex::findEnd( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
 
 	b.clear( );
-	b.push_back(1);
-	b.push_back(2);
+	b.pushBack(1);
+	b.pushBack(2);
 	REQUIRE( dex::findEnd( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.begin( ) + 6 );
 
 	b.clear( );
 	for ( int i = 0;  i != 11;  ++i )
-		b.push_back( i );
+		b.pushBack( i );
 	REQUIRE( dex::findEnd( a.begin( ), a.end( ), b.begin( ), b.end( ) ) == a.end( ) );
 	}
 
 TEST_CASE( "test copy" )
 	{
-	std::vector < int > a, b;
+	dex::vector < int > a, b;
 	b.resize( 20 );
 	for ( int i = 0;  i != 10;  ++i )
-		a.push_back( i );
+		a.pushBack( i );
 	auto copyPoint = dex::copy( a.cbegin(), a.cend(), b.begin() );
 	for ( int i = 0;  i != 10;  ++i )
 		REQUIRE( b[i] == a[i] );
@@ -100,9 +100,9 @@ TEST_CASE( "test copy" )
 
 TEST_CASE( "test fill" )
 	{
-	std::vector < int > a;
+	dex::vector < int > a;
 	for ( int i = 0;  i != 10;  ++i )
-		a.push_back( i );
+		a.pushBack( i );
 	dex::fill( a.begin( ), a.end( ), 489 );
 	for ( int i = 0;  i != 10;  ++i )
 		REQUIRE( a[i] == 489 );
@@ -113,7 +113,7 @@ TEST_CASE( "test min and max" )
 	REQUIRE( dex::min(10, 15) == 10 );
 	REQUIRE( dex::min(15, 10) == 10 );
 	REQUIRE( dex::min(unsigned(-1), unsigned(10)) == unsigned(10) );
-	
+
 	REQUIRE( dex::max(10, 15) == 15 );
 	REQUIRE( dex::max(15, 10) == 15 );
 	REQUIRE( dex::max(unsigned(-1), unsigned(10)) == unsigned(-1) );
@@ -130,11 +130,11 @@ TEST_CASE( "test swap" )
 
 TEST_CASE( "test lexicographical compare" )
 	{
-	std::vector < int > a, b;
+	dex::vector < int > a, b;
 	for ( int i = 0;  i != 10;  ++i )
-		a.push_back( i % 5 );
+		a.pushBack( i % 5 );
 	for ( int i = 0;  i != 10;  ++i )
-		b.push_back( i );
+		b.pushBack( i );
 
 	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.end( ), b.begin( ), b.end( ) ) < 0 );
 	REQUIRE( dex::lexicographicalCompare( b.begin( ), b.end( ), a.begin( ), a.end( ) ) > 0 );
@@ -152,24 +152,24 @@ TEST_CASE( "test lexicographical compare" )
 	REQUIRE( dex::lexicographicalCompare( a.begin( ), a.begin( ), a.end( ), a.end( ) ) == 0 );
 	}
 
-TEST_CASE( "test lower_bound" )
+TEST_CASE( "test lowerBound" )
 	{
-	std::vector < int > a, b, c;
+	dex::vector < int > a, b, c;
 	for ( int number = 0;  number < 30;  ++number )
 		{
-		a.push_back( number );
-		b.push_back( 100 + number );
-		c.push_back( number );
-		c.push_back( number );
+		a.pushBack( number );
+		b.pushBack( 100 + number );
+		c.pushBack( number );
+		c.pushBack( number );
 		}
 
-	REQUIRE( *dex::lower_bound( a.begin( ), a.end( ), 5 ) == 5 );
-	REQUIRE( *dex::lower_bound( a.begin( ), a.end( ), 3 ) == 3 );
+	REQUIRE( *dex::lowerBound( a.begin( ), a.end( ), 5 ) == 5 );
+	REQUIRE( *dex::lowerBound( a.begin( ), a.end( ), 3 ) == 3 );
 	for ( int number = 0;  number < 10;  ++number )
 		{
-		REQUIRE( *dex::lower_bound( a.begin( ), a.end( ), number ) == number );
-		REQUIRE( *dex::lower_bound( b.begin( ), b.end( ), 100 + number ) == 100 + number );
-		REQUIRE( *dex::lower_bound( c.begin( ), c.end( ), number) == number );
-		REQUIRE( *( 1 + dex::lower_bound( c.begin( ), c.end( ), number ) ) == number );
+		REQUIRE( *dex::lowerBound( a.begin( ), a.end( ), number ) == number );
+		REQUIRE( *dex::lowerBound( b.begin( ), b.end( ), 100 + number ) == 100 + number );
+		REQUIRE( *dex::lowerBound( c.begin( ), c.end( ), number) == number );
+		REQUIRE( *( dex::lowerBound( c.begin( ), c.end( ), number ) + 1 ) == number );
 		}
 	}

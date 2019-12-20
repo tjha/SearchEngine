@@ -3,11 +3,11 @@
 
 // 2019-11-29: Init Commit
 
-#include "catch.hpp"
-#include "sharedReaderLock.hpp"
-#include <unistd.h>
 #include <iostream>
 #include <pthread.h>
+#include <unistd.h>
+#include "catch.hpp"
+#include "utils/sharedReaderLock.hpp"
 
 const size_t length = 1000000;
 
@@ -66,13 +66,13 @@ void *write( void * arg )
 
 TEST_CASE( "Shared", "[shared]" )
 	{
-	
+
 	char arr [ length ];
 	pthread_t readers [ 6 ];
 	pthread_t writers [ 2 ];
 	dex::sharedReaderLock m;
 	struct readStruct st;
-	
+
 	for ( size_t i = 0;  i < length;  ++i )
 		{
 		arr[ i ] = 'a';

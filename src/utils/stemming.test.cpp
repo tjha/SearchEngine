@@ -5,9 +5,9 @@
 // 2019-11-04: File created: jasina
 
 #include "catch.hpp"
-#include "../src/utils/basicString.hpp"
-#include "../src/utils/stemming.hpp"
-#include "../src/utils/vector.hpp"
+#include "utils/basicString.hpp"
+#include "utils/stemming.hpp"
+#include "utils/vector.hpp"
 
 using namespace dex;
 TEST_CASE( "test stems", "[stemmer]" )

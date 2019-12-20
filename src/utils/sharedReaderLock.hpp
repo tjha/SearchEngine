@@ -4,8 +4,8 @@
 // 2019-12-04: Changed signal to cv: combsc
 // 2019-11-29: Init Commit: combsc
 
-#ifndef SHARED_READER_LOCK_HPP
-#define SHARED_READER_LOCK_HPP
+#ifndef DEX_SHARED_READER_LOCK
+#define DEX_SHARED_READER_LOCK
 
 #include <pthread.h>
 
@@ -19,7 +19,7 @@ namespace dex
 
 			pthread_mutex_t readingLock;
 			pthread_cond_t cv;
-			
+
 
 		public:
 			sharedReaderLock( )
