@@ -5,11 +5,11 @@
 #ifndef DEX_TOKENSTREAM
 #define DEX_TOKENSTREAM
 
-#include "expression.hpp"
-#include "../constraintSolver/constraintSolver.hpp"
-#include "../indexer/index.hpp"
-#include "../utils/basicString.hpp"
-#include "../utils/unorderedSet.hpp"
+#include "constraintSolver/constraintSolver.hpp"
+#include "indexer/index.hpp"
+#include "queryCompiler/expression.hpp"
+#include "utils/basicString.hpp"
+#include "utils/unorderedSet.hpp"
 
 namespace dex
 	{

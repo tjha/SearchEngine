@@ -2,13 +2,14 @@
 //
 // 2019-12-15: File created
 
-#include "../catch.hpp"
-#include "../constraintSolver/testingISRs.hpp"
-#include "../../src/queryCompiler/expression.hpp"
-#include "../../src/queryCompiler/parserQC.hpp"
-#include "../../src/queryCompiler/tokenstream.hpp"
-#include "../../src/ranker/rankerObjects.hpp"
-#include "../../src/utils/basicString.hpp"
+#include "catch.hpp"
+#include "constraintSolver/testingISRs.hpp"
+#include "queryCompiler/expression.hpp"
+#include "queryCompiler/parserQC.hpp"
+#include "queryCompiler/tokenstream.hpp"
+#include "ranker/rankerObjects.hpp"
+#include "utils/basicString.hpp"
+#include "utils/stemming.hpp"
 
 
 TEST_CASE( "token stream" )
@@ -25,23 +26,23 @@ TEST_CASE( "token stream" )
 		ts = dex::queryCompiler::tokenStream( s, nullptr );
 		REQUIRE( ts.input == "here&is&check&number&two" );
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == "here" );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "here" ) );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == "is" );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "is" ) );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == "check" );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "check" ) );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == "number" );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "number" ) );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == "two" );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "two" ) );
 		delete wordy;
 
 		s = "      here    is     check    number three";
@@ -89,15 +90,15 @@ TEST_CASE( "token stream" )
 
 		REQUIRE( ts.input == "here&is&check|number&one" );
 		REQUIRE( ts.emphasizedWords.size( ) == 1 );
-		REQUIRE( ts.emphasizedWords.count( "is" ) == 1 );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "is" ) ) == 1 );
 
 		s = "$here    $ is     check    number $two";
 		ts = dex::queryCompiler::tokenStream( s, nullptr );
 		REQUIRE( ts.input == "here&is&check&number&two" );
 		REQUIRE( ts.emphasizedWords.size( ) == 3 );
-		REQUIRE( ts.emphasizedWords.count( "here" ) );
-		REQUIRE( ts.emphasizedWords.count( "is" ) );
-		REQUIRE( ts.emphasizedWords.count( "two" ) );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "here" ) ) );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "is" ) ) );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "two" ) ) );
 		}
 	}
 
@@ -107,9 +108,9 @@ TEST_CASE( "single word check" )
 	dex::queryCompiler::parser parsyMcParseface( query, nullptr );
 	dex::matchedDocuments *md = parsyMcParseface.parse( );
 	REQUIRE( md->flattenedQuery.size( ) == 3 );
-	REQUIRE( md->flattenedQuery[ 0 ] == "First" );
-	REQUIRE( md->flattenedQuery[ 1 ] == "check" );
-	REQUIRE( md->flattenedQuery[ 2 ] == "stuff" );
+	REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "First" ) );
+	REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "check" ) );
+	REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "stuff" ) );
 	REQUIRE( md->emphasizedWords.size( ) == 3 );
 	REQUIRE( md->emphasizedWords[ 0 ] == false );
 	REQUIRE( md->emphasizedWords[ 1 ] == true );
@@ -120,7 +121,7 @@ TEST_CASE( "single word check" )
 	parsyMcParseface = dex::queryCompiler::parser( query, nullptr );
 	md = parsyMcParseface.parse( );
 	REQUIRE( md->flattenedQuery.size( ) == 2 );
-	REQUIRE( md->flattenedQuery[ 0 ] == "two" );
-	REQUIRE( md->flattenedQuery[ 1 ] == "words" );
+	REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "two" ) );
+	REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "words" ) );
 	delete md;
 	 }

@@ -5,10 +5,10 @@
 #ifndef DEX_PARSER
 #define DEX_PARSER
 
-#include "expression.hpp"
-#include "tokenstream.hpp"
-#include "../constraintSolver/constraintSolver.hpp"
-#include "../ranker/rankerObjects.hpp"
+#include "constraintSolver/constraintSolver.hpp"
+#include "queryCompiler/expression.hpp"
+#include "queryCompiler/tokenstream.hpp"
+#include "ranker/rankerObjects.hpp"
 
 namespace dex
 	{
