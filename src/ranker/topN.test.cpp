@@ -3,9 +3,9 @@
 //
 // 2019-12-11: Init commit: lougheem
 
-#include "catch.hpp"
-#include "../src/ranker/topN.hpp"
 #include <iostream>
+#include "catch.hpp"
+#include "ranker/topN.hpp"
 
 TEST_CASE( "topN" )
 	{
@@ -18,7 +18,7 @@ TEST_CASE( "topN" )
 		scores.pushBack( index );
 		//std::cout << "score: " << index << "\n";
 		}
-	
+
 	REQUIRE( scores.size( ) >= m );
 	int n = m/10;
 	documentInfo **topN, *p;

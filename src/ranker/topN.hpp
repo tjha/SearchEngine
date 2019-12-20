@@ -6,11 +6,11 @@
 #ifndef DEX_TOP_N
 #define DEX_TOP_N
 
-#include "algorithm.hpp"
-#include "exception.hpp"
-#include "utility.hpp"
-#include "vector.hpp"
 #include <iostream>
+#include "utils/algorithm.hpp"
+#include "utils/exception.hpp"
+#include "utils/utility.hpp"
+#include "utils/vector.hpp"
 
 struct documentInfo
 	{
@@ -44,7 +44,7 @@ documentInfo **findTopN( dex::vector< double > scores, size_t N )
 		}
 
 	node *list = nullptr;
-	
+
 	size_t listCount = 0;
 
 	for ( dex::vector< documentInfo >::iterator documentIt = documentsInformation.begin( );
