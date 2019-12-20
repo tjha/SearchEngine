@@ -1,11 +1,10 @@
 
-#include "basicString.hpp"
 #include "catch.hpp"
-#include "utf.hpp"
-#include "utf.hpp"
-#include "file.hpp"
-#include "vector.hpp"
-#include "url.hpp"
+#include "crawler/url.hpp"
+#include "utils/basicString.hpp"
+#include "utils/file.hpp"
+#include "utils/utf.hpp"
+#include "utils/vector.hpp"
 
 #include <iostream>
 

@@ -1,4 +1,4 @@
-// indexTests.cpp
+// index.test.cpp
 // Tests for building the index
 //
 // 2019-12-08: IndexStreamReader tests: lougheem
@@ -8,11 +8,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
 #include "catch.hpp"
-#include "file.hpp"
-#include "index.cpp"
-#include "utf.hpp"
+#include "indexer/index.hpp"
+#include "utils/file.hpp"
+#include "utils/utf.hpp"
 
 using namespace dex::index;
 using dex::vector;
