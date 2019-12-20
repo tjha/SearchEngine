@@ -95,7 +95,7 @@ namespace dex
 				int beginPath = endPort;
 				int endPath;
 				// Check to see if there are any queries or fragments in our path.
-				
+
 				if ( beginPath >= int( totalUrl.size( ) ) )
 					{
 					endPath = int( totalUrl.size( ) );
@@ -177,7 +177,7 @@ namespace dex
 				complete = other.complete;
 				return *this;
 				}
-			
+
 			string computeFullUrl( )
 				{
 				string completeUrl = service + "://" + host;
@@ -238,7 +238,7 @@ namespace dex
 				{
 				return port;
 				}
-			
+
 			void setPort( const string &p )
 				{
 				if ( p.empty() )
@@ -293,7 +293,7 @@ namespace dex
 				fragment = f;
 				computeFullUrl( );
 				}
-		
+
 		};
 
 	inline bool operator==( const dex::Url &lhs, const dex::Url &rhs )

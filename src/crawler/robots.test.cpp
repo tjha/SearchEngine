@@ -18,6 +18,7 @@ using dex::RobotTxt;
 using dex::string;
 using dex::vector;
 
+const dex::string dex::RobotTxt::userAgent = "jhirshey@umich.edu (Linux)";
 
 TEST_CASE( "timing for visiting sites", "[robotsTxt]" )
 	{

@@ -36,5 +36,4 @@ TEST_CASE( "basics", "[url]" )
 	REQUIRE( thirdExample.getService( ) == "https" );
 	REQUIRE( thirdExample.getFragment( ) == "fragment" );
 	REQUIRE( thirdExample.getPath( ) == "/some/long/path" );
-	
 	}

@@ -191,13 +191,13 @@ namespace dex
 					}
 				mapLock.releaseWriteLock( );
 				}
-			
+
 			void erase( const dex::string &str )
 				{
 				if ( robotExists( str ) )
 					{
 					mapLock.writeLock( );
-					if ( existsNoLock( str ) ) 
+					if ( existsNoLock( str ) )
 						{
 						if ( mainMap[ str ].first )
 							delete mainMap[ str ].first;
@@ -205,7 +205,7 @@ namespace dex
 							delete mainMap[ str ].second;
 						mainMap.erase( str );
 						}
-						
+
 					mapLock.releaseWriteLock( );
 					}
 				}
