@@ -69,7 +69,7 @@ bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk 
 
 		// The first 8 bits of our location determine our synchronization point. We only update the table if we haven't
 		// been "this high" before.
-		for ( synchronizationPoint *syncPoint = synchronizationPoints + ( location >> ( sizeof( location ) - 8 ) );
+		for ( synchronizationPoint *syncPoint = synchronizationPoints + ( location >> ( 8 * sizeof( location ) - 8 ) );
 				syncPoint >= synchronizationPoints && ~syncPoint->inverseLocation == syncPoint->npos;  --syncPoint )
 			{
 			syncPoint->postsChunkArrayOffset = lastPostsChunkOffset;
@@ -221,8 +221,13 @@ dex::index::indexChunk::indexStreamReader::indexStreamReader( indexChunk *chunk,
 
 size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 	{
+	std::cout << "seek(" << target << ")\tabsoluteLocation: " << absoluteLocation << "\n";
+	std::cout << "finding syncPoint at index: " << ( target >> ( sizeof( target ) - 8 ) ) << "\n";
+	std::cout << "\tsizeof( target ) = " << sizeof( target ) << "\n\tsizeof( size_t ) = " << sizeof( size_t ) << "\n";
+
 	postsMetadata::synchronizationPoint *syncPoint
-			= postsMetadatum->synchronizationPoints + ( target >> ( sizeof( target ) - 8 ) );
+			= postsMetadatum->synchronizationPoints + ( target >> ( 8 * sizeof( target ) - 8 ) );
+
 
 	// TODO: Maybe remove?
 	// if ( target < absoluteLocation )
@@ -241,23 +246,30 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 		postsChunkum = indexChunkum->postsChunkArray + syncPoint->postsChunkArrayOffset;
 		post = postsChunkum->posts + syncPoint->postsChunkOffset;
 		absoluteLocation = ~syncPoint->inverseLocation;
+		std::cout << "seek-ed to absolute location: " << absoluteLocation << "\n";
 		}
 
 	// Keep scanning until we find the first place not before our target. We'll return -1 if we fail to reach it.
+	std::cout << "seek-ing for target: " << target << "\tabsoluteLocation: " << absoluteLocation << "\n";
 	while ( absoluteLocation < target )
+		{
+		std::cout << "seek-ing for target: " << target << ". At absoluteLocation: " << absoluteLocation << "\n";
 		if ( next( ) == npos )
 			return npos;
+		}
 
 	return absoluteLocation;
 	}
 
 size_t dex::index::indexChunk::indexStreamReader::next( )
 	{
+	/*
 	std::cout << '\t' << postsMetadatum->occurenceCount
 			<< '\t' << absoluteLocation
 			<< '\t' << *( indexChunkum->maxLocation )
 			<< '\t' << dex::utf::isSentinel( post )
 			<< '\t' << !postsChunkum->nextPostsChunkOffset << std::endl;
+	*/
 	if ( postsMetadatum->occurenceCount == 0 || absoluteLocation >= *( indexChunkum->maxLocation )
 			|| ( dex::utf::isSentinel( post ) && !postsChunkum->nextPostsChunkOffset ) )
 		return npos;

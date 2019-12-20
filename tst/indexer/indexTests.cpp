@@ -47,6 +47,7 @@ TEST_CASE( "lougheed's fun read indexChunk test" )
 		}
 	close( fd );
 	}
+*/
 
 TEST_CASE( "create index chunk" )
 	{
@@ -67,6 +68,58 @@ TEST_CASE( "create index chunk" )
 	close( fd );
 	}
 
+TEST_CASE( "create index chunk with bad HTML" )
+	{
+	SECTION( "empty title vector" )
+		{
+		const char filePath[ ] = "_in.dex";
+		int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
+
+		if ( fd == -1 )
+			exit( 1 );
+		indexChunk initializingIndexChunk = indexChunk( fd );
+
+		string url = "hamiltoncshell.com";
+		vector < string > title = { };
+		string titleString = "Hamilton C Shell 2012";
+		vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
+
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+
+		string url2 = "hammyseeshell.biz";
+		vector < string > title2 = { "good", "website" };
+		string titleString2 = "This is a good website";
+		vector < string > body2 = { "this", "is", "the", "body", "text" };
+
+		REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
+		}
+
+	SECTION( "empty body vector" )
+		{
+		const char filePath[ ] = "_in.dex";
+		int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
+
+		if ( fd == -1 )
+			exit( 1 );
+		indexChunk initializingIndexChunk = indexChunk( fd );
+
+		string url = "hamiltoncshell.com";
+		vector < string > title = { "hamilton", "c", "shell" };
+		string titleString = "Hamilton C Shell 2012";
+		vector < string > body = { };
+
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+
+		string url2 = "hammyseeshell.biz";
+		vector < string > title2 = { "good", "website" };
+		string titleString2 = "This is a good website";
+		vector < string > body2 = { "this", "is", "the", "body", "text" };
+
+		REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
+		}
+
+	}
+
 TEST_CASE( "ISR functions on one document" )
 	{
 	const char filePath[ ] = "_in.dex";
@@ -83,9 +136,6 @@ TEST_CASE( "ISR functions on one document" )
 
 	REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 
-	// "junk" and "some" have their offsets set to 0 in the dictionary!!
-	// 	some in the first word, so it should probably be have its offset be 0
-	// 	removing the second occurence of junk makes its offset be 1 instead of 0
 	indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk");
 	indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
@@ -110,56 +160,137 @@ TEST_CASE( "ISR functions on one document" )
 	close( fd );
 	}
 
-*/
-TEST_CASE( "ISR functions on two documents" )
+TEST_CASE( "ISR functions on multiple documents" )
 	{
+	SECTION( "ISR functions on two documents" )
+		{
+		const char filePath[ ] = "_in.dex";
+		int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
+
+		if ( fd == -1 )
+			exit( 1 );
+		indexChunk initializingIndexChunk = indexChunk( fd );
+
+		string url = "hamiltoncshell.com";
+		vector < string > title = { "hamilton", "c", "shell" };
+		string titleString = "Hamilton C Shell 2012";
+		vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
+
+		string url2 = "google.com";
+		vector < string > title2 = { "evil", "company", "sell", "your", "data" };
+		string titleString2 = "Evil company sell your data";
+		vector < string > body2 = { "click", "this", "ad", "and", "you", "can", "live" };
+
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+		REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
+
+		// "junk" and "some" have their offsets set to 0 in the dictionary!!
+		// 	some in the first word, so it should probably be have its offset be 0
+		// 	removing the second occurence of junk makes its offset be 1 instead of 0
+		indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
+		indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+
+		REQUIRE( andISR.next( ) == 2 );
+		REQUIRE( andISR.next( ) == 5 );
+		REQUIRE( andISR.next( ) == 13 );
+		REQUIRE( andISR.next( ) == static_cast < size_t >( -1 ) );
+		REQUIRE( junkISR.next( ) == 1 );
+		REQUIRE( junkISR.next( ) == 4 );
+		REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
+
+		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+
+		REQUIRE( andISR.next( ) == 2 );
+		REQUIRE( andISR.nextDocument( ) == 13 );
+
+		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+
+		REQUIRE( andISR.nextDocument( ) == 13 );
+
+		REQUIRE( andISR.seek( 6 ) == 13 );
+
+		close( fd );
+
+		}
 	/*
-	const char filePath[ ] = "_in.dex";
-	int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
+	SECTION( "ISR functions on multiple documents" )
+		{
+		const char filePath[ ] = "_in.dex";
+		int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
 
-	if ( fd == -1 )
-		exit( 1 );
-	indexChunk initializingIndexChunk = indexChunk( fd );
+		if ( fd == -1 )
+			exit( 1 );
 
-	string url = "hamiltoncshell.com";
-	vector < string > title = { "hamilton", "c", "shell" };
-	string titleString = "Hamilton C Shell 2012";
-	vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
+		indexChunk initializingIndexChunk = indexChunk( fd );
 
-	string url2 = "google.com";
-	vector < string > title2 = { "evil", "company", "sell", "your", "data" };
-	string titleString2 = "Evil company sell your data";
-	vector < string > body2 = { "click", "this", "ad", "and", "you", "can", "live" };
+		string url = "hamiltoncshell.com";
+		vector < string > title = { "hamilton", "c", "shell" };
+		string titleString = "Hamilton C Shell 2012";
+		vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
+		vector < string > altBody = { "some", "junk", "and", "other", "junk", "and" };
 
-	REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
-	REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 
-	// "junk" and "some" have their offsets set to 0 in the dictionary!!
-	// 	some in the first word, so it should probably be have its offset be 0
-	// 	removing the second occurence of junk makes its offset be 1 instead of 0
-	indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
-	indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+		indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
+		indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+		indexChunk::indexStreamReader moreISR = indexChunk::indexStreamReader( &initializingIndexChunk, "more" );
+		indexChunk::indexStreamReader otherISR = indexChunk::indexStreamReader( &initializingIndexChunk, "other" );
 
-	REQUIRE( andISR.next( ) == 2 );
-	REQUIRE( andISR.next( ) == 5 );
-	REQUIRE( andISR.next( ) == 13 );
-	REQUIRE( andISR.next( ) == static_cast < size_t >( -1 ) );
-	REQUIRE( junkISR.next( ) == 1 );
-	REQUIRE( junkISR.next( ) == 4 );
-	REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
+		size_t junkPos = junkISR.next( );
+		REQUIRE( junkPos == 1 );
+		junkPos = junkISR.next( );
+		REQUIRE( junkPos == 4 );
 
-	andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+		size_t andPos = andISR.next( );
+		REQUIRE( andPos == 2 );
+		andPos = andISR.next( );
+		REQUIRE( andPos == 5 );
 
-	REQUIRE( andISR.next( ) == 2 );
-	REQUIRE( andISR.nextDocument( ) == 13 );
+		size_t morePos = moreISR.next( );
+		REQUIRE( morePos == 3 );
 
-	andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+		string url2 = url + dex::toString( 0 );
+		vector < string > title2( title );
+		string titleString2( titleString + dex::toString( 0 ) );
+		REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body ) );
 
-	REQUIRE( andISR.nextDocument( ) == 13 );
+		junkPos = junkISR.next( );
+		REQUIRE( junkPos == 10 );
+		junkPos = junkISR.next( );
+		REQUIRE( junkPos == 13 );
 
-	REQUIRE( andISR.seek( 6 ) == 13 );
+		andPos = andISR.next( );
+		REQUIRE( andPos == 11 );
+		andPos = andISR.next( );
+		REQUIRE( andPos == 14 );
 
-	close( fd );
+		size_t otherPos = otherISR.next( );
+		REQUIRE( otherPos == 12 );
+
+		for ( int iteration = 1;  iteration < 50;  iteration++ )
+			{
+			string url2 = url + dex::toString( iteration );
+			vector < string > title2( title );
+			string titleString2( titleString + dex::toString( iteration ) );
+			if ( iteration % 2 )
+				{
+				vector < string > body2( body );
+				REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
+				}
+			else
+				{
+				vector < string > body2( altBody );
+				REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
+				}
+
+			junkPos = junkISR.next( );
+			REQUIRE( junkPos == )
+
+
+			}
+		close( fd );
+		}
+		*/
 	}
 
 TEST_CASE( "ONE BIG DOC" )
@@ -267,7 +398,6 @@ TEST_CASE( "ONE BIG DOC" )
 		REQUIRE( andISR.seek( 3 ) == 5 );
 		REQUIRE( andISR.seek( 6 ) == static_cast < size_t >( -1 ) );
 		}
-	*/
 
 	SECTION( "Read indexChunk from a file" )
 		{
@@ -303,12 +433,54 @@ TEST_CASE( "ONE BIG DOC" )
 		REQUIRE( fd != -1 );
 
 		indexChunk fromFileIndexChunk = indexChunk( fd, false );
-		indexChunk::indexStreamReader wordISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
+
+		indexChunk::indexStreamReader wordISR0 = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
 		for ( int iters = 0;  iters < (1<<12) - 2;  iters++ )
-			REQUIRE( wordISR.next( ) == iters );
-		REQUIRE( wordISR.next( ) == ( 1<<12 ) - 2 );
-		REQUIRE( wordISR.next( ) == ( 1<<12 ) - 1 );
-		REQUIRE( wordISR.next( ) == static_cast < size_t >( -1 ) );
+			REQUIRE( wordISR0.next( ) == iters );
+		REQUIRE( wordISR0.next( ) == ( 1<<12 ) - 2 );
+		REQUIRE( wordISR0.next( ) == ( 1<<12 ) - 1 );
+		REQUIRE( wordISR0.next( ) == static_cast < size_t >( -1 ) );
+
+		indexChunk::indexStreamReader wordISR1a = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
+		REQUIRE( wordISR1a.seek( 1 ) == 1 );
+		REQUIRE( wordISR1a.next( ) == 2 );
+
+		indexChunk::indexStreamReader wordISR1b = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
+		REQUIRE( wordISR1b.seek( 0 ) == 0 );
+		for ( int iters = 0;  iters < 5;  iters++ )
+			std::cout << "next( " << iters << " ): " << wordISR1b.next( ) << "\n";
+
+		indexChunk::indexStreamReader wordISR1 = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
+		REQUIRE( wordISR1.seek( 0 ) == 0 );
+		REQUIRE( wordISR1.next( ) == 1 );
+
+		indexChunk::indexStreamReader wordISR2 = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
+		for ( int iters = 0;  iters < (1<<12) - 2;  iters++ )
+			REQUIRE( wordISR2.next( ) == iters );
+		REQUIRE( wordISR2.next( ) == ( 1<<12 ) - 2 );
+		REQUIRE( wordISR2.next( ) == ( 1<<12 ) - 1 );
+		REQUIRE( wordISR2.next( ) == static_cast < size_t >( -1 ) );
+
+		indexChunk::indexStreamReader wordISR3 = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
+		for ( int iters = 0;  iters < ( 1<<4 );  iters++ )
+			{
+			std::cout << "iters: " << iters << "\n";
+			size_t seekLoc = wordISR3.seek( iters<<2 );
+			std::cout << "\tseek-ed: " << seekLoc << "\n";
+			size_t nextLoc = wordISR3.next( );
+			std::cout << "\tnext-ed: " << nextLoc << "\n";
+			// Seek to 0, then next( ) does not return the next location after 0, but returns 0
+			REQUIRE( seekLoc == iters<<2 );
+			REQUIRE( nextLoc == ( iters<<2 ) + 1 );
+			}
+
+		indexChunk::indexStreamReader thirdWordISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
+		for ( int iters = 0;  iters < ( 1<<4 );  iters++ )
+			{
+			std::cout << "iters: " << iters << "\n";
+			REQUIRE( thirdWordISR.seek( iters<<8 ) == iters<<8 );
+			REQUIRE( thirdWordISR.next( ) == ( iters<<8 ) + 1 );
+			}
 		}
 	SECTION( "Fill an indexChunk" )
 		{
