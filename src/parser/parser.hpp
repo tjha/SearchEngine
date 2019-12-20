@@ -235,7 +235,11 @@ namespace dex
 		{
 		return anchors;
 		}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> master
 	vector < string > HTMLparser::ReturnTitle ( )
 		{
 		return title ;

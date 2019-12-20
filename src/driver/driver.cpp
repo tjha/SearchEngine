@@ -16,7 +16,6 @@
 // 2019-11-21: Add working redirect cache, fix overall logic of file, test multithreading: combsc
 // 2019-11-20: Add logging, add file structure for saving html: combsc
 // 2019-11-16: Init Commit: combsc
-
 #include <time.h>
 #include <signal.h>
 #include <iostream>
@@ -321,7 +320,11 @@ void *worker( void *args )
 
 				addToCrawled( toCrawl );
 
+<<<<<<< HEAD
 
+=======
+				
+>>>>>>> master
 				dex::vector < dex::Url > links;
 				try
 					{
