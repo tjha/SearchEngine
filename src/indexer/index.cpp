@@ -222,8 +222,7 @@ dex::index::indexChunk::indexStreamReader::indexStreamReader( indexChunk *chunk,
 size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 	{
 	std::cout << "seek(" << target << ")\tabsoluteLocation: " << absoluteLocation << "\n";
-	std::cout << "finding syncPoint at index: " << ( target >> ( sizeof( target ) - 8 ) ) << "\n";
-	std::cout << "\tsizeof( target ) = " << sizeof( target ) << "\n\tsizeof( size_t ) = " << sizeof( size_t ) << "\n";
+	std::cout << "\tfinding syncPoint at index: " << ( target >> ( 8 * sizeof( target ) - 8 ) ) << "\n";
 
 	postsMetadata::synchronizationPoint *syncPoint
 			= postsMetadatum->synchronizationPoints + ( target >> ( 8 * sizeof( target ) - 8 ) );
@@ -246,23 +245,31 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 		postsChunkum = indexChunkum->postsChunkArray + syncPoint->postsChunkArrayOffset;
 		post = postsChunkum->posts + syncPoint->postsChunkOffset;
 		absoluteLocation = ~syncPoint->inverseLocation;
-		std::cout << "seek-ed to absolute location: " << absoluteLocation << "\n";
+		std::cout << "\tseek-ed to absolute location: " << absoluteLocation << "\n";
 		}
 
 	// Keep scanning until we find the first place not before our target. We'll return -1 if we fail to reach it.
-	std::cout << "seek-ing for target: " << target << "\tabsoluteLocation: " << absoluteLocation << "\n";
+	std::cout << "\tseek-ing for target: " << target << "\tabsoluteLocation: " << absoluteLocation << "\n";
 	while ( absoluteLocation < target )
 		{
-		std::cout << "seek-ing for target: " << target << ". At absoluteLocation: " << absoluteLocation << "\n";
 		if ( next( ) == npos )
 			return npos;
+		std::cout << "\tseek-ing for target: " << target << "\tabsoluteLocation: " << absoluteLocation << "\n";
 		}
+
+	std::cout << "\tFound at absoluteLocation: " << absoluteLocation << "\n";
 
 	return absoluteLocation;
 	}
 
 size_t dex::index::indexChunk::indexStreamReader::next( )
 	{
+	std::cout << "next( )\n";
+	std::cout << "\tpost: " << *post << " " << *( post + 1 ) << "\n";
+	std::cout << "\tabsoluteLocation: " << absoluteLocation << "\n";
+	std::cout << "\tpostsMetadatum: " << postsMetadatum << "\n";
+	std::cout << "\tpostsChunkum: " << postsChunkum << "\n";
+	std::cout << "\tindexChunkum: " << indexChunkum << "\n";
 	/*
 	std::cout << '\t' << postsMetadatum->occurenceCount
 			<< '\t' << absoluteLocation
@@ -283,7 +290,10 @@ size_t dex::index::indexChunk::indexStreamReader::next( )
 		}
 
 	// Post is a pointer to a valid encoded size_t.
-	return absoluteLocation += dex::utf::decoder < size_t >( )( post, &post );
+	absoluteLocation += dex::utf::decoder < size_t >( )( post, &post );
+	std::cout << "next found at absoluteLocation: " << absoluteLocation << "\n";
+	return absoluteLocation;
+	// return absoluteLocation += dex::utf::decoder < size_t >( )( post, &post );
 	}
 
 size_t dex::index::indexChunk::indexStreamReader::nextDocument( )

@@ -139,15 +139,21 @@ TEST_CASE( "ISR functions on one document" )
 	indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk");
 	indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
+	std::cout << "--- AND ISR ---\n";
 	REQUIRE( andISR.next( ) == 2 );
 	REQUIRE( andISR.next( ) == 5 );
 	REQUIRE( andISR.next( ) == static_cast < size_t >( -1 ) );
+	std::cout << "--- JUNK ISR ---\n";
 	REQUIRE( junkISR.next( ) == 1 );
 	REQUIRE( junkISR.next( ) == 4 );
 	REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
 
+	std::cout << "--- AND ISR ---\n";
 	andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+	REQUIRE( andISR.seek( 0 ) == 2 );
+	REQUIRE( andISR.next( ) == 5 );
 
+	andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 	REQUIRE( andISR.seek( 0 ) == 2 );
 	REQUIRE( andISR.seek( 2 ) == 2 );
 	REQUIRE( andISR.seek( 3 ) == 5 );
