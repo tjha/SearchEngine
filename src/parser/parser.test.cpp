@@ -23,17 +23,17 @@
 //             Hard-coded html test for anchor text: tjha
 // 2019-10-26: File created, two GetLinks tests with hard-coded html: medhak,
 //             tjha
-#include "basicString.hpp"
-#include "catch.hpp"
-#include "exception.hpp"
-#include "file.hpp"
-#include <fstream>
-#include "parser.hpp"
-#include "url.hpp"
 
 #include <cstddef>
-
+#include <fstream>
 #include <iostream>
+#include "catch.hpp"
+#include "crawler/url.hpp"
+#include "parser/parser.hpp"
+#include "utils/basicString.hpp"
+#include "utils/exception.hpp"
+#include "utils/file.hpp"
+
 
 using dex::anchorPos;
 using dex::HTMLparser;
@@ -52,13 +52,13 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 	{
 	SECTION(" Words testS :")
 		{
-		
-		string filename = "tst/parser/hamiltoncshell.html";
+
+		string filename = "src/parser/testFiles/hamiltoncshell.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr() );
       dex::Url url( "https://en.wikipedia.org/wiki/Hamilton_C_shell" );
 		HTMLparser testParser( url, htmlDoc, true );
-	
+
 		vector<string> words = testParser.ReturnWords();
 		vector<string> titleWords = testParser.ReturnTitle();
 		vector <string> firstTen;
@@ -79,7 +79,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 		// 	{
 		// 	std::cout << *it << "\n";
 		// 	}
-		
+
 		for ( size_t i = 0; i < 11; i++ )
 			{
 			REQUIRE( firstTen[ i ] == words[ i ] );
@@ -118,7 +118,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 		filenames.pushBack( "youtube.html" );
 		for ( auto filenameIt = filenames.cbegin( );  filenameIt != filenames.cend( );  filenameIt++ )
 			{
-			string filename = "tst/parser/" + *filenameIt;
+			string filename = "src/parser/testFiles/" + *filenameIt;
 			// std::cout << "\n\tPARSING FILE: " << filename << "\n\n";
 
 			string htmlDoc = readFromFile( filename.cStr() );
@@ -198,7 +198,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 
 	SECTION( "working with .s " )
 		{
-		string filename = "tst/parser/man7_man_pages.html";
+		string filename = "src/parser/testFiles/man7_man_pages.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
       dex::Url url( "https://www.kernel.org/doc/man-pages/" );
@@ -213,7 +213,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 
 	SECTION( "working with ..s" )
 		{
-		string filename = "tst/parser/man7_index.html";
+		string filename = "src/parser/testFiles/man7_index.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
       dex::Url url( "http://man7.org/tlpi/index.html" );
@@ -272,7 +272,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 			"https://web.eecs.umich.edu/~pmchen/" );
 		expectedLink.pushBack(
 			"https://web.eecs.umich.edu/" );
-      
+
       dex::Url url( "https://web.eecs.umich.edu/~pmchen/subdir1/subdir2/" );
 		HTMLparser testParser( url, htmlDoc, false );
 		vector< Url > links = testParser.ReturnLinks( );
@@ -299,7 +299,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 	{
 
 	// Read and save HTML file uisng HTMLparser
-	string filename = "tst/parser/peter_chen.html";
+	string filename = "src/parser/testFiles/peter_chen.html";
 	string htmlDoc;
 	htmlDoc = readFromFile( filename.cStr( ) );
 
@@ -403,7 +403,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
 		REQUIRE( AnchorWords.size( ) == lenAnchors );
 
-		
+
 
 		size_t word_count = 0;
 		for ( size_t j = 0; j < anchors.size( ); j++ )
@@ -423,7 +423,7 @@ TEST_CASE( "peter_chen.html page: simple format with comment tags" )
 
 TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
 	{
-		string filename = "tst/parser/amazon.html";
+		string filename = "src/parser/testFiles/amazon.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
       dex::Url url( "https://www.amazon.com/" );
@@ -485,7 +485,7 @@ TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
 
 TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
 	{
-		string filename = "tst/parser/man7.html";
+		string filename = "src/parser/testFiles/man7.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
       dex::Url url( "http://man7.org" );
@@ -531,7 +531,7 @@ TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
 
 TEST_CASE( "enneagraminstitute.com: simple page using Squarespace" )
 	{
-		string filename = "tst/parser/enneagraminstitute.html";
+		string filename = "src/parser/testFiles/enneagraminstitute.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
       dex::Url url( "https://www.enneagraminstitute.com/" );
@@ -616,7 +616,7 @@ TEST_CASE( "enneagraminstitute.com: simple page using Squarespace" )
 
 TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
 	{
-		string filename = "tst/parser/man7_all_pages.html";
+		string filename = "src/parser/testFiles/man7_all_pages.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
       dex::Url url( "http://man7.org/linux/man-pages/dir_all_alphabetic.html" );

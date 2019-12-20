@@ -29,6 +29,7 @@
 #ifndef DEX_HTML_PARSER
 #define DEX_HTML_PARSER
 
+#include <cstddef>
 #include "crawler/url.hpp"
 #include "utils/algorithm.hpp"
 #include "utils/basicString.hpp"
@@ -36,9 +37,6 @@
 #include "utils/utility.hpp"
 #include "utils/vector.hpp"
 
-#include <cstddef>
-
-#include <iostream>
 
 namespace dex
 {
@@ -235,11 +233,6 @@ namespace dex
 		{
 		return anchors;
 		}
-<<<<<<< HEAD
-
-=======
-	
->>>>>>> master
 	vector < string > HTMLparser::ReturnTitle ( )
 		{
 		return title ;
