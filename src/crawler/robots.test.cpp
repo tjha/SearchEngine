@@ -9,10 +9,10 @@
 
 #include "catch.hpp"
 #include <unistd.h>
-#include "../src/crawler/robots.hpp"
-#include "../src/utils/unorderedMap.hpp"
-#include "../src/utils/basicString.hpp"
-#include "../src/utils/vector.hpp"
+#include "crawler/robots.hpp"
+#include "utils/unorderedMap.hpp"
+#include "utils/basicString.hpp"
+#include "utils/vector.hpp"
 
 using dex::RobotTxt;
 using dex::string;
@@ -54,7 +54,7 @@ TEST_CASE( "whitelist and blacklist rules", "[robotsTxt]" )
 	hello.addPathsAllowed ( "secret/other/path" );
 	REQUIRE( hello.visitPathResult( "secret/other/path" ) == 0 );
 	REQUIRE( hello.visitPathResult( "secret/other/path/file" ) == 0 );
-	
+
 	}
 
 TEST_CASE( "constructors and operator=", "[robotTxt]")
@@ -71,7 +71,7 @@ TEST_CASE( "constructors and operator=", "[robotTxt]")
 		RobotTxt rob3 = RobotTxt( rob2 );
 		REQUIRE ( rob3.getDomain( ) == rob2.getDomain( ) );
 		}
-	
+
 	SECTION( "copy constructor functionality test" )
 		{
 		string url = "https://domain.com";
@@ -131,7 +131,7 @@ TEST_CASE( "parsing a robots.txt file", "[robotTxt]" )
 	{
 	// basic case
 	string dummy = "";
-	string exampleString0 = dummy + "User-agent: notUs\n" + 
+	string exampleString0 = dummy + "User-agent: notUs\n" +
 			"Disallow: /\n" +
 			"Crawl-delay: 500\n" +
 			"User-agent: *\n" +
@@ -142,14 +142,14 @@ TEST_CASE( "parsing a robots.txt file", "[robotTxt]" )
 			"User-agent: susBot\n" +
 			"Disallow: /\n";
 	RobotTxt rob0 = RobotTxt( "https://www.domain.com", exampleString0 );
-	REQUIRE( rob0.getDelay( ) == 0 );  
+	REQUIRE( rob0.getDelay( ) == 0 );
 	REQUIRE( rob0.visitPathResult( "/secret/okpath/otherfile") == 0 );
 	REQUIRE( rob0.visitPathResult( "/secret/okfile") == 0 );
 	REQUIRE( rob0.visitPathResult( "/somepublicthing") == 0 );
 	REQUIRE( rob0.visitPathResult( "/secret/file") == 2 );
 
 	// spaces
-	string exampleString1 = dummy + "User-agent: notUs\n" + 
+	string exampleString1 = dummy + "User-agent: notUs\n" +
 			"Disallow: / \n" +
 			"Crawl-delay: 500 \n" +
 			"User-agent: * \n" +
@@ -176,7 +176,7 @@ TEST_CASE( "regex", "[robotTxt]" )
 	REQUIRE( dex::match( "/something/allowed/somethign.php", "/something/allowed/*" ) );
 	REQUIRE( !dex::match( "/something/allowedd/", "/something/allowed/*" ) );
 	REQUIRE( dex::match( "/something/specific.jpg", "/something/specific.jpg" ) );
-	REQUIRE( !dex::match( "/disallowed/index.html" , "/something/specific.jpg*" ) ); 
+	REQUIRE( !dex::match( "/disallowed/index.html" , "/something/specific.jpg*" ) );
 	REQUIRE( dex::match( "/disallowed/index.html" , "/disallowed/*" ) );
 	REQUIRE( dex::match( "/disallowed/index.html" , "/*disallowed/*" ) );
 	REQUIRE( !dex::match( "disallowed/index.html" , "/*disallowed/*" ) );
@@ -193,16 +193,16 @@ TEST_CASE( "wildcard matching", "[robotTxt]" )
 	string url = "https://domain.com";
 	RobotTxt rob = RobotTxt( url, 2);
 	rob.addPathsDisallowed( "/disallowed/*");
-	rob.addPathsAllowed( "/disallowed/justkidding/*" ); 
+	rob.addPathsAllowed( "/disallowed/justkidding/*" );
 	rob.addPathsDisallowed( "*.php" );
 	rob.addPathsDisallowed( "/something/*.jpg" );
-	rob.addPathsAllowed( "/something/allowed/*"); 
+	rob.addPathsAllowed( "/something/allowed/*");
 	rob.addPathsAllowed( "/something/specific.jpg");
 	rob.addPathsAllowed( "*/potato/*");
 
-	
+
 	REQUIRE( rob.visitPathResult( "/disallowed/justkidding/index.html" ) == 0 );
-	
+
 	REQUIRE( rob.visitPathResult( "/something/allowed/somethign.php" ) == 0 );
 	REQUIRE( rob.visitPathResult( "/something/specific.jpg" ) == 0 );
 	REQUIRE( rob.visitPathResult( "/something/allowed/somethign.jpg" ) == 0 );
@@ -210,5 +210,5 @@ TEST_CASE( "wildcard matching", "[robotTxt]" )
 	REQUIRE( rob.visitPathResult( "/disallowed/index.html" ) == 2 );
 	REQUIRE( rob.visitPathResult( "/somePath/secret.php" ) == 2 );
 	REQUIRE( rob.visitPathResult( "/something/someOtherPath/secret.jpg" ) == 2 );
-	REQUIRE( rob.visitPathResult( "/disallowed/justkidding/" ) == 0 );  
+	REQUIRE( rob.visitPathResult( "/disallowed/justkidding/" ) == 0 );
 	}

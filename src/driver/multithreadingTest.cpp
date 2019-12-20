@@ -1,9 +1,9 @@
 // robotsMapTests.cpp
 // Test crawler for multithreading
-// 
+//
 // 2019-11-30: Init Commit: combsc
 
-#include "crawler.hpp"
+#include "crawler/crawler.hpp"
 
 #define numWorkers 10
 pthread_t workers [ numWorkers ];
@@ -37,7 +37,7 @@ void *crawl( void* arg )
 			pthread_mutex_unlock( &frontierLock );
 			return nullptr;
 			}
-			
+
 		dex::Url toCrawl = dex::Url( frontier.front( ).cStr( ) );
 		frontier.erase( 0 );
 		pthread_mutex_unlock( &frontierLock );

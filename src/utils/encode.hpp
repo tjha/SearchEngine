@@ -76,7 +76,7 @@ namespace dex
 
 
 		// basicString Encoding
-		// ( size of string as int ) + ( string ) 
+		// ( size of string as int ) + ( string )
 		template < class T >
 		class encoder < dex::basicString < T > >
 			{
@@ -380,7 +380,7 @@ namespace dex
 						decodedData.pushBack( TDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
 						}
 
-					if ( advancedEncoding ) 
+					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;
 
 					return decodedData;
@@ -404,7 +404,7 @@ namespace dex
 						decodedData.insert( TDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
 						}
 
-					if ( advancedEncoding ) 
+					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;
 
 					return decodedData;

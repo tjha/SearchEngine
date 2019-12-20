@@ -12,11 +12,11 @@
 // 2019-10-30: File creation: combsc
 
 #include "catch.hpp"
-#include "../src/crawler/crawler.hpp"
-#include "../src/crawler/robotsMap.hpp"
-#include "exception.hpp"
-#include "unorderedMap.hpp"
-#include "unorderedSet.hpp"
+#include "crawler/crawler.hpp"
+#include "crawler/robotsMap.hpp"
+#include "utils/exception.hpp"
+#include "utils/unorderedMap.hpp"
+#include "utils/unorderedSet.hpp"
 
 using dex::string;
 using dex::RobotTxt;
@@ -25,6 +25,7 @@ using dex::unorderedMap;
 using std::cout;
 using std::endl;
 
+const dex::string dex::RobotTxt::userAgent = "jhirshey@umich.edu (Linux)";
 
 TEST_CASE( "Crawl", "[crawler]" )
 	{
@@ -32,24 +33,24 @@ TEST_CASE( "Crawl", "[crawler]" )
 		{
 		robotsMap robots( 100 );
 		string res;
-		
+
 		cout << "start long boi" << endl;
 		dex::crawler::crawlUrl( "http://www.tbrandstudio.com/", res, robots );
 		cout << "end connection" << endl;
 		int r = dex::crawler::crawlUrl( dex::string( "https://nytcnapps.oss-cn-hongkong.aliyuncs.com/latest.apk" ), res, robots );
 		cout << r << endl;
-		
+
 		dex::crawler::crawlUrl( "https://www.latimes.com/entertainment-arts/books/los-angeles-times-book-club", res, robots );
 		cout << "here" << endl;
-		
-		
+
+
 		}
-	
+
 	SECTION( "HTTPS" )
 		{
 		robotsMap robots( 100 );
 		string res;
-		
+
 		int errorCode = dex::crawler::crawlUrl( "https://www.runescape.com", res, robots );
 		REQUIRE( errorCode == 302 );
 		REQUIRE( res == "https://www.runescape.com/splash" );
@@ -95,5 +96,5 @@ TEST_CASE( "Crawl", "[crawler]" )
 		REQUIRE( errorCode == -1 );
 		}
 
-	
+
 	}

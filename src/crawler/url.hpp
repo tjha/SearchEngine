@@ -1,11 +1,3 @@
-
-#ifndef DEX_URL_HPP
-#define DEX_URL_HPP
-
-#include "basicString.hpp"
-#include "unorderedSet.hpp"
-#include "exception.hpp"
-#include "functional.hpp"
 // 2019-12-10: Cache Complete Url, add subdomain and domain: combsc
 // 2019-12-02: Added const to respective functions
 // 2019-11-27: Fixed completeUrl if no path is given but ?# are: combsc
@@ -16,6 +8,14 @@
 //             to ensure we don't mess up the url in the future: combsc
 // 2019-10-31: Copy constructor for robots: jhirsh
 // 2019-10-31: Init commit, added query and fragment: combsc
+
+#ifndef DEX_URL_HPP
+#define DEX_URL_HPP
+
+#include "utils/basicString.hpp"
+#include "utils/exception.hpp"
+#include "utils/functional.hpp"
+#include "utils/unorderedSet.hpp"
 
 namespace dex
 	{

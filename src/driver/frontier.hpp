@@ -5,16 +5,18 @@
 // 2019-12-04: Made scoreUrl less aggressive, improved efficiency: combsc
 // 2019-12-03: Change getUrl to reduce number of pageFault: combsc + jhirsh
 // 2019-12-02: Implement maximumSize: combsc
-// 2019-12-01: Implement scoreUrl, getUrls: combsc 
+// 2019-12-01: Implement scoreUrl, getUrls: combsc
 // 2019-11-15: Init Commit, not meant to be efficient: combsc
+
 #ifndef DEX_FRONTIER_HPP
 #define DEX_FRONTIER_HPP
-#include "../utils/vector.hpp"
-#include "../utils/basicString.hpp"
-#include "../utils/unorderedSet.hpp"
-#include "../crawler/url.hpp"
-#include "../crawler/robotsMap.hpp"
+
 #include <stdlib.h>
+#include "crawler/robotsMap.hpp"
+#include "crawler/url.hpp"
+#include "utils/basicString.hpp"
+#include "utils/unorderedSet.hpp"
+#include "utils/vector.hpp"
 
 namespace dex
 	{
@@ -24,7 +26,7 @@ namespace dex
 			robotsMap *robotsPointer = nullptr;
 			vector < Url > toVisit;
 			unorderedSet < Url > *toCheck;
-			
+
 			size_t maximumSize;
 
 			double scoreUrl( dex::Url url )
@@ -70,7 +72,7 @@ namespace dex
 							}
 						}
 					}
-				
+
 
 				// Promote short URLs
 				// max of this should not give more than a good TLD
@@ -155,13 +157,13 @@ namespace dex
 				toCheck->erase( best );
 				toVisit[ maxIndex ] = toVisit.back( );
 				toVisit.popBack( );
-				
+
 				return best;
 				}
 
 			void putUrl( const Url &url)
 				{
-				if ( toCheck->count( url ) > 0 ) 
+				if ( toCheck->count( url ) > 0 )
 					{
 					return;
 					}
@@ -199,7 +201,7 @@ namespace dex
 					toVisit[ minIndex ] = url;
 					toCheck->insert( url );
 					}
-				else 
+				else
 					{
 					toVisit.pushBack( url );
 					toCheck->insert( url );

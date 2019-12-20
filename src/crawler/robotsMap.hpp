@@ -9,10 +9,10 @@
 #ifndef ROBOTS_MAP_HPP
 #define ROBOTS_MAP_HPP
 
-#include "robots.hpp"
-#include "unorderedMap.hpp"
-#include "sharedReaderLock.hpp"
-#include "utility.hpp"
+#include "crawler/robots.hpp"
+#include "utils/sharedReaderLock.hpp"
+#include "utils/unorderedMap.hpp"
+#include "utils/utility.hpp"
 
 namespace dex
 	{

@@ -1,20 +1,3 @@
-
-#ifndef DEX_CRAWLER_HPP
-#define DEX_CRAWLER_HPP
-
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <tls.h>
-#include <sys/time.h>
-#include <string.h>
-#include "robotsMap.hpp"
-#include "exception.hpp"
-#include "file.hpp"
-#include "url.hpp"
-#include <iostream>
-
 // 2019-12-10: Improve URL object: combsc
 // 2019-12-04: Kill connection if page is greater than 5 MB or if recv takes longer than 5 seconds: combsc
 // 2019-11-30: Make robotsMap threadsafe: combsc
@@ -43,6 +26,22 @@
 // 2019-10-29: Turned ParsedUrl into Url, uses dex::strings instead of char*: combsc
 // 2019-10-28: Cleaned up file, got working with HTTP and HTTPS: combsc
 // 2019-10-20: Init Commit: Jonas
+
+#ifndef DEX_CRAWLER_HPP
+#define DEX_CRAWLER_HPP
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <tls.h>
+#include <sys/time.h>
+#include <string.h>
+#include "crawler/robotsMap.hpp"
+#include "utils/exception.hpp"
+#include "utils/file.hpp"
+#include "crawler/url.hpp"
+#include <iostream>
 
 
 namespace dex
