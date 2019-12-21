@@ -1,9 +1,9 @@
 
 #include "catch.hpp"
-#include "crawler/url.hpp"
 #include "utils/basicString.hpp"
 #include "utils/file.hpp"
 #include "utils/utf.hpp"
+#include "utils/url.hpp"
 #include "utils/vector.hpp"
 
 #include <iostream>

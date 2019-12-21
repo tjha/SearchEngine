@@ -65,18 +65,18 @@ TEST_CASE( "gether matching Filenames", "[file]" )
 	{
 	SECTION ( "test with slash" )
 		{
-		dex::string directory = "./src/utils/fileTestsFolder/"; // Top Directory of SearchEngine
+		dex::string directory = "tst/fileTests/"; // Top Directory of SearchEngine
 		dex::string pattern = ".cpp";
 		dex::vector< dex::string > filenames = dex::matchingFilenames( directory, pattern );
 
 		dex::unorderedSet< dex::string > correct;
-		correct.insert("./src/utils/fileTestsFolder/1.cpp");
-		correct.insert("./src/utils/fileTestsFolder/2.cpp");
-		correct.insert("./src/utils/fileTestsFolder/3.cpp");
-		correct.insert("./src/utils/fileTestsFolder/alpha/4.cpp");
-		correct.insert("./src/utils/fileTestsFolder/alpha/5.cpp");
-		correct.insert("./src/utils/fileTestsFolder/beta/6.cpp");
-		correct.insert("./src/utils/fileTestsFolder/beta/delta/7.cpp");
+		correct.insert("tst/fileTests/1.cpp");
+		correct.insert("tst/fileTests/2.cpp");
+		correct.insert("tst/fileTests/3.cpp");
+		correct.insert("tst/fileTests/alpha/4.cpp");
+		correct.insert("tst/fileTests/alpha/5.cpp");
+		correct.insert("tst/fileTests/beta/6.cpp");
+		correct.insert("tst/fileTests/beta/delta/7.cpp");
 		REQUIRE( filenames.size( ) == correct.size( ) );
 		for ( size_t i = 0; i < filenames.size( ); i++ )
 			REQUIRE( correct.count( filenames[ i ] ) == 1 );
@@ -84,18 +84,18 @@ TEST_CASE( "gether matching Filenames", "[file]" )
 
 	SECTION ( "test with no slash" )
 		{
-		dex::string directory = "./src/utils/fileTestsFolder"; // Top Directory of SearchEngine
+		dex::string directory = "tst/fileTests"; // Top Directory of SearchEngine
 		dex::string pattern = ".cpp";
 		dex::vector< dex::string > filenames = dex::matchingFilenames( directory, pattern );
 
 		dex::unorderedSet< dex::string > correct;
-		correct.insert("./src/utils/fileTestsFolder/1.cpp");
-		correct.insert("./src/utils/fileTestsFolder/2.cpp");
-		correct.insert("./src/utils/fileTestsFolder/3.cpp");
-		correct.insert("./src/utils/fileTestsFolder/alpha/4.cpp");
-		correct.insert("./src/utils/fileTestsFolder/alpha/5.cpp");
-		correct.insert("./src/utils/fileTestsFolder/beta/6.cpp");
-		correct.insert("./src/utils/fileTestsFolder/beta/delta/7.cpp");
+		correct.insert("tst/fileTests/1.cpp");
+		correct.insert("tst/fileTests/2.cpp");
+		correct.insert("tst/fileTests/3.cpp");
+		correct.insert("tst/fileTests/alpha/4.cpp");
+		correct.insert("tst/fileTests/alpha/5.cpp");
+		correct.insert("tst/fileTests/beta/6.cpp");
+		correct.insert("tst/fileTests/beta/delta/7.cpp");
 		REQUIRE( filenames.size( ) == correct.size( ) );
 		for ( size_t i = 0; i < filenames.size( ); i++ )
 			REQUIRE( correct.count( filenames[ i ] ) == 1 );

@@ -7,8 +7,8 @@
 #define RANKER_OBJECTS_HPP
 
 #include "constraintSolver/constraintSolver.hpp"
-#include "crawler/url.hpp"
 #include "indexer/index.hpp"
+#include "utils/url.hpp"
 #include "utils/vector.hpp"
 
 // This is what our cosntraintSolver ISR interface looks like. See constraintSolver.hpp

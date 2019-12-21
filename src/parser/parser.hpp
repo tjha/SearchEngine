@@ -30,11 +30,11 @@
 #define DEX_HTML_PARSER
 
 #include <cstddef>
-#include "crawler/url.hpp"
 #include "utils/algorithm.hpp"
 #include "utils/basicString.hpp"
 #include "utils/exception.hpp"
 #include "utils/utility.hpp"
+#include "utils/url.hpp"
 #include "utils/vector.hpp"
 
 

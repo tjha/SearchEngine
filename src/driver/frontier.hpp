@@ -13,9 +13,9 @@
 
 #include <stdlib.h>
 #include "crawler/robotsMap.hpp"
-#include "crawler/url.hpp"
 #include "utils/basicString.hpp"
 #include "utils/unorderedSet.hpp"
+#include "utils/url.hpp"
 #include "utils/vector.hpp"
 
 namespace dex

@@ -9,10 +9,10 @@
 #define DEX_ENCODE
 
 #include "crawler/robots.hpp"
-#include "crawler/url.hpp"
+#include "utils/basicString.hpp"
 #include "utils/exception.hpp"
 #include "utils/vector.hpp"
-#include "utils/basicString.hpp"
+#include "utils/url.hpp"
 
 namespace dex
 	{

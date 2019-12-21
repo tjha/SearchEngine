@@ -40,7 +40,7 @@
 #include "crawler/robotsMap.hpp"
 #include "utils/exception.hpp"
 #include "utils/file.hpp"
-#include "crawler/url.hpp"
+#include "utils/url.hpp"
 #include <iostream>
 
 

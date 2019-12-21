@@ -6,11 +6,11 @@
 
 #include <iostream>
 #include "catch.hpp"
-#include "crawler/url.hpp"
 #include "utils/basicString.hpp"
 #include "utils/encode.hpp"
 #include "utils/exception.hpp"
 #include "utils/unorderedMap.hpp"
+#include "utils/url.hpp"
 #include "utils/vector.hpp"
 
 using namespace dex;
