@@ -1,6 +1,7 @@
 // parser.hpp
 // Provides functions to parse HTML content and deliver
-// 2019-12-04:	Changed anchorterxt return type; added title words. Added return functions for both.
+// 2019-12-21:  Fixed commented out bug in Ctor for GetLinks and removed if isIndex else block: tjha
+// 2019-12-04:	 Changed anchorterxt return type; added title words. Added return functions for both.
 // 2019-12-03:  Added GetWords,inAvoid,findScripts. Edited Parsetags.
 // 2019-11-26:  Eliminated unnecesssary code duplication in fixDots, and
 // 			    addressed several edge cases: tjha
@@ -199,20 +200,16 @@ namespace dex
 			pageLink.popBack( );
 			}
 		//htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
-		//GetLinks( html, isIndex );
-      		if ( isIndex )
-         		{ 
-		         lenAnchors = words.size();
-		         buildAnchors();
-         
-         		GetTitle( html );
-         		buildTitle();
-         
-         		GetWords( html );
-         		}
-     		else
-			{
-			GetLinks( html, isIndex );
+		GetLinks( html, isIndex );
+		if ( isIndex )
+			{ 
+			lenAnchors = words.size();
+			buildAnchors();
+	
+			GetTitle( html );
+			buildTitle();
+	
+			GetWords( html );
 			}
 		}
 
