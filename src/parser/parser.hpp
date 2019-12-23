@@ -783,5 +783,5 @@ namespace dex
 		}
 
 
-};
+}
 #endif // DEX_HTML_PARSER

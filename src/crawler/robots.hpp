@@ -148,7 +148,7 @@ namespace dex
 
 
 		public:
-			static const unsigned defaultDelay = 1;
+			static const unsigned defaultDelay = 10;
 			static const unsigned defaultExpiration = 60 * 60 * 24;
 			static const dex::string userAgent;
 

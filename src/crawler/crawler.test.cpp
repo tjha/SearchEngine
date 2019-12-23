@@ -29,23 +29,6 @@ const dex::string dex::RobotTxt::userAgent = "jhirshey@umich.edu (Linux)";
 
 TEST_CASE( "Crawl", "[crawler]" )
 	{
-	SECTION( "OTHER" )
-		{
-		robotsMap robots( 100 );
-		string res;
-
-		cout << "start long boi" << endl;
-		dex::crawler::crawlUrl( "http://www.tbrandstudio.com/", res, robots );
-		cout << "end connection" << endl;
-		int r = dex::crawler::crawlUrl( dex::string( "https://nytcnapps.oss-cn-hongkong.aliyuncs.com/latest.apk" ), res, robots );
-		cout << r << endl;
-
-		dex::crawler::crawlUrl( "https://www.latimes.com/entertainment-arts/books/los-angeles-times-book-club", res, robots );
-		cout << "here" << endl;
-
-
-		}
-
 	SECTION( "HTTPS" )
 		{
 		robotsMap robots( 100 );
@@ -95,6 +78,4 @@ TEST_CASE( "Crawl", "[crawler]" )
 		errorCode = dex::crawler::crawlUrl( "http://tlpi/index.html", res, robots );
 		REQUIRE( errorCode == -1 );
 		}
-
-
 	}
