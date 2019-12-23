@@ -29,20 +29,40 @@ CXXFLAGS := $(CXXFLAGS) -I $(SOURCE_DIR)/ -I $(TEST_DIR)/
 
 # .hpp files
 HEADER_SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.hpp')
-# .cpp files that are not tests
-BUILD_SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.cpp' -not -name '*.test.cpp')
-# .cpp files that are tests
-TEST_SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.test.cpp')
-# .exe files corresponding to TEST_SOURCES
-TEST_EXECUTABLES := $(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.exe,$(TEST_SOURCES))
+# .cpp files
+BUILD_SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.cpp')
+# .exe files corresponding to TEST_SOURCES. This is pretty contrived, but make wasn't playing nice otherwise
+ALL_TEST_EXECUTABLES :=\
+		$(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.exe,$(shell find $(SOURCE_DIR) -type f -name '*.test.cpp'))
+TEST_EXECUTABLES := $(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.exe,$(case))
+$(info $(case))
+$(info $(TEST_EXECUTABLES))
+ifndef $(case)
+	case := all
+endif
+$(info $(TEST_EXECUTABLES))
+ifeq ($(case),all)
+	TEST_EXECUTABLES := $(ALL_TEST_EXECUTABLES)
+endif
+$(info $(TEST_EXECUTABLES))
 # .o files that will be made (and should be kept)
-PRECIOUS_OBJECTS := $(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(BUILD_SOURCES) $(TEST_SOURCES))
+PRECIOUS_OBJECTS := $(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(BUILD_SOURCES))
 
-all: $(TEST_EXECUTABLES)
+all: test
 
-# test:
-# 	@if test $(module) = "all"; then\
+test: $(TEST_EXECUTABLES)
+# Don't run the indexer tests for now
+	@for file in $^; do\
+		if test "$$file" = "build/indexer/index.test.exe"; then\
+			echo "skipping test";\
+		else\
+			./$$file;\
+		fi;\
+	done;
 
+# Can use this for some testing
+noop:
+	$(info Doing nothing!)
 
 $(BUILD_DIR)/%.test.exe: $(BUILD_DIR)/%.test.o $(BUILD_DIR)/main.o
 # Also compile the corresponding .cpp (not .test.cpp) file if it exists
@@ -53,27 +73,18 @@ $(BUILD_DIR)/%.test.exe: $(BUILD_DIR)/%.test.o $(BUILD_DIR)/main.o
 		$(CXX) $(CXXFLAGS) $^ -o $@;\
 	fi;
 
-# Don't run the indexer tests for now
-	if test "$(patsubst $(BUILD_DIR)/%.test.exe,%,$@)" = "indexer/index"; then\
-		echo "skipping test";\
-	else\
-		./$@;\
-	fi;
-
 # Need to special case queryCompiler
 $(BUILD_DIR)/queryCompiler/queryCompiler.test.exe: $(BUILD_DIR)/queryCompiler/queryCompiler.test.o $(BUILD_DIR)/main.o\
 		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
 		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
 		$(BUILD_DIR)/indexer/index.o
 	$(CXX) $(CXXFLAGS) $^ -o $@;
-	./$@
 
 $(BUILD_DIR)/ranker/ranker.test.exe: $(BUILD_DIR)/ranker/ranker.test.o $(BUILD_DIR)/main.o\
 		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
 		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
 		$(BUILD_DIR)/indexer/index.o
 	$(CXX) $(CXXFLAGS) $^ -o $@;
-	./$@
 
 # Need to special case main.o for Catch-2
 $(BUILD_DIR)/main.o: $(TEST_DIR)/main.cpp $(TEST_DIR)/catch.hpp
@@ -103,10 +114,6 @@ $(SOURCE_DIR)/%.cpp: $(HEADER_SOURCES)
 # indexerDriver: src/indexer/driver.cpp src/indexer/index.cpp
 # 	make build
 # 	$(CXX) $(CXXFLAGS) src/indexer/driver.cpp src/indexer/index.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/indexerDriver.exe
-
-# indexerEncodingTest: tst/indexer/indexerEncodingTests.cpp
-# 	make build
-# 	$(CXX) $(CXXFLAGS) tst/indexer/indexerEncodingTests.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/encodingTests.exe
 
 # indexerTest: tst/indexer/indexTests.cpp
 # 	make build
@@ -146,7 +153,7 @@ $(SOURCE_DIR)/%.cpp: $(HEADER_SOURCES)
 clean:
 	@rm -rf $(BUILD_DIR)/
 
-.PHONY: all test clean
+.PHONY: all test clean noop
 
 # Keep all of our object files aroud for future compilations
 .PRECIOUS: $(PRECIOUS_OBJECTS)
