@@ -137,14 +137,14 @@ namespace dex
 		{
 		dex::encode::encoder < dex::vector < dex::Url > > UrlEncoder;
 		dex::vector< unsigned char > encodedFrontier = UrlEncoder( frontier.getFrontier( ) );
-		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
+		return writeToFile( fileName, reinterpret_cast < char * >( encodedFrontier.data( ) ), encodedFrontier.size( ) );
 		}
 
 	int saveVisitedLinks ( const char * fileName, dex::vector< dex::string > links )
 		{
 		dex::encode::encoder < dex::vector < dex::string > > VectorStringEncoder;
 		dex::vector< unsigned char > encodedFrontier = VectorStringEncoder( links );
-		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
+		return writeToFile( fileName, reinterpret_cast < char * >( encodedFrontier.data( ) ), encodedFrontier.size( ) );
 		}
 
 	int saveCrawledLinks( const char * fileName, dex::unorderedSet < dex::string > * crawled )

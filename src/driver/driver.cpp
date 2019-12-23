@@ -320,11 +320,7 @@ void *worker( void *args )
 
 				addToCrawled( toCrawl );
 
-<<<<<<< HEAD
 
-=======
-				
->>>>>>> master
 				dex::vector < dex::Url > links;
 				try
 					{

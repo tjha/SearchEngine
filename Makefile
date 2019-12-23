@@ -80,7 +80,7 @@ $(BUILD_DIR)/ranker/ranker.test.exe: $(BUILD_DIR)/ranker/ranker.test.o $(BUILD_D
 	$(CXX) $(CXXFLAGS) $^ -o $@;
 
 # Need to special case main.o for Catch-2
-$(BUILD_DIR)/main.o: $(TEST_DIR)/main.cpp $(TEST_DIR)/catch.hpp
+$(BUILD_DIR)/main.o: $(TEST_DIR)/main.cpp
 	mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $(BUILD_DIR)/main.o
 
@@ -88,28 +88,21 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 	mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
-# When any .hpp file is changed, assume we should rebuild everything (maybe bad, but it keeps this file shorter)
+# When any .hpp file is changed, assume we should rebuild everything except main.cpp (maybe bad, but it keeps this file
+# shorter)
+$(TEST_DIR)/main.cpp: $(TEST_DIR)/catch.hpp
 $(SOURCE_DIR)/%.cpp: $(HEADER_SOURCES)
 
-crawlerDriver: src/driver/driver.cpp
-	make build
-	$(CXX) $(CXXFLAGS) -O3 src/driver/driver.cpp -o $(BUILD_PATH)/driver.exe
+crawlerDriver: $(SOURCE_DIR)/driver/driver.cpp
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/driver.exe
 
-# indexerDriver: src/indexer/driver.cpp src/indexer/index.cpp
-# 	make build
-# 	$(CXX) $(CXXFLAGS) src/indexer/driver.cpp src/indexer/index.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/indexerDriver.exe
-
-# driverFinal: src/driver/driver.cpp
-# 	make build
-# 	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -O3 $(BUILD_PATH)/driver.exe
-
-# build:
-# 	@mkdir -vp $(addprefix $(BUILD_PATH)/tst/,$(TESTS_PATHS))
+indexerDriver: $(SOURCE_DIR)/indexer/driver.o $(SOURCE_DIR)/indexer/index.o
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/indexerDriver.exe
 
 printOS:
 	$(info Your OS is '$(UNAME_S)')
-
-# TODO: run_integration_tests #
 
 clean:
 	@rm -rf $(BUILD_DIR)/
@@ -118,7 +111,7 @@ cleanDriver:
 	@rm -rf data/tmp/logs/
 	@rm -rf data/tmp/performance/
 
-.PHONY: all test noop clean cleanDriver
+.PHONY: all test noop crawlerDriver indexerDriver printOS clean cleanDriver
 
 # Keep all of our object files aroud for future compilations
 .PRECIOUS: $(PRECIOUS_OBJECTS)
