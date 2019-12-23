@@ -132,36 +132,60 @@ TEST_CASE( "ISR functions on one document" )
 	string url = "hamiltoncshell.com";
 	vector < string > title = { "hamilton", "c", "shell" };
 	string titleString = "Hamilton C Shell 2012";
-	vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
+	vector < string > body = { "some", "junk", "and", "more", "junk", "and", "junk" };
 
 	REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 
-	indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk");
 	indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+	indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk");
 
-	std::cout << "--- AND ISR ---\n";
-	REQUIRE( andISR.next( ) == 2 );
-	REQUIRE( andISR.next( ) == 5 );
-	REQUIRE( andISR.next( ) == static_cast < size_t >( -1 ) );
-	std::cout << "--- JUNK ISR ---\n";
-	REQUIRE( junkISR.next( ) == 1 );
-	REQUIRE( junkISR.next( ) == 4 );
-	REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
+	SECTION( "next" )
+		{
+		REQUIRE( andISR.next( ) == 2 );
+		REQUIRE( andISR.next( ) == 5 );
+		REQUIRE( andISR.next( ) == static_cast < size_t >( -1 ) );
 
-	std::cout << "--- AND ISR ---\n";
-	andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
-	REQUIRE( andISR.seek( 0 ) == 2 );
-	REQUIRE( andISR.next( ) == 5 );
+		REQUIRE( junkISR.next( ) == 1 );
+		REQUIRE( junkISR.next( ) == 4 );
+		REQUIRE( junkISR.next( ) == 6 );
+		REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
+		}
 
-	andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
-	REQUIRE( andISR.seek( 0 ) == 2 );
-	REQUIRE( andISR.seek( 2 ) == 2 );
-	REQUIRE( andISR.seek( 3 ) == 5 );
-	REQUIRE( andISR.seek( 6 ) == static_cast < size_t >( -1 ) );
+	SECTION( "seek" )
+		{
+		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+		REQUIRE( andISR.seek( 0 ) == 2 );
+		REQUIRE( andISR.seek( 2 ) == 2 );
+		REQUIRE( andISR.seek( 3 ) == 5 );
+		REQUIRE( andISR.seek( 6 ) == static_cast < size_t >( -1 ) );
 
-	REQUIRE( andISR.seek( 4 ) == 5 );
-	REQUIRE( andISR.seek( 1 ) == 2 );
-	REQUIRE( andISR.seek( 0 ) == 2 );
+		REQUIRE( andISR.seek( 4 ) == 5 );
+		REQUIRE( andISR.seek( 1 ) == 2 );
+		REQUIRE( andISR.seek( 0 ) == 2 );
+		}
+
+	SECTION( "seek with next" )
+		{
+		junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
+		REQUIRE( junkISR.next( ) == 1 );
+		REQUIRE( junkISR.seek( 3 ) == 4 );
+		REQUIRE( junkISR.next( ) == 6 );
+
+		junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
+		REQUIRE( junkISR.seek( 1 ) == 1 );
+		REQUIRE( junkISR.next( ) == 4 );
+		REQUIRE( junkISR.next( ) == 6 );
+
+		junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
+		REQUIRE( junkISR.seek( 0 ) == 1 );
+		REQUIRE( junkISR.next( ) == 4 );
+		REQUIRE( junkISR.next( ) == 6 );
+
+		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
+		REQUIRE( andISR.seek( 0 ) == 2 );
+		REQUIRE( andISR.next( ) == 5 );
+		}
+
 
 	close( fd );
 	}
@@ -453,8 +477,6 @@ TEST_CASE( "ONE BIG DOC" )
 
 		indexChunk::indexStreamReader wordISR1b = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
 		REQUIRE( wordISR1b.seek( 0 ) == 0 );
-		for ( int iters = 0;  iters < 5;  iters++ )
-			std::cout << "next( " << iters << " ): " << wordISR1b.next( ) << "\n";
 
 		indexChunk::indexStreamReader wordISR1 = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
 		REQUIRE( wordISR1.seek( 0 ) == 0 );
@@ -470,11 +492,8 @@ TEST_CASE( "ONE BIG DOC" )
 		indexChunk::indexStreamReader wordISR3 = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
 		for ( int iters = 0;  iters < ( 1<<4 );  iters++ )
 			{
-			std::cout << "iters: " << iters << "\n";
 			size_t seekLoc = wordISR3.seek( iters<<2 );
-			std::cout << "\tseek-ed: " << seekLoc << "\n";
 			size_t nextLoc = wordISR3.next( );
-			std::cout << "\tnext-ed: " << nextLoc << "\n";
 			// Seek to 0, then next( ) does not return the next location after 0, but returns 0
 			REQUIRE( seekLoc == iters<<2 );
 			REQUIRE( nextLoc == ( iters<<2 ) + 1 );
@@ -483,7 +502,6 @@ TEST_CASE( "ONE BIG DOC" )
 		indexChunk::indexStreamReader thirdWordISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "someWord" );
 		for ( int iters = 0;  iters < ( 1<<4 );  iters++ )
 			{
-			std::cout << "iters: " << iters << "\n";
 			REQUIRE( thirdWordISR.seek( iters<<8 ) == iters<<8 );
 			REQUIRE( thirdWordISR.next( ) == ( iters<<8 ) + 1 );
 			}

@@ -276,6 +276,7 @@ namespace dex
 						postsChunk *postsChunkum; // Bad naming to disambiguate chunk types
 						indexChunk *indexChunkum;
 						size_t absoluteLocation;
+						bool begun;
 
 					public:
 						// An ISR for the empty string is just and end of document ISR.
