@@ -18,7 +18,7 @@
 #include <pthread.h>
 #include "constraintSolver/constraintSolver.hpp"
 #include "indexer/index.hpp"
-#include "queryCompiler/parserQC.hpp"
+#include "queryCompiler/parser.hpp"
 #include "ranker/rankerConfig.hpp"
 #include "ranker/rankerObjects.hpp"
 #include "ranker/topN.hpp"

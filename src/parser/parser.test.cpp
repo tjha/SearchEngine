@@ -26,7 +26,6 @@
 
 #include <cstddef>
 #include <fstream>
-#include <iostream>
 #include "catch.hpp"
 #include "parser/parser.hpp"
 #include "utils/basicString.hpp"
@@ -45,8 +44,6 @@ using dex::Url;
 using dex::vector;
 
 using std::size_t;
-using std::cout;
-using std::endl;
 
 TEST_CASE( "basic get links with relative paths", "[parser]" )
 	{
@@ -73,12 +70,6 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 		firstTen.pushBack( "jump" );
 		firstTen.pushBack( "to" );
 		firstTen.pushBack( "navigation" );
-		// std::cout << "inParserTests\n";
-		// std::cout << "file: " << filename << "\thas length: " << words.size( ) << "\n";
-		// for ( auto it = words.cbegin( );  it != words.cend( );  it++ )
-		// 	{
-		// 	std::cout << *it << "\n";
-		// 	}
 
 		for ( size_t i = 0; i < 11; i++ )
 			{
@@ -98,37 +89,6 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 			}
 
 		}
-
-/*
-	SECTION(" Parse words from many docs test :")
-		{
-		vector< string > filenames;
-		filenames.pushBack( "Odaenathus.html" );
-		filenames.pushBack( "amazon.html" );
-		filenames.pushBack( "enneagraminstitute.html" );
-		filenames.pushBack( "hearthpwn.html" );
-		filenames.pushBack( "impeachment.html" );
-		filenames.pushBack( "joel.html" );
-		filenames.pushBack( "man7_all_pages.html" );
-		filenames.pushBack( "man7_index.html" );
-		filenames.pushBack( "man7_man_pages.html" );
-		filenames.pushBack( "man7.html" );
-		filenames.pushBack( "runescape.html" );
-		filenames.pushBack( "wsj.html" );
-		filenames.pushBack( "youtube.html" );
-		for ( auto filenameIt = filenames.cbegin( );  filenameIt != filenames.cend( );  filenameIt++ )
-			{
-			string filename = "tst/parserTests/" + *filenameIt;
-			// std::cout << "\n\tPARSING FILE: " << filename << "\n\n";
-
-			string htmlDoc = readFromFile( filename.cStr() );
-			// std::cout << "\tSUCESSFULLY READ FROM FILE\n";
-			HTMLparser testParser( htmlDoc );
-			vector<string> words = testParser.ReturnWords();
-
-			}
-		}
-*/
 
 	SECTION( "parsed simple html document with one link" )
 		{
@@ -295,194 +255,6 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 		}
 	}
 
-TEST_CASE( "peter_chen.html page: simple format with comment tags" )
-	{
-
-	// Read and save HTML file uisng HTMLparser
-	string filename = "tst/parserTests/peter_chen.html";
-	string htmlDoc;
-	htmlDoc = readFromFile( filename.cStr( ) );
-
-   dex::Url url( "https://web.eecs.umich.edu/~pmchen" );
-	HTMLparser testParser( url, htmlDoc, true );
-
-	SECTION( "Expected Links" )
-		{
-		vector< dex::Url > links = testParser.ReturnLinks( );
-
-
-		// Create vector with expected links on page
-		vector < string > expectedLinks;
-
-		expectedLinks.pushBack(
-			"http://www.provost.umich.edu/programs/thurnau/index.html" );
-		expectedLinks.pushBack( "http://www.eecs.umich.edu" );
-		expectedLinks.pushBack( "http://www.umich.edu" );
-		expectedLinks.pushBack(
-			"https://web.eecs.umich.edu/~pmchen/contact.html" );
-		expectedLinks.pushBack( "http://web.eecs.umich.edu/virtual/" );
-		expectedLinks.pushBack( "http://www.eecs.umich.edu/~pmchen/Rio" );
-		expectedLinks.pushBack( "http://www.eecs.umich.edu/ssl" );
-		expectedLinks.pushBack( "http://www.eecs.umich.edu/cse" );
-		expectedLinks.pushBack( "http://www.eecs.umich.edu" );
-		expectedLinks.pushBack( "https://web.eecs.umich.edu/~pmchen/papers/" );
-		expectedLinks.pushBack(
-			"https://web.eecs.umich.edu/~pmchen/eecs482/" );
-		expectedLinks.pushBack(
-			"https://web.eecs.umich.edu/~pmchen/students.html" );
-		expectedLinks.pushBack(
-			"https://web.eecs.umich.edu/~pmchen/software" );
-
-		// Validate correct number of links were extracted
-		REQUIRE ( links.size( ) == expectedLinks.size( ) );
-
-		// Verify parsed links match expected page links
-		for (size_t i = 0; i < expectedLinks.size(); i++ )
-			{
-			REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
-			}
-		}
-
-	SECTION( "Expected Anchor Text" )
-		{
-		// vector < dex::anchorPos > anchors = testParser.ReturnAnchorText();
-		vector < dex::AncWord > anchors = testParser.ReturnAnchorText();
-		size_t lenAnchors = testParser.ReturnAnchorTextLength( );
-		vector < dex::string > AnchorWords;
-
-		// push back anchor words for each link
-		AnchorWords.pushBack( "arthur" );
-		AnchorWords.pushBack( "f" );
-		AnchorWords.pushBack( "thurnau" );
-		AnchorWords.pushBack( "professor" );
-
-		AnchorWords.pushBack( "eecs" );
-		AnchorWords.pushBack( "department" );
-
-		AnchorWords.pushBack( "university" );
-		AnchorWords.pushBack( "of" );
-		AnchorWords.pushBack( "michigan" );
-
-		AnchorWords.pushBack( "contact" );
-		AnchorWords.pushBack( "information" );
-
-		AnchorWords.pushBack( "adding" );
-		AnchorWords.pushBack( "security" );
-		AnchorWords.pushBack( "services" );
-		AnchorWords.pushBack( "through" );
-		AnchorWords.pushBack( "virtual" );
-		AnchorWords.pushBack( "machines" );
-
-
-		AnchorWords.pushBack( "rio" );
-		AnchorWords.pushBack( "ram" );
-		AnchorWords.pushBack( "i" );
-		AnchorWords.pushBack( "o" );
-
-		AnchorWords.pushBack( "software" );
-		AnchorWords.pushBack( "systems" );
-		AnchorWords.pushBack( "lab" );
-
-		AnchorWords.pushBack( "computer" );
-		AnchorWords.pushBack( "science" );
-		AnchorWords.pushBack( "and" );
-		AnchorWords.pushBack( "engineering" );
-		AnchorWords.pushBack( "division" );
-
-		AnchorWords.pushBack( "eecs" );
-
-		AnchorWords.pushBack( "publications" );
-
-		AnchorWords.pushBack( "eecs" );
-		// AnchorWords.pushBack( "482" ); - - because we don't want numbers anymore.
-
-		AnchorWords.pushBack( "students" );
-
-		AnchorWords.pushBack( "software" );
-
-
-		REQUIRE( AnchorWords.size( ) == lenAnchors );
-
-
-
-		size_t word_count = 0;
-		for ( size_t j = 0; j < anchors.size( ); j++ )
-			{
-			for ( size_t i = 0; i < anchors[ j ].text.size() ; i++ )
-				{
-				REQUIRE( AnchorWords[ word_count++ ] == anchors[ j ].text[ i ] );
-				}
-			}
-		}
-
-	SECTION( "Expected Words" )
-		{
-		}
-
-	}
-
-TEST_CASE( "amazon.com html page: comment, script, div, img, and link tags" )
-	{
-		string filename = "tst/parserTests/amazon.html";
-		string htmlDoc;
-		htmlDoc = readFromFile( filename.cStr( ) );
-      dex::Url url( "https://www.amazon.com/" );
-		HTMLparser testParser( url, htmlDoc, true );
-
-		SECTION( "Expected Links" )
-			{
-			vector< dex::Url > links = testParser.ReturnLinks( );
-
-			// Create vector with expected links on page
-			vector < string > expectedLinks;
-
-			expectedLinks.pushBack(
-				"https://www.amazon.com/gp/help/customer/display.html/ref=footer_cou?ie=UTF8&nodeId=508088" );
-			expectedLinks.pushBack(
-				"https://www.amazon.com/gp/help/customer/display.html/ref=footer_privacy?ie=UTF8&nodeId=468496" );
-
-			// Validate correct number of links were extracted
-			REQUIRE ( links.size( ) == expectedLinks.size( ) );
-
-			// Verify parsed links match expected page links
-			for ( size_t i = 0; i < expectedLinks.size(); i++ )
-				{
-				REQUIRE ( links[ i ] == Url( expectedLinks[ i ].cStr( ) ) );
-				}
-			}
-
-		SECTION ( "Expected Anchor Text" )
-			{
-			vector < dex::AncWord > anchors = testParser.ReturnAnchorText();
-			// vector < dex::string > words = testParser.ReturnWords();
-			vector < dex::string > AnchorWords;
-			size_t lenAnchors = testParser.ReturnAnchorTextLength();
-
-			// push back anchor words for each link
-			AnchorWords.pushBack( "conditions" );
-			AnchorWords.pushBack( "of" );
-			AnchorWords.pushBack( "use" );
-
-			AnchorWords.pushBack( "privacy" );
-			AnchorWords.pushBack( "policy" );
-
-			REQUIRE( AnchorWords.size( ) == lenAnchors );
-
-			size_t word_count = 0;
-			for ( size_t j = 0; j < anchors.size( ); j++ )
-				{
-				for ( size_t i = 0; i < anchors[ j ].text.size( ); i++ )
-					{
-					REQUIRE( AnchorWords[ word_count++ ] == anchors[ j ].text[ i ] );
-					}
-				}
-			}
-
-		SECTION( "Expected Words" )
-			{
-			}
-	}
-
 TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
 	{
 		string filename = "tst/parserTests/man7.html";
@@ -628,8 +400,6 @@ TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
 
 			// Create vector with expected links on page
 			vector < string > expectedLinks;
-
-			//std::cout << links[ links.size( ) - 2 ].completeUrl( ) << std::endl;
 
 			// Validate correct number of links were extracted
 			REQUIRE ( links.size( ) == 10813 ); // TODO: figure out why not 10812

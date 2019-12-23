@@ -5,7 +5,7 @@
 #include "catch.hpp"
 #include "constraintSolver/testingISRs.hpp"
 #include "queryCompiler/expression.hpp"
-#include "queryCompiler/parserQC.hpp"
+#include "queryCompiler/parser.hpp"
 #include "queryCompiler/tokenstream.hpp"
 #include "ranker/rankerObjects.hpp"
 #include "utils/basicString.hpp"

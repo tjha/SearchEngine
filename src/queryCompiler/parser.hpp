@@ -1,9 +1,9 @@
-// parserQC.hpp
+// parser.hpp
 //
 // Define interface for our parser based off of the third lab.
 
-#ifndef DEX_PARSER
-#define DEX_PARSER
+#ifndef DEX_QUERY_PARSER
+#define DEX_QUERY_PARSER
 
 #include "constraintSolver/constraintSolver.hpp"
 #include "queryCompiler/expression.hpp"

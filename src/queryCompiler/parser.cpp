@@ -1,10 +1,10 @@
-// parserQC.cpp
+// parser.cpp
 //
 // Implementation of the parser class.
 
 #include "constraintSolver/constraintSolver.hpp"
 #include "queryCompiler/expression.hpp"
-#include "queryCompiler/parserQC.hpp"
+#include "queryCompiler/parser.hpp"
 #include "ranker/rankerObjects.hpp"
 
 dex::queryCompiler::expression *dex::queryCompiler::parser::findFactor( )
