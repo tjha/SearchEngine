@@ -1,6 +1,7 @@
 // ranker.hpp
 // This ranks the stuff
 
+// 2019-12-22: Updated the getDesiredSpan function to use ISRs efficiently: combsc
 // 2019-12-14 and 15: moved everything to pointers, removed prints: combsc
 // 2019-12-12 and 13: Get dynamic ranking working with the constraint solver interface
 //                    Also get static and dynamic scoring working in tandem: combsc
@@ -208,74 +209,88 @@ namespace dex
 					vector < vector < size_t > > &wordCount, vector < string > &titles, vector < string > &urls )
 				{
 				vector < vector < size_t > > documentSpans;
-				//std::cout << "NEW\n\n\n" << std::endl;
 				
 				wordCount.clear( );
 				size_t size = isrs.size( );
-				vector < size_t > firstValues;
-				firstValues.resize( size );
-				size_t beginDocument = 0;
-				size_t endDocument = matching->next( );
+				vector < size_t > isrCurrentValue;
+				isrCurrentValue.resize( size );
+				size_t endDocument;
+				// Find the word counts for all the documents that match
+				endDocument = matching->seek( 0 );
 				for ( size_t i = 0;  i < isrs.size( );  ++i )
 					{
-					firstValues[ i ] = isrs[ i ]->next( );
+					isrCurrentValue[ i ] = isrs[ i ]->seek( 0 );
+					//std::cout << "First ISR Value: " << isrCurrentValue[ i ] << " Index: " << i << std::endl;
 					}
 				while ( endDocument != dex::endOfDocumentISR::npos )
 					{
-					
 					vector < size_t > currentWordCount;
-					
-					vector < size_t > spansOccurances( heuristics.size( ) );
-					vector < size_t > current( size );
-					vector < size_t > next( size );
 					currentWordCount.resize( size );
-					for ( size_t index = 0;  index < size;  ++index )
+					for ( size_t isrIndex = 0;  isrIndex < size;  ++isrIndex )
 						{
-						
-						//std::cout << "for index: " << index << std::endl;
-						currentWordCount[ index ] = 0;
-						// Check to see if the value found earlier is a part of this document.
-						// if it was, increment the words found.
-						//std::cout << firstValues[ index ] << std::endl;
-						if ( firstValues[ index ] < endDocument )
+						currentWordCount[ isrIndex ] = 0;
+						// Check to see if our current next word is a part of the document that we're on
+						// If it isn't, then we know this word doesn't appear in the current document.
+						if ( isrCurrentValue[ isrIndex ] < endDocument )
 							{
-							currentWordCount[ index ]++;
-							size_t result = isrs[ index ]->next( );
-							while ( result < endDocument )
+							currentWordCount[ isrIndex ]++;
+							isrCurrentValue[ isrIndex ] = isrs[ isrIndex ]->next( );
+							while ( isrCurrentValue[ isrIndex ] < endDocument )
 								{
-								//std::cout << result << std::endl;
-								++currentWordCount[ index ];
-								result = isrs[ index ]->next( );
+								++currentWordCount[ isrIndex ];
+								isrCurrentValue[ isrIndex ] = isrs[ isrIndex ]->next( );
 								}
 							}
-						//std::cout << "Seeking to " << beginDocument << std::endl;
-						current[ index ] = isrs[ index ]->seek( beginDocument );
 						}
-					size_t minCount = currentWordCount[ 0 ];
+					wordCount.pushBack( currentWordCount );
+					endDocument = matching->next( );
+					ends->seek( endDocument );
+					}
+
+				// find spans
+				vector < size_t > current;
+				current.clear( );
+				current.resize( size );
+				endDocument = matching->seek( 0 );
+				size_t documentNumber = 0;
+				for ( size_t i = 0;  i < isrs.size( );  ++i )
+					{
+					current[ i ] = isrs[ i ]->seek( 0 );
+					}
+				while ( endDocument != dex::endOfDocumentISR::npos )
+					{
+					vector < size_t > spansOccurances( heuristics.size( ) );
+					vector < size_t > next( size );
+
+					// Find the rarest word for this document
+					size_t minCount = wordCount[ documentNumber ][ 0 ];
+					//std::cout << "Word count: " << minCount << " for index: 0" << std::endl;
 					size_t minIndex = 0;
-					//std::cout << "Index: " << 0 << std::endl;
-					//std::cout << "Word Count: " << minCount << std::endl;
 					for ( size_t index = 1;  index < size;  ++index )
 						{
-						//std::cout << "Index: " << index << std::endl;
-						//std::cout << "Word Count: " << currentWordCount[ index ] << std::endl;
-						if ( currentWordCount[ index ] < minCount )
+						//std::cout << "Word count: " << wordCount[ documentNumber ][ index ] << " for index: " << index << std::endl;
+						if ( wordCount[ documentNumber ][ index ] < minCount )
 							{
-							minCount = currentWordCount[ index ];
+							minCount = wordCount[ documentNumber ][ index ];
 							minIndex = index;
 							}
 						}
 					size_t rarest = minIndex;
-					//std::cout << "rarest calculated to be " << rarest << std::endl;
-					
-					
+
+					//std::cout << "For document " << documentNumber << " the rarest index is " << rarest << std::endl;
+
 					for ( size_t index = 0;  index < size;  ++index )
 						{
-						//std::cout << "Initializing " << isrs[ index ].getWord ( ) << "\n";
-						//std::cout << "\t" << current[ index ];
-						next[ index ] = isrs[ index ]->next( );
-						//std::cout << "\t" << next[ index ] << "\n";
+						// If the current value we're looking at is past the end document there are no occurances
+						// of the word in this document. Therefore, we do not increment the ISR until we know that
+						// we're in the document that uses the word.
+						if ( current[ index ] < endDocument )
+							{
+							next[ index ] = isrs[ index ]->next( );
+							}
 						}
+
+					// Should be setup such that next is one past current.
 
 					dex::vector < size_t > closestLocations( size );
 					while ( current[ rarest ] < endDocument )
@@ -290,8 +305,6 @@ namespace dex
 							else
 								desiredPosition = current[ rarest ] + index - rarest;
 
-							//std::cout << "\t -" << isrs[ index ].getWord( ) << " starts at " << current[ index ] 
-							//		<< " with desiredPosition of " << desiredPosition << "\n";
 							if ( index != rarest )
 								{
 								// Position our ISRs such that current is less than our desired position and next is greater than our
@@ -367,7 +380,6 @@ namespace dex
 							}
 						}
 					documentSpans.pushBack( spansOccurances );
-					wordCount.pushBack( currentWordCount );
 					if ( chunk )
 						{
 						titles.pushBack( chunk->offsetsToEndOfDocumentMetadatas[ endDocument ].title );
@@ -375,12 +387,14 @@ namespace dex
 						}
 					endDocument = matching->next( );
 					ends->seek( endDocument );
-					beginDocument = endDocument - ends->documentSize( );
 					//std::cout << "begin document: " << beginDocument << std::endl;
 					//std::cout << "end document: " << endDocument << std::endl;
-					for ( size_t index = 0;  index < size;  ++index )
+					documentNumber++;
+					current.clear( );
+					current.resize( size );
+					for ( size_t i = 0;  i < isrs.size( );  ++i )
 						{
-						firstValues[ index ] = isrs[ index ]->seek( beginDocument );
+						current[ i ] = next[ i ];
 						}
 					}
 				return documentSpans;
@@ -439,15 +453,11 @@ namespace dex
 					}
 
 				vector < double > dynamicWordScores;
-				matching->seek( 0 );
+				
 				size_t beginDocument = 0;
-				size_t endDocument = matching->next( );
+				size_t endDocument = matching->seek( 0 );
 				for ( size_t i = 0;  i < wordCount.size( );  ++i )
 					{
-					// for ( size_t j = 0; j < wordCount[ i ]. size( ); ++j )
-					// 	{
-					// 	std::cout << wordCount[ i ][ j ] << " " << std::endl;
-					// 	}
 					double dynamicWordScore = getDynamicWordScore( wordCount[ i ], endDocument - beginDocument, emphasized,
 						emphasizedWeight, proportionCap, wordsWeight );
 					dynamicWordScores.pushBack( dynamicWordScore );
@@ -460,10 +470,9 @@ namespace dex
 					}
 				
 				wordCount.clear( );
-				matching->seek( 0 );
 				vector < vector < size_t > > titleWordCount;
 				// No need to get the titles and urls again, so just pass a nullptr.
-				vector < vector < size_t > > titleSpans = getDesiredSpans( titleISRs, matching, ends, nullptr, dynamicTitleSpanHeuristics,
+				vector < vector < size_t > > titleSpans = getDesiredSpans( titleISRs, matching, ends, chunk, dynamicTitleSpanHeuristics,
 						maxNumTitleSpans, wordCount, titles, urls );
 				vector < double > titleSpanScores;
 				
