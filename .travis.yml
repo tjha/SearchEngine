@@ -2,7 +2,7 @@ language: cpp
 compiler: gcc
 
 before_install:
- - sudo ./scripts/libressl-install.sh
+#  - sudo ./scripts/libressl-install.sh
 
 script:
  - make all

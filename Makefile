@@ -7,14 +7,8 @@ TEST_DIR := tst
 # Where to output
 BUILD_DIR := build
 
-# TODO: -Werror
-ifeq ($(tls),no)
-	CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -pthread
-else
-	CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -pthread -ltls
-endif
-
 # TODO: Is this block necessary?
+CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -pthread -ltls
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	CXXFLAGS := $(CXXFLAGS) -L/opt/libressl/lib
@@ -23,6 +17,11 @@ endif
 ifeq ($(UNAME_S),Darwin)
 	CXXFLAGS := $(CXXFLAGS) -L/usr/local/opt/libressl/lib
 	CXXFLAGS := $(CXXFLAGS) -I/usr/local/opt/libressl/include
+endif
+
+# TODO: -Werror
+ifeq ($(tls),no)
+	CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -pthread
 endif
 
 CXXFLAGS := $(CXXFLAGS) -I $(SOURCE_DIR)/ -I $(TEST_DIR)/
@@ -34,12 +33,13 @@ BUILD_SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.cpp')
 # .exe files corresponding to TEST_SOURCES. This is pretty contrived, but make wasn't playing nice otherwise
 ALL_TEST_EXECUTABLES :=\
 		$(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.exe,$(shell find $(SOURCE_DIR) -type f -name '*.test.cpp'))
+TESTS_TO_SKIP := $(BUILD_DIR)/indexer/index.test.exe $(BUILD_DIR)/crawler/crawler.test.exe
 TEST_EXECUTABLES := $(patsubst $(SOURCE_DIR)/%,$(BUILD_DIR)/%.test.exe,$(case))
 ifndef $(case)
 	case := all
 endif
 ifeq ($(case),all)
-	TEST_EXECUTABLES := $(ALL_TEST_EXECUTABLES)
+	TEST_EXECUTABLES := $(filter-out $(TESTS_TO_SKIP),$(ALL_TEST_EXECUTABLES))
 endif
 # .o files that will be made (and should be kept)
 PRECIOUS_OBJECTS := $(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(BUILD_SOURCES))
@@ -49,11 +49,8 @@ all: test
 test: $(TEST_EXECUTABLES)
 # Don't run the indexer or crawler tests for now
 	@for file in $^; do\
-		echo $$file;\
-		case $$file in\
-			build/indexer/index.test.exe|build/crawler/crawler.test.exe) echo "skipping test";;\
-			*)                                                           ./$$file;;\
-		esac;\
+		echo ./$$file;\
+		./$$file;\
 	done;
 
 # Can use this for some testing of the Makefile
