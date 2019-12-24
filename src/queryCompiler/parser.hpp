@@ -25,15 +25,11 @@ namespace dex
 				 *
 				 * Return nullptr if it could not be found
 				 */
-				expression *findAnd( );
-
+				expression *findPhrase( );
 				expression *findFactor( );
-
 				expression *findNot( );
-
+				expression *findAnd( );
 				expression *findOr( );
-
-				expression *findEmph( );
 
 			public:
 				/**

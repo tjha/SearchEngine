@@ -104,7 +104,7 @@ TEST_CASE( "token stream", "[queryCompiler]" )
 
 TEST_CASE( "parsing check", "[queryCompiler]" )
 	{
-	SECTION( "\"First    ($check   & stuff ) &~badness\"" )
+	SECTION( "[First    ($check   & stuff ) &~badness]" )
 		{
 		dex::string query = "First    ($check   & stuff ) &~badness";
 		dex::queryCompiler::parser parsyMcParseface;
@@ -121,7 +121,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 		delete md;
 		}
 
-	SECTION( "two words" )
+	SECTION( "[two words]" )
 		{
 		dex::string query = "two words";
 		dex::queryCompiler::parser parsyMcParseface;
@@ -133,15 +133,34 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 		delete md;
 		}
 
-	SECTION( "alpha | ~( beta & ~gamma )" )
+	SECTION( "[alpha | ~( beta & ~gamma )]" )
 		{
-		dex::string query ="alpha | ~( beta & ~gamma )";
+		dex::string query = "alpha | ~( beta & ~gamma )";
 		dex::queryCompiler::parser parsyMcParseface;
 		dex::matchedDocuments *md = parsyMcParseface.parse( query, nullptr );
 		REQUIRE( query == "(alpha|~(beta&~gamma))" );
 		REQUIRE( md->flattenedQuery.size( ) == 2 );
 		REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "alpha" ) );
 		REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "gamma" ) );
+		delete md;
+		}
+
+	SECTION( "$now \"with some\" | phrases" )
+		{
+		dex::string query = "$now \"with some\" | phrases";
+		dex::queryCompiler::parser parsyMcParseface;
+		dex::matchedDocuments *md = parsyMcParseface.parse( query, nullptr );\
+		REQUIRE( query == "((now&\"with some\")|phrase)" );
+		REQUIRE( md->flattenedQuery.size( ) == 4 );
+		REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "now" ) );
+		REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "with" ) );
+		REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "some" ) );
+		REQUIRE( md->flattenedQuery[ 3 ] == dex::porterStemmer::stem( "phrases" ) );
+		REQUIRE( md->emphasizedWords.size( ) == 4 );
+		REQUIRE( md->emphasizedWords[ 0 ] == true );
+		REQUIRE( md->emphasizedWords[ 1 ] == false );
+		REQUIRE( md->emphasizedWords[ 2 ] == false );
+		REQUIRE( md->emphasizedWords[ 3 ] == false );
 		delete md;
 		}
 	}

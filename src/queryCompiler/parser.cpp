@@ -9,6 +9,33 @@
 
 #include <iostream>
 
+dex::queryCompiler::expression *dex::queryCompiler::parser::findPhrase( )
+	{
+	if ( stream->match( '"' ) )
+		{
+		if ( stream->allConsumed( ) )
+			return nullptr;
+
+		dex::queryCompiler::phraseExpression *phrase = new dex::queryCompiler::phraseExpression( );
+		while ( true )
+			{
+			phrase->terms.pushBack( stream->parseWord( ) );
+
+			if ( stream->match( '"' ) )
+				break;
+
+			if ( stream->allConsumed( ) || !stream->match( ' ' ) )
+				{
+				delete phrase;
+				return nullptr;
+				}
+			}
+		return phrase;
+		}
+
+	return stream->parseWord( );
+	}
+
 dex::queryCompiler::expression *dex::queryCompiler::parser::findFactor( )
 	{
 	if ( stream->allConsumed( ) )
@@ -23,26 +50,8 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findFactor( )
 			delete add;
 		return nullptr;
 		}
-	else
-		if ( stream->match( '"' ) )
-			{
-			dex::queryCompiler::phraseExpression *phrase = new dex::queryCompiler::phraseExpression( );
-			while ( !stream->match( '"' ) && !stream->allConsumed( ) )
-				{
-				phrase->terms.pushBack( stream->parseWord( ) );
-				if ( !stream->match( ' ' ) && !stream->allConsumed( ) )
-					{
-					if ( phrase )
-						delete phrase;
-					return nullptr;
-					}
-				}
-			return phrase;
-			if ( phrase )
-				delete phrase;
-			return nullptr;
-			}
-	return stream->parseWord( );
+
+	return dex::queryCompiler::parser::findPhrase( );
 	}
 
 dex::queryCompiler::expression *dex::queryCompiler::parser::findNot( )
