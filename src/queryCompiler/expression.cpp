@@ -40,6 +40,15 @@ dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >
 			valueFlattenedQuery.second, valueFlattenedQuery.first );
 	}
 
+void dex::queryCompiler::notExpression::print( size_t depth ) const
+	{
+	for ( size_t i = 0;  i != depth;  ++i )
+		std::cout << '\t';
+	std::cout << "NOT" << std::endl;
+	if ( value )
+		value->print( depth + 1 );
+	}
+
 
 dex::queryCompiler::orExpression::orExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
 
@@ -53,6 +62,9 @@ dex::constraintSolver::ISR *dex::queryCompiler::orExpression::eval( ) const
 	{
 	if ( !chunk )
 		return nullptr;
+
+	if ( terms.size( ) == 1 )
+		return terms.front( )->eval( );
 
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector < dex::constraintSolver::ISR * > isrs;
@@ -79,6 +91,21 @@ dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >
 	return dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >( left, right );
 	}
 
+void dex::queryCompiler::orExpression::print( size_t depth ) const
+	{
+	if ( terms.size( ) == 1 )
+		{
+		terms.front( )->print( depth );
+		return;
+		}
+
+	for ( size_t i = 0;  i != depth;  ++i )
+		std::cout << '\t';
+	std::cout << "OR" << std::endl;
+	for ( size_t index = 0;  index != terms.size( );  ++index )
+		terms[ index ]->print( depth + 1 );
+	}
+
 
 dex::queryCompiler::andExpression::andExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
 
@@ -92,6 +119,9 @@ dex::constraintSolver::ISR *dex::queryCompiler::andExpression::eval( ) const
 	{
 	if ( !chunk )
 		return nullptr;
+
+	if ( terms.size( ) == 1 )
+		return terms.front( )->eval( );
 
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector < dex::constraintSolver::ISR * > isrs;
@@ -118,6 +148,21 @@ dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >
 	return dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >( left, right );
 	}
 
+void dex::queryCompiler::andExpression::print( size_t depth ) const
+	{
+	if ( terms.size( ) == 1 )
+		{
+		terms.front( )->print( depth );
+		return;
+		}
+
+	for ( size_t i = 0;  i != depth;  ++i )
+		std::cout << '\t';
+	std::cout << "AND" << std::endl;
+	for ( size_t index = 0;  index != terms.size( );  ++index )
+		terms[ index ]->print( depth + 1 );
+	}
+
 
 dex::queryCompiler::phraseExpression::phraseExpression( dex::index::indexChunk *chunk ) : chunk( chunk ) { }
 
@@ -131,6 +176,9 @@ dex::constraintSolver::ISR *dex::queryCompiler::phraseExpression::eval( ) const
 	{
 	if ( !chunk )
 		return nullptr;
+
+	if ( terms.size( ) == 1 )
+		return terms.front( )->eval( );
 
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector < dex::constraintSolver::ISR * > isrs;
@@ -157,6 +205,22 @@ dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >
 	return dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >( left, right );
 	}
 
+void dex::queryCompiler::phraseExpression::print( size_t depth ) const
+	{
+	if ( terms.size( ) == 1 )
+		{
+		terms.front( )->print( depth );
+		return;
+		}
+
+	for ( size_t i = 0;  i != depth;  ++i )
+		std::cout << '\t';
+	std::cout << "PHRASE" << std::endl;
+	for ( size_t index = 0;  index != terms.size( );  ++index )
+		terms[ index ]->print( depth + 1 );
+	}
+
+
 dex::queryCompiler::word::word( dex::string str, dex::index::indexChunk *chunk ) : str( str ), chunk( chunk ) { }
 
 dex::constraintSolver::ISR *dex::queryCompiler::word::eval( ) const
@@ -175,4 +239,11 @@ dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > dex::quer
 	{
 	return dex::pair  < dex::vector < dex::string >, dex::vector < dex::string > >(
 			dex::vector < dex::string >{ str }, dex::vector < dex::string >( ) );
+	}
+
+void dex::queryCompiler::word::print( size_t depth ) const
+	{
+	for ( size_t i = 0;  i != depth;  ++i )
+		std::cout << '\t';
+	std::cout << '[' << str << ']' << std::endl;
 	}

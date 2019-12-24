@@ -46,7 +46,7 @@ namespace dex
 				 * The public interface of the parser. Call this function,
 				 * rather than the private internal functions.
 				 */
-				dex::matchedDocuments *parse( );
+				dex::matchedDocuments *parse( bool verbose = false );
 			};
 		}
 	}

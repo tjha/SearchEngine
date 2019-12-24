@@ -39,14 +39,7 @@ namespace dex
 				~notExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
-				void print( size_t depth = 0 ) const override
-					{
-					for ( size_t i = 0;  i != depth;  ++i )
-						std::cout << '\t';
-					std::cout << "NOT" << std::endl;
-					if ( value )
-						value->print( depth + 1 );
-					}
+				void print( size_t depth = 0 ) const override;
 			};
 
 		class orExpression: public expression
@@ -58,14 +51,7 @@ namespace dex
 				~orExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
-				void print( size_t depth = 0 ) const override
-					{
-					for ( size_t i = 0;  i != depth;  ++i )
-						std::cout << '\t';
-					std::cout << "OR" << std::endl;
-					for ( size_t index = 0;  index != terms.size( );  ++index )
-						terms[ index ]->print( depth + 1 );
-					}
+				void print( size_t depth = 0 ) const override;
 			};
 
 		class andExpression: public expression
@@ -77,14 +63,7 @@ namespace dex
 				~andExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
-				void print( size_t depth = 0 ) const override
-					{
-					for ( size_t i = 0;  i != depth;  ++i )
-						std::cout << '\t';
-					std::cout << "AND" << std::endl;
-					for ( size_t index = 0;  index != terms.size( );  ++index )
-						terms[ index ]->print( depth + 1 );
-					}
+				void print( size_t depth = 0 ) const override;
 			};
 
 		class phraseExpression : public expression
@@ -96,14 +75,7 @@ namespace dex
 				~phraseExpression( );
 				dex::constraintSolver::ISR *eval( ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
-				void print( size_t depth = 0 ) const override
-					{
-					for ( size_t i = 0;  i != depth;  ++i )
-						std::cout << '\t';
-					std::cout << "OR" << std::endl;
-					for ( size_t index = 0;  index != terms.size( );  ++index )
-						terms[ index ]->print( depth + 1 );
-					}
+				void print( size_t depth = 0 ) const override;
 			};
 
 		class word: public expression
@@ -114,12 +86,7 @@ namespace dex
 				word( dex::string str, dex::index::indexChunk *chunk );
 				dex::constraintSolver::ISR *eval( ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
-				void print( size_t depth = 0 ) const override
-					{
-					for ( size_t i = 0;  i != depth;  ++i )
-						std::cout << '\t';
-					std::cout << '[' << str << ']' << std::endl;
-					}
+				void print( size_t depth = 0 ) const override;
 			};
 		}
 	}

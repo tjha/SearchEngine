@@ -112,7 +112,7 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 dex::queryCompiler::parser::parser( const dex::string &in, dex::index::indexChunk *chunkIn )
 		: stream( in, chunkIn ), chunk( chunkIn ) { }
 
-dex::matchedDocuments *dex::queryCompiler::parser::parse( )
+dex::matchedDocuments *dex::queryCompiler::parser::parse( bool verbose )
 	{
 	dex::queryCompiler::expression *root = dex::queryCompiler::parser::findOr( );
 	if ( root )
@@ -134,7 +134,8 @@ dex::matchedDocuments *dex::queryCompiler::parser::parse( )
 				emphasizedWords.pushBack( stream.emphasizedWords.count( flattenedQuery[ index ] ) );
 			dex::constraintSolver::ISR *matchingDocumentISR = root->eval( );
 
-			root->print( );
+			if ( verbose )
+				root->print( );
 
 			delete root;
 

@@ -102,26 +102,43 @@ TEST_CASE( "token stream" )
 		}
 	}
 
-TEST_CASE( "single word check" )
-	 {
-	dex::string query = "First    ($check   & stuff ) &~badness";
-	dex::queryCompiler::parser parsyMcParseface( query, nullptr );
-	dex::matchedDocuments *md = parsyMcParseface.parse( );
-	REQUIRE( md->flattenedQuery.size( ) == 3 );
-	REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "First" ) );
-	REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "check" ) );
-	REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "stuff" ) );
-	REQUIRE( md->emphasizedWords.size( ) == 3 );
-	REQUIRE( md->emphasizedWords[ 0 ] == false );
-	REQUIRE( md->emphasizedWords[ 1 ] == true );
-	REQUIRE( md->emphasizedWords[ 2 ] == false );
-	delete md;
+TEST_CASE( "flattened query check" )
+	{
+	SECTION( "\"First    ($check   & stuff ) &~badness\"" )
+		{
+		dex::string query = "First    ($check   & stuff ) &~badness";
+		dex::queryCompiler::parser parsyMcParseface( query, nullptr );
+		dex::matchedDocuments *md = parsyMcParseface.parse( );
+		REQUIRE( md->flattenedQuery.size( ) == 3 );
+		REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "First" ) );
+		REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "check" ) );
+		REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "stuff" ) );
+		REQUIRE( md->emphasizedWords.size( ) == 3 );
+		REQUIRE( md->emphasizedWords[ 0 ] == false );
+		REQUIRE( md->emphasizedWords[ 1 ] == true );
+		REQUIRE( md->emphasizedWords[ 2 ] == false );
+		delete md;
+		}
 
-	query = "two words";
-	parsyMcParseface = dex::queryCompiler::parser( query, nullptr );
-	md = parsyMcParseface.parse( );
-	REQUIRE( md->flattenedQuery.size( ) == 2 );
-	REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "two" ) );
-	REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "words" ) );
-	delete md;
-	 }
+	SECTION( "two words" )
+		{
+		dex::string query = "two words";
+		dex::queryCompiler::parser parsyMcParseface = dex::queryCompiler::parser( query, nullptr );
+		dex::matchedDocuments *md = parsyMcParseface.parse( );
+		REQUIRE( md->flattenedQuery.size( ) == 2 );
+		REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "two" ) );
+		REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "words" ) );
+		delete md;
+		}
+
+	SECTION( "alpha | ~( beta & ~gamma )" )
+		{
+		dex::string query ="alpha | ~( beta & ~gamma )";
+		dex::queryCompiler::parser parsyMcParseface( query, nullptr );
+		dex::matchedDocuments *md = parsyMcParseface.parse( true );
+		REQUIRE( md->flattenedQuery.size( ) == 2 );
+		REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "alpha" ) );
+		REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "gamma" ) );
+		delete md;
+		}
+	}

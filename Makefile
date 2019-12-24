@@ -7,8 +7,8 @@ TEST_DIR := tst
 # Where to output
 BUILD_DIR := build
 
-# TODO: Is this block necessary?
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -pthread -ltls
+# TODO: Is this block necessary?
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	CXXFLAGS := $(CXXFLAGS) -L/opt/libressl/lib
@@ -66,7 +66,7 @@ $(BUILD_DIR)/%.test.exe: $(BUILD_DIR)/%.test.o $(BUILD_DIR)/main.o
 		$(CXX) $(CXXFLAGS) $^ -o $@;\
 	fi;
 
-# Need to special case queryCompiler
+# Need to special case queryCompiler and ranker
 $(BUILD_DIR)/queryCompiler/queryCompiler.test.exe: $(BUILD_DIR)/queryCompiler/queryCompiler.test.o $(BUILD_DIR)/main.o\
 		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
 		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
@@ -80,18 +80,13 @@ $(BUILD_DIR)/ranker/ranker.test.exe: $(BUILD_DIR)/ranker/ranker.test.o $(BUILD_D
 	$(CXX) $(CXXFLAGS) $^ -o $@;
 
 # Need to special case main.o for Catch-2
-$(BUILD_DIR)/main.o: $(TEST_DIR)/main.cpp
+$(BUILD_DIR)/main.o: $(TEST_DIR)/main.cpp $(TEST_DIR)/catch.hpp
 	mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $(BUILD_DIR)/main.o
 
-$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(HEADER_SOURCES)
 	mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -c $^ -o $@
-
-# When any .hpp file is changed, assume we should rebuild everything except main.cpp (maybe bad, but it keeps this file
-# shorter)
-$(TEST_DIR)/main.cpp: $(TEST_DIR)/catch.hpp
-$(SOURCE_DIR)/%.cpp: $(HEADER_SOURCES)
+	$(CXX) $(CXXFLAGS) -c $(filter-out %.hpp,$^) -o $@
 
 crawlerDriver: $(SOURCE_DIR)/driver/driver.cpp
 	mkdir -p $(BUILD_DIR)
