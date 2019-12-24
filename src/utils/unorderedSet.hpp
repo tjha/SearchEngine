@@ -11,11 +11,11 @@
 #define DEX_UNORDERED_SET
 
 #include <cstddef>
-#include "algorithm.hpp"
-#include "exception.hpp"
-#include "typeTraits.hpp"
-#include "utility.hpp"
-#include "basicString.hpp"
+#include "utils/algorithm.hpp"
+#include "utils/basicString.hpp"
+#include "utils/exception.hpp"
+#include "utils/typeTraits.hpp"
+#include "utils/utility.hpp"
 
 namespace dex
 	{

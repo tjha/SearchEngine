@@ -6,8 +6,8 @@
 #ifndef RANKER_CONFIG_HPP
 #define RANKER_CONFIG_HPP
 
-#include "vector.hpp"
-#include "utility.hpp"
+#include "utils/utility.hpp"
+#include "utils/vector.hpp"
 
 struct RankerConfiguration
 	{
@@ -31,7 +31,7 @@ struct RankerConfiguration
 	constexpr static const double wordWeight = 1000;
 	};
 
-const dex::vector < dex::pair < size_t, double > > RankerConfiguration::StaticTitleWeights = 
+const dex::vector < dex::pair < size_t, double > > RankerConfiguration::StaticTitleWeights =
 		{
 		{ 15, 50 },
 		{ 25, 40 },

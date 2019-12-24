@@ -9,22 +9,23 @@
 // 2019-11-4: Swapped out memcpy for dex::copy: combsc
 // 2019-11-2: Initial Commit: combsc
 
-#ifndef FILE_HPP
-#define FILE_HPP
+#ifndef DEX_FILE_HPP
+#define DEX_FILE_HPP
+
 #include <dirent.h>
+#include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "exception.hpp"
-#include "algorithm.hpp"
-#include "vector.hpp"
-#include "basicString.hpp"
-#include "unorderedSet.hpp"
+#include "utils/algorithm.hpp"
+#include "utils/basicString.hpp"
+#include "utils/exception.hpp"
+#include "utils/unorderedSet.hpp"
+#include "utils/vector.hpp"
 
-#include <iostream>
 
 namespace dex
 	{

@@ -1,0 +1,127 @@
+// queryCompilerTests.cpp
+//
+// 2019-12-15: File created
+
+#include "catch.hpp"
+#include "constraintSolver/testingISRs.hpp"
+#include "queryCompiler/expression.hpp"
+#include "queryCompiler/parser.hpp"
+#include "queryCompiler/tokenstream.hpp"
+#include "ranker/rankerObjects.hpp"
+#include "utils/basicString.hpp"
+#include "utils/stemming.hpp"
+
+
+TEST_CASE( "token stream" )
+	{
+	SECTION( "space delimiting" )
+		{
+		dex::queryCompiler::word *wordy;
+
+		dex::string s = "here is check number one";
+		dex::queryCompiler::tokenStream ts( s, nullptr );
+		REQUIRE( ts.input == "here&is&check&number&one" );
+
+		s = "here    is     check    number two";
+		ts = dex::queryCompiler::tokenStream( s, nullptr );
+		REQUIRE( ts.input == "here&is&check&number&two" );
+		wordy = ts.parseWord( );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "here" ) );
+		REQUIRE( ts.match( '&' ) );
+		delete wordy;
+		wordy = ts.parseWord( );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "is" ) );
+		REQUIRE( ts.match( '&' ) );
+		delete wordy;
+		wordy = ts.parseWord( );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "check" ) );
+		REQUIRE( ts.match( '&' ) );
+		delete wordy;
+		wordy = ts.parseWord( );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "number" ) );
+		REQUIRE( ts.match( '&' ) );
+		delete wordy;
+		wordy = ts.parseWord( );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "two" ) );
+		delete wordy;
+
+		s = "      here    is     check    number three";
+		ts = dex::queryCompiler::tokenStream( s, nullptr );
+		REQUIRE( ts.input == "here&is&check&number&three" );
+
+		s = "here    is     check    number four     ";
+		ts = dex::queryCompiler::tokenStream( s, nullptr );
+		REQUIRE( ts.input == "here&is&check&number&four" );
+
+		s = "     here    is     check    number five     ";
+		ts = dex::queryCompiler::tokenStream( s, nullptr );
+		REQUIRE( ts.input == "here&is&check&number&five" );
+		}
+
+	SECTION( "with ORs" )
+		{
+		dex::string s = "here is check | number one";
+		dex::queryCompiler::tokenStream ts( s, nullptr );
+		REQUIRE( ts.input == "here&is&check|number&one" );
+		}
+
+	SECTION( "with ANDS" )
+		{
+		dex::string s = "here is check & number & one";
+		dex::queryCompiler::tokenStream ts( s, nullptr );
+		REQUIRE( ts.input == "here&is&check&number&one");
+		}
+
+	SECTION( "with Phrases" )
+		{
+		dex::string s = "here \"is check\" | number one";
+		dex::queryCompiler::tokenStream ts( s, nullptr );
+		REQUIRE( ts.input == "here&\"is check\"|number&one" );
+
+		s = "here    \"is     check\"    number two";
+		ts = dex::queryCompiler::tokenStream( s, nullptr );
+		REQUIRE( ts.input == "here&\"is check\"&number&two" );
+		}
+
+	SECTION( "with Emphasis" )
+		{
+		dex::string s = "here $is check | number one";
+		dex::queryCompiler::tokenStream ts( s, nullptr );
+
+		REQUIRE( ts.input == "here&is&check|number&one" );
+		REQUIRE( ts.emphasizedWords.size( ) == 1 );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "is" ) ) == 1 );
+
+		s = "$here    $ is     check    number $two";
+		ts = dex::queryCompiler::tokenStream( s, nullptr );
+		REQUIRE( ts.input == "here&is&check&number&two" );
+		REQUIRE( ts.emphasizedWords.size( ) == 3 );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "here" ) ) );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "is" ) ) );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "two" ) ) );
+		}
+	}
+
+TEST_CASE( "single word check" )
+	 {
+	dex::string query = "First    ($check   & stuff ) &~badness";
+	dex::queryCompiler::parser parsyMcParseface( query, nullptr );
+	dex::matchedDocuments *md = parsyMcParseface.parse( );
+	REQUIRE( md->flattenedQuery.size( ) == 3 );
+	REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "First" ) );
+	REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "check" ) );
+	REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "stuff" ) );
+	REQUIRE( md->emphasizedWords.size( ) == 3 );
+	REQUIRE( md->emphasizedWords[ 0 ] == false );
+	REQUIRE( md->emphasizedWords[ 1 ] == true );
+	REQUIRE( md->emphasizedWords[ 2 ] == false );
+	delete md;
+
+	query = "two words";
+	parsyMcParseface = dex::queryCompiler::parser( query, nullptr );
+	md = parsyMcParseface.parse( );
+	REQUIRE( md->flattenedQuery.size( ) == 2 );
+	REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "two" ) );
+	REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "words" ) );
+	delete md;
+	 }

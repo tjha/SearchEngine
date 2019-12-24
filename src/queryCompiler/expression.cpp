@@ -3,11 +3,11 @@
 // 2019-12-15: Done (desperate times): jasina, medhak
 
 #include <cstddef>
-#include "../constraintSolver/constraintSolver.hpp"
-#include "../indexer/index.hpp"
-#include "../queryCompiler/expression.hpp"
-#include "../utils/basicString.hpp"
-#include "../utils/stemming.hpp"
+#include "constraintSolver/constraintSolver.hpp"
+#include "indexer/index.hpp"
+#include "queryCompiler/expression.hpp"
+#include "utils/basicString.hpp"
+#include "utils/stemming.hpp"
 
 
 dex::queryCompiler::expression::~expression( ) { }

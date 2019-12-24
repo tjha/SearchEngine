@@ -24,14 +24,14 @@
 #define DEX_UTF
 
 #include <cstddef>
-#include "algorithm.hpp"
-#include "basicString.hpp"
-#include "exception.hpp"
-#include "utility.hpp"
-#include "unorderedMap.hpp"
-#include "unorderedSet.hpp"
-#include "vector.hpp"
-#include "../crawler/robots.hpp"
+#include "crawler/robots.hpp"
+#include "utils/algorithm.hpp"
+#include "utils/basicString.hpp"
+#include "utils/exception.hpp"
+#include "utils/utility.hpp"
+#include "utils/unorderedMap.hpp"
+#include "utils/unorderedSet.hpp"
+#include "utils/vector.hpp"
 
 namespace dex
 	{
