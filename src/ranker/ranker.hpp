@@ -258,8 +258,8 @@ namespace dex
 				size_t documentNumber = 0;
 				while ( endDocument != dex::endOfDocumentISR::npos )
 					{
-					std::cout << "Begin Document: " << beginDocument << std::endl;
-					std::cout << "End Document: " << endDocument << std::endl;
+					// std::cout << "Begin Document: " << beginDocument << std::endl;
+					// std::cout << "End Document: " << endDocument << std::endl;
 					vector < size_t > spansOccurances( heuristics.size( ) );
 					vector < size_t > next( size );
 
@@ -301,13 +301,13 @@ namespace dex
 					dex::vector < size_t > closestLocations( size );
 					while ( current[ rarest ] < endDocument )
 						{
-						std::cout << "Iteration: " << current[ rarest ] << "\n";
+						// std::cout << "Iteration: " << current[ rarest ] << "\n";
 						closestLocations[ rarest ] = current[ rarest ];
 						for ( size_t index = 0;  index < size;  ++index )
 							{
-							std::cout << "index: " << index << std::endl;
-							std::cout << "current: " << current[ index ] << std::endl;
-							std::cout << "next: " << next[ index ] << std::endl;
+							// std::cout << "index: " << index << std::endl;
+							// std::cout << "current: " << current[ index ] << std::endl;
+							// std::cout << "next: " << next[ index ] << std::endl;
 							size_t desiredPosition;
 							if ( current[ rarest ] + index < rarest )
 								desiredPosition = 0;
@@ -322,7 +322,7 @@ namespace dex
 									{
 									current[ index ] = next[ index ];
 									next[ index ] = isrs[ index ]->next( );
-									std::cout << "\t\t\t..." << current[ index ] << "\n";
+									// std::cout << "\t\t\t..." << current[ index ] << "\n";
 									}
 
 
@@ -335,22 +335,22 @@ namespace dex
 									if ( current[ index ] < beginDocument && next[ index ] < endDocument )
 										{
 										closest = next[ index ];
-										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-												<< " and " << next[ index ] << "\n";
+										// std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+										// 		<< " and " << next[ index ] << "\n";
 										}
 									// If current is in bounds but next is out of bounds, set closest to current
 									if ( current[ index ] >= beginDocument && next[ index ] >= endDocument )
 										{
 										closest = current[ index ];
-										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-												<< " and " << next[ index ] << "\n";
+										// std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+										// 		<< " and " << next[ index ] << "\n";
 										}
 									// If both are out of bounds, just set closest to next, it'll be caught later.
 									if ( current[ index ] < beginDocument && next[ index ] >= endDocument )
 										{
 										closest = next[ index ];
-										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-												<< " and " << next[ index ] << "\n";
+										// std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+										// 		<< " and " << next[ index ] << "\n";
 										}
 									}
 								else
@@ -359,14 +359,14 @@ namespace dex
 									if ( desiredPosition + desiredPosition < next[ index ] + current[ index ] )
 										{
 										closest = current[ index ];
-										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-												<< " and " << next[ index ] << "\n";
+										// std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+										// 		<< " and " << next[ index ] << "\n";
 										}
 									else
 										{
 										closest = next[ index ];
-										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-												<< " and " << next[ index ] << "\n";
+										// std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+										// 		<< " and " << next[ index ] << "\n";
 										}
 									}
 
@@ -397,7 +397,7 @@ namespace dex
 							{
 							span = max - min + 1;
 							}
-						std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
+						// std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
 						for ( size_t index = 0;  index < heuristics.size( );  ++index )
 							{
 							if ( span <= heuristics[ index ].first * size )
