@@ -3,12 +3,12 @@
 // 2019-12-15: Done: jasina, medhak
 
 #include <cstddef>
-#include "expression.hpp"
-#include "tokenstream.hpp"
-#include "../utils/algorithm.hpp"
-#include "../utils/basicString.hpp"
-#include "../utils/stemming.hpp"
-#include "../utils/unorderedSet.hpp"
+#include "queryCompiler/expression.hpp"
+#include "queryCompiler/tokenstream.hpp"
+#include "utils/algorithm.hpp"
+#include "utils/basicString.hpp"
+#include "utils/stemming.hpp"
+#include "utils/unorderedSet.hpp"
 
 bool dex::queryCompiler::isAlpha ( char c )
 	 {

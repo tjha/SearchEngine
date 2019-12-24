@@ -10,14 +10,14 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "index.hpp"
-#include "basicString.hpp"
-#include "exception.hpp"
-#include "unorderedMap.hpp"
-#include "unorderedSet.hpp"
-#include "utf.hpp"
-#include "utility.hpp"
-#include "vector.hpp"
+#include "indexer/index.hpp"
+#include "utils/basicString.hpp"
+#include "utils/exception.hpp"
+#include "utils/unorderedMap.hpp"
+#include "utils/unorderedSet.hpp"
+#include "utils/utf.hpp"
+#include "utils/utility.hpp"
+#include "utils/vector.hpp"
 
 // TODO: remove this
 #include <iostream>

@@ -7,7 +7,7 @@
 
 #include <cstddef>
 #include "constraintSolver.hpp"
-#include "../utils/vector.hpp"
+#include "utils/vector.hpp"
 
 size_t argMin( const dex::vector < size_t > &v )
 	{

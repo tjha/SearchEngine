@@ -10,11 +10,11 @@
 // 2019-11-18: Added expiration date: combsc
 // 2019-11-13: Added parsing for robots.txt files: combsc
 // 2019-11-04: fixed fixPath function, should NOT have / at the end: combsc
-// 2019-11-03: Added default values for all member variables for all 
+// 2019-11-03: Added default values for all member variables for all
 //             constructors, fixed the copy constructor: combsc
 // 2019-11-01: Added iterators for add/remove paths functions, refactored
 //             code to reflect our standards: combsc
-// 2019-10-31: Path sets defined size now, hash func, Copy constructors, 
+// 2019-10-31: Path sets defined size now, hash func, Copy constructors,
 //             operator=: jhirsh
 // 2019-10-21: Improved definition of path: Chris
 // 2019-10-17: File created: Jonas, Chris
@@ -24,11 +24,11 @@
 
 #include <time.h>
 #include <stdio.h>
-#include "basicString.hpp"
-#include "vector.hpp"
-#include "unorderedSet.hpp"
-#include "algorithm.hpp"
-#include "functional.hpp"
+#include "utils/algorithm.hpp"
+#include "utils/basicString.hpp"
+#include "utils/functional.hpp"
+#include "utils/unorderedSet.hpp"
+#include "utils/vector.hpp"
 
 namespace dex
 	{
@@ -60,7 +60,7 @@ namespace dex
 			}
 		return true;
 		}
-	// using this link to understand the protocol: 
+	// using this link to understand the protocol:
 	// https://www.promptcloud.com/blog/how-to-read-and-respect-robots-file/
 	struct RobotTxt
 		{
@@ -85,7 +85,7 @@ namespace dex
 			dex::vector < dex::string > allowedWildcards;
 			dex::vector < dex::string > disallowedWildcards;
 
-			
+
 
 			bool pathIsAllowed( dex::string path )
 				{
@@ -105,16 +105,16 @@ namespace dex
 						pathIsAllowed = false;
 						}
 					}
-				
+
 				// if the path passed in is explicitly in disallowed paths, return false
 				if ( disallowedPaths.count( path ) > 0 )
 					return false;
-					
+
 				// if the path passed in is explicitly in allowed paths, return true
 				if ( allowedPaths.count( path ) > 0 )
 					return true;
 
-				
+
 				// Parse the path to see if it is part of a disallowed path or allowed path
 				for ( size_t nextSlashLocation = path.find( "/" );  nextSlashLocation != dex::string::npos;
 						nextSlashLocation = path.find( "/", nextSlashLocation + 1 ) )
@@ -145,10 +145,10 @@ namespace dex
 					fixedPath.append( "/" );
 				return dex::toLower( fixedPath );
 				}
-			
+
 
 		public:
-			static const unsigned defaultDelay = 1;
+			static const unsigned defaultDelay = 10;
 			static const unsigned defaultExpiration = 60 * 60 * 24;
 			static const dex::string userAgent;
 
@@ -160,7 +160,7 @@ namespace dex
 				lastTimeVisited = allowedVisitTime - crawlDelay;
 				expireTime = allowedVisitTime + defaultExpiration;
 				}
-			RobotTxt( const RobotTxt &other ) : domain( other.domain ), crawlDelay( other.crawlDelay ), 
+			RobotTxt( const RobotTxt &other ) : domain( other.domain ), crawlDelay( other.crawlDelay ),
 					lastTimeVisited( other.lastTimeVisited ), allowedVisitTime( other.allowedVisitTime ),
 					expireTime( other.expireTime ), disallowedPaths( other.disallowedPaths ),
 					allowedPaths( other.allowedPaths )
@@ -208,7 +208,7 @@ namespace dex
 
 					// find all allowed paths
 					int allowStart, allowEnd;
-					for ( allowStart = toParse.find( "allow: " );  allowStart != -1;  allowStart = toParse.find( "allow: ", allowStart + 1) ) 
+					for ( allowStart = toParse.find( "allow: " );  allowStart != -1;  allowStart = toParse.find( "allow: ", allowStart + 1) )
 						{
 						string check = toParse.substr( allowStart - 3, 10 );
 						if ( allowStart > 2 && check.compare( "disallow: ") != 0 )
@@ -227,7 +227,7 @@ namespace dex
 						}
 					}
 				}
-			
+
 			RobotTxt operator=( const RobotTxt &other )
 				{
 				RobotTxt otherCopy ( other );
@@ -282,7 +282,7 @@ namespace dex
 					else
 						disallowedWildcards.pushBack( *it );
 					}
-					
+
 				}
 			void addPathsDisallowed( const dex::unorderedSet < dex::string > &paths )
 				{
@@ -300,7 +300,7 @@ namespace dex
 					{
 					disallowedWildcards.pushBack( str );
 					}
-					
+
 				}
 
 			// Set the allowed paths for the domain
@@ -326,7 +326,7 @@ namespace dex
 					else
 						allowedWildcards.pushBack( *it );
 					}
-					
+
 				}
 			void addPathsAllowed( const dex::unorderedSet < dex::string > &paths )
 				{
@@ -344,7 +344,7 @@ namespace dex
 					{
 					allowedWildcards.pushBack( path );
 					}
-					
+
 				}
 
 			// Checks for if you can perform HTTP request
@@ -353,7 +353,7 @@ namespace dex
 				{
 				if ( !pathIsAllowed( path ) )
 					return 2;
-				
+
 				if ( time( nullptr ) < allowedVisitTime )
 					return 1;
 				return 0;
@@ -373,7 +373,7 @@ namespace dex
 							"Crawl-Delay:\t\t" + dex::toString( crawlDelay ) + "\n" +
 							"Allowed-Visit-Time:\t" + ctime( &allowedVisitTime ) +
 							"Last-Visit:\t\t" + ctime( &lastTimeVisited ) + "\n" +
-							"Expire Time:\t\t" + ctime( &expireTime ) + "\n" + 
+							"Expire Time:\t\t" + ctime( &expireTime ) + "\n" +
 							"Allowed-Paths\n" + allowedPaths.compress( ) +
 							"Disallowed-Paths\n" + disallowedPaths.compress( );
 				}

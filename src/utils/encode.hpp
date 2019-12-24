@@ -8,11 +8,11 @@
 #ifndef DEX_ENCODE
 #define DEX_ENCODE
 
-#include "exception.hpp"
-#include "vector.hpp"
-#include "basicString.hpp"
-#include "../src/crawler/robots.hpp"
-#include "../src/crawler/url.hpp"
+#include "crawler/robots.hpp"
+#include "utils/basicString.hpp"
+#include "utils/exception.hpp"
+#include "utils/vector.hpp"
+#include "utils/url.hpp"
 
 namespace dex
 	{
@@ -76,7 +76,7 @@ namespace dex
 
 
 		// basicString Encoding
-		// ( size of string as int ) + ( string ) 
+		// ( size of string as int ) + ( string )
 		template < class T >
 		class encoder < dex::basicString < T > >
 			{
@@ -380,7 +380,7 @@ namespace dex
 						decodedData.pushBack( TDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
 						}
 
-					if ( advancedEncoding ) 
+					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;
 
 					return decodedData;
@@ -404,7 +404,7 @@ namespace dex
 						decodedData.insert( TDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
 						}
 
-					if ( advancedEncoding ) 
+					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;
 
 					return decodedData;

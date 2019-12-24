@@ -9,10 +9,10 @@
 #ifndef ROBOTS_MAP_HPP
 #define ROBOTS_MAP_HPP
 
-#include "robots.hpp"
-#include "unorderedMap.hpp"
-#include "sharedReaderLock.hpp"
-#include "utility.hpp"
+#include "crawler/robots.hpp"
+#include "utils/sharedReaderLock.hpp"
+#include "utils/unorderedMap.hpp"
+#include "utils/utility.hpp"
 
 namespace dex
 	{
@@ -191,13 +191,13 @@ namespace dex
 					}
 				mapLock.releaseWriteLock( );
 				}
-			
+
 			void erase( const dex::string &str )
 				{
 				if ( robotExists( str ) )
 					{
 					mapLock.writeLock( );
-					if ( existsNoLock( str ) ) 
+					if ( existsNoLock( str ) )
 						{
 						if ( mainMap[ str ].first )
 							delete mainMap[ str ].first;
@@ -205,7 +205,7 @@ namespace dex
 							delete mainMap[ str ].second;
 						mainMap.erase( str );
 						}
-						
+
 					mapLock.releaseWriteLock( );
 					}
 				}
