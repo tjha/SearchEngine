@@ -1,6 +1,7 @@
 // rankerTests.cpp
 // tests for the ranker class
 //
+// 2019-12-23: Check that we can't span across documents: combsc
 // 2019-12-22: Update unsigneds to size_t: combsc
 // 2019-12-10 - 14: Wrote everything else: combsc
 // 2019-12-09: Init Commit: combsc + lougheem
@@ -401,6 +402,101 @@ TEST_CASE( "spanning multiple documents" )
 		REQUIRE( wordCount[ 2 ][ 2 ] == 1 );
 		}
 
+	SECTION( "No Cross Document Spans 1" )
+		{
+		dex::vector < size_t > ends = { 10, 20, 30 };
+		dex::endOfDocumentISR endisr( ends );
+		dex::ISR matchingISR( "", ends, endisr );
+		dex::vector < size_t > quick = { 9 };
+		dex::ISR quickISR( "quick", quick, endisr );
+		dex::vector < size_t > brown = { 11 };
+		dex::ISR brownISR( "brown", brown, endisr );
+		dex::vector < size_t > fox = { 12 };
+		dex::ISR foxISR( "fox", fox, endisr );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &quickISR );
+		isrs.pushBack( &brownISR );
+		isrs.pushBack( &foxISR );
+		
+		dex::vector < dex::pair < size_t, double > > heuristics = { { 10, 1 } };
+		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
+		dex::vector < dex::vector < size_t > > wordCount;
+		dex::vector < dex::string > titles;
+		dex::vector < dex::string > urls;
+		dex::vector < dex::vector < size_t > > spans = judge.getDesiredSpans( isrs, &matchingISR, &endisr,
+				nullptr, heuristics, 5, wordCount, titles, urls );
+
+
+		REQUIRE( spans[ 0 ][ 0 ] == 0 );
+		REQUIRE( wordCount[ 0 ][ 0 ] == 1 );
+		REQUIRE( wordCount[ 0 ][ 1 ] == 0 );
+		REQUIRE( wordCount[ 0 ][ 2 ] == 0 );
+
+		REQUIRE( spans[ 1 ][ 0 ] == 0 );
+		REQUIRE( wordCount[ 1 ][ 0 ] == 0 );
+		REQUIRE( wordCount[ 1 ][ 1 ] == 1 );
+		REQUIRE( wordCount[ 1 ][ 2 ] == 1 );
+
+		REQUIRE( spans[ 2 ][ 0 ] == 0 );
+		REQUIRE( wordCount[ 2 ][ 0 ] == 0 );
+		REQUIRE( wordCount[ 2 ][ 1 ] == 0 );
+		REQUIRE( wordCount[ 2 ][ 2 ] == 0 );
+		}
+
+	SECTION( "No Cross Document Spans 2" )
+		{
+		dex::vector < size_t > ends = { 10, 20, 30 };
+		dex::endOfDocumentISR endisr( ends );
+		dex::ISR matchingISR( "", ends, endisr );
+		dex::vector < size_t > quick = { 9,
+				19,
+				29 };
+		dex::ISR quickISR( "quick", quick, endisr );
+		dex::vector < size_t > brown = { 1,
+				11,
+				21 };
+		dex::ISR brownISR( "brown", brown, endisr );
+		dex::vector < size_t > fox = { 2,
+				12,
+				22 };
+		dex::ISR foxISR( "fox", fox, endisr );
+		dex::vector < dex::constraintSolver::ISR * > isrs;
+		isrs.pushBack( &quickISR );
+		isrs.pushBack( &brownISR );
+		isrs.pushBack( &foxISR );
+		
+		dex::vector < dex::pair < size_t, double > > heuristics = { { 2, 1 }, { 4, 1 } };
+		dex::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics, 
+			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight, someChunks );
+		dex::vector < dex::vector < size_t > > wordCount;
+		dex::vector < dex::string > titles;
+		dex::vector < dex::string > urls;
+		dex::vector < dex::vector < size_t > > spans = judge.getDesiredSpans( isrs, &matchingISR, &endisr,
+				nullptr, heuristics, 5, wordCount, titles, urls );
+
+
+		REQUIRE( spans[ 0 ][ 0 ] == 0 );
+		REQUIRE( spans[ 0 ][ 1 ] == 1 );
+		REQUIRE( wordCount[ 0 ][ 0 ] == 1 );
+		REQUIRE( wordCount[ 0 ][ 1 ] == 1 );
+		REQUIRE( wordCount[ 0 ][ 2 ] == 1 );
+
+		REQUIRE( spans[ 1 ][ 0 ] == 0 );
+		REQUIRE( spans[ 1 ][ 1 ] == 1 );
+		REQUIRE( wordCount[ 1 ][ 0 ] == 1 );
+		REQUIRE( wordCount[ 1 ][ 1 ] == 1 );
+		REQUIRE( wordCount[ 1 ][ 2 ] == 1 );
+
+		REQUIRE( spans[ 2 ][ 0 ] == 0 );
+		REQUIRE( spans[ 2 ][ 1 ] == 1 );
+		REQUIRE( wordCount[ 2 ][ 0 ] == 1 );
+		REQUIRE( wordCount[ 2 ][ 1 ] == 1 );
+		REQUIRE( wordCount[ 2 ][ 2 ] == 1 );
+		}
+
+		// TODO:: Add a test case where not alll documents match
+
 	SECTION( "quick brown fox someMissing" )
 		{
 		dex::vector < size_t > ends = { 959, 6000, 7000, 8000, 9000 };
@@ -554,6 +650,7 @@ TEST_CASE( "scoring" )
 		REQUIRE( dynamicScores[ 0 ] > dynamicScores[ 1 ] );
 		REQUIRE( dynamicScores[ 1 ] > dynamicScores[ 2 ] );
 		}
+	
 
 	// TODO: MAKE SURE WE CAN'T SPAN ACROSS DOCUMENTS
 	/*

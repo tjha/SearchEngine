@@ -1,6 +1,7 @@
 // ranker.hpp
 // This ranks the stuff
 
+// 2019-12-23: Updated to use beginDocument properly: combsc
 // 2019-12-22: Updated the getDesiredSpan function to use ISRs efficiently: combsc
 // 2019-12-14 and 15: moved everything to pointers, removed prints: combsc
 // 2019-12-12 and 13: Get dynamic ranking working with the constraint solver interface
@@ -215,25 +216,24 @@ namespace dex
 				vector < size_t > isrCurrentValue;
 				isrCurrentValue.resize( size );
 				size_t endDocument;
+				size_t beginDocument;
 				// Find the word counts for all the documents that match
 				endDocument = matching->seek( 0 );
-				for ( size_t i = 0;  i < isrs.size( );  ++i )
-					{
-					isrCurrentValue[ i ] = isrs[ i ]->seek( 0 );
-					//std::cout << "First ISR Value: " << isrCurrentValue[ i ] << " Index: " << i << std::endl;
-					}
+				ends->seek( endDocument );
+				beginDocument = endDocument - ends->documentSize( );
 				while ( endDocument != dex::endOfDocumentISR::npos )
 					{
 					vector < size_t > currentWordCount;
 					currentWordCount.resize( size );
 					for ( size_t isrIndex = 0;  isrIndex < size;  ++isrIndex )
 						{
+						isrCurrentValue[ isrIndex ] = isrs[ isrIndex ]->seek( beginDocument );
 						currentWordCount[ isrIndex ] = 0;
 						// Check to see if our current next word is a part of the document that we're on
 						// If it isn't, then we know this word doesn't appear in the current document.
 						if ( isrCurrentValue[ isrIndex ] < endDocument )
 							{
-							currentWordCount[ isrIndex ]++;
+							++currentWordCount[ isrIndex ];
 							isrCurrentValue[ isrIndex ] = isrs[ isrIndex ]->next( );
 							while ( isrCurrentValue[ isrIndex ] < endDocument )
 								{
@@ -245,6 +245,7 @@ namespace dex
 					wordCount.pushBack( currentWordCount );
 					endDocument = matching->next( );
 					ends->seek( endDocument );
+					beginDocument = endDocument - ends->documentSize( );
 					}
 
 				// find spans
@@ -252,13 +253,13 @@ namespace dex
 				current.clear( );
 				current.resize( size );
 				endDocument = matching->seek( 0 );
+				ends->seek( endDocument );
+				beginDocument = endDocument - ends->documentSize( );
 				size_t documentNumber = 0;
-				for ( size_t i = 0;  i < isrs.size( );  ++i )
-					{
-					current[ i ] = isrs[ i ]->seek( 0 );
-					}
 				while ( endDocument != dex::endOfDocumentISR::npos )
 					{
+					std::cout << "Begin Document: " << beginDocument << std::endl;
+					std::cout << "End Document: " << endDocument << std::endl;
 					vector < size_t > spansOccurances( heuristics.size( ) );
 					vector < size_t > next( size );
 
@@ -284,9 +285,14 @@ namespace dex
 						// If the current value we're looking at is past the end document there are no occurances
 						// of the word in this document. Therefore, we do not increment the ISR until we know that
 						// we're in the document that uses the word.
+						current[ index ] = isrs[ index ]->seek( beginDocument );
 						if ( current[ index ] < endDocument )
 							{
 							next[ index ] = isrs[ index ]->next( );
+							}
+						else
+							{
+							next[ index ] = current[ index ];
 							}
 						}
 
@@ -295,10 +301,13 @@ namespace dex
 					dex::vector < size_t > closestLocations( size );
 					while ( current[ rarest ] < endDocument )
 						{
-						//std::cout << "Iteration: " << current[ rarest ] << "\n";
+						std::cout << "Iteration: " << current[ rarest ] << "\n";
 						closestLocations[ rarest ] = current[ rarest ];
 						for ( size_t index = 0;  index < size;  ++index )
 							{
+							std::cout << "index: " << index << std::endl;
+							std::cout << "current: " << current[ index ] << std::endl;
+							std::cout << "next: " << next[ index ] << std::endl;
 							size_t desiredPosition;
 							if ( current[ rarest ] + index < rarest )
 								desiredPosition = 0;
@@ -309,40 +318,58 @@ namespace dex
 								{
 								// Position our ISRs such that current is less than our desired position and next is greater than our
 								// desired position.
-								// next[ index ] - current[ rarest ] < index - rarest
 								while ( next[ index ] < endDocument && next[ index ] + rarest < current[ rarest ] + index )
 									{
 									current[ index ] = next[ index ];
 									next[ index ] = isrs[ index ]->next( );
-									//std::cout << "\t\t\t..." << current[ index ] << "\n";
+									std::cout << "\t\t\t..." << current[ index ] << "\n";
 									}
+								
 
 								// Take the value that is closest to our desired position for this span.
 								size_t closest;
-								// if ( desiredPosition - current[ index ] < next[ index ] - desiredPosition )
-								if ( desiredPosition + desiredPosition < next[ index ] + current[ index ] )
+								// Check to see if either current or next are not in the document
+								if ( current[ index ] < beginDocument || next[ index ] >= endDocument )
 									{
-									closest = current[ index ];
-									//std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-									//		<< " and " << next[ index ] << "\n";
+									// If current is out of bounds but next is in bounds, set closest to next
+									if ( current[ index ] < beginDocument && next[ index ] < endDocument )
+										{
+										closest = next[ index ];
+										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+												<< " and " << next[ index ] << "\n";
+										}
+									// If current is in bounds but next is out of bounds, set closest to current
+									if ( current[ index ] >= beginDocument && next[ index ] >= endDocument )
+										{
+										closest = current[ index ];
+										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+												<< " and " << next[ index ] << "\n";
+										}
+									// If both are out of bounds, just set closest to next, it'll be caught later.
+									if ( current[ index ] < beginDocument && next[ index ] >= endDocument )
+										{
+										closest = next[ index ];
+										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+												<< " and " << next[ index ] << "\n";
+										}
 									}
 								else
 									{
-									// if ( desiredPosition - current[ index ] > next[ index ] - desiredPosition || index > rarest )
-									if ( next[ index ] < endDocument && 
-											( 2 * desiredPosition > next[ index ] + current[ index ]  || index > rarest ) )
+									// If both next and current are in the document
+									if ( desiredPosition + desiredPosition < next[ index ] + current[ index ] )
 										{
-										closest = next[ index ];
-										//std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-										//		<< " and " << next[ index ] << "\n";
+										closest = current[ index ];
+										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+												<< " and " << next[ index ] << "\n";
 										}
 									else
 										{
-										closest = current[ index ];
-										//std::cout << "\t\tChoose " << closest << " between " << current[ index ]
-										//		<< " and " << next[ index ] << "\n";
+										closest = next[ index ];
+										std::cout << "\t\tChoose " << closest << " between " << current[ index ]
+												<< " and " << next[ index ] << "\n";
 										}
 									}
+								
 								closestLocations[ index ] = closest;
 								}
 							}
@@ -359,9 +386,18 @@ namespace dex
 								min = closestLocations[ index ];
 								}
 							}
-						// What if min/max weren't updated??
-						size_t span = max - min + 1;
-						//std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
+						// If max is greater than or equal to end document, one of the words is not in our document.
+						// Therefore the span should be npos.
+						size_t span;
+						if ( max >= endDocument || min < beginDocument )
+							{
+							span = dex::endOfDocumentISR::npos;
+							}
+						else
+							{
+							span = max - min + 1;
+							}
+						std::cout << "\tSpan from " << min << " to " << max << " with length " << span << "\n";
 						for ( size_t index = 0;  index < heuristics.size( );  ++index )
 							{
 							if ( span <= heuristics[ index ].first * size )
@@ -387,15 +423,8 @@ namespace dex
 						}
 					endDocument = matching->next( );
 					ends->seek( endDocument );
-					//std::cout << "begin document: " << beginDocument << std::endl;
-					//std::cout << "end document: " << endDocument << std::endl;
+					beginDocument = endDocument - ends->documentSize( );
 					documentNumber++;
-					current.clear( );
-					current.resize( size );
-					for ( size_t i = 0;  i < isrs.size( );  ++i )
-						{
-						current[ i ] = next[ i ];
-						}
 					}
 				return documentSpans;
 				}
