@@ -108,8 +108,9 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 		{
 		dex::string query = "First    ($check   & stuff ) &~badness";
 		dex::queryCompiler::parser parsyMcParseface;
-		dex::matchedDocuments *md = parsyMcParseface.parse( query, nullptr );
-		REQUIRE( query == "(First&(check&stuff)&~bad)");
+		dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
+		dex::matchedDocuments *md = mdg( nullptr );
+		REQUIRE( mdg.getQuery( ) == "(First&(check&stuff)&~bad)");
 		REQUIRE( md->flattenedQuery.size( ) == 3 );
 		REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "First" ) );
 		REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "check" ) );
@@ -125,8 +126,9 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 		{
 		dex::string query = "two words";
 		dex::queryCompiler::parser parsyMcParseface;
-		dex::matchedDocuments *md = parsyMcParseface.parse( query, nullptr );
-		REQUIRE( query == "(two&word)");
+		dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
+		dex::matchedDocuments *md = mdg( nullptr );
+		REQUIRE( mdg.getQuery( ) == "(two&word)");
 		REQUIRE( md->flattenedQuery.size( ) == 2 );
 		REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "two" ) );
 		REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "words" ) );
@@ -137,8 +139,9 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 		{
 		dex::string query = "alpha | ~( beta & ~gamma )";
 		dex::queryCompiler::parser parsyMcParseface;
-		dex::matchedDocuments *md = parsyMcParseface.parse( query, nullptr );
-		REQUIRE( query == "(alpha|~(beta&~gamma))" );
+		dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
+		dex::matchedDocuments *md = mdg( nullptr );
+		REQUIRE( mdg.getQuery( ) == "(alpha|~(beta&~gamma))" );
 		REQUIRE( md->flattenedQuery.size( ) == 2 );
 		REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "alpha" ) );
 		REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "gamma" ) );
@@ -149,8 +152,9 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 		{
 		dex::string query = "$now \"with some\" | phrases";
 		dex::queryCompiler::parser parsyMcParseface;
-		dex::matchedDocuments *md = parsyMcParseface.parse( query, nullptr );\
-		REQUIRE( query == "((now&\"with some\")|phrase)" );
+		dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
+		dex::matchedDocuments *md = mdg( nullptr );
+		REQUIRE( mdg.getQuery( ) == "((now&\"with some\")|phrase)" );
 		REQUIRE( md->flattenedQuery.size( ) == 4 );
 		REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "now" ) );
 		REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "with" ) );

@@ -7,7 +7,54 @@
 #include "queryCompiler/parser.hpp"
 #include "ranker/rankerObjects.hpp"
 
-#include <iostream>
+dex::queryCompiler::matchedDocumentsGenerator::matchedDocumentsGenerator(
+		dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream ) : root( root ), stream( stream )
+	{
+	if ( !root || !stream )
+		{
+		invalid = true;
+		return;
+		}
+
+	const dex::vector < dex::string > &flattenedQuery = root->flattenedQuery( ).first;
+
+	invalid = flattenedQuery.empty( );
+	if ( invalid )
+		return;
+
+	emphasizedWords.reserve( flattenedQuery.size( ) );
+	for( size_t index = 0;  index < flattenedQuery.size( );  ++index )
+		emphasizedWords.pushBack( stream->emphasizedWords.count( flattenedQuery[ index ] ) );
+
+	query = root->toString( );
+	}
+
+dex::queryCompiler::matchedDocumentsGenerator::~matchedDocumentsGenerator( )
+	{
+	if ( root )
+		delete root;
+	if ( stream )
+		delete stream;
+	}
+
+dex::matchedDocuments *dex::queryCompiler::matchedDocumentsGenerator::operator( )( dex::index::indexChunk *chunk ) const
+	{
+	if ( invalid )
+		return nullptr;
+
+	return new dex::matchedDocuments
+		{
+		root->flattenedQuery( ).first,  // flattened query vector of strings
+		root->eval( chunk ),            // matching document ISR
+		chunk,                          // index chunk
+		emphasizedWords                 // emphasized words in order of flattenedQuery.
+		};
+	}
+
+dex::string dex::queryCompiler::matchedDocumentsGenerator::getQuery( ) const
+	{
+	return query;
+	}
 
 dex::queryCompiler::expression *dex::queryCompiler::parser::findPhrase( )
 	{
@@ -120,47 +167,9 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 	return nullptr;
 	}
 
-dex::matchedDocuments *dex::queryCompiler::parser::parse( dex::string &in, dex::index::indexChunk *chunk )
+dex::queryCompiler::matchedDocumentsGenerator dex::queryCompiler::parser::parse( dex::string &in )
 	{
 	stream = new tokenStream( in );
-
 	dex::queryCompiler::expression *root = dex::queryCompiler::parser::findOr( );
-	if ( root )
-		{
-		if ( stream->allConsumed( ) )
-			{
-			const dex::vector < dex::string > &flattenedQuery = root->flattenedQuery( ).first;
-
-			dex::vector < bool > emphasizedWords;
-			emphasizedWords.reserve( flattenedQuery.size( ) );
-
-			if ( flattenedQuery.empty( ) )
-				{
-				delete root;
-				delete stream;
-				return nullptr;
-				}
-
-			for( size_t index = 0;  index < flattenedQuery.size( );  ++index )
-				emphasizedWords.pushBack( stream->emphasizedWords.count( flattenedQuery[ index ] ) );
-			dex::constraintSolver::ISR *matchingDocumentISR = root->eval( chunk );
-
-			in = root->toString( );
-
-			delete root;
-			delete stream;
-
-			return new dex::matchedDocuments
-				{
-				flattenedQuery,       // flattened query vector of strings
-				matchingDocumentISR,  // matching document ISR
-				chunk,                // index chunk
-				emphasizedWords       // emphasized words in order of flattenedQuery.
-				};
-			}
-		delete root;
-		}
-	delete stream;
-
-	return nullptr;
+	return dex::queryCompiler::matchedDocumentsGenerator( root, stream );
 	}

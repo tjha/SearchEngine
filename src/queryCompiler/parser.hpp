@@ -15,6 +15,22 @@ namespace dex
 	{
 	namespace queryCompiler
 		{
+		class matchedDocumentsGenerator
+			{
+			private:
+				bool invalid;
+				dex::queryCompiler::expression *root;
+				tokenStream *stream;
+				dex::vector < bool > emphasizedWords;
+				dex::string query;
+
+			public:
+				matchedDocumentsGenerator( dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream );
+				~matchedDocumentsGenerator( );
+				dex::matchedDocuments *operator( )( dex::index::indexChunk *chunk ) const;
+				dex::string getQuery( ) const;
+			};
+
 		class parser
 			{
 				// Stream of tokens to consume input from
@@ -36,7 +52,7 @@ namespace dex
 				 * The public interface of the parser. Call this function,
 				 * rather than the private internal functions.
 				 */
-				dex::matchedDocuments *parse( dex::string &in, dex::index::indexChunk *chunk );
+				matchedDocumentsGenerator parse( dex::string &in );
 			};
 		}
 	}

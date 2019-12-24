@@ -30,7 +30,8 @@ namespace dex
 			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
 			std::cout << "[" << queryRequest.query << "]" << std::endl;
 			dex::queryCompiler::parser parser;
-			dex::matchedDocuments *documents = parser.parse( queryRequest.query, queryRequest.chunkPointer );
+			// TODO: Do not pass in the query here. Instead, just pass in a dex::queryCompiler::matchedDocumentsGenerator.
+			dex::matchedDocuments *documents = parser.parse( queryRequest.query )( queryRequest.chunkPointer );
 			std::cout << "Parse and Score isr: ";
 			std::cout << documents->matchingDocumentISR << std::endl;
 			for ( int i = 0;  i < 10; ++i )
