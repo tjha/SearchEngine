@@ -106,7 +106,14 @@ cleanDriver:
 	@rm -rf data/tmp/logs/
 	@rm -rf data/tmp/performance/
 
-.PHONY: all test noop crawlerDriver indexerDriver printOS clean cleanDriver
+help:
+	@echo "To make all of the tests, just run make test or make test case=all"
+	@echo "To run a specific test, run something similar to make test case=src/constraintSolver/constraintSolver. Note that the thing after the equals sign should be the name of a .test.cpp file without its extension"
+	@echo "To make the drivers, run make crawlerDriver and make indexerDriver"
+	@echo "To clean things up, run make clean (destroys the build/ directory) and/or make cleanDriver (destroys the data/ directory)"
+	@echo "To disable the use of the LibreSSL library (which is good if you don't have it installed), add the flag tls=no into your make command (i.e. something like make test tls=no)."
+
+.PHONY: all test noop crawlerDriver indexerDriver printOS clean cleanDriver help
 
 # Keep all of our object files aroud for future compilations
 .PRECIOUS: $(PRECIOUS_OBJECTS)
