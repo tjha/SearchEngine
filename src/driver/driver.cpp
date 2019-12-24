@@ -16,17 +16,17 @@
 // 2019-11-21: Add working redirect cache, fix overall logic of file, test multithreading: combsc
 // 2019-11-20: Add logging, add file structure for saving html: combsc
 // 2019-11-16: Init Commit: combsc
-#include "crawler.hpp"
-#include "basicString.hpp"
-#include "vector.hpp"
-#include "frontier.hpp"
-#include "checkpointing.hpp"
-#include "parser.hpp"
-#include "robots.hpp"
 #include <time.h>
 #include <signal.h>
 #include <iostream>
 #include <pthread.h>
+#include "crawler/crawler.hpp"
+#include "crawler/robots.hpp"
+#include "driver/checkpointing.hpp"
+#include "driver/frontier.hpp"
+#include "parser/parser.hpp"
+#include "utils/basicString.hpp"
+#include "utils/vector.hpp"
 
 const dex::string dex::RobotTxt::userAgent = "jhirshey@umich.edu (Linux)";
 //dex::string savePath = "/home/ec2-user/socket-html/";
@@ -203,7 +203,7 @@ int addToFrontier( dex::Url &current )
 
 // Call checkpointing functions after time alotted or user input
 void saveDataStructures( )
-	{	
+	{
 	dex::saveFrontier( ( tmpPath + "savedFrontier.txt" ).cStr( ), urlFrontier );
 	crawledLock.readLock( );
 	dex::saveCrawledLinks( "data/crawledLinks.txt", crawledLinks );
@@ -241,7 +241,7 @@ void *worker( void *args )
 	dex::string name = dex::toString( a + 1000 * instanceId );
 	dex::string folderPath = savePath + "html/" + name + "/";
 	int currentFileDescriptor = dex::getCurrentFileDescriptor( folderPath );
-	
+
 	log( "Start thread " + name + "\n");
 	//print( "fileName" );
 	for ( int i = 0;  true;  ++i )
@@ -250,7 +250,7 @@ void *worker( void *args )
 			return nullptr;
 
 		pthread_mutex_lock( &frontierLock );
-		
+
 		while ( urlFrontier.empty( ) )
 			{
 			pthread_cond_wait( &frontierCV, &frontierLock );
@@ -280,12 +280,12 @@ void *worker( void *args )
 
 		if ( testing && time( NULL ) - startTime > testTime )
 			{
-			
+
 			pthread_mutex_unlock( &frontierLock );
 			exit( 0 );
 			}
 		pthread_mutex_unlock( &frontierLock );
-		
+
 		log( name + ": Connecting to " + toCrawl.completeUrl( ) + "\n" );
 		dex::string result;
 		result.reserve( 4000000 );
@@ -320,7 +320,6 @@ void *worker( void *args )
 
 				addToCrawled( toCrawl );
 
-				
 				dex::vector < dex::Url > links;
 				try
 					{
@@ -352,10 +351,10 @@ void *worker( void *args )
 								addToFrontier( current );
 								}
 							}
-							
+
 						}
 					}
-				
+
 				// Add 2 random inbound links to the frontier.
 				size_t toAdd = 2;
 				size_t added = 0;
@@ -373,7 +372,7 @@ void *worker( void *args )
 					}
 
 				pthread_cond_signal( &frontierCV );
-				
+
 				pthread_mutex_unlock( &frontierLock );
 				}
 			}
@@ -381,9 +380,9 @@ void *worker( void *args )
 		if ( errorCode == dex::POLITENESS_ERROR || errorCode == dex::PUT_BACK_IN_FRONTIER )
 			{
 			pthread_mutex_lock( &frontierLock );
-			
+
 			urlFrontier.putUrl( toCrawl );
-			
+
 			pthread_mutex_unlock( &frontierLock );
 			}
         //print( "past politeness" );
@@ -394,9 +393,9 @@ void *worker( void *args )
 			if ( urlId == instanceId )
 				{
 				pthread_mutex_lock( &frontierLock );
-				
+
 				urlFrontier.putUrl( location );
-				
+
 				pthread_mutex_unlock( &frontierLock );
 				}
 			}
@@ -413,7 +412,7 @@ void *worker( void *args )
 
 int main( )
 	{
-	while( state != 'q' ) 
+	while( state != 'q' )
 		{
 		try
 			{
@@ -428,7 +427,7 @@ int main( )
 				return 0;
 				}
 			signal(SIGPIPE, SIG_IGN);
-			
+
 			// Make the necessary directories if they don't exist
 			dex::makeDirectory( savePath.cStr( ) );
 			dex::makeDirectory( ( savePath + "/html" ).cStr( ) );
@@ -472,8 +471,8 @@ int main( )
 
 			for ( size_t i = 0;  i < numWorkers; ++i )
 				pthread_join( workers[ i ], nullptr );
-			
-			saveDataStructures( );	
+
+			saveDataStructures( );
 			std::cout << "exiting safely...\n";
 			return 0;
 			}

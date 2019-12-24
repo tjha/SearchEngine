@@ -13,18 +13,16 @@
 
 #include <dirent.h>
 #include <time.h>
-#include "../utils/file.hpp"
-#include "../utils/basicString.hpp"
-#include "../crawler/robotsMap.hpp"
-#include "frontier.hpp"
-#include "file.hpp"
-#include "utf.hpp"
-#include "encode.hpp"
-#include "utility.hpp"
+#include "crawler/robotsMap.hpp"
+#include "driver/frontier.hpp"
+#include "utils/basicString.hpp"
+#include "utils/encode.hpp"
+#include "utils/file.hpp"
+#include "utils/utf.hpp"
+#include "utils/utility.hpp"
 
 namespace dex
 	{
-	
 	dex::pair < size_t, size_t > getInstanceInfo( const char *fileName)
 		{
 		dex::pair < size_t, size_t > toReturn;
@@ -48,7 +46,7 @@ namespace dex
 		toReturn.second = dex::stoi( info.substr( delimLocation + 12, info.size( ) - delimLocation - 12 ) );
 		return toReturn;
 		}
-	
+
 	// Folder structure
 	// Hash the URL
 	// 2 layers of folders
@@ -102,7 +100,7 @@ namespace dex
 			{
 			// read in the frontier file
 			string frontierList( readFromFile( fileName ) );
-			
+
 			string delimiter = "\n";
 			size_t found = frontierList.find( delimiter, 0 );
 			size_t start = found + delimiter.size( );
@@ -139,14 +137,14 @@ namespace dex
 		{
 		dex::encode::encoder < dex::vector < dex::Url > > UrlEncoder;
 		dex::vector< unsigned char > encodedFrontier = UrlEncoder( frontier.getFrontier( ) );
-		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
+		return writeToFile( fileName, reinterpret_cast < char * >( encodedFrontier.data( ) ), encodedFrontier.size( ) );
 		}
 
 	int saveVisitedLinks ( const char * fileName, dex::vector< dex::string > links )
 		{
 		dex::encode::encoder < dex::vector < dex::string > > VectorStringEncoder;
 		dex::vector< unsigned char > encodedFrontier = VectorStringEncoder( links );
-		return writeToFile( fileName, encodedFrontier.data( ), encodedFrontier.size( ) );
+		return writeToFile( fileName, reinterpret_cast < char * >( encodedFrontier.data( ) ), encodedFrontier.size( ) );
 		}
 
 	int saveCrawledLinks( const char * fileName, dex::unorderedSet < dex::string > * crawled )
@@ -166,7 +164,7 @@ namespace dex
 			return links;
 		// read in the frontier file
 		string crawled( readFromFile( fileName ) );
-		
+
 		string delimiter = "\n";
 		size_t found = crawled.find( delimiter, 0 );
 		size_t start = found + delimiter.size( );
@@ -194,7 +192,7 @@ namespace dex
 		if ( !dex::fileExists( fileName ) )
 			return brokenLinks;
 		string linksList( readFromFile( fileName ) );
-		
+
 		string delimiter = "\n";
 		size_t found = linksList.find( delimiter, 0 );
 		size_t start = found + delimiter.size( );
@@ -229,7 +227,7 @@ namespace dex
 
 	int saveLinksToShip( const char * folderPath, dex::vector < dex::Url > *linksToShip, int len )
 		{
-		
+
 		for ( int i = 0;  i < len;  ++i )
 			{
 			string linksToShipData = "LINKS FOR " + dex::toString( i ) + "\n";
@@ -239,7 +237,7 @@ namespace dex
 				}
 			writeToFile( ( dex::string( folderPath ) + "linksFor" + dex::toString( i ) ).cStr( ), linksToShipData.cStr( ), linksToShipData.size( ) );
 			}
-		
+
 		return 0;
 		}
 
@@ -247,7 +245,7 @@ namespace dex
 		{
 		DIR * dir = opendir( ( logPath ).cStr( ) );
 		dirent * entry = readdir( dir );
-		
+
 		// delete old logs
 		while ( entry != NULL )
 			{
@@ -273,7 +271,7 @@ namespace dex
 			std::cerr << "Couldn't open new log file " << filename << std::endl;
 			exit( 1 );
 			}
-		
+
 		return fileDescriptor;
 		}
 
@@ -281,7 +279,7 @@ namespace dex
 		{
 		DIR * dir = opendir( ( performancePath ).cStr( ) );
 		dirent * entry = readdir( dir );
-		
+
 		// delete old logs
 		while ( entry != NULL )
 			{
@@ -306,7 +304,7 @@ namespace dex
 			std::cerr << "Couldn't open new log file " << filename << std::endl;
 			exit( 2 );
 			}
-		
+
 		std::cout << "performance FD " << fileDescriptor << std::endl;
 		// return file to driver
 		std::cout << "Deleteing old performance file, creating new at " << filename << std::endl;
@@ -316,4 +314,4 @@ namespace dex
 
 	}
 	#endif
-	
+

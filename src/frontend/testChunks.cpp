@@ -1,8 +1,8 @@
 // file for testing chunks
-#include "file.hpp"
-#include "index.hpp"
-#include "ranker.hpp"
-#include "basicString.hpp"
+#include "indexer/index.hpp"
+#include "ranker/ranker.hpp"
+#include "utils/basicString.hpp"
+#include "utils/file.hpp"
 
 
 // Global variables for ranker

@@ -1,88 +1,117 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g3 -pthread
+CXX := g++
 
-# flags
+# Where our .cpp and .hpp files are
+SOURCE_DIR := src
+# Where the Catch 2 framework files are found
+TEST_DIR := tst
+# Where to output
+BUILD_DIR := build
+
+# TODO: Is this block necessary?
+CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -pthread -ltls
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-	OSFLAG := -D LINUX
-	LDFLAGS := -L/opt/libressl/lib
-	CPPFLAGS := -I/opt/libressl/include
+	CXXFLAGS := $(CXXFLAGS) -L/opt/libressl/lib
+	CXXFLAGS := $(CXXFLAGS) -I/opt/libressl/include
 endif
 ifeq ($(UNAME_S),Darwin)
-	OSFLAG := -D OSX
-	LDFLAGS := -L/usr/local/opt/libressl/lib
-	CPPFLAGS := -I/usr/local/opt/libressl/include
+	CXXFLAGS := $(CXXFLAGS) -L/usr/local/opt/libressl/lib
+	CXXFLAGS := $(CXXFLAGS) -I/usr/local/opt/libressl/include
 endif
 
-# path #
-SRC_PATH = src
-TEST_PATH = tst
-BUILD_PATH = build
-INCLUDES = -I $(SRC_PATH)/utils/ -I $(SRC_PATH)/parser/ -I $(SRC_PATH)/crawler/ -I $(SRC_PATH)/indexer/ -I $(SRC_PATH)/driver/ -I $(SRC_PATH)/ranker/ -I $(SRC_PATH)/constraintSolver/ -I $(SRC_PATH)/queryCompiler/ -I $(TEST_PATH) $(LDFLAGS) $(CPPFLAGS)
+# TODO: -Werror
+ifeq ($(tls),no)
+	CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -pthread
+endif
 
-TEST_SOURCES := $(wildcard $(TEST_PATH)/*/*.cpp)
-TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(TEST_SOURCES))
-TESTS_PATHS := $(filter-out $(TEST_PATH)/%.cpp $(TEST_PATH)/%.hpp, $(wildcard $(TEST_PATH)/*/))
-TESTS_PATHS := $(patsubst $(TEST_PATH)/%,%,$(TESTS_PATHS))
+CXXFLAGS := $(CXXFLAGS) -I $(SOURCE_DIR)/ -I $(TEST_DIR)/
 
-MODULE_CASES := $(wildcard $(TEST_PATH)/$(module)/*.cpp)
-MODULE_TESTS := $(patsubst $(TEST_PATH)/%Tests.cpp,$(BUILD_PATH)/tst/%Tests.exe,$(MODULE_CASES))
+# .hpp files
+HEADER_SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.hpp')
+# .cpp files
+BUILD_SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.cpp')
+# .exe files corresponding to TEST_SOURCES. This is pretty contrived, but make wasn't playing nice otherwise
+ALL_TEST_EXECUTABLES :=\
+		$(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.exe,$(shell find $(SOURCE_DIR) -type f -name '*.test.cpp'))
+TESTS_TO_SKIP := $(BUILD_DIR)/indexer/index.test.exe $(BUILD_DIR)/crawler/crawler.test.exe
+TEST_EXECUTABLES := $(patsubst $(SOURCE_DIR)/%,$(BUILD_DIR)/%.test.exe,$(case))
+ifndef $(case)
+	case := all
+endif
+ifeq ($(case),all)
+	TEST_EXECUTABLES := $(filter-out $(TESTS_TO_SKIP),$(ALL_TEST_EXECUTABLES))
+endif
+# .o files that will be made (and should be kept)
+PRECIOUS_OBJECTS := $(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(BUILD_SOURCES))
 
-all: print_os $(TESTS)
+all: test
 
-crawlerDriver: src/driver/driver.cpp
-	make build
-	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/driver.exe
+test: $(TEST_EXECUTABLES)
+# Don't run the indexer or crawler tests for now
+	@for file in $^; do\
+		echo ./$$file;\
+		./$$file;\
+	done;
 
-chunkTest: src/frontend/testChunks.cpp
-	make build
-	$(CXX) $(CXXFLAGS) src/frontend/testChunks.cpp src/indexer/index.cpp src/constraintSolver/constraintSolver.cpp src/queryCompiler/parserQC.cpp src/queryCompiler/expression.cpp src/queryCompiler/tokenstream.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/chunkDriver.exe
+# Can use this for some testing of the Makefile
+noop:
+	$(info Doing nothing!)
 
-indexerDriver: src/indexer/driver.cpp src/indexer/index.cpp
-	make build
-	$(CXX) $(CXXFLAGS) src/indexer/driver.cpp src/indexer/index.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/indexerDriver.exe
+$(BUILD_DIR)/%.test.exe: $(BUILD_DIR)/%.test.o $(BUILD_DIR)/main.o
+# Also compile the corresponding .cpp (not .test.cpp) file if it exists
+	@if test -f $(patsubst $(BUILD_DIR)/%.test.exe,$(SOURCE_DIR)/%.cpp,$@); then\
+		make $(patsubst %.test.exe,%.o,$@);\
+		$(CXX) $(CXXFLAGS) $^ $(patsubst %.test.exe,%.o,$@) -o $@;\
+	else\
+		$(CXX) $(CXXFLAGS) $^ -o $@;\
+	fi;
 
-indexerEncodingTest: tst/indexer/indexerEncodingTests.cpp
-	make build
-	$(CXX) $(CXXFLAGS) tst/indexer/indexerEncodingTests.cpp $(INCLUDES) -ltls -O3 -o $(BUILD_PATH)/encodingTests.exe
+# Need to special case queryCompiler
+$(BUILD_DIR)/queryCompiler/queryCompiler.test.exe: $(BUILD_DIR)/queryCompiler/queryCompiler.test.o $(BUILD_DIR)/main.o\
+		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
+		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
+		$(BUILD_DIR)/indexer/index.o
+	$(CXX) $(CXXFLAGS) $^ -o $@;
 
-indexerTest: tst/indexer/indexTests.cpp
-	make build
-	$(CXX) $(CXXFLAGS) tst/indexer/indexTests.cpp $(INCLUDES) tst/main.cpp -O3 -o $(BUILD_PATH)/indexTests.exe
+$(BUILD_DIR)/ranker/ranker.test.exe: $(BUILD_DIR)/ranker/ranker.test.o $(BUILD_DIR)/main.o\
+		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
+		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
+		$(BUILD_DIR)/indexer/index.o
+	$(CXX) $(CXXFLAGS) $^ -o $@;
 
-driverFinal: src/driver/driver.cpp
-	make build
-	$(CXX) $(CXXFLAGS) src/driver/driver.cpp $(INCLUDES) -ltls -O3 $(BUILD_PATH)/driver.exe
+# Need to special case main.o for Catch-2
+$(BUILD_DIR)/main.o: $(TEST_DIR)/main.cpp
+	mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $< -o $(BUILD_DIR)/main.o
 
-multithreadingTest: src/driver/multithreadingTest.cpp
-	$(CXX) $(CXXFLAGS) src/driver/multithreadingTest.cpp $(INCLUDES) -ltls -o build/multithreadingTest.exe
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
+	mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+# When any .hpp file is changed, assume we should rebuild everything except main.cpp (maybe bad, but it keeps this file
+# shorter)
+$(TEST_DIR)/main.cpp: $(TEST_DIR)/catch.hpp
+$(SOURCE_DIR)/%.cpp: $(HEADER_SOURCES)
+
+crawlerDriver: $(SOURCE_DIR)/driver/driver.cpp
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/driver.exe
+
+indexerDriver: $(SOURCE_DIR)/indexer/driver.o $(SOURCE_DIR)/indexer/index.o
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/indexerDriver.exe
+
+printOS:
+	$(info Your OS is '$(UNAME_S)')
+
+clean:
+	@rm -rf $(BUILD_DIR)/
 
 cleanDriver:
 	@rm -rf data/tmp/logs/
 	@rm -rf data/tmp/performance/
 
-test: $(BUILD_PATH)/tst/$(case)Tests.exe
+.PHONY: all test noop crawlerDriver indexerDriver printOS clean cleanDriver
 
-tests: $(MODULE_TESTS)
-
-build:
-	@mkdir -vp $(addprefix $(BUILD_PATH)/tst/,$(TESTS_PATHS))
-
-$(BUILD_PATH)/tst/%Tests.exe: $(BUILD_PATH)/tst/%Tests.o
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ tst/main.cpp -o $@ -ltls
-	./$@
-	make clean
-
-$(BUILD_PATH)/tst/%Tests.o: $(TEST_PATH)/%Tests.cpp
-	make build
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@ -ltls
-
-print_os: ;@echo 'os = ' $(OSFLAG)
-
-# TODO: run_integration_tests #
-
-clean:
-	@rm -rf $(BUILD_PATH)/
-
-.PHONY: tests clean cleanDriver
-
+# Keep all of our object files aroud for future compilations
+.PRECIOUS: $(PRECIOUS_OBJECTS)

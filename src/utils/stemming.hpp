@@ -9,8 +9,8 @@
 #define DEX_STEMMING
 
 #include <cstddef>
-#include "basicString.hpp"
-#include "vector.hpp"
+#include "utils/basicString.hpp"
+#include "utils/vector.hpp"
 
 namespace dex
 	{

@@ -8,7 +8,7 @@
 #ifndef DEX_UTILITY
 #define DEX_UTILITY
 
-#include "algorithm.hpp"
+#include "utils/algorithm.hpp"
 
 namespace dex
 	{

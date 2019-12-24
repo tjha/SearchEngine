@@ -2,10 +2,10 @@ language: cpp
 compiler: gcc
 
 before_install:
- - sudo ./scripts/libressl-install.sh
+#  - sudo ./scripts/libressl-install.sh
 
 script:
- - make all
+ - make all tls=no
  - make clean
 
 after_success:

@@ -6,10 +6,10 @@
 #ifndef RANKER_OBJECTS_HPP
 #define RANKER_OBJECTS_HPP
 
-#include "constraintSolver.hpp"
-#include "index.hpp"
-#include "vector.hpp"
-#include "url.hpp"
+#include "constraintSolver/constraintSolver.hpp"
+#include "indexer/index.hpp"
+#include "utils/url.hpp"
+#include "utils/vector.hpp"
 
 // This is what our cosntraintSolver ISR interface looks like. See constraintSolver.hpp
 // namespace dex
@@ -106,7 +106,6 @@ namespace dex
 				return internal[ pos ] - internal[ pos - 1 ] - 1;
 				}
 		};
-	
 	class ISR : public constraintSolver::ISR
 		{
 		private:
@@ -115,7 +114,6 @@ namespace dex
 			size_t pos;
 			dex::endOfDocumentISR ends;
 		public:
-			
 			const static size_t npos = size_t ( -1 );
 			ISR( )
 				{

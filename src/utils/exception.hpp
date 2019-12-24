@@ -21,7 +21,7 @@ namespace dex
 				return "Exception";
 				}
 		};
-	
+
 
 	class outOfRangeException : public exception
 		{
@@ -40,7 +40,7 @@ namespace dex
 				return "Invalid Argument Exception";
 				}
 		};
-	
+
 	class fileWriteException : public exception
 		{
 		public:

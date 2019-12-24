@@ -47,10 +47,10 @@
 
 #include <cstddef>
 #include <iostream>
-#include "algorithm.hpp"
-#include "exception.hpp"
-#include "functional.hpp"
-#include "typeTraits.hpp"
+#include "utils/algorithm.hpp"
+#include "utils/exception.hpp"
+#include "utils/functional.hpp"
+#include "utils/typeTraits.hpp"
 
 namespace dex
 	{
