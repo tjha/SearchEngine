@@ -9,6 +9,7 @@
 #include "queryCompiler/expression.hpp"
 #include "queryCompiler/tokenstream.hpp"
 #include "ranker/rankerObjects.hpp"
+#include "utils/basicString.hpp"
 
 namespace dex
 	{
@@ -17,7 +18,7 @@ namespace dex
 		class parser
 			{
 				// Stream of tokens to consume input from
-				tokenStream stream;
+				tokenStream *stream;
 
 				dex::index::indexChunk *chunk;
 
@@ -38,15 +39,10 @@ namespace dex
 
 			public:
 				/**
-				 * Construct parser based on given input
-				 */
-				parser( const dex::string &in, dex::index::indexChunk *chunkIn );
-
-				/**
 				 * The public interface of the parser. Call this function,
 				 * rather than the private internal functions.
 				 */
-				dex::matchedDocuments *parse( bool verbose = false );
+				dex::matchedDocuments *parse( dex::string &in, dex::index::indexChunk *chunkIn );
 			};
 		}
 	}

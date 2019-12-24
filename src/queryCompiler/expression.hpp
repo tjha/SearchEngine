@@ -5,7 +5,6 @@
 #ifndef DEX_EXPRESSION
 #define DEX_EXPRESSION
 
-#include <iostream>
 #include "constraintSolver/constraintSolver.hpp"
 #include "indexer/index.hpp"
 #include "utils/basicString.hpp"
@@ -20,9 +19,9 @@ namespace dex
 			{
 			public:
 				virtual ~expression( );
-				virtual dex::constraintSolver::ISR *eval( ) const = 0;
+				virtual dex::constraintSolver::ISR *eval( dex::index::indexChunk *chunk ) const = 0;
 				virtual dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const = 0;
-				virtual void print( size_t depth = 0 ) const = 0;
+				virtual dex::string toString( ) const = 0;
 			};
 
 		inline dex::index::indexChunk::endOfDocumentIndexStreamReader *getEndOfDocumentISR( dex::index::indexChunk *chunk )
@@ -34,59 +33,51 @@ namespace dex
 			{
 			public:
 				expression *value;
-				dex::index::indexChunk *chunk;
-				notExpression( expression *value, dex::index::indexChunk *chunk );
+				notExpression( expression *value );
 				~notExpression( );
-				dex::constraintSolver::ISR *eval( ) const override;
+				dex::constraintSolver::ISR *eval( dex::index::indexChunk *chunk ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
-				void print( size_t depth = 0 ) const override;
+				dex::string toString( ) const override;
 			};
 
 		class orExpression: public expression
 			{
 			public:
 				dex::vector < expression * > terms;
-				dex::index::indexChunk *chunk;
-				orExpression( dex::index::indexChunk *chunk );
 				~orExpression( );
-				dex::constraintSolver::ISR *eval( ) const override;
+				dex::constraintSolver::ISR *eval( dex::index::indexChunk *chunk ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
-				void print( size_t depth = 0 ) const override;
+				dex::string toString( ) const override;
 			};
 
 		class andExpression: public expression
 			{
 			public:
 				dex::vector < expression * > terms;
-				dex::index::indexChunk *chunk;
-				andExpression( dex::index::indexChunk *chunk );
 				~andExpression( );
-				dex::constraintSolver::ISR *eval( ) const override;
+				dex::constraintSolver::ISR *eval( dex::index::indexChunk *chunk ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
-				void print( size_t depth = 0 ) const override;
+				dex::string toString( ) const override;
 			};
 
 		class phraseExpression : public expression
 			{
 			public:
 				dex::vector < expression * > terms;
-				dex::index::indexChunk *chunk;
-				phraseExpression( dex::index::indexChunk *chunk );
 				~phraseExpression( );
-				dex::constraintSolver::ISR *eval( ) const override;
+				dex::constraintSolver::ISR *eval( dex::index::indexChunk *chunk ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
-				void print( size_t depth = 0 ) const override;
+				dex::string toString( ) const override;
 			};
 
 		class word: public expression
 			{
 			public:
 				dex::string str;
-				dex::index::indexChunk *chunk;
-				word( dex::string str, dex::index::indexChunk *chunk );
-				dex::constraintSolver::ISR *eval( ) const override;
+				word( dex::string str );
+				dex::constraintSolver::ISR *eval( dex::index::indexChunk *chunk ) const override;
 				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery( ) const override;
-				void print( size_t depth = 0 ) const override;
+				dex::string toString( ) const override;
 			};
 		}
 	}
