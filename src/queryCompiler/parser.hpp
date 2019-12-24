@@ -20,8 +20,6 @@ namespace dex
 				// Stream of tokens to consume input from
 				tokenStream *stream;
 
-				dex::index::indexChunk *chunk;
-
 				/**
 				 * Find the appropriate nonterminal
 				 *
@@ -42,7 +40,7 @@ namespace dex
 				 * The public interface of the parser. Call this function,
 				 * rather than the private internal functions.
 				 */
-				dex::matchedDocuments *parse( dex::string &in, dex::index::indexChunk *chunkIn );
+				dex::matchedDocuments *parse( dex::string &in, dex::index::indexChunk *chunk );
 			};
 		}
 	}

@@ -111,10 +111,9 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 	return nullptr;
 	}
 
-dex::matchedDocuments *dex::queryCompiler::parser::parse( dex::string &in, dex::index::indexChunk *chunkIn )
+dex::matchedDocuments *dex::queryCompiler::parser::parse( dex::string &in, dex::index::indexChunk *chunk )
 	{
 	stream = new tokenStream( in );
-	chunk = chunkIn;
 
 	dex::queryCompiler::expression *root = dex::queryCompiler::parser::findOr( );
 	if ( root )

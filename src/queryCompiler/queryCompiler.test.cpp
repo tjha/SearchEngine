@@ -12,7 +12,7 @@
 #include "utils/stemming.hpp"
 
 
-TEST_CASE( "token stream" )
+TEST_CASE( "token stream", "[queryCompiler]" )
 	{
 	SECTION( "space delimiting" )
 		{
@@ -102,7 +102,7 @@ TEST_CASE( "token stream" )
 		}
 	}
 
-TEST_CASE( "flattened query check" )
+TEST_CASE( "parsing check", "[queryCompiler]" )
 	{
 	SECTION( "\"First    ($check   & stuff ) &~badness\"" )
 		{
