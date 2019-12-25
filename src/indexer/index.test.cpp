@@ -281,6 +281,19 @@ TEST_CASE( "ISR functions on multiple documents" )
 		REQUIRE( bodyISR.next( ) == 13 );
 		REQUIRE( bodyISR.next( ) == 19 );
 		REQUIRE( bodyISR.next( ) == 32 );
+
+		size_t ham = hamiltonISR.next( );
+		while ( ham != static_cast< size_t >( -1 ) )
+			{
+			std::cout << "next: " << ham << std::endl;
+			ham = hamiltonISR.next( );
+			}
+
+		hamiltonISR = indexChunk::indexStreamReader( &initializingIndexChunk, "hamilton" );
+		REQUIRE( hamiltonISR.next( ) == 6 );
+		REQUIRE( hamiltonISR.next( ) == 21 );
+		REQUIRE( hamiltonISR.next( ) == 25 );
+		REQUIRE( hamiltonISR.next( ) == 34 );
 		}
 	/*
 	SECTION( "ISR functions on multiple documents" )
