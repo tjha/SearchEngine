@@ -16,15 +16,21 @@ dex::queryCompiler::matchedDocumentsGenerator::matchedDocumentsGenerator(
 		return;
 		}
 
-	const dex::vector < dex::string > &flattenedQuery = root->flattenedQuery( ).first;
+	flattenedQuery = root->flattenedQuery( );
 
-	invalid = flattenedQuery.empty( );
+	if ( flattenedQuery.first.empty( ) )
+		{
+		invalid = true;
+		return;
+		}
+
+	invalid = flattenedQuery.first.empty( );
 	if ( invalid )
 		return;
 
-	emphasizedWords.reserve( flattenedQuery.size( ) );
-	for( size_t index = 0;  index < flattenedQuery.size( );  ++index )
-		emphasizedWords.pushBack( stream->emphasizedWords.count( flattenedQuery[ index ] ) );
+	emphasizedWords.reserve( flattenedQuery.first.size( ) );
+	for( size_t index = 0;  index < flattenedQuery.first.size( );  ++index )
+		emphasizedWords.pushBack( stream->emphasizedWords.count( flattenedQuery.first[ index ] ) );
 
 	query = root->toString( );
 	}
@@ -42,10 +48,15 @@ dex::matchedDocuments *dex::queryCompiler::matchedDocumentsGenerator::operator( 
 	if ( invalid )
 		return nullptr;
 
+	dex::constraintSolver::ISR *isr = root->eval( chunk );
+
+	if ( isr && flattenedQuery.first.size( ) + flattenedQuery.second.size( ) == 1 )
+		isr = new dex::constraintSolver::phraseISR( { isr }, dex::queryCompiler::getEndOfDocumentISR( chunk ) );
+
 	return new dex::matchedDocuments
 		{
-		root->flattenedQuery( ).first,  // flattened query vector of strings
-		root->eval( chunk ),            // matching document ISR
+		flattenedQuery.first,  // flattened query vector of strings
+		isr,            // matching document ISR
 		chunk,                          // index chunk
 		emphasizedWords                 // emphasized words in order of flattenedQuery.
 		};
@@ -53,6 +64,8 @@ dex::matchedDocuments *dex::queryCompiler::matchedDocumentsGenerator::operator( 
 
 dex::string dex::queryCompiler::matchedDocumentsGenerator::getQuery( ) const
 	{
+	if ( flattenedQuery.first.size( ) + flattenedQuery.second.size( ) == 1 )
+		return "(" + query + ")";
 	return query;
 	}
 

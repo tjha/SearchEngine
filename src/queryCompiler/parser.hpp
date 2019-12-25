@@ -10,6 +10,7 @@
 #include "queryCompiler/tokenstream.hpp"
 #include "ranker/rankerObjects.hpp"
 #include "utils/basicString.hpp"
+#include "utils/utility.hpp"
 
 namespace dex
 	{
@@ -21,6 +22,7 @@ namespace dex
 				bool invalid;
 				dex::queryCompiler::expression *root;
 				tokenStream *stream;
+				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery;
 				dex::vector < bool > emphasizedWords;
 				dex::string query;
 

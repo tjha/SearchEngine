@@ -170,7 +170,7 @@ dex::constraintSolver::ISR *dex::queryCompiler::phraseExpression::eval( dex::ind
 	for ( size_t i = 0;  i < terms.size( );  ++i )
 		isrs.pushBack( terms[ i ]->eval( chunk ) );
 
-	return new dex::constraintSolver::andISR( isrs, endDocISR );
+	return new dex::constraintSolver::phraseISR( isrs, endDocISR );
 	}
 
 dex::pair < dex::vector < dex::string >, dex::vector < dex::string > >

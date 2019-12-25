@@ -167,4 +167,18 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 		REQUIRE( md->emphasizedWords[ 3 ] == false );
 		delete md;
 		}
+
+	SECTION( "alpha" )
+		{
+		dex::string query = "alpha";
+		dex::queryCompiler::parser parsyMcParseface;
+		dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
+		dex::matchedDocuments *md = mdg( nullptr );
+		REQUIRE( mdg.getQuery( ) == "(alpha)" );
+		REQUIRE( md->flattenedQuery.size( ) == 1 );
+		REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "alpha" ) );
+		REQUIRE( md->emphasizedWords.size( ) == 1 );
+		REQUIRE( md->emphasizedWords[ 0 ] == false );
+		delete md;
+		}
 	}
