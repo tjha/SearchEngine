@@ -29,16 +29,14 @@
 #ifndef DEX_HTML_PARSER
 #define DEX_HTML_PARSER
 
-#include "algorithm.hpp"
-#include "basicString.hpp"
-#include "exception.hpp"
-#include "url.hpp"
-#include "utility.hpp"
-#include "vector.hpp"
-
 #include <cstddef>
+#include "utils/algorithm.hpp"
+#include "utils/basicString.hpp"
+#include "utils/exception.hpp"
+#include "utils/utility.hpp"
+#include "utils/url.hpp"
+#include "utils/vector.hpp"
 
-#include <iostream>
 
 namespace dex
 {
@@ -201,13 +199,13 @@ namespace dex
 		//htmlFile = html.substr( linkEnd + 1, html.length( ) - linkEnd - 1 );
 		//GetLinks( html, isIndex );
       		if ( isIndex )
-         		{ 
+         		{
 		         lenAnchors = words.size();
 		         buildAnchors();
-         
+
          		GetTitle( html );
          		buildTitle();
-         
+
          		GetWords( html );
          		}
      		else
@@ -216,7 +214,7 @@ namespace dex
 			}
 		}
 
-	
+
 	size_t HTMLparser::ReturnAnchorTextLength( )
 		{
 		return lenAnchors;
@@ -298,11 +296,11 @@ namespace dex
 		if( indexNotOf == start )
 			{
 			changeToLowercase( anchor );
-			// removePunctuation( anchor );      
+			// removePunctuation( anchor );
 			words.pushBack( anchor );
 			}
 		}
-	
+
 	void HTMLparser::changeToLowercase( string &word )
 		{
 		word = word.cStr();
@@ -346,7 +344,7 @@ namespace dex
 			return;
 			}
 		string t = word;
-		
+
 		for( std::size_t i = 0; i < 44; i++ )
 			{
 			std::size_t ind = word.find( DELIMITERS[ i ] );
@@ -356,16 +354,16 @@ namespace dex
 				ind = word.find( DELIMITERS[ i ]);
 				}
 			}
-		
+
 		std::size_t ind = word.find( '-' );
-		
+
 		while( ind != string::npos )
 			{
-			
+
 			word = word.erase( ind , 1 );
 			ind = word.find( '-' );
 			}
-	  
+
 		}
 
 	std::size_t spaceDelimitedTargetPosition( dex::string target,
@@ -658,7 +656,7 @@ namespace dex
 		Positions body, start;
 		start.start = 0;
 		start.end = htmlFile.length( ) - 1;
-		
+
 		string s, t;
 		s = "<body";
 		t = "</body>";
@@ -669,10 +667,10 @@ namespace dex
 			{
 			return;
 			}
-	
+
 		vector < Positions > avoidThis;
 		avoidThis = findScripts( body, htmlFile );
-		
+
 		string text;
 		std::size_t posClose = htmlFile.find( '>', body.start + 6 );
 		std::size_t posOpen = htmlFile.find( '<', posClose );
@@ -683,21 +681,21 @@ namespace dex
 				{
 				break;
 				}
-	 
+
 			if( inAvoid( posClose, avoidThis ) || inAvoid( posOpen, avoidThis ) )
 				{
 				posClose = htmlFile.find( '>', posOpen );
 				posOpen = htmlFile.find( '<', posClose );
 				continue;
 				}
-	 
+
 			text = htmlFile.substr(posClose + 1, posOpen - posClose - 1);
-	 
+
 			if( text.findFirstNotOf(WHITESPACE) == string::npos)
 				{
 				if( text.find( ALPHABET ) != string::npos )
 					{
-					// Because manpages git(line 27) wasn't being caught. 
+					// Because manpages git(line 27) wasn't being caught.
 					BreakAnchors( text );
 					}
 				posClose = htmlFile.find( '>', posOpen );
@@ -706,7 +704,7 @@ namespace dex
 				}
 
 			BreakAnchors( text );
-  
+
 			posClose = htmlFile.find( '>', posOpen );
 			posOpen = htmlFile.find( '<', posClose );
 			}
@@ -735,12 +733,12 @@ namespace dex
 		Positions title, start;
 		start.start = 0;
 		start.end = htmlFile.length( ) - 1;
-		
+
 		string s, t;
 		s = "<title";
 		t = "</title>";
 		title = ParseTag( start, s, t, htmlFile );
-	
+
 		if( title.start == string::npos )
 			{
 			return;
@@ -755,9 +753,9 @@ namespace dex
 				{
 				break;
 				}
-	 
+
 			text = htmlFile.substr(posClose + 1, posOpen - posClose - 1);
-	 
+
 			if( text.findFirstNotOf(WHITESPACE) == string::npos)
 				{
 				if( text.find( ALPHABET ) != string::npos )
@@ -770,7 +768,7 @@ namespace dex
 				}
 
 			BreakAnchors( text );
-  
+
 			posClose = htmlFile.find( '>', posOpen );
 			posOpen = htmlFile.find( '<', posClose );
 			}
@@ -786,5 +784,5 @@ namespace dex
 		}
 
 
-};
+}
 #endif // DEX_HTML_PARSER

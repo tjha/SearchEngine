@@ -10,7 +10,7 @@
 #define DEX_CONSTRAINT_SOLVER
 
 #include <cstddef>
-#include "../utils/vector.hpp"
+#include "utils/vector.hpp"
 
 namespace dex
 	{

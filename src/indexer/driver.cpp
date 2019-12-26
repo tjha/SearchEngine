@@ -6,18 +6,17 @@
 // 2019-12-08:	created index driver to read through directory: jhirsh
 //
 
+#include <dirent.h>
 #include <iostream>
-#include <unordered_set>
-#include "dirent.h"
 #include <time.h>
-#include "index.hpp"
-#include "exception.hpp"
-#include "file.hpp"
-#include "vector.hpp"
-#include "basicString.hpp"
-#include "parser.hpp"
-#include "url.hpp"
-#include "utf.hpp"
+#include "indexer/index.hpp"
+#include "parser/parser.hpp"
+#include "utils/basicString.hpp"
+#include "utils/exception.hpp"
+#include "utils/file.hpp"
+#include "utils/url.hpp"
+#include "utils/utf.hpp"
+#include "utils/vector.hpp"
 
 using dex::string;
 using dex::vector;
@@ -35,7 +34,6 @@ int openFile( int indexChunkCount, dex::string outputFolder )
 
 int main ( int argc, char ** argv )
 	{
-	
 	if ( argc != 3 )
 		{
 		std::cerr << "Usage ./build/indexer.exe <batch-name> <chunk-output-folder>";
@@ -60,7 +58,6 @@ int main ( int argc, char ** argv )
 		}
 
 	dex::utf::decoder < dex::string > stringDecoder;
-	
 	dex::vector < dex::string > existingIndexChunks = dex::matchingFilenames( outputFolder, "_in.dex");
 	int indexChunkCount = existingIndexChunks.size( );
 	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
@@ -71,7 +68,6 @@ int main ( int argc, char ** argv )
 	unsigned checkpoint = 100;
 	time_t start = time( nullptr );
 	int statisticsFileDescriptor = open( ( outputFolder + "statistics.txt").cStr( ), O_RDWR | O_CREAT, 0777 );
-	
 	size_t totalDocumentsProcessed = 0;
 	size_t totalBytesProcessed = 0;
 	for ( unsigned index = 0;  index < toProcess.size( );  ++index )
@@ -83,7 +79,6 @@ int main ( int argc, char ** argv )
 		// Decode the current file
 		unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( fileName.cStr( ), 0 ) );
 		unsigned char *ptr = savedHtml;
-		
 		size_t filesize = dex::getFileSize( fileName.cStr( ) );
 		while ( static_cast < size_t >( ptr - savedHtml ) < filesize )
 			{
@@ -105,7 +100,7 @@ int main ( int argc, char ** argv )
 
 				// TODO this should go in parser but didn't want to break dependent functionality
 				// TODO add default argument for anchorText in index.hpp
-				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString, 
+				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{
 					toDelete = dex::matchingFilenames( batch, "_processed" );
@@ -162,7 +157,6 @@ int main ( int argc, char ** argv )
 			}
 		close( fileDescriptor );
 		}
-	
 
 	}
 

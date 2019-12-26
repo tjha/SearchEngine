@@ -5,12 +5,12 @@
 #ifndef DEX_EXPRESSION
 #define DEX_EXPRESSION
 
-#include "../constraintSolver/constraintSolver.hpp"
-#include "../indexer/index.hpp"
-#include "../utils/basicString.hpp"
-#include "../utils/utility.hpp"
-#include "../utils/vector.hpp"
 #include <iostream>
+#include "constraintSolver/constraintSolver.hpp"
+#include "indexer/index.hpp"
+#include "utils/basicString.hpp"
+#include "utils/utility.hpp"
+#include "utils/vector.hpp"
 
 namespace dex
 	{
@@ -81,7 +81,7 @@ namespace dex
 					{
 					for ( size_t i = 0;  i != depth;  ++i )
 						std::cout << '\t';
-					std::cout << "OR" << std::endl;
+					std::cout << "AND" << std::endl;
 					for ( size_t index = 0;  index != terms.size( );  ++index )
 						terms[ index ]->print( depth + 1 );
 					}

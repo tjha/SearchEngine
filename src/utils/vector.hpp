@@ -25,9 +25,9 @@
 
 #include <cstddef>
 #include <initializer_list>
-#include "algorithm.hpp"
-#include "exception.hpp"
-#include "typeTraits.hpp"
+#include "utils/algorithm.hpp"
+#include "utils/exception.hpp"
+#include "utils/typeTraits.hpp"
 
 namespace dex
 	{
