@@ -57,15 +57,6 @@ test: $(TEST_EXECUTABLES)
 noop:
 	$(info Doing nothing!)
 
-$(BUILD_DIR)/%.test.exe: $(BUILD_DIR)/%.test.o $(BUILD_DIR)/main.o
-# Also compile the corresponding .cpp (not .test.cpp) file if it exists
-	@if test -f $(patsubst $(BUILD_DIR)/%.test.exe,$(SOURCE_DIR)/%.cpp,$@); then\
-		make $(patsubst %.test.exe,%.o,$@);\
-		$(CXX) $(CXXFLAGS) $^ $(patsubst %.test.exe,%.o,$@) -o $@;\
-	else\
-		$(CXX) $(CXXFLAGS) $^ -o $@;\
-	fi;
-
 # Need to special case queryCompiler and ranker
 $(BUILD_DIR)/queryCompiler/queryCompiler.test.exe: $(BUILD_DIR)/queryCompiler/queryCompiler.test.o $(BUILD_DIR)/main.o\
 		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
@@ -117,3 +108,8 @@ help:
 
 # Keep all of our object files aroud for future compilations
 .PRECIOUS: $(PRECIOUS_OBJECTS)
+
+.SECONDEXPANSION:
+$(BUILD_DIR)/%.test.exe: $(BUILD_DIR)/%.test.o $(BUILD_DIR)/main.o $$(patsubst $(SOURCE_DIR)/$%.cpp,$(BUILD_DIR)/$%.o,$$(wildcard $(SOURCE_DIR)/$$*.cpp))
+# Also compile the corresponding .cpp (not .test.cpp) file if it exists
+	$(CXX) $(CXXFLAGS) $^ -o $@;
