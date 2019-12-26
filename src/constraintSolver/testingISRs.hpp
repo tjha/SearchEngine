@@ -58,9 +58,9 @@ class testingEndOfDocumentISR : public dex::constraintSolver::endOfDocumentISR
 		size_t documentSize( )
 			{
 			if ( index == 0 || index > deltas.size( ) )
-				return toGet = npos;
+				return npos;
 
-			return toGet = deltas[ index - 1 ];
+			return deltas[ index - 1 ];
 			}
 	};
 
