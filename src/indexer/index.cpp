@@ -283,8 +283,7 @@ size_t dex::index::indexChunk::indexStreamReader::next( )
 	std::cout << "\tabsoluteLocation: " << absoluteLocation << "\n";
 	std::cout << "\tpostsMetadatum: " << postsMetadatum << "\n";
 	std::cout << "\tpostsChunkum: " << postsChunkum << "\n";
-	std::cout << "\tindexChunkum: " << indexChunkum << "\n";
-	*/
+	std::cout << "\tindexChunkum: " << indexChunkum << "\n";*/
 
 	if ( postsMetadatum->occurenceCount == 0 || absoluteLocation >= *( indexChunkum->maxLocation )
 			|| ( dex::utf::isSentinel( post ) && !postsChunkum->nextPostsChunkOffset ) )
