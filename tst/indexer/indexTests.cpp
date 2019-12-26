@@ -186,7 +186,6 @@ TEST_CASE( "ISR functions on one document" )
 		REQUIRE( andISR.next( ) == 5 );
 		}
 
-
 	close( fd );
 	}
 
@@ -199,6 +198,7 @@ TEST_CASE( "ISR functions on multiple documents" )
 
 		if ( fd == -1 )
 			exit( 1 );
+
 		indexChunk initializingIndexChunk = indexChunk( fd );
 
 		string url = "hamiltoncshell.com";
@@ -214,9 +214,6 @@ TEST_CASE( "ISR functions on multiple documents" )
 		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 		REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
 
-		// "junk" and "some" have their offsets set to 0 in the dictionary!!
-		// 	some in the first word, so it should probably be have its offset be 0
-		// 	removing the second occurence of junk makes its offset be 1 instead of 0
 		indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
 		indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
@@ -345,11 +342,26 @@ TEST_CASE( "ONE BIG DOC" )
 		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 		indexChunk::indexStreamReader wordISR = indexChunk::indexStreamReader( &initializingIndexChunk, "someWord" );
 		REQUIRE( body.size( ) == ( 1<<12 ) );
-		for ( int iters = 0;  iters < (1<<12) - 2;  iters++ )
+		for ( int iters = 0;  iters < (1<<12);  iters++ )
 			REQUIRE( wordISR.next( ) == iters );
-		REQUIRE( wordISR.next( ) == ( 1<<12 ) - 2 );
-		REQUIRE( wordISR.next( ) == ( 1<<12 ) - 1 );
 		REQUIRE( wordISR.next( ) == static_cast < size_t >( -1 ) );
+
+		wordISR = indexChunk::indexStreamReader( &initializingIndexChunk, "someWord" );
+		for ( int iters = 0;  iters < (1<<12) - 1;  iters++ )
+			{
+			REQUIRE( wordISR.seek( iters ) == iters );
+			REQUIRE( wordISR.next( ) == iters + 1 );
+			}
+		REQUIRE( wordISR.seek( 1<<12 ) == static_cast < size_t >( -1 ) );
+		REQUIRE( wordISR.next( ) == static_cast < size_t >( -1 ) );
+
+		wordISR = indexChunk::indexStreamReader( &initializingIndexChunk, "someWord" );
+		for ( int iters = 0;  iters < (1<<6) - 1;  iters++ )
+			{
+			REQUIRE( wordISR.seek( iters << 6 ) == iters << 6 );
+			REQUIRE( wordISR.next( ) == ( iters << 6 ) + 1 );
+			}
+		close( fd );
 		}
 
 	SECTION( "Interweaving of linked posting lists" )
