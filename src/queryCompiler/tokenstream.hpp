@@ -6,7 +6,6 @@
 #define DEX_TOKENSTREAM
 
 #include "constraintSolver/constraintSolver.hpp"
-#include "indexer/index.hpp"
 #include "queryCompiler/expression.hpp"
 #include "utils/basicString.hpp"
 #include "utils/unorderedSet.hpp"
@@ -29,15 +28,13 @@ namespace dex
 				// Where we currently are in the input
 				size_t location { 0 };
 
-				dex::index::indexChunk *chunk;
-
 			public:
 				dex::unorderedSet < dex::string > emphasizedWords;
 				/**
 				 * Construct a token stream that uses a copy of the input
 				 * that contains only characters relevant to math expressions
 				 */
-				tokenStream( const dex::string &in, dex::index::indexChunk *chunk );
+				tokenStream( const dex::string &in );
 
 				/**
 				 * Attempt to match and consume a specific character

@@ -7,46 +7,117 @@
 #include "queryCompiler/parser.hpp"
 #include "ranker/rankerObjects.hpp"
 
-dex::queryCompiler::expression *dex::queryCompiler::parser::findFactor( )
+dex::queryCompiler::matchedDocumentsGenerator::matchedDocumentsGenerator(
+		dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream ) : root( root ), stream( stream )
 	{
-	if ( stream.allConsumed( ) )
+	if ( !root || !stream )
+		{
+		invalid = true;
+		return;
+		}
+
+	flattenedQuery = root->flattenedQuery( );
+
+	if ( flattenedQuery.first.empty( ) )
+		{
+		invalid = true;
+		return;
+		}
+
+	invalid = flattenedQuery.first.empty( );
+	if ( invalid )
+		return;
+
+	emphasizedWords.reserve( flattenedQuery.first.size( ) );
+	for( size_t index = 0;  index < flattenedQuery.first.size( );  ++index )
+		emphasizedWords.pushBack( stream->emphasizedWords.count( flattenedQuery.first[ index ] ) );
+
+	query = root->toString( );
+	}
+
+dex::queryCompiler::matchedDocumentsGenerator::~matchedDocumentsGenerator( )
+	{
+	if ( root )
+		delete root;
+	if ( stream )
+		delete stream;
+	}
+
+dex::matchedDocuments *dex::queryCompiler::matchedDocumentsGenerator::operator( )( dex::index::indexChunk *chunk ) const
+	{
+	if ( invalid )
 		return nullptr;
 
-	if ( stream.match( '(' ) )
+	dex::constraintSolver::ISR *isr = root->eval( chunk );
+
+	if ( isr && flattenedQuery.first.size( ) + flattenedQuery.second.size( ) == 1 )
+		isr = new dex::constraintSolver::phraseISR( { isr }, dex::queryCompiler::getEndOfDocumentISR( chunk ) );
+
+	return new dex::matchedDocuments
+		{
+		flattenedQuery.first,  // flattened query vector of strings
+		isr,            // matching document ISR
+		chunk,                          // index chunk
+		emphasizedWords                 // emphasized words in order of flattenedQuery.
+		};
+	}
+
+dex::string dex::queryCompiler::matchedDocumentsGenerator::getQuery( ) const
+	{
+	if ( flattenedQuery.first.size( ) + flattenedQuery.second.size( ) == 1 )
+		return "(" + query + ")";
+	return query;
+	}
+
+dex::queryCompiler::expression *dex::queryCompiler::parser::findPhrase( )
+	{
+	if ( stream->match( '"' ) )
+		{
+		if ( stream->allConsumed( ) )
+			return nullptr;
+
+		dex::queryCompiler::phraseExpression *phrase = new dex::queryCompiler::phraseExpression( );
+		while ( true )
+			{
+			phrase->terms.pushBack( stream->parseWord( ) );
+
+			if ( stream->match( '"' ) )
+				break;
+
+			if ( stream->allConsumed( ) || !stream->match( ' ' ) )
+				{
+				delete phrase;
+				return nullptr;
+				}
+			}
+		return phrase;
+		}
+
+	return stream->parseWord( );
+	}
+
+dex::queryCompiler::expression *dex::queryCompiler::parser::findFactor( )
+	{
+	if ( stream->allConsumed( ) )
+		return nullptr;
+
+	if ( stream->match( '(' ) )
 		{
 		dex::queryCompiler::expression *add = dex::queryCompiler::parser::findOr( );
-		if ( stream.match( ')' ) )
+		if ( stream->match( ')' ) )
 			return add;
 		if ( add )
 			delete add;
 		return nullptr;
 		}
-	else
-		if ( stream.match( '"' ) )
-			{
-			dex::queryCompiler::phraseExpression *phrase = new dex::queryCompiler::phraseExpression( chunk );
-			while ( !stream.match( '"' ) && !stream.allConsumed( ) )
-				{
-				phrase->terms.pushBack( stream.parseWord( ) );
-				if ( !stream.match( ' ' ) && !stream.allConsumed( ) )
-					{
-					if ( phrase )
-						delete phrase;
-					return nullptr;
-					}
-				}
-			return phrase;
-			if ( phrase )
-				delete phrase;
-			return nullptr;
-			}
-	return stream.parseWord( );
+
+	return dex::queryCompiler::parser::findPhrase( );
 	}
 
 dex::queryCompiler::expression *dex::queryCompiler::parser::findNot( )
 	{
 	size_t count;
-	for ( count = 0;  stream.match( '~' );  ++count );
+	for ( count = 0;  stream->match( '~' );  ++count );
 
 	if ( count % 2 == 0 )
 		return dex::queryCompiler::parser::findFactor( );
@@ -54,7 +125,7 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findNot( )
 		{
 		dex::queryCompiler::expression *factor = dex::queryCompiler::parser::findFactor( );
 		if ( factor )
-			return new dex::queryCompiler::notExpression( factor, chunk );
+			return new dex::queryCompiler::notExpression( factor );
 		return nullptr;
 		}
 	}
@@ -64,12 +135,12 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findOr( )
 	dex::queryCompiler::expression *left = dex::queryCompiler::parser::findAnd( );
 	if ( left )
 		{
-		dex::queryCompiler::orExpression *self = new dex::queryCompiler::orExpression( chunk );
+		dex::queryCompiler::orExpression *self = new dex::queryCompiler::orExpression( );
 		self->terms.pushBack( left );
 		bool termAdded = true;
 		while ( termAdded )
 			{
-			if ( stream.match( '|' ) )
+			if ( stream->match( '|' ) )
 				{
 				left = dex::queryCompiler::parser::findAnd( );
 				if ( !left )
@@ -89,12 +160,12 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 	dex::queryCompiler::expression *left = dex::queryCompiler::parser::findNot( );
 	if ( left )
 		{
-		dex::queryCompiler::andExpression *self = new dex::queryCompiler::andExpression( chunk );
+		dex::queryCompiler::andExpression *self = new dex::queryCompiler::andExpression( );
 		self->terms.pushBack( left );
 		bool termAdded = true;
 		while ( termAdded )
 			{
-			if ( stream.match( '&' ) )
+			if ( stream->match( '&' ) )
 				{
 				left = dex::queryCompiler::parser::findNot( );
 				if ( !left )
@@ -109,44 +180,9 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 	return nullptr;
 	}
 
-dex::queryCompiler::parser::parser( const dex::string &in, dex::index::indexChunk *chunkIn )
-		: stream( in, chunkIn ), chunk( chunkIn ) { }
-
-dex::matchedDocuments *dex::queryCompiler::parser::parse( )
+dex::queryCompiler::matchedDocumentsGenerator dex::queryCompiler::parser::parse( dex::string &in )
 	{
+	stream = new tokenStream( in );
 	dex::queryCompiler::expression *root = dex::queryCompiler::parser::findOr( );
-	if ( root )
-		{
-		if ( stream.allConsumed( ) )
-			{
-			const dex::vector < dex::string > &flattenedQuery = root->flattenedQuery( ).first;
-
-			dex::vector < bool > emphasizedWords;
-			emphasizedWords.reserve( flattenedQuery.size( ) );
-
-			if ( flattenedQuery.empty( ) )
-				{
-				delete root;
-				return nullptr;
-				}
-
-			for( size_t index = 0;  index < flattenedQuery.size( );  ++index )
-				emphasizedWords.pushBack( stream.emphasizedWords.count( flattenedQuery[ index ] ) );
-			dex::constraintSolver::ISR *matchingDocumentISR = root->eval( );
-
-			root->print( );
-
-			delete root;
-
-			return new dex::matchedDocuments
-				{
-				flattenedQuery,       // flattened query vector of strings
-				matchingDocumentISR,  // matching document ISR
-				chunk,                // index chunk
-				emphasizedWords       // emphasized words in order of flattenedQuery.
-				};
-			}
-		delete root;
-		}
-	return nullptr;
+	return dex::queryCompiler::matchedDocumentsGenerator( root, stream );
 	}
