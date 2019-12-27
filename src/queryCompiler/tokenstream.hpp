@@ -17,7 +17,7 @@ namespace dex
 		bool isAlpha ( char c );
 
 		// Check if character is one of the symbols from our language
-		bool isSymbol( char c );
+		bool isSymbol( char c, bool infix = true );
 
 
 		class tokenStream
@@ -34,7 +34,7 @@ namespace dex
 				 * Construct a token stream that uses a copy of the input
 				 * that contains only characters relevant to math expressions
 				 */
-				tokenStream( const dex::string &in );
+				tokenStream( const dex::string &in, bool infix = true );
 
 				/**
 				 * Attempt to match and consume a specific character

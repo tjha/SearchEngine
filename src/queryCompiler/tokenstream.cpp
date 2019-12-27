@@ -15,7 +15,7 @@ bool dex::queryCompiler::isAlpha ( char c )
 	 return ( c >= 'A' && c <= 'Z' ) || ( c >= 'a' && c <= 'z' );
 	 }
 
-bool dex::queryCompiler::isSymbol( char c )
+bool dex::queryCompiler::isSymbol( char c, bool infix )
 	{
 	switch ( c )
 		{
@@ -24,23 +24,24 @@ bool dex::queryCompiler::isSymbol( char c )
 		case '$':
 		case '"':
 		case '~':
-		case '(':
-		case ')':
 		case ' ':
 			return true;
+		case '(':
+		case ')':
+			return infix;
 		default:
 			return false;
 		}
 	}
 
 
-dex::queryCompiler::tokenStream::tokenStream( const dex::string &in )
+dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix )
 	{
-	dex::string semiparsed;
-	semiparsed.reserve( in.size( ) );
 	input.reserve( in.size( ) );
 
-	// Erase irrelevant chars using algorithm --- gasp!!
+	// Intermediate value to help us figure out which words are emphasized
+	dex::string semiparsed;
+	semiparsed.reserve( in.size( ) );
 
 	bool charIsAlpha;
 	bool charIsSymbol;
@@ -50,7 +51,7 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in )
 	for ( size_t index = 0;  index < in.size( );  ++index )
 		{
 		charIsAlpha = isAlpha( in[ index ] );
-		charIsSymbol = isSymbol( in[ index ] );
+		charIsSymbol = isSymbol( in[ index ], infix );
 
 		if ( !( charIsAlpha || charIsSymbol ) )
 			continue;
