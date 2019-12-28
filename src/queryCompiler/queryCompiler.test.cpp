@@ -81,6 +81,14 @@ TEST_CASE( "token stream", "[queryCompiler]" )
 		s = "here    \"is     check\"    number two";
 		ts = dex::queryCompiler::tokenStream( s );
 		REQUIRE( ts.input == "here&\"is check\"&number&two" );
+
+		s = "here    \"is     check\"    \"number   three\"";
+		ts = dex::queryCompiler::tokenStream( s );
+		REQUIRE( ts.input == "here&\"is check\"&\"number three\"" );
+
+		s = "here    \"is     check\"\"number   four\"";
+		ts = dex::queryCompiler::tokenStream( s );
+		REQUIRE( ts.input == "here&\"is check\"&\"number four\"" );
 		}
 
 	SECTION( "with Emphasis" )
