@@ -1,6 +1,7 @@
 // ranker.hpp
 // This ranks the stuff
 
+// 2019-12-28: Remove bad debug statements, fixed parseQueryScoreDocuments, moved topN out of ranker: combsc
 // 2019-12-23: Updated to use beginDocument properly: combsc
 // 2019-12-22: Updated the getDesiredSpan function to use ISRs efficiently: combsc
 // 2019-12-14 and 15: moved everything to pointers, removed prints: combsc
@@ -27,20 +28,6 @@
 
 namespace dex
 	{
-	void *parseAndScore( void *args )
-			{
-			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
-			std::cout << "[" << queryRequest.query << "]" << std::endl;
-			dex::queryCompiler::parser parser( queryRequest.query, queryRequest.chunkPointer );
-			dex::matchedDocuments *documents = parser.parse( );
-			std::cout << "Parse and Score isr: ";
-			std::cout << documents->matchingDocumentISR << std::endl;
-			for ( int i = 0;  i < 10; ++i )
-				std::cout << " Matched document found that ends at: " << documents->matchingDocumentISR->next( ) << std::endl;
-			documents->matchingDocumentISR->seek( 0 );
-			std::cout << "NPOS: " << dex::constraintSolver::ISR::npos << std::endl;
-			return ( void * ) documents;
-			}
 	class ranker
 		{
 		private:
@@ -56,7 +43,6 @@ namespace dex
 			double emphasizedWeight;
 			double proportionCap;
 			double wordsWeight;
-			dex::vector < dex::index::indexChunk * > chunkPointers;
 
 
 		public:
@@ -64,13 +50,12 @@ namespace dex
 					dex::vector < dex::pair < size_t, double > > bodySpanHeuristics,
 					dex::vector < dex::pair < size_t, double > > titleSpanHeuristics,
 					double emphasizedWeightIn, double proportionCapIn,
-					size_t bodySpans, size_t titleSpans, double wordsWeightIn, dex::vector < dex::index::indexChunk * > someChunks )
+					size_t bodySpans, size_t titleSpans, double wordsWeightIn )
 				{
 				staticTitleWeights = titleWeights;
 				staticUrlWeight = urlWeight;
 				dynamicBodySpanHeuristics = bodySpanHeuristics;
 				dynamicTitleSpanHeuristics = titleSpanHeuristics;
-				chunkPointers = someChunks;
 				maxNumBodySpans = bodySpans;
 				maxNumTitleSpans = titleSpans;
 				emphasizedWeight = emphasizedWeightIn;
@@ -78,9 +63,8 @@ namespace dex
 				wordsWeight = wordsWeightIn;
 				}
 
-			ranker ( dex::vector < dex::index::indexChunk * > someChunks )
+			ranker ( )
 				{
-				chunkPointers = someChunks;
 				RankerConfiguration config;
 				staticTitleWeights = config.StaticTitleWeights;
 				staticUrlWeight = config.StaticUrlWeight;
@@ -93,10 +77,11 @@ namespace dex
 				wordsWeight = config.wordWeight;
 				}
 
-			double staticScoreUrl( const dex::Url &url )
+			double staticScoreUrl( const dex::Url &url ) const
 				{
 				double score = 0;
 				// Promote good tlds ( .com, .org, .gov )
+				dex::vector < dex::string > tlds = { ".com", ".org", ".gov", ".edu" };
 				dex::string host = url.getHost( );
 				if ( host.size( ) > 4 )
 					{
@@ -105,29 +90,12 @@ namespace dex
 						score += 8;
 						}
 					host = host.substr( host.size( ) - 4, 4);
-					if ( host == ".com" )
+					for ( size_t i = 0;  i < tlds.size( );  ++i )
 						{
-						score += 10;
-						}
-					else
-						{
-						if ( host == ".org" )
+						if ( host == tlds[ i ] )
 							{
 							score += 10;
-							}
-						else
-							{
-							if ( host == ".gov" )
-								{
-								score += 10;
-								}
-							else
-								{
-								if ( host == ".edu" )
-									{
-									score += 10;
-									}
-								}
+							break;
 							}
 						}
 					}
@@ -139,7 +107,7 @@ namespace dex
 				// TODO: Make this more binary
 				dex::string completeUrl = url.completeUrl( );
 				int urlSize = dex::max( size_t( 45 ), completeUrl.size( ) );
-				score += 9 * 45 / urlSize;
+				score += 9.0 * 45 / urlSize;
 
 				if ( url.getService( ) == "https" )
 					{
@@ -189,7 +157,7 @@ namespace dex
 					{
 					std::cout << "Static Score Title: " << titleScore << std::endl;
 					}
-				double urlScore = staticScoreUrl( url ) * staticUrlWeight;
+				double urlScore = staticScoreUrl( url );
 				if ( printInfo )
 					{
 					std::cout << "Static Score Url: " << urlScore << std::endl;
@@ -231,15 +199,10 @@ namespace dex
 						currentWordCount[ isrIndex ] = 0;
 						// Check to see if our current next word is a part of the document that we're on
 						// If it isn't, then we know this word doesn't appear in the current document.
-						if ( isrCurrentValue[ isrIndex ] < endDocument )
+						while ( isrCurrentValue[ isrIndex ] < endDocument )
 							{
 							++currentWordCount[ isrIndex ];
 							isrCurrentValue[ isrIndex ] = isrs[ isrIndex ]->next( );
-							while ( isrCurrentValue[ isrIndex ] < endDocument )
-								{
-								++currentWordCount[ isrIndex ];
-								isrCurrentValue[ isrIndex ] = isrs[ isrIndex ]->next( );
-								}
 							}
 						}
 					wordCount.pushBack( currentWordCount );
@@ -249,9 +212,7 @@ namespace dex
 					}
 
 				// find spans
-				vector < size_t > current;
-				current.clear( );
-				current.resize( size );
+				vector < size_t > current( size, 0 );
 				endDocument = matching->seek( 0 );
 				ends->seek( endDocument );
 				beginDocument = endDocument - ends->documentSize( );
@@ -567,108 +528,134 @@ namespace dex
 					}
 				return { totalScores, 0 };
 				}
+		};
+	
+	struct queryRequest
+		{
+		dex::string query;
+		dex::index::indexChunk *chunkPointer;
+		dex::ranker *rankerPointer;
+		bool printInfo;
+		};
 
-			// second is error, if -1 there was a bad query.
-			pair < dex::vector < dex::searchResult >, int > getTopN( size_t n, dex::string query, bool printInfo = false )
+	void *parseQueryScoreDocuments( void *args )
+		{
+			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
+			dex::queryCompiler::parser parser( queryRequest.query, queryRequest.chunkPointer );
+			dex::matchedDocuments *documents = parser.parse( );
+			dex::ranker *rankerPointer = queryRequest.rankerPointer;
+			bool printInfo = queryRequest.printInfo;
+
+			pair < dex::vector < dex::searchResult >, int > searchResults;
+			// need to get the end ISR from the chunk
+			if ( !documents )
 				{
-				dex::vector < dex::searchResult > results;
-				results.reserve( n );
-				// pass query to query compiler
-				// pass compiled query to constraintSolver
-
-				dex::vector < dex::matchedDocuments * > documents;
-				dex::vector < double > scores;
-				vector < string > titles;
-				vector < Url > urls;
-
-				dex::vector < dex::queryRequest > requests;
-				requests.resize( chunkPointers.size( ) );
-
-				pthread_t workerThreads [ chunkPointers.size( ) ];
-				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
-					{
-					requests[ index ].query = query;
-					requests[ index ].chunkPointer = chunkPointers[ index ];
-					pthread_create( &workerThreads[ index ], nullptr, parseAndScore, ( void * ) &requests[ index ] );
-					}
-
-				for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
-					{
-					void *returnValue;
-					pthread_join( workerThreads[ index ], &returnValue );
-					dex::matchedDocuments *returnDocuments = ( dex::matchedDocuments * ) returnValue;
-					std::cout << "main matchingISR: " << returnDocuments->matchingDocumentISR << std::endl;
-					documents.pushBack( returnDocuments );
-					}
-
-				for ( size_t index = 0;  index < documents.size( );  ++index )
-					{
-					// need to get the end ISR from the chunk
-					if ( !documents[ index ] )
-						{
-						return { results, -1 };
-						}
-					dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr =
-							new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents[ index ]->chunk, "" );
-					vector < string > currentTitles;
-					vector < string > currentUrls;
-					for ( int i = 0;  i < 10; ++i )
-						std::cout << " Matched document found that ends at: " << documents[ index ]->matchingDocumentISR->next( ) << std::endl;
-					documents[ index ]->matchingDocumentISR->seek( 0 );
-					pair < vector < double >, int > currentScoresPair = scoreDocuments( documents[ index ], eodisr,
-					currentTitles, currentUrls, printInfo );
-					vector < double > currentScores = currentScoresPair.first;
-					if ( currentScoresPair.second == -1 )
-						{
-						return { results, -1 };
-						}
-					// Now that we're done with these ISRs we delete them
-					if ( documents[ index ] )
-						{
-						if ( documents[ index ]->matchingDocumentISR )
-							delete documents[ index ]->matchingDocumentISR;
-						delete documents[ index ];
-						}
-					if ( eodisr )
-						delete eodisr;
+				searchResults = { { }, -1 };
+				return ( void * ) &searchResults;
+				}
+			dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr =
+					new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents->chunk, "" );
+			vector < string > titles;
+			vector < string > urls;
+			pair < vector < double >, int > scoresPair = rankerPointer->scoreDocuments( documents, eodisr,
+			titles, urls, printInfo );
+			if ( scoresPair.second == -1 )
+				{
+				searchResults = { { }, -1 };
+				return ( void * ) &searchResults;
+				}
+			vector < double > scores = scoresPair.first;
+			// Now that we're done with these ISRs we delete them
+			if ( documents )
+				{
+				if ( documents->matchingDocumentISR )
+					delete documents->matchingDocumentISR;
+				delete documents;
+				}
+			if ( eodisr )
+				delete eodisr;
 
 
 
-					// We will be receiving the things in matched documents!
-					if ( currentScores.size( ) != currentTitles.size( ) ||
-							currentScores.size( ) != currentUrls.size( ) )
-						{
-						std::cerr << "Sizes of urls, titles, and scores don't match." << std::endl;
-						throw dex::invalidArgumentException( );
-						}
-					for ( size_t j = 0;  j < currentScores.size( );  ++j )
-						{
-						std::cout << "Title: " << currentTitles[ j ] << std::endl;
-						std::cout << "Url: " << currentUrls[ j ] << std::endl;
-						std::cout << "Score: " << currentScores[ j ] << std::endl;
-						scores.pushBack( currentScores[ j ] );
-						titles.pushBack( currentTitles[ j ] );
-						urls.pushBack( currentUrls[ j ] );
-						}
-					}
-
-				documentInfo **topN, *p;
-				dex::vector< dex::searchResult > topDocuments;
-
-				topN = findTopN( scores, n );
-
-				for ( size_t index = 0;  index < n && ( p = topN[ index ] );  index++ )
-					{
-					topDocuments.pushBack( { urls[ p->documentIndex ], titles[ p->documentIndex ] } );
-					if ( printInfo )
-						{
-						std::cout << p->score << "\t" << urls[ p->documentIndex ].completeUrl( ) << "\t"
-								<< titles[ p->documentIndex ] << "\n";
-						}
-					}
-				return { results, 0 };
+			// We will be receiving the things in matched documents!
+			if ( scores.size( ) != titles.size( ) ||
+					scores.size( ) != urls.size( ) )
+				{
+				std::cerr << "Sizes of urls, titles, and scores don't match." << std::endl;
+				throw dex::invalidArgumentException( );
+				}
+			searchResults.second = 0;
+			for ( size_t index = 0;  index < scores.size( );  ++index )
+				{
+				searchResults.first.pushBack( { urls[ index ], titles[ index ], scores[ index ] } );
 				}
 
-		};
+
+			
+			return ( void * ) &searchResults;
+		}
+
+	// second is error, if -1 there was a bad query.
+	pair < dex::vector < dex::searchResult >, int > getTopN( size_t n, dex::string query, dex::ranker *rankerPointer,
+	dex::vector < dex::index::indexChunk * > chunkPointers, bool printInfo = false )
+		{
+			dex::vector < dex::searchResult > results;
+			results.reserve( n );
+			dex::vector < double > scores;
+			dex::vector < dex::queryRequest > requests;
+			requests.resize( chunkPointers.size( ) );
+
+			pthread_t workerThreads [ chunkPointers.size( ) ];
+			for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+				{
+				requests[ index ].query = query;
+				requests[ index ].chunkPointer = chunkPointers[ index ];
+				requests[ index ].rankerPointer = rankerPointer;
+				requests[ index ].printInfo = printInfo;
+				pthread_create( &workerThreads[ index ], nullptr, parseQueryScoreDocuments, ( void * ) &requests[ index ] );
+				}
+
+			for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+				{
+				void *returnValue;
+				pthread_join( workerThreads[ index ], &returnValue );
+				dex::pair < dex::vector < dex::searchResult >, int > *returnedResults =
+						( dex::pair < dex::vector < dex::searchResult >, int > * ) returnValue;
+				// If the query results in an error, propogate up.
+				if ( returnedResults->second == -1 )
+					{
+					return { { }, -1 };
+					}
+				// Otherwise, add the results from this index chunk to the results and scores vectors
+				else
+					{
+					for ( size_t index = 0;  index < returnedResults->first.size( );  ++index )
+						{
+						results.pushBack( returnedResults->first[ index ] );
+						scores.pushBack( results[ index ].score );
+						}
+					}
+				}
+
+			
+
+			documentInfo **topN, *p;
+			dex::vector< dex::searchResult > topDocuments;
+
+			topN = findTopN( scores, n );
+
+			for ( size_t index = 0;  index < n && ( p = topN[ index ] );  index++ )
+				{
+				topDocuments.pushBack( results[ p->documentIndex ] );
+				if ( printInfo )
+					{
+					std::cout << results[ p->documentIndex ].score << "\t" << results[ p->documentIndex ].url.completeUrl( ) << "\t"
+							<< results[ p->documentIndex ].title << "\n";
+					}
+				}
+			return { results, 0 };
+		}
+
+	
 	}
 #endif

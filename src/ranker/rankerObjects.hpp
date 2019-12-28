@@ -188,16 +188,11 @@ namespace dex
 		dex::vector < bool > emphasizedWords;
 		};
 
-	struct queryRequest
-		{
-		dex::string query;
-		dex::index::indexChunk *chunkPointer;
-		};
-
 	struct searchResult
 		{
 		dex::Url url;
 		dex::string title;
+		double score;
 		};
 	}
 
