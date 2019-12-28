@@ -7,6 +7,8 @@
 #include "queryCompiler/parser.hpp"
 #include "ranker/rankerObjects.hpp"
 
+#include <iostream>
+
 dex::queryCompiler::matchedDocumentsGenerator::matchedDocumentsGenerator(
 		dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream ) : root( root ), stream( stream )
 	{
@@ -180,9 +182,99 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::findAnd( )
 	return nullptr;
 	}
 
-dex::queryCompiler::matchedDocumentsGenerator dex::queryCompiler::parser::parse( dex::string &in )
+dex::queryCompiler::expression *dex::queryCompiler::parser::parsePrefix( )
 	{
-	stream = new tokenStream( in );
-	dex::queryCompiler::expression *root = dex::queryCompiler::parser::findOr( );
+	if ( stream->allConsumed( ) )
+		return nullptr;
+
+	// Elimiate leading spaces
+	while ( stream->match( ' ' ) );
+
+	if ( stream->match( '|' ) )
+		{
+		dex::queryCompiler::expression *left = dex::queryCompiler::parser::parsePrefix( );
+		if ( !left )
+			return nullptr;
+		if ( stream->allConsumed( ) )
+			{
+			delete left;
+			return nullptr;
+			}
+
+		dex::queryCompiler::expression *right = dex::queryCompiler::parser::parsePrefix( );
+		if ( !right )
+			{
+			delete left;
+			return nullptr;
+			}
+
+		dex::queryCompiler::orExpression *self = new dex::queryCompiler::orExpression( );
+		self->terms.pushBack( left );
+		self->terms.pushBack( right );
+		return self;
+		}
+
+	if ( stream->match( '&' ) )
+		{
+		dex::queryCompiler::expression *left = dex::queryCompiler::parser::parsePrefix( );
+		if ( !left )
+			return nullptr;
+		if ( stream->allConsumed( ) )
+			{
+			delete left;
+			return nullptr;
+			}
+
+		dex::queryCompiler::expression *right = dex::queryCompiler::parser::parsePrefix( );
+		if ( !right )
+			{
+			delete left;
+			return nullptr;
+			}
+
+		dex::queryCompiler::andExpression *self = new dex::queryCompiler::andExpression( );
+		self->terms.pushBack( left );
+		self->terms.pushBack( right );
+		return self;
+		}
+
+	size_t tildeCount;
+	for ( tildeCount = 0;  stream->match( '~' );  ++tildeCount );
+
+	if ( tildeCount > 0 )
+		{
+		if ( tildeCount % 2 == 0 )
+			return dex::queryCompiler::parser::parsePrefix( );
+		else
+			{
+			dex::queryCompiler::expression *factor = dex::queryCompiler::parser::parsePrefix( );
+			if ( factor )
+				return new dex::queryCompiler::notExpression( factor );
+			return nullptr;
+			}
+		}
+
+	return findPhrase( );
+	}
+
+dex::queryCompiler::matchedDocumentsGenerator dex::queryCompiler::parser::parse( dex::string &in, bool infix )
+	{
+	stream = new tokenStream( in, infix );
+	dex::queryCompiler::expression *root;
+
+	std::cout << stream->input << std::endl;
+
+	if ( infix )
+		root = dex::queryCompiler::parser::findOr( );
+	else
+		{
+		root = dex::queryCompiler::parser::parsePrefix( );
+		if ( !stream->allConsumed( ) )
+			{
+			delete root;
+			root = nullptr;
+			}
+		}
+
 	return dex::queryCompiler::matchedDocumentsGenerator( root, stream );
 	}

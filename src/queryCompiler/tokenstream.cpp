@@ -46,7 +46,7 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix 
 	bool charIsAlpha;
 	bool charIsSymbol;
 	bool inPhrase = false;
-	char previousCharacter = '\0';
+	char previousCharacter = '&';
 
 	for ( size_t index = 0;  index < in.size( );  ++index )
 		{
@@ -138,9 +138,7 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix 
 		semiparsed.pushBack( in[ index ] );
 		previousCharacter = in[ index ];
 		}
-	if ( !in.empty( ) && !semiparsed.empty( ) && in.front( ) == ' ' && semiparsed.front( ) == '&' )
-		semiparsed = semiparsed.substr( 1 );
-	if ( !in.empty( ) && !semiparsed.empty( ) && semiparsed.back( ) == ' ' )
+	if ( !semiparsed.empty( ) && semiparsed.back( ) == ' ' )
 		semiparsed.popBack( );
 
 	for ( size_t index = 0;  index < semiparsed.size( ) - 1;  ++index )
