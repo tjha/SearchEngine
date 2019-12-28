@@ -7,8 +7,6 @@
 #include "queryCompiler/parser.hpp"
 #include "ranker/rankerObjects.hpp"
 
-#include <iostream>
-
 dex::queryCompiler::matchedDocumentsGenerator::matchedDocumentsGenerator(
 		dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream ) : root( root ), stream( stream )
 	{
@@ -261,8 +259,6 @@ dex::queryCompiler::matchedDocumentsGenerator dex::queryCompiler::parser::parse(
 	{
 	stream = new tokenStream( in, infix );
 	dex::queryCompiler::expression *root;
-
-	std::cout << stream->input << std::endl;
 
 	if ( infix )
 		root = dex::queryCompiler::parser::findOr( );
