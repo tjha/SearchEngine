@@ -3,30 +3,24 @@
 //
 // 2019-12-11: Init commit: lougheem
 
-#include <iostream>
+#include <cstddef>
 #include "catch.hpp"
 #include "ranker/topN.hpp"
 
 TEST_CASE( "topN" )
 	{
-	dex::vector< double > scores;
-	dex::vector< double > topScores;
-	int m = 1000;
+	dex::vector < double > scores;
 
-	for ( double index = 0;  index < m + 1;  index++ )
-		{
-		scores.pushBack( index );
-		//std::cout << "score: " << index << "\n";
-		}
+	for ( size_t index = 0;  index < 1500;  ++index )
+		scores.pushBack( static_cast < double >( index ) / 2 );
 
-	REQUIRE( scores.size( ) >= m );
-	int n = m/10;
-	documentInfo **topN, *p;
-	topN = findTopN( scores, n );
-	for ( int index = 0;  index < n - 1;  index++ )
-		{
-		REQUIRE( topN[ index ]->score > topN[ index + 1 ]->score );
-		}
+	size_t N = 100;
+	documentInfo **topN = findTopN( scores, N );
+	for ( size_t index = 0;  index < N;  ++index )
+		REQUIRE( topN[ index ]->score == static_cast < double >( 1499 - index ) / 2 );
 
+	for ( size_t index = 0;  index < N;  ++index )
+		delete topN[ index ];
+	delete [ ] topN;
 	}
 
