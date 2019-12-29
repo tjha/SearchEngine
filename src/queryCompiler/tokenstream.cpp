@@ -61,8 +61,18 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix 
 			{
 			inPhrase = !inPhrase;
 
-			if ( previousCharacter == ' ' && inPhrase && infix )
-				semiparsed.back( ) = '&';
+			// If we have a quote preceeded by a space, replace the space with the necessary character
+			if ( previousCharacter == ' ' )
+				{
+				if ( inPhrase && infix )
+					semiparsed.back( ) = '&';
+				if ( !inPhrase )
+					{
+					semiparsed.back( ) = '"';
+					previousCharacter = '"';
+					continue;
+					}
+				}
 
 			if ( previousCharacter == '"' )
 				{
