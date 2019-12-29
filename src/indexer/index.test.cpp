@@ -161,7 +161,7 @@ TEST_CASE( "Basic ISR functions for body and title" )
 		indexChunk::indexStreamReader artISR = indexChunk::indexStreamReader( &initializingIndexChunk, "art" );
 		indexChunk::indexStreamReader decoratedArtISR = indexChunk::indexStreamReader( &initializingIndexChunk, "#art" );
 
-		REQUIRE( decoratedArtISR.next( ) == 1 );
+		REQUIRE( decoratedArtISR.next( ) == 0 );
 		REQUIRE( artISR.next( ) == static_cast< size_t >( - 1 ) );
 		}
 	
@@ -281,6 +281,11 @@ TEST_CASE( "ISR functions on multiple documents" )
 		REQUIRE( junkISR.next( ) == 1 );
 		REQUIRE( junkISR.next( ) == 4 );
 		REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
+		
+		indexChunk::indexStreamReader endOfDocumentISR( &initializingIndexChunk, "" );
+		REQUIRE( endOfDocumentISR.next( ) == 9 );
+		REQUIRE( endOfDocumentISR.next( ) == 22 );
+		REQUIRE( endOfDocumentISR.next( ) == static_cast < size_t >( -1 ) );
 
 		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
@@ -325,7 +330,7 @@ TEST_CASE( "ISR functions on multiple documents" )
 		vector < string > emptyBody = { };
 
 		// REQUIRE( initializingIndexChunk.addDocument( url0, nonEmptyTitle, titleString0, emptyBody ) );
-		// REQUIRE( initializingIndexChunk.addDocument( url0, emptyTitle, titleString0, emptyBody ) );
+		REQUIRE( initializingIndexChunk.addDocument( url0, emptyTitle, titleString0, emptyBody ) );
 		REQUIRE( initializingIndexChunk.addDocument( url1, title, titleString1, body ) );
 		REQUIRE( initializingIndexChunk.addDocument( url2, emptyTitle, titleString2, body ) );
 		REQUIRE( initializingIndexChunk.addDocument( url3, title, titleString3, body ) );
@@ -350,7 +355,7 @@ TEST_CASE( "ISR functions on multiple documents" )
 			ham = hamiltonISR.next( );
 			}
 
-		hamiltonISR = indexChunk::indexStreamReader( &initializingIndexChunk, "hamilton" );
+		hamiltonISR = indexChunk::indexStreamReader( &initializingIndexChunk, "#hamilton" );
 		REQUIRE( hamiltonISR.next( ) == 6 );
 		REQUIRE( hamiltonISR.next( ) == 21 );
 		REQUIRE( hamiltonISR.next( ) == 25 );
