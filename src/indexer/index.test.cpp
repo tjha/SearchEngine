@@ -133,10 +133,10 @@ TEST_CASE( "Basic ISR functions for body and title" )
 		
 		REQUIRE( initializingIndexChunk.addDocument( "a.com", { "art" }, "art", { "body" } ) );
 
-		indexChunk::indexStreamReader decoratedArtISR = indexChunk::indexStreamReader( &initializingIndexChunk, "art" );
+		indexChunk::indexStreamReader decoratedArtISR = indexChunk::indexStreamReader( &initializingIndexChunk, "#art" );
 		indexChunk::indexStreamReader bodyISR = indexChunk::indexStreamReader( &initializingIndexChunk, "body" );
 
-		initializingIndexChunk.printDictionary( );
+		// initializingIndexChunk.printDictionary( );
 		REQUIRE( bodyISR.next( ) == 0 );
 		REQUIRE( decoratedArtISR.next( ) == 1 );
 		}
