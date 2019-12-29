@@ -243,9 +243,33 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			delete md;
 			}
 
-		SECTION( "[  &  &   |  $this  is \"  a  comprehensive test\" | $ that ~   \"does stuff  \" ]" )
+		SECTION( "[  &  &  |  $  this  is  \"  a  comprehensive  test  \"  |  $  that  ~  \"  does stuff  \"  ]" )
 			{
 			dex::string query = "  &  &   |  $this  is \"  a  comprehensive test\" | $ that ~   \"does stuff  \" ";
+			dex::queryCompiler::parser parsyMcParseface;
+			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query, false );
+			dex::matchedDocuments *md = mdg( nullptr );
+			REQUIRE( mdg.getQuery( ) == "(((thi|i)&\"a comprehens test\")&(that|~\"doe stuff\"))");
+			REQUIRE( md->flattenedQuery.size( ) == 6 );
+			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "this" ) );
+			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "is" ) );
+			REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "a" ) );
+			REQUIRE( md->flattenedQuery[ 3 ] == dex::porterStemmer::stem( "comprehensive" ) );
+			REQUIRE( md->flattenedQuery[ 4 ] == dex::porterStemmer::stem( "test" ) );
+			REQUIRE( md->flattenedQuery[ 5 ] == dex::porterStemmer::stem( "that" ) );
+			REQUIRE( md->emphasizedWords.size( ) == 6 );
+			REQUIRE( md->emphasizedWords[ 0 ] == true );
+			REQUIRE( md->emphasizedWords[ 1 ] == false );
+			REQUIRE( md->emphasizedWords[ 2 ] == false );
+			REQUIRE( md->emphasizedWords[ 3 ] == false );
+			REQUIRE( md->emphasizedWords[ 4 ] == false );
+			REQUIRE( md->emphasizedWords[ 5 ] == true );
+			delete md;
+			}
+
+		SECTION( "[&&|$thisis\"a comprehensive test\"|$that~\"does stuff\"]" )
+			{
+			dex::string query = "&&|$this is\"a comprehensive test\"|$that~\"does stuff\"";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query, false );
 			dex::matchedDocuments *md = mdg( nullptr );
