@@ -18,12 +18,6 @@ dex::queryCompiler::matchedDocumentsGenerator::matchedDocumentsGenerator(
 
 	flattenedQuery = root->flattenedQuery( );
 
-	if ( flattenedQuery.first.empty( ) )
-		{
-		invalid = true;
-		return;
-		}
-
 	invalid = flattenedQuery.first.empty( );
 	if ( invalid )
 		return;
