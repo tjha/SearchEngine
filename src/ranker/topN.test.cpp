@@ -15,7 +15,7 @@ TEST_CASE( "topN" )
 		scores.pushBack( static_cast < double >( index ) / 2 );
 
 	size_t N = 100;
-	documentInfo **topN = findTopN( scores, N );
+	dex::documentInfo **topN = dex::findTopN( scores, N );
 	for ( size_t index = 0;  index < N;  ++index )
 		REQUIRE( topN[ index ]->score == static_cast < double >( 1499 - index ) / 2 );
 
