@@ -212,6 +212,14 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	return true;
 	}
 
+void dex::index::indexChunk::printDictionary( )
+	{
+	for ( auto it = dictionary.cbegin( );  it != dictionary.cend( );  ++it )
+		{
+		std::cout << it->first << std::endl;
+		}
+	}
+
 dex::index::indexChunk::indexStreamReader::indexStreamReader( indexChunk *chunk, dex::string word ) :
 		indexChunkum( chunk ), absoluteLocation( 0 )
 	{

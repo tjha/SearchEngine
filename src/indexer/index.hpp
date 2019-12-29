@@ -179,6 +179,8 @@ namespace dex
 				indexChunk( int fileDescriptor, bool initialize = true );
 				~indexChunk( );
 
+				void printDictionary( );
+
 			private:
 				// InputIt should dereference to a string.
 				// Note: This has to be defined in the header due to the templating.
