@@ -1,6 +1,7 @@
 // ranker.hpp
 // This ranks the stuff
 
+// 2019-12-29: Updated the parser interface, fixed documentSize bug: combsc
 // 2019-12-28: Remove bad debug statements, fixed parseQueryScoreDocuments, moved topN out of ranker: combsc
 // 2019-12-23: Updated to use beginDocument properly: combsc
 // 2019-12-22: Updated the getDesiredSpan function to use ISRs efficiently: combsc
@@ -188,9 +189,9 @@ namespace dex
 				// Find the word counts for all the documents that match
 				endDocument = matching->seek( 0 );
 				ends->seek( endDocument );
-				beginDocument = endDocument - ends->documentSize( );
 				while ( endDocument != dex::endOfDocumentISR::npos )
 					{
+					beginDocument = endDocument - ends->documentSize( );
 					vector < size_t > currentWordCount;
 					currentWordCount.resize( size );
 					for ( size_t isrIndex = 0;  isrIndex < size;  ++isrIndex )
@@ -208,17 +209,17 @@ namespace dex
 					wordCount.pushBack( currentWordCount );
 					endDocument = matching->next( );
 					ends->seek( endDocument );
-					beginDocument = endDocument - ends->documentSize( );
 					}
 
 				// find spans
 				vector < size_t > current( size, 0 );
 				endDocument = matching->seek( 0 );
 				ends->seek( endDocument );
-				beginDocument = endDocument - ends->documentSize( );
+				
 				size_t documentNumber = 0;
 				while ( endDocument != dex::endOfDocumentISR::npos )
 					{
+					beginDocument = endDocument - ends->documentSize( );
 					// std::cout << "Begin Document: " << beginDocument << std::endl;
 					// std::cout << "End Document: " << endDocument << std::endl;
 					vector < size_t > spansOccurances( heuristics.size( ) );
@@ -384,7 +385,6 @@ namespace dex
 						}
 					endDocument = matching->next( );
 					ends->seek( endDocument );
-					beginDocument = endDocument - ends->documentSize( );
 					documentNumber++;
 					}
 				return documentSpans;
@@ -541,8 +541,9 @@ namespace dex
 	void *parseQueryScoreDocuments( void *args )
 		{
 			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
-			dex::queryCompiler::parser parser( queryRequest.query, queryRequest.chunkPointer );
-			dex::matchedDocuments *documents = parser.parse( );
+			dex::queryCompiler::parser parser;
+			dex::queryCompiler::matchedDocumentsGenerator generator = parser.parse( queryRequest.query );
+			dex::matchedDocuments *documents = generator( queryRequest.chunkPointer );
 			dex::ranker *rankerPointer = queryRequest.rankerPointer;
 			bool printInfo = queryRequest.printInfo;
 

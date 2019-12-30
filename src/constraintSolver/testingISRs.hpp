@@ -15,9 +15,11 @@ class testingEndOfDocumentISR : public dex::constraintSolver::endOfDocumentISR
 		size_t index;
 		size_t location;
 
+		size_t toGet;
+
 	public:
 		testingEndOfDocumentISR( const dex::vector <size_t> &deltas )
-				: deltas( deltas ), index( 0 ), location( 0 ) { }
+				: deltas( deltas ), index( 0 ), location( 0 ), toGet( npos ) { }
 
 		size_t seek( size_t target )
 			{
@@ -29,23 +31,28 @@ class testingEndOfDocumentISR : public dex::constraintSolver::endOfDocumentISR
 			while ( index < deltas.size( ) && location < target );
 
 			if ( location < target )
-				return npos;
+				return toGet = npos;
 
-			return location;
+			return toGet = location;
 			}
 
 		size_t next( )
 			{
 			if ( index >= deltas.size( ) )
-				return npos;
+				return toGet = npos;
 
 			location += deltas[ index++ ];
-			return location;
+			return toGet = location;
 			}
 
 		size_t nextDocument( )
 			{
-			return next( );
+			return toGet = next( );
+			}
+
+		size_t get( )
+			{
+			return toGet;
 			}
 
 		size_t documentSize( )
@@ -66,9 +73,11 @@ class testingISR : public dex::constraintSolver::ISR
 		size_t index;
 		size_t location;
 
+		size_t toGet;
+
 	public:
 		testingISR( const dex::vector <size_t> &deltas, testingEndOfDocumentISR *endOfDocumentISR )
-				: deltas( deltas ), endOfDocumentISR( endOfDocumentISR ), index( 0 ), location( 0 ) { }
+				: deltas( deltas ), endOfDocumentISR( endOfDocumentISR ), index( 0 ), location( 0 ), toGet( npos ) { }
 
 		~testingISR( )
 			{
@@ -85,36 +94,41 @@ class testingISR : public dex::constraintSolver::ISR
 			while ( index < deltas.size( ) && location < target );
 
 			if ( location < target )
-				return npos;
+				return toGet = npos;
 
-			return location;
+			return toGet = location;
 			}
 
 		size_t next( )
 			{
 			if ( index >= deltas.size( ) )
-				return npos;
+				return toGet = npos;
 
 			location += deltas[ index++ ];
-			return location;
+			return toGet = location;
 			}
 
 		size_t nextDocument( )
 			{
 			if ( index == 0 )
-				return next( );
+				return toGet = next( );
 
 			if ( index >= deltas.size( ) )
-				return npos;
+				return toGet = npos;
 
 			endOfDocumentISR->seek( location );
 			if ( seek( endOfDocumentISR->location ) == npos )
-				return npos;
+				return toGet = npos;
 
 			if ( location == endOfDocumentISR->location )
-				return next( );
+				return toGet = next( );
 
-			return location;
+			return toGet = location;
+			}
+
+		size_t get( )
+			{
+			return toGet;
 			}
 	};
 
