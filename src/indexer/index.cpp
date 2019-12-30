@@ -48,7 +48,6 @@ dex::index::indexChunk::postsMetadata::postsMetadata( size_t chunkOffset ) :
 		occurenceCount( 0 ), documentCount( 0 ), firstPostsChunkOffset( chunkOffset ),
 		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ), synchronizationPoints( )
 	{
-	// std::cout << "new lastPostsChunkOffset: " << lastPostsChunkOffset << "\t in constructor\n";
 	}
 
 bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk *postsChunkArray )
@@ -59,7 +58,6 @@ bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk 
 		std::cout << "not good! lastPostsChunkOffset: " << lastPostsChunkOffset << "\n";
 		// exit(1);
 		}
-	// std::cout << "postsChunkArray[ 1L << 20 - 1 ].currentPostOffset" << postsChunkArray[ ( 1L << 20 ) - 1 ].currentPostOffset << "\n";
 	size_t originalPostOffset = postsChunkArray[ lastPostsChunkOffset ].currentPostOffset;
 	bool successful = postsChunkArray[ lastPostsChunkOffset ].append( delta );
 
@@ -191,12 +189,14 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	for ( dex::vector < dex::string >::constIterator it = body.cbegin( );  it != body.cend( );  ++it )
 		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
 	for ( dex::vector < dex::string >::constIterator it = title.cbegin( );  it != title.cend( );  ++it )
-		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
+		uniqueWords.insert( dex::porterStemmer::stem( "#" + *it ) );
 
 	// Update the count of how many documents each word appears in.
 	for ( dex::unorderedSet < const dex::string >::constIterator uniqueWord = uniqueWords.cbegin( );
 			uniqueWord != uniqueWords.cend( );  ++postsMetadataArray[ dictionary[ *( uniqueWord++ ) ] ].documentCount )
+		{
 		postsMetadataArray[ dictionary[ *uniqueWord ] ].occurenceCount += postsMetadataChanges[ *uniqueWord ];
+		}
 
 	offsetsToEndOfDocumentMetadatas[ documentOffset ] = endOfDocumentMetadataType
 		{
@@ -207,13 +207,30 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 		};
 
 	postsMetadataArray[ 0 ].append( ( *location )++, postsChunkArray );
+	++postsMetadataArray[ 0 ].occurenceCount;
 
 	return true;
+	}
+
+void dex::index::indexChunk::printDictionary( )
+	{
+	for ( auto it = dictionary.cbegin( );  it != dictionary.cend( );  ++it )
+		{
+		std::cout << it->first << std::endl;
+		}
 	}
 
 dex::index::indexChunk::indexStreamReader::indexStreamReader( indexChunk *chunk, dex::string word ) :
 		indexChunkum( chunk ), absoluteLocation( 0 )
 	{
+	if ( !chunk->dictionary.count( dex::porterStemmer::stem( word ) ) )
+		{
+		postsMetadatum = nullptr;
+		postsChunkum = nullptr;
+		post = nullptr;
+		begun = false;
+		return;
+		}
 	postsMetadatum = chunk->postsMetadataArray + chunk->dictionary[ dex::porterStemmer::stem( word ) ];
 	postsChunkum = chunk->postsChunkArray + postsMetadatum->firstPostsChunkOffset;
 	post = postsChunkum->posts;
@@ -222,13 +239,14 @@ dex::index::indexChunk::indexStreamReader::indexStreamReader( indexChunk *chunk,
 
 size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 	{
+	if ( !postsMetadatum )
+		return ( npos );
 
 	if ( target == 0 )
 		begun = false;
 
 	postsMetadata::synchronizationPoint *syncPoint
 			= postsMetadatum->synchronizationPoints + ( target >> ( 8 * sizeof( target ) - 8 ) );
-
 
 	// TODO: Maybe remove?
 	// if ( target < absoluteLocation )
@@ -259,32 +277,14 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 			return npos;
 		}
 
-	// std::cout << "\tFound at absoluteLocation: " << absoluteLocation << "\n";
-
-	/*
-	byte *postCopy = post;
-	std::cout << "\tpost: " << dex::utf::decoder < size_t >( ) ( postCopy, &postCopy ) << "\n";
-	std::cout << "\tabsoluteLocation: " << absoluteLocation << "\n";
-	std::cout << "\tpostsMetadatum: " << postsMetadatum << "\n";
-	std::cout << "\tpostsChunkum: " << postsChunkum << "\n";
-	std::cout << "\tindexChunkum: " << indexChunkum << "\n";
-	*/
-
 	return absoluteLocation;
 	}
 
 size_t dex::index::indexChunk::indexStreamReader::next( )
 	{
-	// std::cout << "next( )\n";
 
-	/*
-	byte *postCopy = post;
-	std::cout << "\tpost: " << dex::utf::decoder < size_t >( ) ( postCopy, &postCopy ) << "\n";
-	std::cout << "\tabsoluteLocation: " << absoluteLocation << "\n";
-	std::cout << "\tpostsMetadatum: " << postsMetadatum << "\n";
-	std::cout << "\tpostsChunkum: " << postsChunkum << "\n";
-	std::cout << "\tindexChunkum: " << indexChunkum << "\n";
-	*/
+	if ( !postsMetadatum )
+		return ( npos );
 
 	if ( postsMetadatum->occurenceCount == 0 || absoluteLocation >= *( indexChunkum->maxLocation )
 			|| ( dex::utf::isSentinel( post ) && !postsChunkum->nextPostsChunkOffset ) )
@@ -300,13 +300,14 @@ size_t dex::index::indexChunk::indexStreamReader::next( )
 
 	// Post is a pointer to a valid encoded size_t.
 	absoluteLocation += dex::utf::decoder < size_t >( )( post, &post );
-	// std::cout << "\tFound at absoluteLocation: " << absoluteLocation << "\n";
 	return absoluteLocation;
 	// return absoluteLocation += dex::utf::decoder < size_t >( )( post, &post );
 	}
 
 size_t dex::index::indexChunk::indexStreamReader::nextDocument( )
 	{
+	if ( !postsMetadatum )
+		return ( npos );
 	dex::index::indexChunk::indexStreamReader endOfDocumentISR( indexChunkum, "" );
 	size_t endOfDocumentLocation = endOfDocumentISR.seek( absoluteLocation );
 	if ( endOfDocumentLocation == npos )
