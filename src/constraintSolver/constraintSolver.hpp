@@ -34,6 +34,9 @@ namespace dex
 				// Note that this requires some way of accessing document boundaries.
 				virtual size_t nextDocument( ) = 0;
 
+				// Return the last returned value.
+				virtual size_t get( ) = 0;
+
 				virtual ~ISR( ) = default;
 			};
 
@@ -43,6 +46,7 @@ namespace dex
 				virtual size_t seek( size_t target ) = 0;
 				virtual size_t next( ) = 0;
 				virtual size_t nextDocument( ) = 0;
+				virtual size_t get( ) = 0;
 				virtual size_t documentSize( ) = 0;
 			};
 
@@ -56,6 +60,8 @@ namespace dex
 				dex::vector < size_t > locations;
 				size_t endOfDocLocation;
 
+				size_t toGet;
+
 				// Move all factors so they are in the same document. Return true when there are still things to read.
 				bool align( );
 
@@ -66,6 +72,7 @@ namespace dex
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
+				virtual size_t get( );
 			};
 
 		class orISR : public dex::constraintSolver::ISR
@@ -78,6 +85,8 @@ namespace dex
 				dex::vector < size_t > locations;
 				size_t endOfDocLocation;
 
+				size_t toGet;
+
 			public:
 				orISR( dex::vector < dex::constraintSolver::ISR * > summands,
 						dex::constraintSolver::endOfDocumentISR *endOfDocISR );
@@ -85,6 +94,7 @@ namespace dex
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
+				virtual size_t get( );
 			};
 
 		class notISR : public dex::constraintSolver::ISR
@@ -97,12 +107,15 @@ namespace dex
 				size_t location;
 				size_t endOfDocLocation;
 
+				size_t toGet;
+
 			public:
 				notISR( dex::constraintSolver::ISR *neg, dex::constraintSolver::endOfDocumentISR *endOfDocISR );
 				~notISR( );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
+				virtual size_t get( );
 			};
 
 		class phraseISR : public dex::constraintSolver::ISR
@@ -112,6 +125,8 @@ namespace dex
 				dex::vector < dex::constraintSolver::ISR * > words;
 				dex::constraintSolver::endOfDocumentISR *endOfDocISR;
 				dex::vector < size_t > locations;
+
+				size_t toGet;
 
 				// Move all word ISRs so that they in order next to each other in a phrase. Return true when there are still
 				// things to read.
@@ -124,6 +139,7 @@ namespace dex
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
+				virtual size_t get( );
 			};
 		}
 	}
