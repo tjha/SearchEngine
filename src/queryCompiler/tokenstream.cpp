@@ -34,7 +34,7 @@ bool dex::queryCompiler::isSymbol( char c )
 	}
 
 
-dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index::indexChunk *chunk ) : chunk( chunk )
+dex::queryCompiler::tokenStream::tokenStream( const dex::string &in )
 	{
 	dex::string semiparsed;
 	semiparsed.reserve( in.size( ) );
@@ -171,5 +171,5 @@ dex::queryCompiler::word *dex::queryCompiler::tokenStream::parseWord( )
 	dex::string word = input.substr( location, nextSymbolLocation - location );
 	location = dex::min( nextSymbolLocation, input.size( ) );
 
-	return new dex::queryCompiler::word( dex::porterStemmer::stem( word ), chunk );
+	return new dex::queryCompiler::word( dex::porterStemmer::stem( word ) );
 	}
