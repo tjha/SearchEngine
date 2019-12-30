@@ -8,7 +8,7 @@
 #include "constraintSolver/constraintSolver.hpp"
 #include "queryCompiler/expression.hpp"
 #include "queryCompiler/tokenstream.hpp"
-#include "ranker/rankerObjects.hpp"
+#include "ranker/ranker.hpp"
 #include "utils/basicString.hpp"
 #include "utils/utility.hpp"
 
@@ -29,7 +29,7 @@ namespace dex
 			public:
 				matchedDocumentsGenerator( dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream );
 				~matchedDocumentsGenerator( );
-				dex::matchedDocuments *operator( )( dex::index::indexChunk *chunk ) const;
+				dex::ranker::matchedDocuments *operator( )( dex::index::indexChunk *chunk ) const;
 				dex::string getQuery( ) const;
 			};
 

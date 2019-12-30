@@ -7,7 +7,7 @@
 #include "queryCompiler/expression.hpp"
 #include "queryCompiler/parser.hpp"
 #include "queryCompiler/tokenstream.hpp"
-#include "ranker/rankerObjects.hpp"
+#include "ranker/ranker.hpp"
 #include "utils/basicString.hpp"
 #include "utils/stemming.hpp"
 
@@ -171,7 +171,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::string query = "First    ($check   & stuff ) &~badness";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
-			dex::matchedDocuments *md = mdg( nullptr );
+			dex::ranker::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(first&(check&stuff)&~bad)");
 			REQUIRE( md->flattenedQuery.size( ) == 3 );
 			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "first" ) );
@@ -189,7 +189,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::string query = "two words";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
-			dex::matchedDocuments *md = mdg( nullptr );
+			dex::ranker::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(two&word)");
 			REQUIRE( md->flattenedQuery.size( ) == 2 );
 			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "two" ) );
@@ -202,7 +202,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::string query = "alpha | ~( beta & ~gamma )";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
-			dex::matchedDocuments *md = mdg( nullptr );
+			dex::ranker::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(alpha|~(beta&~gamma))" );
 			REQUIRE( md->flattenedQuery.size( ) == 2 );
 			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "alpha" ) );
@@ -215,7 +215,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::string query = "$now \"with some\" | phrases";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
-			dex::matchedDocuments *md = mdg( nullptr );
+			dex::ranker::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "((now&\"with some\")|phrase)" );
 			REQUIRE( md->flattenedQuery.size( ) == 4 );
 			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "now" ) );
@@ -235,7 +235,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::string query = "alpha";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
-			dex::matchedDocuments *md = mdg( nullptr );
+			dex::ranker::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(alpha)" );
 			REQUIRE( md->flattenedQuery.size( ) == 1 );
 			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "alpha" ) );
@@ -252,7 +252,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::string query = "     &   basic and  ";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query, false );
-			dex::matchedDocuments *md = mdg( nullptr );
+			dex::ranker::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(basic&and)");
 			REQUIRE( md->flattenedQuery.size( ) == 2 );
 			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "basic" ) );
@@ -268,7 +268,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::string query = "     |   basic or  ";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query, false );
-			dex::matchedDocuments *md = mdg( nullptr );
+			dex::ranker::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(basic|or)");
 			REQUIRE( md->flattenedQuery.size( ) == 2 );
 			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "basic" ) );
@@ -284,7 +284,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::string query = "| alpha ~ & $beta ~ gamma";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query, false );
-			dex::matchedDocuments *md = mdg( nullptr );
+			dex::ranker::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(alpha|~(beta&~gamma))");
 			REQUIRE( md->flattenedQuery.size( ) == 2 );
 			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "alpha" ) );
@@ -300,7 +300,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::string query = "  &  &   |  $this  is \"  a  comprehensive test\" | $ that ~   \"does stuff  \" ";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query, false );
-			dex::matchedDocuments *md = mdg( nullptr );
+			dex::ranker::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(((thi|i)&\"a comprehens test\")&(that|~\"doe stuff\"))");
 			REQUIRE( md->flattenedQuery.size( ) == 6 );
 			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "this" ) );
@@ -324,7 +324,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::string query = "&&|$this is\"a comprehensive test\"|$that~\"does stuff\"";
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query, false );
-			dex::matchedDocuments *md = mdg( nullptr );
+			dex::ranker::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(((thi|i)&\"a comprehens test\")&(that|~\"doe stuff\"))");
 			REQUIRE( md->flattenedQuery.size( ) == 6 );
 			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "this" ) );
