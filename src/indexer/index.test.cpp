@@ -145,7 +145,7 @@ TEST_CASE( "Basic ISR functions for body and title" )
 		{
 		indexChunk initializingIndexChunk = indexChunk( fd );	
 
-		REQUIRE( initializingIndexChunk.addDocument( "a.com", { "title" }, "titleString", { "body" } ) );
+		REQUIRE( initializingIndexChunk.addDocument( "a.com", { "art" }, "titleString", { "body" } ) );
 
 		indexChunk::indexStreamReader nondecoratedArtISR = indexChunk::indexStreamReader( &initializingIndexChunk, "art" );
 
