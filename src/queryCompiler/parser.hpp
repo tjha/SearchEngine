@@ -49,12 +49,14 @@ namespace dex
 				expression *findAnd( );
 				expression *findOr( );
 
+				expression *parsePrefix( );
+
 			public:
 				/**
 				 * The public interface of the parser. Call this function,
 				 * rather than the private internal functions.
 				 */
-				matchedDocumentsGenerator parse( dex::string &in );
+				matchedDocumentsGenerator parse( dex::string &in, bool infix = true );
 			};
 		}
 	}

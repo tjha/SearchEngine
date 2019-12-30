@@ -14,11 +14,17 @@ namespace dex
 	{
 	namespace queryCompiler
 		{
-		bool isAlpha ( char c );
+		// Check if the character is in [a-zA-Z]
+		bool isAlpha( char c );
 
 		// Check if character is one of the symbols from our language
-		bool isSymbol( char c );
+		bool isSymbol( char c, bool infix = true );
 
+		// Check if character is whitespace
+		bool isWhitespace( char c );
+
+		// Convert c to lower case if it is upper case
+		char toLower( char c );
 
 		class tokenStream
 			{
@@ -27,14 +33,14 @@ namespace dex
 				dex::string input;
 				// Where we currently are in the input
 				size_t location { 0 };
-
-			public:
+				// Which words in the input were emphasized
 				dex::unorderedSet < dex::string > emphasizedWords;
+
 				/**
 				 * Construct a token stream that uses a copy of the input
 				 * that contains only characters relevant to math expressions
 				 */
-				tokenStream( const dex::string &in );
+				tokenStream( const dex::string &in, bool infix = true );
 
 				/**
 				 * Attempt to match and consume a specific character
