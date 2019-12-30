@@ -179,6 +179,8 @@ namespace dex
 				indexChunk( int fileDescriptor, bool initialize = true );
 				~indexChunk( );
 
+				void printDictionary( );
+
 			private:
 				// InputIt should dereference to a string.
 				// Note: This has to be defined in the header due to the templating.
@@ -192,7 +194,6 @@ namespace dex
 
 					for ( ;  first != last;  ++first, ++newLocation )
 						{
-						// std::cout << "About to stem: ->" << *first << "<-\n";
 						string wordToAdd = dex::porterStemmer::stem( *first );
 						string decoratedWordToAdd = decorator + wordToAdd;
 
@@ -213,7 +214,6 @@ namespace dex
 
 							// Add a new postsChunk
 							size_t newPostsChunkOffset = ( *postsChunkCount )++;
-							// std::cout << "postsChunkCount: " << *postsChunkCount << "\n";
 							postsChunkArray[ newPostsChunkOffset ] = postsChunk( );
 							wordMetadata->firstPostsChunkOffset = newPostsChunkOffset;
 
@@ -244,10 +244,9 @@ namespace dex
 							postsChunkArray[ wordMetadata->lastPostsChunkOffset ].nextPostsChunkOffset = *postsChunkCount;
 							postsChunkArray[ *postsChunkCount ] = postsChunk( );
 							wordMetadata->lastPostsChunkOffset = ( *postsChunkCount )++;
-							// std::cout << "new LastPostsChunkOffset: " << *postsChunkCount << "\n";
 							}
 
-						++postsMetadataChanges[ wordToAdd ];
+						++postsMetadataChanges[ decoratedWordToAdd ];
 						}
 
 					// Copy over newWords into dict.

@@ -119,6 +119,62 @@ TEST_CASE( "create index chunk with bad HTML" )
 
 	}
 
+TEST_CASE( "Basic ISR functions for body and title" )
+	{
+	const char filePath[ ] = "_in.dex";
+	int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
+
+	if ( fd == -1 )
+		exit( 1 );
+
+	SECTION( "ISR functions on single title and body words" )
+		{
+		indexChunk initializingIndexChunk = indexChunk( fd );
+		
+		REQUIRE( initializingIndexChunk.addDocument( "a.com", { "art" }, "art", { "body" } ) );
+
+		indexChunk::indexStreamReader decoratedArtISR = indexChunk::indexStreamReader( &initializingIndexChunk, "#art" );
+		indexChunk::indexStreamReader bodyISR = indexChunk::indexStreamReader( &initializingIndexChunk, "body" );
+
+		// initializingIndexChunk.printDictionary( );
+		REQUIRE( bodyISR.next( ) == 0 );
+		REQUIRE( decoratedArtISR.next( ) == 1 );
+		}
+
+	SECTION( "ISR functions on nondecorated title" )
+		{
+		indexChunk initializingIndexChunk = indexChunk( fd );	
+
+		REQUIRE( initializingIndexChunk.addDocument( "a.com", { "art" }, "titleString", { "body" } ) );
+
+		indexChunk::indexStreamReader nondecoratedArtISR = indexChunk::indexStreamReader( &initializingIndexChunk, "art" );
+
+		REQUIRE( nondecoratedArtISR.next( ) == static_cast< size_t >( -1 ) );
+		}
+	
+	SECTION( "ISR functions on empty body" )
+		{
+		indexChunk initializingIndexChunk = indexChunk( fd );	
+
+		// empty body vector
+		REQUIRE( initializingIndexChunk.addDocument( "amazon.com", { "art" }, "art", { } ) );
+
+		indexChunk::indexStreamReader artISR = indexChunk::indexStreamReader( &initializingIndexChunk, "art" );
+		indexChunk::indexStreamReader decoratedArtISR = indexChunk::indexStreamReader( &initializingIndexChunk, "#art" );
+
+		REQUIRE( decoratedArtISR.next( ) == 0 );
+		REQUIRE( artISR.next( ) == static_cast< size_t >( - 1 ) );
+		}
+	
+	SECTION( "Nonexistent word ISR" )
+		{
+		indexChunk chunk = indexChunk( fd );	
+		
+		REQUIRE( chunk.addDocument( "a.com", { "title" }, "titleString", { "body" } ) );
+		indexChunk::indexStreamReader nonexistentISR = indexChunk::indexStreamReader( &chunk, "nonexistent" );
+		}
+	}
+
 TEST_CASE( "ISR functions on one document" )
 	{
 	const char filePath[ ] = "_in.dex";
@@ -226,6 +282,11 @@ TEST_CASE( "ISR functions on multiple documents" )
 		REQUIRE( junkISR.next( ) == 1 );
 		REQUIRE( junkISR.next( ) == 4 );
 		REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
+		
+		indexChunk::indexStreamReader endOfDocumentISR( &initializingIndexChunk, "" );
+		REQUIRE( endOfDocumentISR.next( ) == 9 );
+		REQUIRE( endOfDocumentISR.next( ) == 22 );
+		REQUIRE( endOfDocumentISR.next( ) == static_cast < size_t >( -1 ) );
 
 		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
@@ -240,6 +301,66 @@ TEST_CASE( "ISR functions on multiple documents" )
 
 		close( fd );
 
+		}
+
+	SECTION( "ISR functions with empty title and body vectors" )
+		{
+		const char filePath[ ] = "_in.dex";
+		int fd = open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
+
+		if ( fd == -1 )
+			exit( 1 );
+		indexChunk initializingIndexChunk = indexChunk( fd );
+
+		string url0 = "hamiltoncshell.com";
+		string url1 = "hammyseeshell.biz";
+		string url2 = "jammyhammy.edu";
+		string url3 = "fannywanny.io";
+		string url4 = "marypoppins.io";
+		string url5 = "soundofmusic.io";
+		vector < string > title = { "hamilton", "c", "shell" };
+		vector < string > emptyTitle = { };
+		vector < string > nonEmptyTitle = { "wurd" };
+		string titleString0 = "Hamilton C Shell 2012";
+		string titleString1 = "Best Website";
+		string titleString2 = "Second Best Website";
+		string titleString3 = "Third Best Website";
+		string titleString4 = "Movie";
+		string titleString5 = "Other Movie";
+		vector < string > body = { "this", "is", "the", "body", "text" };
+		vector < string > emptyBody = { };
+
+		// REQUIRE( initializingIndexChunk.addDocument( url0, nonEmptyTitle, titleString0, emptyBody ) );
+		REQUIRE( initializingIndexChunk.addDocument( url0, emptyTitle, titleString0, emptyBody ) );
+		REQUIRE( initializingIndexChunk.addDocument( url1, title, titleString1, body ) );
+		REQUIRE( initializingIndexChunk.addDocument( url2, emptyTitle, titleString2, body ) );
+		REQUIRE( initializingIndexChunk.addDocument( url3, title, titleString3, body ) );
+		REQUIRE( initializingIndexChunk.addDocument( url4, title, titleString4, emptyBody ) );
+		REQUIRE( initializingIndexChunk.addDocument( url5, title, titleString5, body ) );
+
+		// exit( 1 );
+
+		indexChunk::indexStreamReader bodyISR = indexChunk::indexStreamReader( &initializingIndexChunk, "body" );
+		indexChunk::indexStreamReader hamiltonISR = indexChunk::indexStreamReader( &initializingIndexChunk, "hamilton" );
+		/*
+		REQUIRE( bodyISR.next( ) == 4 );
+		REQUIRE( bodyISR.next( ) == 13 );
+		REQUIRE( bodyISR.next( ) == 19 );
+		REQUIRE( bodyISR.next( ) == 32 );
+		*/
+
+		size_t ham = hamiltonISR.next( );
+		while ( ham != static_cast< size_t >( -1 ) )
+			{
+			std::cout << "next: " << ham << std::endl;
+			ham = hamiltonISR.next( );
+			}
+
+		hamiltonISR = indexChunk::indexStreamReader( &initializingIndexChunk, "#hamilton" );
+		REQUIRE( hamiltonISR.next( ) == 6 );
+		REQUIRE( hamiltonISR.next( ) == 21 );
+		REQUIRE( hamiltonISR.next( ) == 25 );
+		REQUIRE( hamiltonISR.next( ) == 34 );
 		}
 	/*
 	SECTION( "ISR functions on multiple documents" )
