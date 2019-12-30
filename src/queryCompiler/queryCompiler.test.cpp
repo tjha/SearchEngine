@@ -58,6 +58,50 @@ TEST_CASE( "token stream", "[queryCompiler]" )
 		REQUIRE( ts.input == "here&is&check&number&five" );
 		}
 
+	SECTION( "space + tab delimiting")
+		{
+		dex::queryCompiler::word *wordy;
+
+		dex::string s = "here is check number one";
+		dex::queryCompiler::tokenStream ts( s );
+		REQUIRE( ts.input == "here&is&check&number&one" );
+
+		s = "here		  is  		 check			number two";
+		ts = dex::queryCompiler::tokenStream( s );
+		REQUIRE( ts.input == "here&is&check&number&two" );
+		wordy = ts.parseWord( );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "here" ) );
+		REQUIRE( ts.match( '&' ) );
+		delete wordy;
+		wordy = ts.parseWord( );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "is" ) );
+		REQUIRE( ts.match( '&' ) );
+		delete wordy;
+		wordy = ts.parseWord( );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "check" ) );
+		REQUIRE( ts.match( '&' ) );
+		delete wordy;
+		wordy = ts.parseWord( );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "number" ) );
+		REQUIRE( ts.match( '&' ) );
+		delete wordy;
+		wordy = ts.parseWord( );
+		REQUIRE( wordy->str == dex::porterStemmer::stem( "two" ) );
+		delete wordy;
+
+		s = "			here 			  is 	  check 		 number three";
+		ts = dex::queryCompiler::tokenStream( s );
+		REQUIRE( ts.input == "here&is&check&number&three" );
+
+		s = "here	is	check	number four	";
+		ts = dex::queryCompiler::tokenStream( s );
+		REQUIRE( ts.input == "here&is&check&number&four" );
+
+		s = "   	 here  	 is  		  check	 number five     ";
+		ts = dex::queryCompiler::tokenStream( s );
+		REQUIRE( ts.input == "here&is&check&number&five" );
+		}
+
 	SECTION( "with ORs" )
 		{
 		dex::string s = "here is check | number one";
@@ -107,6 +151,14 @@ TEST_CASE( "token stream", "[queryCompiler]" )
 		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "here" ) ) );
 		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "is" ) ) );
 		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "two" ) ) );
+
+		s = "$here    $ is     check				number	$three";
+		ts = dex::queryCompiler::tokenStream( s );
+		REQUIRE( ts.input == "here&is&check&number&three" );
+		REQUIRE( ts.emphasizedWords.size( ) == 3 );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "here" ) ) );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "is" ) ) );
+		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "three" ) ) );
 		}
 	}
 
@@ -120,9 +172,9 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
 			dex::matchedDocuments *md = mdg( nullptr );
-			REQUIRE( mdg.getQuery( ) == "(First&(check&stuff)&~bad)");
+			REQUIRE( mdg.getQuery( ) == "(first&(check&stuff)&~bad)");
 			REQUIRE( md->flattenedQuery.size( ) == 3 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "First" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "first" ) );
 			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "check" ) );
 			REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "stuff" ) );
 			REQUIRE( md->emphasizedWords.size( ) == 3 );
@@ -267,7 +319,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			delete md;
 			}
 
-		SECTION( "[&&|$thisis\"a comprehensive test\"|$that~\"does stuff\"]" )
+		SECTION( "[&&|$this is\"a comprehensive test\"|$that~\"does stuff\"]" )
 			{
 			dex::string query = "&&|$this is\"a comprehensive test\"|$that~\"does stuff\"";
 			dex::queryCompiler::parser parsyMcParseface;

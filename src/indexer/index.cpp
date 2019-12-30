@@ -177,9 +177,12 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	dex::unorderedMap < dex::string, size_t > postsMetadataChanges;
 
 	size_t documentOffset = *location;
-	if ( !append( body.cbegin( ), body.cend( ), postsMetadataChanges )
-			|| !append( title.cbegin( ), title.cend( ), postsMetadataChanges, "#" ) )
+	if ( !append( body.cbegin( ), body.cend( ), postsMetadataChanges ) )
 		return false;
+	++location;
+	if ( !append( title.cbegin( ), title.cend( ), postsMetadataChanges, "#" ) )
+		return false;
+	++location;
 
 	*maxLocation = *location;
 

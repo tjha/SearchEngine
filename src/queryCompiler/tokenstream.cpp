@@ -24,16 +24,36 @@ bool dex::queryCompiler::isSymbol( char c, bool infix )
 		case '$':
 		case '"':
 		case '~':
-		case ' ':
 			return true;
 		case '(':
 		case ')':
 			return infix;
 		default:
-			return false;
+			return isWhitespace( c );
 		}
 	}
 
+bool dex::queryCompiler::isWhitespace( char c )
+	{
+	switch ( c )
+		{
+		case ' ':
+		case '\f':
+		case '\n':
+		case '\r':
+		case '\t':
+		case '\v':
+			return true;
+		}
+	return false;
+	}
+
+char dex::queryCompiler::toLower( char c )
+	{
+	if ( c >= 'A' && c <= 'Z' )
+		return c + ( 'a' - 'A' );
+	return c;
+	}
 
 dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix )
 	{
@@ -45,24 +65,28 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix 
 
 	bool charIsAlpha;
 	bool charIsSymbol;
+	bool charIsWhitespace;
 	bool inPhrase = false;
+	char currentChar;
 	char previousCharacter = '&';
 
 	for ( size_t index = 0;  index < in.size( );  ++index )
 		{
-		charIsAlpha = isAlpha( in[ index ] );
-		charIsSymbol = isSymbol( in[ index ], infix );
+		currentChar = toLower( in[ index ] );
+		charIsAlpha = isAlpha( currentChar );
+		charIsSymbol = isSymbol( currentChar, infix );
+		charIsWhitespace = isWhitespace( currentChar );
 
 		// If we encounter an unknown character, ignore it
 		if ( !( charIsAlpha || charIsSymbol ) )
 			continue;
 
-		if ( in[ index ] == '"' )
+		if ( currentChar == '"' )
 			{
 			inPhrase = !inPhrase;
 
 			// If we have a quote preceeded by a space, replace the space with the necessary character
-			if ( previousCharacter == ' ' )
+			if ( isWhitespace( previousCharacter ) )
 				{
 				if ( inPhrase && infix )
 					semiparsed.back( ) = '&';
@@ -93,11 +117,11 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix 
 			}
 
 		// Skip symbols found in phrases
-		if ( inPhrase && charIsSymbol && in[ index ] != ' ' )
+		if ( inPhrase && charIsSymbol && !charIsWhitespace )
 			continue;
 
 		// If we see an implied ampersand preceeding an open parenthesis, insert it
-		if ( in[ index ] == '(' )
+		if ( currentChar == '(' )
 			{
 			if ( isAlpha( previousCharacter ) || previousCharacter == ')' || previousCharacter == '"' )
 				{
@@ -107,33 +131,33 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix 
 					semiparsed.pushBack( ' ' );
 				}
 			else
-				if ( previousCharacter == ' ' && infix )
+				if ( isWhitespace( previousCharacter ) && infix )
 					{
 					semiparsed.back( ) = '&';
 					previousCharacter = '&';
 					}
 			}
 
-		if ( previousCharacter == ' ' )
+		if ( isWhitespace( previousCharacter ) )
 			{
 			if ( charIsSymbol )
 				// Remove spaces that are adjacent to symbols
-				semiparsed.back( ) = in[ index ];
+				semiparsed.back( ) = currentChar;
 			else
 				{
 				// If we see an implied ampersand preceeding a word, insert it
 				if ( !inPhrase && infix )
 					semiparsed.back( ) = '&';
 
-				semiparsed.pushBack( in[ index ] );
+				semiparsed.pushBack( currentChar );
 				}
 
-			previousCharacter = in[ index ];
+			previousCharacter = currentChar;
 			continue;
 			}
 
 		// Ignore extraneous spaces after symbols
-		if ( isSymbol( previousCharacter ) && in[ index ] == ' ' )
+		if ( isSymbol( previousCharacter ) && charIsWhitespace )
 			continue;
 
 		// If we see an implied ampersand preceeding a word, insert it
@@ -145,10 +169,10 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix 
 				semiparsed.pushBack( ' ' );
 			}
 
-		semiparsed.pushBack( in[ index ] );
-		previousCharacter = in[ index ];
+		semiparsed.pushBack( currentChar );
+		previousCharacter = currentChar;
 		}
-	if ( !semiparsed.empty( ) && semiparsed.back( ) == ' ' )
+	if ( !semiparsed.empty( ) && isWhitespace( semiparsed.back( ) ) )
 		semiparsed.popBack( );
 
 	for ( size_t index = 0;  index < semiparsed.size( ) - 1;  ++index )
@@ -164,7 +188,9 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix 
 		else
 			input.pushBack( semiparsed[ index ] );
 
-	if ( semiparsed.back( ) != '$' )
+	if ( semiparsed.back( ) == '$' )
+		input.clear( );
+	else
 		input.pushBack( semiparsed.back( ) );
 	}
 

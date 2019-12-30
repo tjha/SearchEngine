@@ -17,16 +17,15 @@ dex::queryCompiler::matchedDocumentsGenerator::matchedDocumentsGenerator(
 		}
 
 	flattenedQuery = root->flattenedQuery( );
-
-	invalid = flattenedQuery.first.empty( );
-	if ( invalid )
-		return;
+	query = root->toString( );
 
 	emphasizedWords.reserve( flattenedQuery.first.size( ) );
 	for( size_t index = 0;  index < flattenedQuery.first.size( );  ++index )
 		emphasizedWords.pushBack( stream->emphasizedWords.count( flattenedQuery.first[ index ] ) );
 
-	query = root->toString( );
+	invalid = flattenedQuery.first.empty( );
+	if ( invalid )
+		return;
 	}
 
 dex::queryCompiler::matchedDocumentsGenerator::~matchedDocumentsGenerator( )
