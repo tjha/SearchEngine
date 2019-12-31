@@ -143,8 +143,8 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 		dex::index::indexChunk *chunk,
 		// Because we need to run this on both title and body words, we need to include the
 		// heuristics and maxNumSpans variables.
-		const dex::vector < dex::pair < size_t, double > > &heuristics,
-		const size_t maxNumSpans,
+		const dex::vector < dex::pair < size_t, double > > &heuristics, // TODO: Remove the second element of the pair
+		const size_t maxNumSpans, // TODO: Probably shouldn't be the responsibility of this function, should be in getDynmiacScores
 		dex::vector < dex::vector < size_t > > &wordCount,
 		dex::vector < dex::string > &titles,
 		dex::vector < dex::string > &urls ) const
@@ -152,11 +152,11 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 	dex::vector < dex::vector < size_t > > documentSpans;
 
 	wordCount.clear( );
-	size_t size = isrs.size( );
-	dex::vector < size_t > isrCurrentValue;
-	isrCurrentValue.resize( size );
+	size_t isrCount = isrs.size( );
 	size_t endDocument;
 	size_t beginDocument;
+
+	// TODO: Make this a (inline?) function
 	// Find the word counts for all the documents that match
 	endDocument = matching->seek( 0 );
 	ends->seek( endDocument );
@@ -164,17 +164,17 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 		{
 		beginDocument = endDocument - ends->documentSize( );
 		dex::vector < size_t > currentWordCount;
-		currentWordCount.resize( size );
-		for ( size_t isrIndex = 0;  isrIndex < size;  ++isrIndex )
+		currentWordCount.resize( isrCount );
+		for ( size_t isrIndex = 0;  isrIndex < isrCount;  ++isrIndex )
 			{
-			isrCurrentValue[ isrIndex ] = isrs[ isrIndex ]->seek( beginDocument );
+			isrs[ isrIndex ]->seek( beginDocument );
 			currentWordCount[ isrIndex ] = 0;
 			// Check to see if our current next word is a part of the document that we're on
 			// If it isn't, then we know this word doesn't appear in the current document.
-			while ( isrCurrentValue[ isrIndex ] < endDocument )
+			while ( isrs[ isrIndex ]->get( ) < endDocument )
 				{
 				++currentWordCount[ isrIndex ];
-				isrCurrentValue[ isrIndex ] = isrs[ isrIndex ]->next( );
+				isrs[ isrIndex ]->next( );
 				}
 			}
 		wordCount.pushBack( currentWordCount );
@@ -183,7 +183,7 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 		}
 
 	// find spans
-	dex::vector < size_t > current( size, 0 );
+	dex::vector < size_t > previous( isrCount, 0 );
 	endDocument = matching->seek( 0 );
 	ends->seek( endDocument );
 
@@ -192,93 +192,76 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 		{
 		beginDocument = endDocument - ends->documentSize( );
 		dex::vector < size_t > spansOccurances( heuristics.size( ) );
-		dex::vector < size_t > next( size );
+		dex::vector < size_t > current( isrCount );
 
 		// Find the rarest word for this document
-		size_t minCount = wordCount[ documentNumber ][ 0 ];
-		size_t minIndex = 0;
-		for ( size_t index = 1;  index < size;  ++index )
-			{
-			if ( wordCount[ documentNumber ][ index ] < minCount )
-				{
-				minCount = wordCount[ documentNumber ][ index ];
-				minIndex = index;
-				}
-			}
-		size_t rarest = minIndex;
+		size_t rarest = 0;
+		for ( size_t index = 1;  index < isrCount;  ++index )
+			if ( wordCount[ documentNumber ][ index ] < wordCount[ documentNumber ][ rarest ] )
+				rarest = index;
 
-		for ( size_t index = 0;  index < size;  ++index )
+		for ( size_t index = 0;  index < isrCount;  ++index )
 			{
-			// If the current value we're looking at is past the end document there are no occurances
-			// of the word in this document. Therefore, we do not increment the ISR until we know that
-			// we're in the document that uses the word.
-			current[ index ] = isrs[ index ]->seek( beginDocument );
-			if ( current[ index ] < endDocument )
-				{
-				next[ index ] = isrs[ index ]->next( );
-				}
-			else
-				{
-				next[ index ] = current[ index ];
-				}
+			previous[ index ] = isrs[ index ]->seek( beginDocument );
+			current[ index ] = isrs[ index ]->next( );
 			}
 
-		// Should be setup such that next is one past current.
+		// Should be setup such that current is one past previous.
 
-		dex::vector < size_t > closestLocations( size );
-		while ( current[ rarest ] < endDocument )
+		dex::vector < size_t > closestLocations( isrCount );
+		while ( previous[ rarest ] < endDocument )
 			{
-			closestLocations[ rarest ] = current[ rarest ];
-			for ( size_t index = 0;  index < size;  ++index )
+			closestLocations[ rarest ] = previous[ rarest ];
+			for ( size_t index = 0;  index < isrCount;  ++index )
 				{
 				size_t desiredPosition;
-				if ( current[ rarest ] + index < rarest )
+				if ( previous[ rarest ] + index < rarest )
 					desiredPosition = 0;
 				else
-					desiredPosition = current[ rarest ] + index - rarest;
+					desiredPosition = previous[ rarest ] + index - rarest;
 
 				if ( index != rarest )
 					{
-					// Position our ISRs such that current is less than our desired position and next is greater than our
+					// Position our ISRs such that previous is less than our desired position and current is greater than our
 					// desired position.
-					while ( next[ index ] < endDocument && next[ index ] + rarest < current[ rarest ] + index )
+					while ( current[ index ] < endDocument && current[ index ] + rarest < previous[ rarest ] + index )
 						{
-						current[ index ] = next[ index ];
-						next[ index ] = isrs[ index ]->next( );
+						previous[ index ] = current[ index ];
+						current[ index ] = isrs[ index ]->next( );
 						}
 
 
 					// Take the value that is closest to our desired position for this span.
 					size_t closest;
-					// Check to see if either current or next are not in the document
-					if ( current[ index ] < beginDocument || next[ index ] >= endDocument )
+					// Check to see if either previous or current are not in the document
+					if ( previous[ index ] < beginDocument || current[ index ] >= endDocument )
 						{
-						// If current is out of bounds but next is in bounds, set closest to next
-						if ( current[ index ] < beginDocument && next[ index ] < endDocument )
-							{
-							closest = next[ index ];
-							}
-						// If current is in bounds but next is out of bounds, set closest to current
-						if ( current[ index ] >= beginDocument && next[ index ] >= endDocument )
+						// If previous is out of bounds but current is in bounds, set closest to current
+						if ( previous[ index ] < beginDocument && current[ index ] < endDocument )
 							{
 							closest = current[ index ];
 							}
-						// If both are out of bounds, just set closest to next, it'll be caught later.
-						if ( current[ index ] < beginDocument && next[ index ] >= endDocument )
+						// If previous is in bounds but current is out of bounds, set closest to previous
+						if ( previous[ index ] >= beginDocument && current[ index ] >= endDocument )
 							{
-							closest = next[ index ];
+							closest = previous[ index ];
+							}
+						// If both are out of bounds, just set closest to current, it'll be caught later.
+						if ( previous[ index ] < beginDocument && current[ index ] >= endDocument )
+							{
+							closest = current[ index ];
 							}
 						}
 					else
 						{
-						// If both next and current are in the document
-						if ( desiredPosition + desiredPosition < next[ index ] + current[ index ] )
+						// If both current and previous are in the document
+						if ( desiredPosition + desiredPosition < current[ index ] + previous[ index ] )
 							{
-							closest = current[ index ];
+							closest = previous[ index ];
 							}
 						else
 							{
-							closest = next[ index ];
+							closest = current[ index ];
 							}
 						}
 
@@ -287,7 +270,7 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 				}
 			size_t min = endDocument;
 			size_t max = 0;
-			for ( size_t index = 0;  index < size;  ++index )
+			for ( size_t index = 0;  index < isrCount;  ++index )
 				{
 				if ( closestLocations[ index ] > max )
 					{
@@ -311,7 +294,7 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 				}
 			for ( size_t index = 0;  index < heuristics.size( );  ++index )
 				{
-				if ( span <= heuristics[ index ].first * size )
+				if ( span <= heuristics[ index ].first * isrCount )
 					{
 					if ( spansOccurances[ index ] < maxNumSpans )
 						{
@@ -320,10 +303,10 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 					break;
 					}
 				}
-			current[ rarest ] = next[ rarest ];
-			if ( next[ rarest ] < endDocument )
+			previous[ rarest ] = current[ rarest ];
+			if ( current[ rarest ] < endDocument )
 				{
-				next[ rarest ] = isrs[ rarest ]->next( );
+				current[ rarest ] = isrs[ rarest ]->next( );
 				}
 			}
 		documentSpans.pushBack( spansOccurances );
