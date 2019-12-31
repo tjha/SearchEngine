@@ -208,7 +208,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 
 		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight );
+			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
 		dex::vector < dex::string > urls;
@@ -262,7 +262,7 @@ TEST_CASE( "edge cases", "[ranker]" )
 		isrs.pushBack( &foxISR );
 		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight );
+			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
 		dex::vector < dex::string > urls;
@@ -301,7 +301,7 @@ TEST_CASE( "edge cases", "[ranker]" )
 		isrs.pushBack( &foxISR );
 		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight );
+			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
 		dex::vector < dex::string > urls;
@@ -364,7 +364,7 @@ TEST_CASE( "spanning multiple documents" )
 
 		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight );
+			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
 		dex::vector < dex::string > urls;
@@ -415,7 +415,7 @@ TEST_CASE( "spanning multiple documents" )
 
 		dex::vector < dex::pair < size_t, double > > heuristics = { { 10, 1 } };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight );
+			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
 		dex::vector < dex::string > urls;
@@ -463,7 +463,7 @@ TEST_CASE( "spanning multiple documents" )
 
 		dex::vector < dex::pair < size_t, double > > heuristics = { { 2, 1 }, { 4, 1 } };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight );
+			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
 		dex::vector < dex::string > urls;
@@ -525,7 +525,7 @@ TEST_CASE( "spanning multiple documents" )
 
 		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight );
+			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
 		dex::vector < dex::string > urls;
@@ -633,7 +633,7 @@ TEST_CASE( "scoring" )
 		titleisrs.pushBack( &titlebrownISR );
 		titleisrs.pushBack( &titlefoxISR );
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight );
+			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < bool > emphasized = { false, false, false };
 		dex::vector < dex::string > titles;
 		dex::vector < dex::string > urls;
@@ -696,7 +696,7 @@ TEST_CASE( "scoring" )
 		titleisrs.pushBack( &titlebrownISR );
 		titleisrs.pushBack( &titlefoxISR );
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight );
+			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < bool > emphasized = { false, false, false };
 
 
@@ -764,7 +764,7 @@ TEST_CASE( "scoring" )
 		titleisrs.pushBack( &titlebrownISR );
 		titleisrs.pushBack( &titlefoxISR );
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
-			emphasizedWeight, proportionCap, maxNumBodySpans, maxNumTitleSpans, wordsWeight );
+			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < bool > emphasized = { false, false, false };
 
 
