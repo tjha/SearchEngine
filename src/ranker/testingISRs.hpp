@@ -64,7 +64,7 @@ namespace dex
 						{
 						return internal[ pos ];
 						}
-					return internal[ pos ] - internal[ pos - 1 ] - 1;
+					return internal[ pos ] - internal[ pos - 1 ];
 					}
 			};
 

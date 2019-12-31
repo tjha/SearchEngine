@@ -56,16 +56,6 @@ TEST_CASE( "static ranking", "[ranker]" )
 
 TEST_CASE( "begin document" )
 	{
-	dex::vector < dex::pair < size_t, double > > titleWeights = { { 15, 50 }, { 25, 40 }, { 50, 20 } };
-	double urlWeight = 1;
-	dex::vector < dex::pair < size_t, double > > bodySpanHeuristics;
-	dex::vector < dex::pair < size_t, double > > titleSpanHeuristics;
-	double emphasizedWeight = 0;
-	double proportionCap = 0;
-	size_t maxNumBodySpans = 0;
-	size_t maxNumTitleSpans = 0;
-	double wordsWeight = 1000;
-
 	dex::vector < size_t > ends = { 959, 6000, 7000 };
 	dex::rankerTesting::endOfDocumentISR endisr( ends );
 	dex::rankerTesting::ISR matchingISR( "", ends, endisr );
@@ -87,13 +77,13 @@ TEST_CASE( "begin document" )
 
 	endDocument = matchingISR.next( );
 	endisr.seek( endDocument );
-	beginDocument = endDocument - endisr.documentSize( );
+	beginDocument = endDocument - endisr.documentSize( ) + 1;
 	REQUIRE( endDocument == 6000 );
 	REQUIRE( beginDocument == 960 );
 
 	endDocument = matchingISR.next( );
 	endisr.seek( endDocument );
-	beginDocument = endDocument - endisr.documentSize( );
+	beginDocument = endDocument - endisr.documentSize( ) + 1;
 	REQUIRE( endDocument == 7000 );
 	REQUIRE( beginDocument == 6001 );
 
@@ -136,6 +126,34 @@ TEST_CASE( "sudo ISR", "[ranker]" )
 		REQUIRE( isr.next( ) == size_t( -1 ) );
 		REQUIRE( isr.seek( postingList[ 4 ] + 1 ) == size_t( -1 ) );
 		REQUIRE( isr.next( ) == size_t( -1 ) );
+		}
+
+	SECTION ( "get" )
+		{
+		dex::vector < size_t > ends = { 50, 100, 150, 200 };
+		dex::vector < size_t > postingList = { 3, 42, 82, 101, 103, 105, 199 };
+
+		dex::rankerTesting::endOfDocumentISR endisr( ends );
+		dex::rankerTesting::ISR isr( "wurd", postingList, endisr );
+
+		for ( size_t i = 0; i < postingList.size( ) - 1; ++i )
+			{
+			REQUIRE( isr.seek( postingList[ i ] - 1 ) == postingList[ i ] );
+			REQUIRE( isr.get( ) == postingList[ i ] );
+			REQUIRE( isr.next( ) == postingList[ i + 1 ] );
+			REQUIRE( isr.get( ) == postingList[ i + 1 ] );
+			}
+
+		REQUIRE( isr.seek( postingList[ 6 ] ) == postingList[ 6 ] );
+		REQUIRE( isr.get( ) == postingList[ 6 ] );
+		REQUIRE( isr.next( ) == size_t( -1 ) );
+		REQUIRE( isr.get( ) == size_t( -1 ) );
+		REQUIRE( isr.seek( postingList[ 6 ] + 1 ) == size_t( -1 ) );
+		REQUIRE( isr.get( ) == size_t( -1 ) );
+		REQUIRE( isr.next( ) == size_t( -1 ) );
+		REQUIRE( isr.get( ) == size_t( -1 ) );
+		REQUIRE( isr.seek( 0 ) == postingList[ 0 ] );
+		REQUIRE( isr.get( ) == postingList[ 0 ] );
 		}
 
 
