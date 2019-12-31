@@ -162,13 +162,14 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 	ends->seek( endDocument );
 	while ( endDocument != dex::constraintSolver::ISR::npos )
 		{
-		beginDocument = endDocument - ends->documentSize( );
-		dex::vector < size_t > currentWordCount;
-		currentWordCount.resize( isrCount );
+		beginDocument = endDocument - ends->documentSize( ) + 1;
+		dex::vector < size_t > currentWordCount( isrCount, 0 );
 		for ( size_t isrIndex = 0;  isrIndex < isrCount;  ++isrIndex )
 			{
-			isrs[ isrIndex ]->seek( beginDocument );
-			currentWordCount[ isrIndex ] = 0;
+			// Avoid accidental backwards seeks
+			// if ( isrs[ isrIndex ]->get( ) < beginDocument )
+				isrs[ isrIndex ]->seek( beginDocument );
+
 			// Check to see if our current next word is a part of the document that we're on
 			// If it isn't, then we know this word doesn't appear in the current document.
 			while ( isrs[ isrIndex ]->get( ) < endDocument )
@@ -190,7 +191,7 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 	size_t documentNumber = 0;
 	while ( endDocument != dex::constraintSolver::ISR::npos )
 		{
-		beginDocument = endDocument - ends->documentSize( );
+		beginDocument = endDocument - ends->documentSize( ) + 1;
 		dex::vector < size_t > spansOccurances( heuristics.size( ) );
 		dex::vector < size_t > current( isrCount );
 
@@ -458,12 +459,13 @@ void *dex::ranker::parseQueryScoreDocuments( void *args )
 		dex::ranker::ranker *rankerPointer = queryRequest.rankerPointer;
 		bool printInfo = queryRequest.printInfo;
 
-		dex::pair < dex::vector < dex::ranker::searchResult >, int > searchResults;
+		dex::pair < dex::vector < dex::ranker::searchResult >, int > *searchResults =
+				new dex::pair < dex::vector < dex::ranker::searchResult >, int >( );
 		// need to get the end ISR from the chunk
 		if ( !documents )
 			{
-			searchResults = { { }, -1 };
-			return ( void * ) &searchResults;
+			*searchResults = { { }, -1 };
+			return reinterpret_cast < void * >( searchResults );
 			}
 		dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr =
 				new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents->chunk, "" );
@@ -473,8 +475,8 @@ void *dex::ranker::parseQueryScoreDocuments( void *args )
 		titles, urls, printInfo );
 		if ( scoresPair.second == -1 )
 			{
-			searchResults = { { }, -1 };
-			return ( void * ) &searchResults;
+			*searchResults = { { }, -1 };
+			return reinterpret_cast < void * >( searchResults );
 			}
 		dex::vector < double > scores = scoresPair.first;
 		// Now that we're done with these ISRs we delete them
@@ -487,19 +489,18 @@ void *dex::ranker::parseQueryScoreDocuments( void *args )
 		if ( eodisr )
 			delete eodisr;
 		// We will be receiving the things in matched documents!
-		if ( scores.size( ) != titles.size( ) ||
-				scores.size( ) != urls.size( ) )
+		if ( scores.size( ) != titles.size( ) || scores.size( ) != urls.size( ) )
 			{
 			std::cerr << "Sizes of urls, titles, and scores don't match." << std::endl;
 			throw dex::invalidArgumentException( );
 			}
-		searchResults.second = 0;
+		searchResults->second = 0;
 		for ( size_t index = 0;  index < scores.size( );  ++index )
 			{
-			searchResults.first.pushBack( { urls[ index ], titles[ index ], scores[ index ] } );
+			searchResults->first.pushBack( { urls[ index ], titles[ index ], scores[ index ] } );
 			}
 
-		return ( void * ) &searchResults;
+		return reinterpret_cast < void * >( searchResults );
 	}
 
 // second is error, if -1 there was a bad query.
@@ -512,7 +513,7 @@ dex::vector < dex::index::indexChunk * > chunkPointers, bool printInfo )
 		dex::vector < dex::ranker::queryRequest > requests;
 		requests.resize( chunkPointers.size( ) );
 
-		pthread_t workerThreads [ chunkPointers.size( ) ];
+		pthread_t *workerThreads = new pthread_t[ chunkPointers.size( ) ];
 		for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
 			{
 			requests[ index ].query = query;
@@ -531,7 +532,10 @@ dex::vector < dex::index::indexChunk * > chunkPointers, bool printInfo )
 					( dex::pair < dex::vector < dex::ranker::searchResult >, int > * ) returnValue;
 			// If the query results in an error, propogate up.
 			if ( returnedResults->second == -1 )
+				{
+				delete [ ] workerThreads;
 				return { { }, -1 };
+				}
 			// Otherwise, add the results from this index chunk to the results and scores vectors
 			else
 				for ( size_t index = 0;  index < returnedResults->first.size( );  ++index )
@@ -554,5 +558,6 @@ dex::vector < dex::index::indexChunk * > chunkPointers, bool printInfo )
 						<< results[ p->documentIndex ].title << "\n";
 			}
 
+		delete [ ] workerThreads;
 		return { results, 0 };
 	}
