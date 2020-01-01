@@ -186,21 +186,22 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		isrs.pushBack( &duoISR );
 		isrs.pushBack( &mushuISR );
 
-		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 20, 1 }, { 60, 1 } };
+		dex::vector < size_t > heuristics = { 1, 20, 60 };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
 				maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
-		dex::vector < dex::string > urls;
+		dex::vector < dex::Url > urls;
+		wordCount = judge.rankerDynamic.getDocumentInfo( isrs, &matchingISR, &endisr, nullptr, titles, urls );
 		dex::vector < dex::vector < size_t > > spans = judge.rankerDynamic.getDesiredSpans( isrs, &matchingISR, &endisr,
-				nullptr, heuristics, 5, wordCount, titles, urls );
+				heuristics, wordCount );
 		std::cout << "Finished spanning\n";
 		size_t prevHeuristic = 0;
 		for ( size_t i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
 			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic + 1 << " and "
-					<< heuristics[ i ].first * isrs.size( ) << std::endl;
-			prevHeuristic = heuristics[ i ].first * isrs.size( );
+					<< heuristics[ i ] * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ] * isrs.size( );
 			}
 		REQUIRE( spans[ 0 ][ 0 ] == 2 );
 		REQUIRE( spans[ 0 ][ 1 ] == 0 );
@@ -224,21 +225,22 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
 
-		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
+		dex::vector < size_t > heuristics = { 1, 3, 4, 5 };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
 			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
-		dex::vector < dex::string > urls;
+		dex::vector < dex::Url > urls;
+		wordCount = judge.rankerDynamic.getDocumentInfo( isrs, &matchingISR, &endisr, nullptr, titles, urls );
 		dex::vector < dex::vector < size_t > > spans = judge.rankerDynamic.getDesiredSpans( isrs, &matchingISR, &endisr,
-				nullptr, heuristics, 5, wordCount, titles, urls );
+				heuristics, wordCount );
 		std::cout << "Finished spanning\n";
 		size_t prevHeuristic = 0;
 		for ( size_t i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
 			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic + 1 << " and "
-					<< heuristics[ i ].first * isrs.size( ) << std::endl;
-			prevHeuristic = heuristics[ i ].first * isrs.size( );
+					<< heuristics[ i ] * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ] * isrs.size( );
 			}
 		REQUIRE( spans[ 0 ][ 0 ] == 2 );
 		REQUIRE( spans[ 0 ][ 1 ] == 1 );
@@ -278,21 +280,22 @@ TEST_CASE( "edge cases", "[ranker]" )
 		isrs.pushBack( &quickISR );
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
-		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
+		dex::vector < size_t > heuristics = { 1, 3, 4, 5 };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
 			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
-		dex::vector < dex::string > urls;
+		dex::vector < dex::Url > urls;
+		wordCount = judge.rankerDynamic.getDocumentInfo( isrs, &matchingISR, &endisr, nullptr, titles, urls );
 		dex::vector < dex::vector < size_t > > spans = judge.rankerDynamic.getDesiredSpans( isrs, &matchingISR, &endisr,
-				nullptr, heuristics, 5, wordCount, titles, urls );
+				heuristics, wordCount );
 		std::cout << "Finished spanning\n";
 		size_t prevHeuristic = 0;
 		for ( size_t i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
 			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic << " and "
-					<< heuristics[ i ].first * isrs.size( ) << std::endl;
-			prevHeuristic = heuristics[ i ].first;
+					<< heuristics[ i ] * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ];
 			}
 		REQUIRE( spans[ 0 ][ 0 ] == 0 );
 		REQUIRE( spans[ 0 ][ 1 ] == 0 );
@@ -317,21 +320,22 @@ TEST_CASE( "edge cases", "[ranker]" )
 		isrs.pushBack( &quickISR );
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
-		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
+		dex::vector < size_t > heuristics = { 1, 3, 4, 5 };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
 			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
-		dex::vector < dex::string > urls;
+		dex::vector < dex::Url > urls;
+		wordCount = judge.rankerDynamic.getDocumentInfo( isrs, &matchingISR, &endisr, nullptr, titles, urls );
 		dex::vector < dex::vector < size_t > > spans = judge.rankerDynamic.getDesiredSpans( isrs, &matchingISR, &endisr,
-				nullptr, heuristics, 5, wordCount, titles, urls );
+				heuristics, wordCount );
 		std::cout << "Finished spanning\n";
 		size_t prevHeuristic = 0;
 		for ( size_t i = 0;  i < spans[ 0 ].size( );  ++i )
 			{
 			std::cout << spans[ 0 ][ i ] << " spans between " << prevHeuristic << " and " <<
-					heuristics[ i ].first * isrs.size( ) << std::endl;
-			prevHeuristic = heuristics[ i ].first;
+					heuristics[ i ] * isrs.size( ) << std::endl;
+			prevHeuristic = heuristics[ i ];
 			}
 		REQUIRE( spans[ 0 ][ 0 ] == 0 );
 		REQUIRE( spans[ 0 ][ 1 ] == 0 );
@@ -380,14 +384,15 @@ TEST_CASE( "spanning multiple documents" )
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
 
-		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
+		dex::vector < size_t > heuristics = { 1, 3, 4, 5 };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
 			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
-		dex::vector < dex::string > urls;
+		dex::vector < dex::Url > urls;
+		wordCount = judge.rankerDynamic.getDocumentInfo( isrs, &matchingISR, &endisr, nullptr, titles, urls );
 		dex::vector < dex::vector < size_t > > spans = judge.rankerDynamic.getDesiredSpans( isrs, &matchingISR, &endisr,
-				nullptr, heuristics, 5, wordCount, titles, urls );
+				heuristics, wordCount );
 
 
 		REQUIRE( spans[ 0 ][ 0 ] == 2 );
@@ -431,14 +436,15 @@ TEST_CASE( "spanning multiple documents" )
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
 
-		dex::vector < dex::pair < size_t, double > > heuristics = { { 10, 1 } };
+		dex::vector < size_t > heuristics = { 10 };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
 			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
-		dex::vector < dex::string > urls;
+		dex::vector < dex::Url > urls;
+		wordCount = judge.rankerDynamic.getDocumentInfo( isrs, &matchingISR, &endisr, nullptr, titles, urls );
 		dex::vector < dex::vector < size_t > > spans = judge.rankerDynamic.getDesiredSpans( isrs, &matchingISR, &endisr,
-				nullptr, heuristics, 5, wordCount, titles, urls );
+				heuristics, wordCount );
 
 
 		REQUIRE( spans[ 0 ][ 0 ] == 0 );
@@ -479,14 +485,15 @@ TEST_CASE( "spanning multiple documents" )
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
 
-		dex::vector < dex::pair < size_t, double > > heuristics = { { 2, 1 }, { 4, 1 } };
+		dex::vector < size_t > heuristics = { 2, 4 };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
 			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
-		dex::vector < dex::string > urls;
+		dex::vector < dex::Url > urls;
+		wordCount = judge.rankerDynamic.getDocumentInfo( isrs, &matchingISR, &endisr, nullptr, titles, urls );
 		dex::vector < dex::vector < size_t > > spans = judge.rankerDynamic.getDesiredSpans( isrs, &matchingISR, &endisr,
-				nullptr, heuristics, 5, wordCount, titles, urls );
+				heuristics, wordCount );
 
 
 		REQUIRE( spans[ 0 ][ 0 ] == 0 );
@@ -541,14 +548,15 @@ TEST_CASE( "spanning multiple documents" )
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
 
-		dex::vector < dex::pair < size_t, double > > heuristics = { { 1, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } };
+		dex::vector < size_t > heuristics = { 1, 3, 4, 5 };
 		dex::ranker::ranker judge( titleWeights, urlWeight, bodySpanHeuristics, titleSpanHeuristics,
 			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < dex::vector < size_t > > wordCount;
 		dex::vector < dex::string > titles;
-		dex::vector < dex::string > urls;
+		dex::vector < dex::Url > urls;
+		wordCount = judge.rankerDynamic.getDocumentInfo( isrs, &matchingISR, &endisr, nullptr, titles, urls );
 		dex::vector < dex::vector < size_t > > spans = judge.rankerDynamic.getDesiredSpans( isrs, &matchingISR, &endisr,
-				nullptr, heuristics, 5, wordCount, titles, urls );
+				heuristics, wordCount );
 
 
 		REQUIRE( spans[ 0 ][ 0 ] == 2 );
@@ -654,7 +662,7 @@ TEST_CASE( "scoring" )
 			maxNumBodySpans, maxNumTitleSpans, emphasizedWeight, proportionCap, wordsWeight );
 		dex::vector < bool > emphasized = { false, false, false };
 		dex::vector < dex::string > titles;
-		dex::vector < dex::string > urls;
+		dex::vector < dex::Url > urls;
 		dex::vector < double > dynamicScores = judge.rankerDynamic.getDynamicScores( isrs, titleisrs, &matchingISR, &endisr, nullptr,
 				emphasized, titles, urls, true );
 		std::cout << dynamicScores[ 0 ] << std::endl;

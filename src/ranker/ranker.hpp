@@ -1,6 +1,7 @@
 // ranker.hpp
 // this ranks the stuff
 //
+// 2012-12-31: Refactored code: jasina + combsc
 // 2019-12-11: Init Commit: combsc
 
 #ifndef DEX_RANKER_OBJECTS
@@ -77,32 +78,40 @@ namespace dex
 					dex::vector < dex::pair < size_t, double > > titleSpanHeuristics, size_t maxNumBodySpans,
 					size_t maxNumTitleSpans, double emphasizedWeight, double proportionCap,  double wordsWeight );
 
-				// Heuristics is a vector contianing the lengths of the spans you're looking for in the document
-				// Emphasized is a vector containing whether or not the word at that index was emphasized
-				// Vector of ISRs should be arranged such that the words of the ISRs line up with the order of the query
-				// rarest should be the index of the ISR of the rarest word in the query
-				// ISRs will not be moved back to the beginning
+				// Returns the word count of all the documents in the index chunk for the ISRs passed.
+				// also returns the titles and urls corresponding to each document in documentTitles and documentUrls
+				dex::vector < dex::vector < size_t > > getDocumentInfo( 
+						dex::vector < constraintSolver::ISR * > &isrs,
+						constraintSolver::ISR *matching,
+						constraintSolver::endOfDocumentISR *ends,
+						dex::index::indexChunk *chunk,
+						dex::vector < dex::string > &documentTitles,
+						dex::vector < dex::Url > &documentUrls ) const;
+
+				// Get the number of spans that occur in each document for the ISRs passed in
 				vector < vector < size_t > > getDesiredSpans(
-					vector < constraintSolver::ISR * > &isrs,
-					constraintSolver::ISR *matching,
-					constraintSolver::endOfDocumentISR *ends,
-					dex::index::indexChunk *chunk,
-					const vector < pair < size_t, double > > &heuristics,
-					const size_t maxNumSpans,
-					vector < vector < size_t > > &wordCount,
-					vector < string > &titles,
-					vector < string > &urls ) const;
+						// Vector of ISRs should be arranged such that the words of the ISRs line up with the order of the query
+						vector < constraintSolver::ISR * > &isrs,
+						constraintSolver::ISR *matching,
+						constraintSolver::endOfDocumentISR *ends,
+						// This determines the sizes of spans that this function finds
+						const vector < size_t > &spanSizes,
+						const vector < vector < size_t > > &wordCount ) const;
 
 				// Returns bag of words scoring of the number of words in the given document
-				double dynamicScoreWords( const vector < size_t > &wordCount, const size_t documentLength,
-					const vector < bool > &emphasized ) const;
+				double dynamicScoreWords(
+						// Number of each query word for a given document
+						const vector < size_t > &wordCount,
+						const size_t documentLength,
+						// Emphasized is a vector containing whether or not the word at that index was emphasized
+						const vector < bool > &emphasized ) const;
 
 				// getDynamicScores returns a vector of dynamic scores for the matching documents passed in.
 				// titles and urls are more return variables that correspond to the matching documents passed in.
 				vector < double > getDynamicScores( vector < constraintSolver::ISR * > &bodyISRs,
 					vector < constraintSolver::ISR * > &titleISRs, constraintSolver::ISR *matching,
 					constraintSolver::endOfDocumentISR *ends, index::indexChunk *chunk, const vector < bool > &emphasized,
-					vector < string > &titles, vector < string > &urls, bool printInfo = false ) const;
+					vector < dex::string > &titles, vector < dex::Url > &urls, bool printInfo = false ) const;
 			};
 
 		class ranker
@@ -147,8 +156,8 @@ namespace dex
 				pair < vector < double >, int > scoreDocuments(
 					matchedDocuments *documents,
 					constraintSolver::endOfDocumentISR *ends,
-					vector < string > &titles,
-					vector < string > &urls,
+					vector < dex::string > &titles,
+					vector < dex::Url > &urls,
 					bool printInfo = true ) const;
 			};
 

@@ -1,6 +1,9 @@
 // ranker.cpp
 // This ranks the stuff
 
+// 2020-01-01: Got code working using get( ), made function for getting documentInfo
+//             moved maxNumSpans to dynamicScores instead of getDesiredSpans: combsc
+// 2019-12-31: Refactored code: jasina + combsc
 // 2019-12-29: Updated the parser interface, fixed documentSize bug: combsc
 // 2019-12-28: Remove bad debug statements, fixed parseQueryScoreDocuments, moved topN out of ranker: combsc
 // 2019-12-23: Updated to use beginDocument properly: combsc
@@ -24,6 +27,7 @@
 #include "ranker/topN.hpp"
 #include "utils/utility.hpp"
 #include "utils/vector.hpp"
+#include "utils/url.hpp"
 #include <iostream>
 
 
@@ -135,29 +139,20 @@ dex::ranker::ranker::ranker(
 				rankerDynamic( bodySpanHeuristics, titleSpanHeuristics, maxBodySpans, maxTitleSpans, emphasizedWeight,
 						proportionCap, wordWeight ) { }
 
-dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpans(
-		// Body ISRs are assumed to be pointing to the beginning of the document.
-		dex::vector < dex::constraintSolver::ISR * > &isrs,
-		dex::constraintSolver::ISR *matching,
-		dex::constraintSolver::endOfDocumentISR *ends,
+dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDocumentInfo( 
+		dex::vector < constraintSolver::ISR * > &isrs,
+		constraintSolver::ISR *matching,
+		constraintSolver::endOfDocumentISR *ends,
 		dex::index::indexChunk *chunk,
-		// Because we need to run this on both title and body words, we need to include the
-		// heuristics and maxNumSpans variables.
-		const dex::vector < dex::pair < size_t, double > > &heuristics, // TODO: Remove the second element of the pair
-		const size_t maxNumSpans, // TODO: Probably shouldn't be the responsibility of this function, should be in getDynmiacScores
-		dex::vector < dex::vector < size_t > > &wordCount,
-		dex::vector < dex::string > &titles,
-		dex::vector < dex::string > &urls ) const
+		dex::vector < dex::string > &documentTitles,
+		dex::vector < dex::Url > &documentUrls ) const
 	{
-	dex::vector < dex::vector < size_t > > documentSpans;
-
-	wordCount.clear( );
+	documentTitles.clear( );
+	documentUrls.clear( );
 	size_t isrCount = isrs.size( );
+	dex::vector < dex::vector < size_t > > wordCount;
 	size_t endDocument;
 	size_t beginDocument;
-
-	// TODO: Make this a (inline?) function
-	// Find the word counts for all the documents that match
 	endDocument = matching->seek( 0 );
 	ends->seek( endDocument );
 	while ( endDocument != dex::constraintSolver::ISR::npos )
@@ -167,7 +162,7 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 		for ( size_t isrIndex = 0;  isrIndex < isrCount;  ++isrIndex )
 			{
 			// Avoid accidental backwards seeks
-			// if ( isrs[ isrIndex ]->get( ) < beginDocument )
+			if ( isrs[ isrIndex ]->get( ) < beginDocument || isrs[ isrIndex ]->get( ) == dex::constraintSolver::ISR::npos )
 				isrs[ isrIndex ]->seek( beginDocument );
 
 			// Check to see if our current next word is a part of the document that we're on
@@ -179,10 +174,31 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 				}
 			}
 		wordCount.pushBack( currentWordCount );
+		if ( chunk )
+			{
+			documentTitles.pushBack( chunk->offsetsToEndOfDocumentMetadatas[ endDocument ].title );
+			documentUrls.pushBack( chunk->offsetsToEndOfDocumentMetadatas[ endDocument].url );
+			}
 		endDocument = matching->next( );
 		ends->seek( endDocument );
 		}
+	return wordCount;
+	}
 
+dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpans(
+		// Body ISRs are assumed to be pointing to the beginning of the document.
+		dex::vector < dex::constraintSolver::ISR * > &isrs,
+		dex::constraintSolver::ISR *matching,
+		dex::constraintSolver::endOfDocumentISR *ends,
+		// Because we need to run this on both title and body words, we need to include the
+		// heuristics and maxNumSpans variables.
+		const dex::vector < size_t > &spanSizes,
+		const dex::vector < dex::vector < size_t > > &wordCount ) const
+	{
+	dex::vector < dex::vector < size_t > > documentSpans;
+	size_t isrCount = isrs.size( );
+	size_t endDocument;
+	size_t beginDocument;
 	// find spans
 	dex::vector < size_t > previous( isrCount, 0 );
 	endDocument = matching->seek( 0 );
@@ -192,7 +208,7 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 	while ( endDocument != dex::constraintSolver::ISR::npos )
 		{
 		beginDocument = endDocument - ends->documentSize( ) + 1;
-		dex::vector < size_t > spansOccurances( heuristics.size( ) );
+		dex::vector < size_t > spansOccurances( spanSizes.size( ) );
 		dex::vector < size_t > current( isrCount );
 
 		// Find the rarest word for this document
@@ -204,65 +220,66 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 		for ( size_t index = 0;  index < isrCount;  ++index )
 			{
 			previous[ index ] = isrs[ index ]->seek( beginDocument );
-			current[ index ] = isrs[ index ]->next( );
+			if ( index != rarest )
+				isrs[ index ]->next( );
 			}
 
 		// Should be setup such that current is one past previous.
 
 		dex::vector < size_t > closestLocations( isrCount );
-		while ( previous[ rarest ] < endDocument )
+		while ( isrs[ rarest ]->get( ) < endDocument )
 			{
-			closestLocations[ rarest ] = previous[ rarest ];
+			closestLocations[ rarest ] = isrs[ rarest ]->get( );
 			for ( size_t index = 0;  index < isrCount;  ++index )
 				{
 				size_t desiredPosition;
-				if ( previous[ rarest ] + index < rarest )
+				if ( isrs[ rarest ]->get( ) + index < rarest )
 					desiredPosition = 0;
 				else
-					desiredPosition = previous[ rarest ] + index - rarest;
+					desiredPosition = isrs[ rarest ]->get( ) + index - rarest;
 
 				if ( index != rarest )
 					{
 					// Position our ISRs such that previous is less than our desired position and current is greater than our
 					// desired position.
-					while ( current[ index ] < endDocument && current[ index ] + rarest < previous[ rarest ] + index )
+					while ( isrs[ index ]->get( ) < endDocument && isrs[ index ]->get( ) + rarest < isrs[ rarest ]->get( ) + index )
 						{
-						previous[ index ] = current[ index ];
-						current[ index ] = isrs[ index ]->next( );
+						previous[ index ] = isrs[ index ]->get( );
+						isrs[ index ]->next( );
 						}
 
 
 					// Take the value that is closest to our desired position for this span.
 					size_t closest;
 					// Check to see if either previous or current are not in the document
-					if ( previous[ index ] < beginDocument || current[ index ] >= endDocument )
+					if ( previous[ index ] < beginDocument || isrs[ index ]->get( ) >= endDocument )
 						{
 						// If previous is out of bounds but current is in bounds, set closest to current
-						if ( previous[ index ] < beginDocument && current[ index ] < endDocument )
+						if ( previous[ index ] < beginDocument && isrs[ index ]->get( ) < endDocument )
 							{
-							closest = current[ index ];
+							closest = isrs[ index ]->get( );
 							}
 						// If previous is in bounds but current is out of bounds, set closest to previous
-						if ( previous[ index ] >= beginDocument && current[ index ] >= endDocument )
+						if ( previous[ index ] >= beginDocument && isrs[ index ]->get( ) >= endDocument )
 							{
 							closest = previous[ index ];
 							}
 						// If both are out of bounds, just set closest to current, it'll be caught later.
-						if ( previous[ index ] < beginDocument && current[ index ] >= endDocument )
+						if ( previous[ index ] < beginDocument && isrs[ index ]->get( ) >= endDocument )
 							{
-							closest = current[ index ];
+							closest = isrs[ index ]->get( );
 							}
 						}
 					else
 						{
 						// If both current and previous are in the document
-						if ( desiredPosition + desiredPosition < current[ index ] + previous[ index ] )
+						if ( desiredPosition + desiredPosition < isrs[ index ]->get( ) + previous[ index ] )
 							{
 							closest = previous[ index ];
 							}
 						else
 							{
-							closest = current[ index ];
+							closest = isrs[ index ]->get( );
 							}
 						}
 
@@ -293,29 +310,17 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDesiredSpa
 				{
 				span = max - min + 1;
 				}
-			for ( size_t index = 0;  index < heuristics.size( );  ++index )
+			for ( size_t index = 0;  index < spanSizes.size( );  ++index )
 				{
-				if ( span <= heuristics[ index ].first * isrCount )
+				if ( span <= spanSizes[ index ] * isrCount )
 					{
-					if ( spansOccurances[ index ] < maxNumSpans )
-						{
-						spansOccurances[ index ]++;
-						}
+					spansOccurances[ index ]++;
 					break;
 					}
 				}
-			previous[ rarest ] = current[ rarest ];
-			if ( current[ rarest ] < endDocument )
-				{
-				current[ rarest ] = isrs[ rarest ]->next( );
-				}
+			isrs[ rarest ]->next( );
 			}
 		documentSpans.pushBack( spansOccurances );
-		if ( chunk )
-			{
-			titles.pushBack( chunk->offsetsToEndOfDocumentMetadatas[ endDocument ].title );
-			urls.pushBack( chunk->offsetsToEndOfDocumentMetadatas[ endDocument].url );
-			}
 		endDocument = matching->next( );
 		ends->seek( endDocument );
 		documentNumber++;
@@ -349,14 +354,17 @@ double dex::ranker::dynamicRanker::dynamicScoreWords( const dex::vector < size_t
 dex::vector < double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector < constraintSolver::ISR * > &bodyISRs,
 		dex::vector < constraintSolver::ISR * > &titleISRs, dex::constraintSolver::ISR *matching,
 		dex::constraintSolver::endOfDocumentISR *ends, dex::index::indexChunk *chunk,
-		const dex::vector < bool > &emphasized, dex::vector < string > &titles, dex::vector < string > &urls,
+		const dex::vector < bool > &emphasized, dex::vector < dex::string > &titles, dex::vector < dex::Url > &urls,
 		bool printInfo ) const
 	{
-	dex::vector < dex::vector < size_t > > wordCount;
 	titles.clear( );
 	urls.clear( );
-	dex::vector < dex::vector < size_t > > bodySpans = getDesiredSpans( bodyISRs, matching, ends, chunk,
-			bodySpanHeuristics, maxNumBodySpans, wordCount, titles, urls );
+	dex::vector < dex::vector < size_t > > wordCount = getDocumentInfo( bodyISRs, matching, ends, chunk, titles, urls );
+	vector < size_t > bodySpanSizes( bodySpanHeuristics.size( ) );
+	for ( size_t spanIndex = 0;  spanIndex < bodySpanHeuristics.size( );  ++spanIndex )
+		bodySpanSizes[ spanIndex ] = bodySpanHeuristics[ spanIndex ].first;
+	dex::vector < dex::vector < size_t > > bodySpans = getDesiredSpans( bodyISRs, matching, ends, bodySpanSizes, 
+			wordCount );
 	dex::vector < double > bodySpanScores;
 
 	for ( size_t i = 0;  i < bodySpans.size( );  ++i )
@@ -364,7 +372,7 @@ dex::vector < double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector
 		double bodySpanScore = 0;
 		for ( size_t j = 0;  j < bodySpans[ i ].size( );  ++j )
 			{
-			bodySpanScore += bodySpans[ i ][ j ] * bodySpanHeuristics[ j ].second;
+			bodySpanScore += dex::min( bodySpans[ i ][ j ], maxNumBodySpans ) * bodySpanHeuristics[ j ].second;
 			}
 		bodySpanScores.pushBack( bodySpanScore );
 		if ( printInfo )
@@ -391,9 +399,11 @@ dex::vector < double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector
 
 	wordCount.clear( );
 	dex::vector < dex::vector < size_t > > titleWordCount;
-	// No need to get the titles and urls again, so just pass a nullptr.
-	dex::vector < dex::vector < size_t > > titleSpans = getDesiredSpans( titleISRs, matching, ends, chunk, titleSpanHeuristics,
-			maxNumTitleSpans, wordCount, titles, urls );
+	vector < size_t > titleSpanSizes( titleSpanHeuristics.size( ) );
+	for ( size_t spanIndex = 0;  spanIndex < titleSpanHeuristics.size( );  ++spanIndex )
+		titleSpanSizes[ spanIndex ] = titleSpanHeuristics[ spanIndex ].first;
+	dex::vector < dex::vector < size_t > > titleSpans = getDesiredSpans( titleISRs, matching, ends, titleSpanSizes,
+			wordCount );
 	dex::vector < double > titleSpanScores;
 
 	for ( size_t i = 0;  i < titleSpans.size( );  ++i )
@@ -401,7 +411,7 @@ dex::vector < double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector
 		double titleSpanScore = 0;
 		for ( size_t j = 0;  j < titleSpans[ i ].size( );  ++j )
 			{
-			titleSpanScore += titleSpans[ i ][ j ] * titleSpanHeuristics[ j ].second;
+			titleSpanScore += dex::min( titleSpans[ i ][ j ], maxNumTitleSpans ) * titleSpanHeuristics[ j ].second;
 			}
 		titleSpanScores.pushBack( titleSpanScore );
 		if ( printInfo )
@@ -421,7 +431,7 @@ dex::vector < double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector
 
 // returns a pair. First is the scores. second is error code. if error code is -1, you messed up.
 dex::pair < dex::vector < double >, int > dex::ranker::ranker::scoreDocuments( dex::ranker::matchedDocuments *documents,
-		dex::constraintSolver::endOfDocumentISR *ends, dex::vector < string > &titles, dex::vector < string > &urls,
+		dex::constraintSolver::endOfDocumentISR *ends, dex::vector < dex::string > &titles, dex::vector < dex::Url > &urls,
 		bool printInfo ) const
 	{
 	// if the query is bad return -1
@@ -470,7 +480,7 @@ void *dex::ranker::parseQueryScoreDocuments( void *args )
 		dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr =
 				new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents->chunk, "" );
 		dex::vector < dex::string > titles;
-		dex::vector < dex::string > urls;
+		dex::vector < dex::Url > urls;
 		dex::pair < dex::vector < double >, int > scoresPair = rankerPointer->scoreDocuments( documents, eodisr,
 		titles, urls, printInfo );
 		if ( scoresPair.second == -1 )
