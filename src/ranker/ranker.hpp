@@ -1,7 +1,8 @@
 // ranker.hpp
 // this ranks the stuff
 //
-// 2012-12-31: Refactored code: jasina + combsc
+// 2020-01-01: Add kendallsTau function: combsc
+// 2019-12-31: Refactored code: jasina + combsc
 // 2019-12-11: Init Commit: combsc
 
 #ifndef DEX_RANKER_OBJECTS
@@ -65,18 +66,15 @@ namespace dex
 			{
 			private:
 				// pair of < inclusive upper bound on span range, score weighting of that range >
-				dex::vector < dex::pair < size_t, double > > bodySpanHeuristics;
-				dex::vector < dex::pair < size_t, double > > titleSpanHeuristics;
-				size_t maxNumBodySpans;
-				size_t maxNumTitleSpans;
-				double emphasizedWeight;
-				double proportionCap;
+				double maxBodySpanScore;
+				double maxTitleSpanScore;
+				double emphasizedWordWeight;
+				double maxBagOfWordsScore;
 				double wordsWeight;
 
 			public:
-				dynamicRanker( dex::vector < dex::pair < size_t, double > > bodySpanHeuristics,
-					dex::vector < dex::pair < size_t, double > > titleSpanHeuristics, size_t maxNumBodySpans,
-					size_t maxNumTitleSpans, double emphasizedWeight, double proportionCap,  double wordsWeight );
+				dynamicRanker( double maxBodySpanScore, double maxTitleSpanScore, double emphasizedWordWeight,
+						double maxBagOfWordsScore,  double wordsWeight );
 
 				// Returns the word count of all the documents in the index chunk for the ISRs passed.
 				// also returns the titles and urls corresponding to each document in documentTitles and documentUrls
@@ -88,14 +86,25 @@ namespace dex
 						dex::vector < dex::string > &documentTitles,
 						dex::vector < dex::Url > &documentUrls ) const;
 
-				// Get the number of spans that occur in each document for the ISRs passed in
-				vector < vector < size_t > > getDesiredSpans(
+				// For a given ordering returns the kendallTau coefficient
+				// a correct ordering would look like this:
+				// { 0, 1, 2, 3 }
+				// the worst ording would look like this:
+				// { 3, 2, 1, 0 }
+				double kendallsTau( const dex::vector < size_t > &ordering ) const;
+
+				// Score the span passed in
+				double scoreBodySpan( size_t queryLength, size_t spanLength, double tau ) const;
+				double scoreTitleSpan( size_t queryLength, size_t spanLength, double tau ) const;
+
+				// Get the spans that occur in each document for the ISRs passed in
+				// pair corresponds to span size found along with the kendall tau coefficient associated
+				// with the ordering of the span.
+				dex::vector < dex::vector < dex::pair < size_t, double > > > getDesiredSpans(
 						// Vector of ISRs should be arranged such that the words of the ISRs line up with the order of the query
 						vector < constraintSolver::ISR * > &isrs,
 						constraintSolver::ISR *matching,
 						constraintSolver::endOfDocumentISR *ends,
-						// This determines the sizes of spans that this function finds
-						const vector < size_t > &spanSizes,
 						const vector < vector < size_t > > &wordCount ) const;
 
 				// Returns bag of words scoring of the number of words in the given document
@@ -127,26 +136,16 @@ namespace dex
 					// score weighting for URL
 					const double staticUrlWeight = 1,
 
-					// pair of < inclusive upper bound on body span range, score weighting of that range >
-					const dex::vector < dex::pair < size_t, double > > &bodySpanHeuristics
-							= dex::vector < dex::pair < size_t, double > >( { { 1, 50 }, { 3, 25 }, { 4, 15 }, { 5, 5 } } ),
-
-					// pair of < inclusive upper bound on title span range, score weighting of that range >
-					const dex::vector < dex::pair < size_t, double > > &titleSpanHeuristics
-							= dex::vector < dex::pair < size_t, double > >( { { 1, 250 }, { 2, 100 } } ),
-
 					// Maximum number of spans we measure for body ISRs
-					const size_t maxBodySpans = 5,
+					const double maxBodySpanScore = 500,
 
 					// Maximum number of spans we measure for title ISRs
-					const size_t maxTitleSpans = 1,
+					const double maxTitleSpanScore = 500,
 
 					// double for the weighting applied to emphasized words in bag of words scoring
-					const double emphasizedWeight = 3.0,
+					const double emphasizedWordWeight = 3.0,
 
-					// double for the maximum word occurance proportion measured for a document in bag
-					// of words scoring, this should be quite low.
-					const double proportionCap = 0.06,
+					const double maxBagOfWordsScore = 150,
 
 					// Weighting for the bag of words scoring
 					const double wordWeight = 1000
