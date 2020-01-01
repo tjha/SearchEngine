@@ -177,10 +177,10 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	size_t documentOffset = *location;
 	if ( !append( body.cbegin( ), body.cend( ), postsMetadataChanges ) )
 		return false;
-	++location;
+	// ++location;
 	if ( !append( title.cbegin( ), title.cend( ), postsMetadataChanges, "#" ) )
 		return false;
-	++location;
+	// ++location;
 
 	*maxLocation = *location;
 

@@ -51,6 +51,9 @@ test: $(TEST_EXECUTABLES)
 	@for file in $^; do\
 		echo ./$$file;\
 		./$$file;\
+		if test $$? -eq 1; then\
+			exit 1;\
+		fi;\
 	done;
 
 # Can use this for some testing of the Makefile
