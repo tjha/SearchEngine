@@ -15,7 +15,7 @@ bool dex::queryCompiler::isAlpha ( char c )
 	 return ( c >= 'A' && c <= 'Z' ) || ( c >= 'a' && c <= 'z' );
 	 }
 
-bool dex::queryCompiler::isSymbol( char c )
+bool dex::queryCompiler::isSymbol( char c, bool infix )
 	{
 	switch ( c )
 		{
@@ -24,53 +24,91 @@ bool dex::queryCompiler::isSymbol( char c )
 		case '$':
 		case '"':
 		case '~':
+			return true;
 		case '(':
 		case ')':
-		case ' ':
-			return true;
+			return infix;
 		default:
-			return false;
+			return isWhitespace( c );
 		}
 	}
 
-
-dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index::indexChunk *chunk ) : chunk( chunk )
+bool dex::queryCompiler::isWhitespace( char c )
 	{
-	dex::string semiparsed;
-	semiparsed.reserve( in.size( ) );
+	switch ( c )
+		{
+		case ' ':
+		case '\f':
+		case '\n':
+		case '\r':
+		case '\t':
+		case '\v':
+			return true;
+		}
+	return false;
+	}
+
+char dex::queryCompiler::toLower( char c )
+	{
+	if ( c >= 'A' && c <= 'Z' )
+		return c + ( 'a' - 'A' );
+	return c;
+	}
+
+dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix )
+	{
 	input.reserve( in.size( ) );
 
-	// Erase irrelevant chars using algorithm --- gasp!!
+	// Intermediate value to help us figure out which words are emphasized
+	dex::string semiparsed;
+	semiparsed.reserve( in.size( ) );
 
 	bool charIsAlpha;
 	bool charIsSymbol;
+	bool charIsWhitespace;
 	bool inPhrase = false;
-	char previousCharacter = '\0';
+	char currentChar;
+	char previousCharacter = '&';
 
 	for ( size_t index = 0;  index < in.size( );  ++index )
 		{
-		charIsAlpha = isAlpha( in[ index ] );
-		charIsSymbol = isSymbol( in[ index ] );
+		currentChar = toLower( in[ index ] );
+		charIsAlpha = isAlpha( currentChar );
+		charIsSymbol = isSymbol( currentChar, infix );
+		charIsWhitespace = isWhitespace( currentChar );
 
+		// If we encounter an unknown character, ignore it
 		if ( !( charIsAlpha || charIsSymbol ) )
 			continue;
 
-		if ( in[ index ] == '"' )
+		if ( currentChar == '"' )
 			{
 			inPhrase = !inPhrase;
 
-			if ( previousCharacter == ' ' && inPhrase )
-				semiparsed.back( ) = '&';
+			// If we have a quote preceeded by a space, replace the space with the necessary character
+			if ( isWhitespace( previousCharacter ) )
+				{
+				if ( inPhrase && infix )
+					semiparsed.back( ) = '&';
+				if ( !inPhrase )
+					{
+					semiparsed.back( ) = '"';
+					previousCharacter = '"';
+					continue;
+					}
+				}
 
 			if ( previousCharacter == '"' )
 				{
-				if ( inPhrase )
+				// If we encounter an empty quoted phrase, our input should be considered invalid
+				if ( !inPhrase )
+					return;
+
+				// If we have two quotes back to back, delimit them somehow
+				if ( infix )
 					semiparsed.pushBack( '&' );
 				else
-					{
-					semiparsed.popBack( );
-					continue;
-					}
+					semiparsed.pushBack( ' ' );
 				}
 
 			semiparsed.pushBack( '"' );
@@ -78,65 +116,81 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, dex::index:
 			continue;
 			}
 
-		if ( inPhrase && charIsSymbol && in[ index ] != ' ' )
+		// Skip symbols found in phrases
+		if ( inPhrase && charIsSymbol && !charIsWhitespace )
 			continue;
 
-		if ( in[ index ] == '(' )
+		// If we see an implied ampersand preceeding an open parenthesis, insert it
+		if ( currentChar == '(' )
 			{
 			if ( isAlpha( previousCharacter ) || previousCharacter == ')' || previousCharacter == '"' )
-				semiparsed.pushBack( '&' );
+				{
+				if ( infix )
+					semiparsed.pushBack( '&' );
+				else
+					semiparsed.pushBack( ' ' );
+				}
 			else
-				if ( previousCharacter == ' ' )
+				if ( isWhitespace( previousCharacter ) && infix )
 					{
 					semiparsed.back( ) = '&';
 					previousCharacter = '&';
 					}
 			}
 
-		if ( previousCharacter == ' ' )
+		if ( isWhitespace( previousCharacter ) )
 			{
 			if ( charIsSymbol )
-				semiparsed.back( ) = in[ index ];
+				// Remove spaces that are adjacent to symbols
+				semiparsed.back( ) = currentChar;
 			else
 				{
-				if ( !inPhrase )
+				// If we see an implied ampersand preceeding a word, insert it
+				if ( !inPhrase && infix )
 					semiparsed.back( ) = '&';
 
-				semiparsed.pushBack( in[ index ] );
+				semiparsed.pushBack( currentChar );
 				}
 
-			previousCharacter = in[ index ];
+			previousCharacter = currentChar;
 			continue;
 			}
 
-		if ( isSymbol( previousCharacter ) && in[ index ] == ' ' )
+		// Ignore extraneous spaces after symbols
+		if ( isSymbol( previousCharacter ) && charIsWhitespace )
 			continue;
 
+		// If we see an implied ampersand preceeding a word, insert it
 		if ( !inPhrase && previousCharacter == '"' && charIsAlpha )
-			semiparsed.pushBack( '&' );
+			{
+			if ( infix )
+				semiparsed.pushBack( '&' );
+			else
+				semiparsed.pushBack( ' ' );
+			}
 
-		semiparsed.pushBack( in[ index ] );
-		previousCharacter = in[ index ];
+		semiparsed.pushBack( currentChar );
+		previousCharacter = currentChar;
 		}
-	if ( !in.empty( ) && !semiparsed.empty( ) && in.front( ) == ' ' && semiparsed.front( ) == '&' )
-		semiparsed = semiparsed.substr( 1 );
-	if ( !in.empty( ) && !semiparsed.empty( ) && semiparsed.back( ) == ' ' )
+	if ( !semiparsed.empty( ) && isWhitespace( semiparsed.back( ) ) )
 		semiparsed.popBack( );
 
-	for( size_t index = 0;  index < semiparsed.size( ) - 1;  ++index )
+	for ( size_t index = 0;  index < semiparsed.size( ) - 1;  ++index )
 		if ( semiparsed[ index ] == '$' )
 			{
 			dex::string word = semiparsed.substr(
 					index + 1, semiparsed.findFirstOf( "|&$\"~() ", index + 1, 8 ) - index - 1 );
 			emphasizedWords.insert( dex::porterStemmer::stem( word ) );
-			if( index != 0 && semiparsed[ index - 1] != '(' && semiparsed[ index - 1] != '|'
-					&& semiparsed[ index - 1] != '&' && semiparsed[ index - 1] != '~' )
+			if ( index != 0 && semiparsed[ index - 1 ] != '(' && semiparsed[ index - 1 ] != '|'
+					&& semiparsed[ index - 1 ] != '&' && semiparsed[ index - 1 ] != '~' )
 				input.pushBack( '&' );
 			}
 		else
 			input.pushBack( semiparsed[ index ] );
 
-	if ( semiparsed.back( ) != '$' )
+	if ( semiparsed.back( ) == '$' )
+		input.clear( );
+	else
 		input.pushBack( semiparsed.back( ) );
 	}
 
@@ -171,5 +225,5 @@ dex::queryCompiler::word *dex::queryCompiler::tokenStream::parseWord( )
 	dex::string word = input.substr( location, nextSymbolLocation - location );
 	location = dex::min( nextSymbolLocation, input.size( ) );
 
-	return new dex::queryCompiler::word( dex::porterStemmer::stem( word ), chunk );
+	return new dex::queryCompiler::word( dex::porterStemmer::stem( word ) );
 	}

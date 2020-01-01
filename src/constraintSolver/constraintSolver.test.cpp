@@ -20,13 +20,19 @@ TEST_CASE( "testISRs" )
 		testingISR isr( locationsToDeltas( dex::vector < size_t >( { 0, 4, 5, 9, 10, 11 } ) ), isrEnd );
 
 		REQUIRE( isr.next( ) == 0 );
+		REQUIRE( isr.get( ) == 0 );
 		REQUIRE( isr.next( ) == 4 );
+		REQUIRE( isr.get( ) == 4 );
 		REQUIRE( isr.next( ) == 5 );
+		REQUIRE( isr.get( ) == 5 );
 		REQUIRE( isr.next( ) == 9 );
+		REQUIRE( isr.get( ) == 9 );
 		REQUIRE( isr.next( ) == 10 );
+		REQUIRE( isr.get( ) == 10 );
 		REQUIRE( isr.next( ) == 11 );
+		REQUIRE( isr.get( ) == 11 );
 		REQUIRE( isr.next( ) == testingISR::npos );
-		REQUIRE( isr.next( ) == testingISR::npos );
+		REQUIRE( isr.get( ) == testingISR::npos );
 		}
 
 	SECTION( "nextDocument" )
@@ -36,10 +42,15 @@ TEST_CASE( "testISRs" )
 		testingISR isr( locationsToDeltas( dex::vector < size_t >( { 0, 4, 5, 9, 10, 11 } ) ), isrEnd );
 
 		REQUIRE( isr.nextDocument( ) == 0 );
+		REQUIRE( isr.get( ) == 0 );
 		REQUIRE( isr.nextDocument( ) == 4 );
+		REQUIRE( isr.get( ) == 4 );
 		REQUIRE( isr.nextDocument( ) == 9 );
+		REQUIRE( isr.get( ) == 9 );
 		REQUIRE( isr.nextDocument( ) == testingISR::npos );
+		REQUIRE( isr.get( ) == testingISR::npos );
 		REQUIRE( isr.nextDocument( ) == testingISR::npos );
+		REQUIRE( isr.get( ) == testingISR::npos );
 		}
 
 	SECTION( "overlapping nextDocument" )
@@ -49,14 +60,23 @@ TEST_CASE( "testISRs" )
 		testingISR isr( locationsToDeltas( dex::vector < size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ), isrEnd );
 
 		REQUIRE( isr.nextDocument( ) == 3 );
+		REQUIRE( isr.get( ) == 3 );
 		REQUIRE( isr.nextDocument( ) == 7 );
+		REQUIRE( isr.get( ) == 7 );
 		REQUIRE( isr.nextDocument( ) == 8 );
+		REQUIRE( isr.get( ) == 8 );
 		REQUIRE( isr.nextDocument( ) == 12 );
+		REQUIRE( isr.get( ) == 12 );
 		REQUIRE( isr.nextDocument( ) == 13 );
+		REQUIRE( isr.get( ) == 13 );
 		REQUIRE( isr.nextDocument( ) == 14 );
+		REQUIRE( isr.get( ) == 14 );
 		REQUIRE( isr.nextDocument( ) == 16 );
+		REQUIRE( isr.get( ) == 16 );
 		REQUIRE( isr.nextDocument( ) == testingISR::npos );
+		REQUIRE( isr.get( ) == testingISR::npos );
 		REQUIRE( isr.nextDocument( ) == testingISR::npos );
+		REQUIRE( isr.get( ) == testingISR::npos );
 		}
 	}
 
@@ -87,8 +107,11 @@ TEST_CASE( "andISR" )
 				dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB, isrC } ), isrEndAnd);
 
 		REQUIRE( isrAnd.seek( 10 ) == 50 );
+		REQUIRE( isrAnd.get( ) == 50 );
 		REQUIRE( isrAnd.seek( 62 ) == 70 );
+		REQUIRE( isrAnd.get( ) == 70 );
 		REQUIRE( isrAnd.seek( 71 ) == dex::constraintSolver::ISR::npos );
+		REQUIRE( isrAnd.get( ) == dex::constraintSolver::ISR::npos );
 		}
 
 	SECTION( "next/nextDocument" )
@@ -116,8 +139,11 @@ TEST_CASE( "andISR" )
 			dex::constraintSolver::andISR isrAnd( dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB, isrC } ), isrEndAnd );
 
 			REQUIRE( isrAnd.next( ) == 3 );
+			REQUIRE( isrAnd.get( ) == 3 );
 			REQUIRE( isrAnd.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrAnd.get( ) == dex::constraintSolver::ISR::npos );
 			REQUIRE( isrAnd.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrAnd.get( ) == dex::constraintSolver::ISR::npos );
 			}
 
 		SECTION( "A few matches" )
@@ -137,9 +163,13 @@ TEST_CASE( "andISR" )
 					dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB } ), isrEndAnd );
 
 			REQUIRE( isrAnd.next( ) == 81 );
+			REQUIRE( isrAnd.get( ) == 81 );
 			REQUIRE( isrAnd.next( ) == 165 );
+			REQUIRE( isrAnd.get( ) == 165 );
 			REQUIRE( isrAnd.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrAnd.get( ) == dex::constraintSolver::ISR::npos );
 			REQUIRE( isrAnd.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrAnd.get( ) == dex::constraintSolver::ISR::npos );
 			}
 
 		SECTION( "No matches" )
@@ -160,7 +190,9 @@ TEST_CASE( "andISR" )
 					dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB } ), isrEndAnd );
 
 			REQUIRE( isrAnd.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrAnd.get( ) == dex::constraintSolver::ISR::npos );
 			REQUIRE( isrAnd.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrAnd.get( ) == dex::constraintSolver::ISR::npos );
 			}
 
 		SECTION( "Consecutive matches" )
@@ -180,10 +212,15 @@ TEST_CASE( "andISR" )
 			dex::constraintSolver::andISR isrAnd( dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB } ), isrEndAnd );
 
 			REQUIRE( isrAnd.next( ) == 30 );
+			REQUIRE( isrAnd.get( ) == 30 );
 			REQUIRE( isrAnd.next( ) == 50 );
+			REQUIRE( isrAnd.get( ) == 50 );
 			REQUIRE( isrAnd.next( ) == 60 );
+			REQUIRE( isrAnd.get( ) == 60 );
 			REQUIRE( isrAnd.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrAnd.get( ) == dex::constraintSolver::ISR::npos );
 			REQUIRE( isrAnd.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrAnd.get( ) == dex::constraintSolver::ISR::npos );
 			}
 		}
 	}
@@ -216,10 +253,15 @@ TEST_CASE( "orISR" )
 				dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB, isrC } ), isrEndOr );
 
 		REQUIRE( isrOr.seek( 10 ) == 20 );
+		REQUIRE( isrOr.get( ) == 20 );
 		REQUIRE( isrOr.seek( 30 ) == 50 );
+		REQUIRE( isrOr.get( ) == 50 );
 		REQUIRE( isrOr.seek( 40 ) == 50 );
+		REQUIRE( isrOr.get( ) == 50 );
 		REQUIRE( isrOr.seek( 71 ) == 80 );
-		REQUIRE( isrOr.seek( 78 ) == dex::constraintSolver::ISR::npos ); // or should this be 80?
+		REQUIRE( isrOr.get( ) == 80 );
+		REQUIRE( isrOr.seek( 78 ) == dex::constraintSolver::ISR::npos );
+		REQUIRE( isrOr.get( ) == dex::constraintSolver::ISR::npos );
 		}
 
 	SECTION( "next/nextDocument" )
@@ -250,11 +292,17 @@ TEST_CASE( "orISR" )
 					dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB, isrC } ), isrEndOR );
 
 			REQUIRE( isrOR.next( ) == 3 );
+			REQUIRE( isrOR.get( ) == 3 );
 			REQUIRE( isrOR.next( ) == 7 );
+			REQUIRE( isrOR.get( ) == 7 );
 			REQUIRE( isrOR.next( ) == 9 );
+			REQUIRE( isrOR.get( ) == 9 );
 			REQUIRE( isrOR.next( ) == 12 );
+			REQUIRE( isrOR.get( ) == 12 );
 			REQUIRE( isrOR.next( ) == 16 );
+			REQUIRE( isrOR.get( ) == 16 );
 			REQUIRE( isrOR.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrOR.get( ) == dex::constraintSolver::ISR::npos );
 			}
 
 		SECTION( "A few matches" )
@@ -278,11 +326,17 @@ TEST_CASE( "orISR" )
 					dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB } ), isrEndOr );
 
 			REQUIRE( isrOr.next( ) == 35 );
+			REQUIRE( isrOr.get( ) == 35 );
 			REQUIRE( isrOr.next( ) == 81 );
+			REQUIRE( isrOr.get( ) == 81 );
 			REQUIRE( isrOr.next( ) == 139 );
+			REQUIRE( isrOr.get( ) == 139 );
 			REQUIRE( isrOr.next( ) == 165 );
+			REQUIRE( isrOr.get( ) == 165 );
 			REQUIRE( isrOr.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrOr.get( ) == dex::constraintSolver::ISR::npos );
 			REQUIRE( isrOr.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrOr.get( ) == dex::constraintSolver::ISR::npos );
 			}
 
 		SECTION( "No matches" )
@@ -305,11 +359,17 @@ TEST_CASE( "orISR" )
 					dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB } ), isrEndOr );
 
 			REQUIRE( isrOr.next( ) == 10 );
+			REQUIRE( isrOr.get( ) == 10 );
 			REQUIRE( isrOr.next( ) == 20 );
+			REQUIRE( isrOr.get( ) == 20 );
 			REQUIRE( isrOr.next( ) == 30 );
+			REQUIRE( isrOr.get( ) == 30 );
 			REQUIRE( isrOr.next( ) == 50 );
+			REQUIRE( isrOr.get( ) == 50 );
 			REQUIRE( isrOr.next( ) == 60 );
+			REQUIRE( isrOr.get( ) == 60 );
 			REQUIRE( isrOr.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrOr.get( ) == dex::constraintSolver::ISR::npos );
 			}
 
 		SECTION( "Consecutive matches" )
@@ -333,12 +393,19 @@ TEST_CASE( "orISR" )
 					dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB } ), isrEndOR );
 
 			REQUIRE( isrOr.next( ) == 10 );
+			REQUIRE( isrOr.get( ) == 10 );
 			REQUIRE( isrOr.next( ) == 20 );
+			REQUIRE( isrOr.get( ) == 20 );
 			REQUIRE( isrOr.seek( 29 ) == 30 );
+			REQUIRE( isrOr.get( ) == 30 );
 			REQUIRE( isrOr.seek( 45 ) == 60 );
+			REQUIRE( isrOr.get( ) == 60 );
 			REQUIRE( isrOr.next( ) == 60 );
+			REQUIRE( isrOr.get( ) == 60 );
 			REQUIRE( isrOr.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrOr.get( ) == dex::constraintSolver::ISR::npos );
 			REQUIRE( isrOr.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrOr.get( ) == dex::constraintSolver::ISR::npos );
 			}
 		}
 	}
@@ -371,8 +438,11 @@ TEST_CASE( "phraseISR" )
 				dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB, isrC } ), isrEndPhrase );
 
 		REQUIRE( isrPhrase.seek( 10 ) == 20 );
+		REQUIRE( isrPhrase.get( ) == 20 );
 		REQUIRE( isrPhrase.seek( 41 ) == 50 );
+		REQUIRE( isrPhrase.get( ) == 50 );
 		REQUIRE( isrPhrase.seek( 60 ) == dex::constraintSolver::ISR::npos ); // or should this be 80?
+		REQUIRE( isrPhrase.get( ) == dex::constraintSolver::ISR::npos ); // or should this be 80?
 		}
 
 	SECTION( "next/nextDocument" )
@@ -401,7 +471,9 @@ TEST_CASE( "phraseISR" )
 					dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB, isrC } ), isrEndPhrase );
 
 			REQUIRE( isrPhrase.next( ) == 3 );
+			REQUIRE( isrPhrase.get( ) == 3 );
 			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrPhrase.get( ) == dex::constraintSolver::ISR::npos );
 			}
 
 		SECTION( "A few matches" )
@@ -425,9 +497,13 @@ TEST_CASE( "phraseISR" )
 					dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB } ), isrEndPhrase );
 
 			REQUIRE( isrPhrase.next( ) == 35 );
+			REQUIRE( isrPhrase.get( ) == 35 );
 			REQUIRE( isrPhrase.next( ) == 165 );
+			REQUIRE( isrPhrase.get( ) == 165 );
 			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrPhrase.get( ) == dex::constraintSolver::ISR::npos );
 			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrPhrase.get( ) == dex::constraintSolver::ISR::npos );
 			}
 
 		SECTION( "No matches" )
@@ -473,12 +549,19 @@ TEST_CASE( "phraseISR" )
 					dex::vector < dex::constraintSolver::ISR * >( { isrA, isrB } ), isrEndPhrase );
 
 			REQUIRE( isrPhrase.next( ) == 20 );
+			REQUIRE( isrPhrase.get( ) == 20 );
 			REQUIRE( isrPhrase.next( ) == 30 );
+			REQUIRE( isrPhrase.get( ) == 30 );
 			REQUIRE( isrPhrase.next( ) == 50 );
+			REQUIRE( isrPhrase.get( ) == 50 );
 			REQUIRE( isrPhrase.seek( 45 ) == 60 );
+			REQUIRE( isrPhrase.get( ) == 60 );
 			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrPhrase.get( ) == dex::constraintSolver::ISR::npos );
 			REQUIRE( isrPhrase.seek( 55 ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrPhrase.get( ) == dex::constraintSolver::ISR::npos );
 			REQUIRE( isrPhrase.next( ) == dex::constraintSolver::ISR::npos );
+			REQUIRE( isrPhrase.get( ) == dex::constraintSolver::ISR::npos );
 			}
 		}
 	}
@@ -518,15 +601,24 @@ TEST_CASE( "notISR" )
 		dex::constraintSolver::notISR isrNotC( isrC, isrEndNotC );
 
 		REQUIRE( isrNotA.next( ) == 40 );
+		REQUIRE( isrNotA.get( ) == 40 );
 		REQUIRE( isrNotA.next( ) == 60 );
+		REQUIRE( isrNotA.get( ) == 60 );
 		REQUIRE( isrNotA.seek( 55 ) == 60 );
+		REQUIRE( isrNotA.get( ) == 60 );
 		REQUIRE( isrNotA.next( ) == dex::constraintSolver::ISR::npos );
+		REQUIRE( isrNotA.get( ) == dex::constraintSolver::ISR::npos );
 
 		REQUIRE( isrNotB.seek( 27 ) == 30 );
+		REQUIRE( isrNotB.get( ) == 30 );
 		REQUIRE( isrNotB.seek( 35 ) == 40 );
+		REQUIRE( isrNotB.get( ) == 40 );
 		REQUIRE( isrNotB.next( ) == 60 );
+		REQUIRE( isrNotB.get( ) == 60 );
 		REQUIRE( isrNotB.seek( 75 ) == dex::constraintSolver::ISR::npos );
+		REQUIRE( isrNotB.get( ) == dex::constraintSolver::ISR::npos );
 		REQUIRE( isrNotB.next( ) == dex::constraintSolver::ISR::npos );
+		REQUIRE( isrNotB.get( ) == dex::constraintSolver::ISR::npos );
 		}
 	}
 
@@ -543,11 +635,17 @@ TEST_CASE( "nested ISRs" )
 		dex::constraintSolver::orISR orISR( dex::vector < dex::constraintSolver::ISR * >{ isr }, isrOrEnd );
 
 		REQUIRE( orISR.nextDocument( ) == 7 );
+		REQUIRE( orISR.get( ) == 7 );
 		REQUIRE( orISR.nextDocument( ) == 8 );
+		REQUIRE( orISR.get( ) == 8 );
 		REQUIRE( orISR.nextDocument( ) == 13 );
+		REQUIRE( orISR.get( ) == 13 );
 		REQUIRE( orISR.nextDocument( ) == 16 );
+		REQUIRE( orISR.get( ) == 16 );
 		REQUIRE( orISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( orISR.get( ) == testingISR::npos );
 		REQUIRE( orISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( orISR.get( ) == testingISR::npos );
 		}
 
 	SECTION( "AND with alignment" )
@@ -561,11 +659,17 @@ TEST_CASE( "nested ISRs" )
 		dex::constraintSolver::andISR andISR( dex::vector < dex::constraintSolver::ISR * >{ isr }, isrAndEnd );
 
 		REQUIRE( andISR.nextDocument( ) == 7 );
+		REQUIRE( andISR.get( ) == 7 );
 		REQUIRE( andISR.nextDocument( ) == 8 );
+		REQUIRE( andISR.get( ) == 8 );
 		REQUIRE( andISR.nextDocument( ) == 13 );
+		REQUIRE( andISR.get( ) == 13 );
 		REQUIRE( andISR.nextDocument( ) == 16 );
+		REQUIRE( andISR.get( ) == 16 );
 		REQUIRE( andISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( andISR.get( ) == testingISR::npos );
 		REQUIRE( andISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( andISR.get( ) == testingISR::npos );
 		}
 
 	SECTION( "one word in OR in OR" )
@@ -582,10 +686,15 @@ TEST_CASE( "nested ISRs" )
 		dex::constraintSolver::orISR orOrISR( dex::vector < dex::constraintSolver::ISR * >{ orISR }, isrOrOrEnd );
 
 		REQUIRE( orOrISR.nextDocument( ) == 3 );
+		REQUIRE( orOrISR.get( ) == 3 );
 		REQUIRE( orOrISR.nextDocument( ) == 7 );
+		REQUIRE( orOrISR.get( ) == 7 );
 		REQUIRE( orOrISR.nextDocument( ) == 12 );
+		REQUIRE( orOrISR.get( ) == 12 );
 		REQUIRE( orOrISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( orOrISR.get( ) == testingISR::npos );
 		REQUIRE( orOrISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( orOrISR.get( ) == testingISR::npos );
 		}
 
 	SECTION( "one word in AND in AND" )
@@ -602,9 +711,14 @@ TEST_CASE( "nested ISRs" )
 		dex::constraintSolver::andISR orOrISR( dex::vector < dex::constraintSolver::ISR * >{ orISR }, isrAndAndEnd );
 
 		REQUIRE( orOrISR.nextDocument( ) == 3 );
+		REQUIRE( orOrISR.get( ) == 3 );
 		REQUIRE( orOrISR.nextDocument( ) == 7 );
+		REQUIRE( orOrISR.get( ) == 7 );
 		REQUIRE( orOrISR.nextDocument( ) == 12 );
+		REQUIRE( orOrISR.get( ) == 12 );
 		REQUIRE( orOrISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( orOrISR.get( ) == testingISR::npos );
 		REQUIRE( orOrISR.nextDocument( ) == testingISR::npos );
+		REQUIRE( orOrISR.get( ) == testingISR::npos );
 		}
 	}

@@ -7,7 +7,7 @@
 #define RANKER_OBJECTS_HPP
 
 #include "constraintSolver/constraintSolver.hpp"
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "utils/url.hpp"
 #include "utils/vector.hpp"
 
@@ -53,19 +53,15 @@ namespace dex
 		private:
 			dex::vector < size_t > internal;
 			size_t pos;
+			size_t toGet;
 		public:
-			endOfDocumentISR( )
-				{
-				}
-			endOfDocumentISR( dex::vector < size_t > vecIn )
-				{
-				internal = vecIn;
-				pos = 0;
-				}
+			endOfDocumentISR( ) : toGet( npos ) { }
+			endOfDocumentISR( dex::vector < size_t > vecIn ) : internal( vecIn ), pos( 0 ), toGet( npos ) { }
 			endOfDocumentISR &operator =( const endOfDocumentISR other )
 				{
 				internal = other.internal;
 				pos = other.pos;
+				toGet = other.toGet;
 				return *this;
 				}
 			const static size_t npos = size_t ( -1 );
@@ -76,26 +72,30 @@ namespace dex
 					if ( internal[ index ] >= target )
 						{
 						pos = index;
-						return internal[ pos ];
+						return toGet = internal[ pos ];
 						}
 					}
 				pos = internal.size( );
-				return npos;
+				return toGet = npos;
 				}
 			size_t next( )
 				{
 				if ( pos == internal.size( ) )
 					{
-					return npos;
+					return toGet = npos;
 					}
 				size_t toReturn = internal[ pos ];
 				pos++;
 
-				return toReturn;
+				return toGet = toReturn;
 				}
 			size_t nextDocument( )
 				{
-				return next( );
+				return toGet = next( );
+				}
+			size_t get( )
+				{
+				return toGet;
 				}
 			size_t documentSize( )
 				{
@@ -113,22 +113,17 @@ namespace dex
 			dex::string word;
 			size_t pos;
 			dex::endOfDocumentISR ends;
+			size_t toGet;
 		public:
 			const static size_t npos = size_t ( -1 );
-			ISR( )
-				{
-				}
-			ISR( dex::string word, dex::vector < size_t > vecIn, dex::endOfDocumentISR endsIn )
-				{
-				this->word = word;
-				internal = vecIn;
-				pos = 0;
-				ends = endsIn;
-				}
+			ISR( ) : toGet ( npos ) { }
+			ISR( dex::string word, dex::vector < size_t > vecIn, dex::endOfDocumentISR endsIn ) :
+				internal( vecIn ), word( word ), pos( 0 ), ends( endsIn ), toGet( npos ) { }
 
 			void reset( )
 				{
 				pos = 0;
+				toGet = npos;
 				}
 			// Jump this ISR to the first instance of our pattern that is at or after target. Return the location of the
 			// instance, or -1 if there is none.
@@ -139,11 +134,11 @@ namespace dex
 					if ( internal[ index ] >= target )
 						{
 						pos = index;
-						return next( );
+						return toGet = next( );
 						}
 					}
 				pos = internal.size( );
-				return npos;
+				return toGet = npos;
 				}
 
 			// Jump ISR to next location of our pattern. Return location of instance or -1 if there is none.
@@ -151,12 +146,12 @@ namespace dex
 				{
 				if ( pos == internal.size( ) )
 					{
-					return npos;
+					return toGet = npos;
 					}
-				size_t toReturn = internal[ pos ];
+				toGet = internal[ pos ];
 				pos++;
 
-				return toReturn;
+				return toGet;
 				}
 
 			// Jump this ISR to the first location of our pattern that is in the next document. Return the location of the
@@ -167,10 +162,14 @@ namespace dex
 				if ( pos == internal.size( ) )
 					{
 					std::cout << "CALLED NEXT DOCUMENT, POS AT END OF INTERNAL" << std::endl;
-					return npos;
+					return toGet = npos;
 					}
 				ends.seek( internal[ pos ] );
-				return seek( ends.next( ) );
+				return toGet = seek( ends.next( ) );
+				}
+			size_t get( )
+				{
+				return toGet;
 				}
 			dex::string getWord( )
 				{

@@ -1,4 +1,4 @@
-// index.hpp
+// indexer.hpp
 // Indexer.
 //
 // 2019-12-09: Fix bugs in building index: lougheem, jasina
@@ -268,8 +268,6 @@ namespace dex
 					private:
 						friend class indexChunk;
 
-						static const size_t npos = static_cast < size_t >( -1 );
-
 						byte *post;
 						postsMetadata *postsMetadatum;
 						postsChunk *postsChunkum; // Bad naming to disambiguate chunk types
@@ -277,12 +275,15 @@ namespace dex
 						size_t absoluteLocation;
 						bool begun;
 
+						size_t toGet;
+
 					public:
 						// An ISR for the empty string is just and end of document ISR.
 						indexStreamReader( indexChunk *chunk, dex::string word = "" );
 						size_t seek( size_t target );
 						size_t next( );
 						size_t nextDocument( );
+						size_t get( );
 
 						// Need functions to get metadata for a word for entire posting list
 						// 	and for in the current document
@@ -293,11 +294,13 @@ namespace dex
 					{
 					private:
 						//indexChunk *chunk;
+						size_t toGet;
 					public:
 						endOfDocumentIndexStreamReader( indexChunk *chunk, dex::string );
 						size_t seek( size_t target );
 						size_t next( );
 						size_t nextDocument( );
+						size_t get( );
 						size_t documentSize( );
 					};
 			};

@@ -17,7 +17,7 @@
 #include <cstddef>
 #include <pthread.h>
 #include "constraintSolver/constraintSolver.hpp"
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "queryCompiler/parser.hpp"
 #include "ranker/rankerConfig.hpp"
 #include "ranker/rankerObjects.hpp"
@@ -29,8 +29,9 @@ namespace dex
 			{
 			dex::queryRequest queryRequest = *( ( dex::queryRequest * ) args );
 			std::cout << "[" << queryRequest.query << "]" << std::endl;
-			dex::queryCompiler::parser parser( queryRequest.query, queryRequest.chunkPointer );
-			dex::matchedDocuments *documents = parser.parse( );
+			dex::queryCompiler::parser parser;
+			// TODO: Do not pass in the query here. Instead, just pass in a dex::queryCompiler::matchedDocumentsGenerator.
+			dex::matchedDocuments *documents = parser.parse( queryRequest.query )( queryRequest.chunkPointer );
 			std::cout << "Parse and Score isr: ";
 			std::cout << documents->matchingDocumentISR << std::endl;
 			for ( int i = 0;  i < 10; ++i )

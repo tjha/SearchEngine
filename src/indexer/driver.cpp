@@ -2,14 +2,14 @@
 //
 // 2019-12-11:	edited to call correct functions to index and use lexicoComp: jhirsh, loghead
 //             brought in dex::matchingFilenames, write statistics: combsc
-// 2019-12-10:	edits to attach to index.hpp functions: combsc, loghead
+// 2019-12-10:	edits to attach to indexer.hpp functions: combsc, loghead
 // 2019-12-08:	created index driver to read through directory: jhirsh
 //
 
 #include <dirent.h>
 #include <iostream>
 #include <time.h>
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "parser/parser.hpp"
 #include "utils/basicString.hpp"
 #include "utils/exception.hpp"
@@ -99,7 +99,7 @@ int main ( int argc, char ** argv )
 					}
 
 				// TODO this should go in parser but didn't want to break dependent functionality
-				// TODO add default argument for anchorText in index.hpp
+				// TODO add default argument for anchorText in indexer.hpp
 				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{

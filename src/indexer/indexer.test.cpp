@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "catch.hpp"
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "utils/file.hpp"
 #include "utils/utf.hpp"
 
