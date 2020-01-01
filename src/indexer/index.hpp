@@ -196,7 +196,6 @@ namespace dex
 						{
 						string wordToAdd = dex::porterStemmer::stem( *first );
 						string decoratedWordToAdd = decorator + wordToAdd;
-						std::cout << "about to add decorated word: " << decoratedWordToAdd << "\n";
 
 						if ( wordToAdd.size( ) > maxWordLength )
 							continue;
