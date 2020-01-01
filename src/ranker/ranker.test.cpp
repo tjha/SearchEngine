@@ -8,7 +8,7 @@
 #include <iostream>
 #include "catch.hpp"
 #include "constraintSolver/constraintSolver.hpp"
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "ranker/ranker.hpp"
 #include "ranker/rankerObjects.hpp"
 

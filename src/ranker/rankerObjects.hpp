@@ -7,7 +7,7 @@
 #define RANKER_OBJECTS_HPP
 
 #include "constraintSolver/constraintSolver.hpp"
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "utils/url.hpp"
 #include "utils/vector.hpp"
 

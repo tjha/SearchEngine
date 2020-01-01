@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <stdio.h>
 
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "ranker/ranker.hpp"
 #include "utils/basicString.hpp"
 #include "utils/file.hpp"

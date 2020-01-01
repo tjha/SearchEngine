@@ -4,7 +4,7 @@
 
 #include <cstddef>
 #include "constraintSolver/constraintSolver.hpp"
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "queryCompiler/expression.hpp"
 #include "utils/basicString.hpp"
 #include "utils/stemming.hpp"

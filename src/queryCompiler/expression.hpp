@@ -6,7 +6,7 @@
 #define DEX_EXPRESSION
 
 #include "constraintSolver/constraintSolver.hpp"
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "utils/basicString.hpp"
 #include "utils/utility.hpp"
 #include "utils/vector.hpp"

@@ -10,7 +10,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "utils/basicString.hpp"
 #include "utils/exception.hpp"
 #include "utils/unorderedMap.hpp"

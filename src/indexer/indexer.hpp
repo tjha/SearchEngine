@@ -1,4 +1,4 @@
-// index.hpp
+// indexer.hpp
 // Indexer.
 //
 // 2019-12-09: Fix bugs in building index: lougheem, jasina
