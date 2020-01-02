@@ -342,7 +342,7 @@ dex::vector < dex::vector < dex::pair < size_t, double > > > dex::ranker::dynami
 				span = max - min + 1;
 				tau = kendallsTau( closestLocations );
 				}
-			spansOccurances.pushBack( dex::pair( span, tau ) );
+			spansOccurances.pushBack( dex::pair < size_t, double > ( span, tau ) );
 			isrs[ rarest ]->next( );
 			}
 		documentSpans.pushBack( spansOccurances );
