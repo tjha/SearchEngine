@@ -3,4 +3,4 @@
 echo "export LD_LIBRARY_PATH=/opt/libressl/lib" >> ~/.bashrc
 echo "export LDFLAGS=/opt/libressl/lib" >> ~/.bashrc
 echo "export CPPFLAGS=/opt/libressl/include" >> ~/.bashrc
-echo "export PATH_TO_SEARCH_ENGINE=/home/ec2-user/SearchEngine" >> ~/.bashrc
+echo "export PATH_TO_SEARCH_ENGINE="$(pwd) >> ~/.bashrc
