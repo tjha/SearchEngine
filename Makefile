@@ -74,7 +74,7 @@ $(BUILD_DIR)/queryCompiler/queryCompiler.test.exe: $(BUILD_DIR)/queryCompiler/qu
 $(BUILD_DIR)/ranker/ranker.test.exe: $(BUILD_DIR)/ranker/ranker.test.o $(BUILD_DIR)/main.o\
 		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
 		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
-		$(BUILD_DIR)/indexer/indexer.o
+		$(BUILD_DIR)/indexer/indexer.o $(BUILD_DIR)/ranker/ranker.o
 	$(CXX) $(CXXFLAGS) $^ -o $@;
 
 # Need to special case main.o for Catch-2
