@@ -5,7 +5,6 @@
 #include "constraintSolver/constraintSolver.hpp"
 #include "queryCompiler/expression.hpp"
 #include "queryCompiler/parser.hpp"
-#include "ranker/ranker.hpp"
 
 dex::queryCompiler::matchedDocumentsGenerator::matchedDocumentsGenerator(
 		dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream ) : root( root ), stream( stream )
@@ -36,7 +35,7 @@ dex::queryCompiler::matchedDocumentsGenerator::~matchedDocumentsGenerator( )
 		delete stream;
 	}
 
-dex::ranker::matchedDocuments *dex::queryCompiler::matchedDocumentsGenerator::operator( )(
+dex::queryCompiler::matchedDocuments *dex::queryCompiler::matchedDocumentsGenerator::operator( )(
 		dex::index::indexChunk *chunk ) const
 	{
 	if ( invalid )
@@ -47,7 +46,7 @@ dex::ranker::matchedDocuments *dex::queryCompiler::matchedDocumentsGenerator::op
 	if ( isr && flattenedQuery.first.size( ) + flattenedQuery.second.size( ) == 1 )
 		isr = new dex::constraintSolver::phraseISR( { isr }, dex::queryCompiler::getEndOfDocumentISR( chunk ) );
 
-	return new dex::ranker::matchedDocuments
+	return new dex::queryCompiler::matchedDocuments
 		{
 		flattenedQuery.first,  // flattened query vector of strings
 		isr,            // matching document ISR
@@ -61,6 +60,11 @@ dex::string dex::queryCompiler::matchedDocumentsGenerator::getQuery( ) const
 	if ( flattenedQuery.first.size( ) + flattenedQuery.second.size( ) == 1 )
 		return "(" + query + ")";
 	return query;
+	}
+
+bool dex::queryCompiler::matchedDocumentsGenerator::isValid( ) const
+	{
+	return !invalid;
 	}
 
 dex::queryCompiler::expression *dex::queryCompiler::parser::findPhrase( )

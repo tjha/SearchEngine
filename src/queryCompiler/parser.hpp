@@ -8,7 +8,6 @@
 #include "constraintSolver/constraintSolver.hpp"
 #include "queryCompiler/expression.hpp"
 #include "queryCompiler/tokenstream.hpp"
-#include "ranker/ranker.hpp"
 #include "utils/basicString.hpp"
 #include "utils/utility.hpp"
 
@@ -16,6 +15,15 @@ namespace dex
 	{
 	namespace queryCompiler
 		{
+		// Information to pass to the ranker
+		struct matchedDocuments
+			{
+			dex::vector < dex::string > flattenedQuery;
+			dex::constraintSolver::ISR *matchingDocumentISR;
+			dex::index::indexChunk *chunk;
+			dex::vector < bool > emphasizedWords;
+			};
+
 		class matchedDocumentsGenerator
 			{
 			private:
@@ -29,8 +37,9 @@ namespace dex
 			public:
 				matchedDocumentsGenerator( dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream );
 				~matchedDocumentsGenerator( );
-				dex::ranker::matchedDocuments *operator( )( dex::index::indexChunk *chunk ) const;
+				dex::queryCompiler::matchedDocuments *operator( )( dex::index::indexChunk *chunk ) const;
 				dex::string getQuery( ) const;
+				bool isValid( ) const;
 			};
 
 		class parser

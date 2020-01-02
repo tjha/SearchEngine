@@ -5,10 +5,12 @@
 // 2019-12-31: Refactored code: jasina + combsc
 // 2019-12-11: Init Commit: combsc
 
-#ifndef DEX_RANKER_OBJECTS
-#define DEX_RANKER_OBJECTS
+#ifndef DEX_RANKER
+#define DEX_RANKER
 
+#include <pthread.h>
 #include "constraintSolver/constraintSolver.hpp"
+#include "queryCompiler/parser.hpp"
 #include "indexer/index.hpp"
 #include "utils/url.hpp"
 #include "utils/utility.hpp"
@@ -23,14 +25,7 @@ namespace dex
 		class dynamicRanker;
 		class ranker;
 
-		struct matchedDocuments
-			{
-			dex::vector < dex::string > flattenedQuery;
-			dex::constraintSolver::ISR *matchingDocumentISR;
-			dex::index::indexChunk *chunk;
-			dex::vector < bool > emphasizedWords;
-			};
-
+		// What is returned after scoring documents
 		struct searchResult
 			{
 			dex::Url url;
@@ -38,9 +33,11 @@ namespace dex
 			double score;
 			};
 
-		struct queryRequest
+		// All the information necessary for scoring documents in a chunk
+		struct scoreRequest
 			{
-			dex::string query;
+			dex::queryCompiler::matchedDocumentsGenerator *generatorPointer;
+			pthread_mutex_t *generatorLockPointer;
 			dex::index::indexChunk *chunkPointer;
 			dex::ranker::ranker *rankerPointer;
 			bool printInfo;
@@ -50,8 +47,11 @@ namespace dex
 			{
 			private:
 				// pair of < maximum length of title, score awarded to title >
+				// for example: { { 10, 50 }, { 25, 15 } }
+				// means that any title with length 10 or fewer gets a score of 50
+				// any title between 11 and 25 gets a score of 15
 				dex::vector < dex::pair < size_t, double > > titleWeights;
-				// score weighting for URL
+				// increase to make the staticUrl scoring higher
 				double urlWeight;
 
 			public:
@@ -65,10 +65,14 @@ namespace dex
 		class dynamicRanker
 			{
 			private:
+				// used to prevent spamming, set a cap on how many points a document can get for spans found
 				double maxBodySpanScore;
 				double maxTitleSpanScore;
+				// double for the weighting applied to emphasized words in bag of words scoring
 				double emphasizedWordWeight;
+				// used to prevent spamming, set a cap on how many points a document can get for bagOfWords scoring
 				double maxBagOfWordsScore;
+				// increase this to increase the relevance of bagOfWords scoring
 				double wordsWeight;
 
 			public:
@@ -92,9 +96,6 @@ namespace dex
 				// { 3, 2, 1, 0 }
 				double kendallsTau( const dex::vector < size_t > &ordering ) const;
 
-				double scoreBodySpan( size_t queryLength, size_t spanLength, double tau ) const;
-				double scoreTitleSpan( size_t queryLength, size_t spanLength, double tau ) const;
-
 				// Get the spans that occur in each document for the ISRs passed in
 				// pair corresponds to span size found along with the kendall tau coefficient associated
 				// with the ordering of the span.
@@ -104,6 +105,9 @@ namespace dex
 						constraintSolver::ISR *matching,
 						constraintSolver::endOfDocumentISR *ends,
 						const vector < vector < size_t > > &wordCount ) const;
+
+				double scoreBodySpan( size_t queryLength, size_t spanLength, double tau ) const;
+				double scoreTitleSpan( size_t queryLength, size_t spanLength, double tau ) const;
 
 				// Returns bag of words scoring of the number of words in the given document
 				double scoreBagOfWords(
@@ -151,14 +155,16 @@ namespace dex
 
 				// titles and urls act as extra return values
 				pair < vector < double >, int > scoreDocuments(
-					matchedDocuments *documents,
+					dex::queryCompiler::matchedDocuments *documents,
 					constraintSolver::endOfDocumentISR *ends,
 					vector < dex::string > &titles,
 					vector < dex::Url > &urls,
 					bool printInfo = true ) const;
 			};
 
-		void *parseQueryScoreDocuments( void *args );
+		// When given a scoreRequest, search a chunk for all matching documents and return their searchResult objects
+		void *findAndScoreDocuments( void *args );
+		// Returns the N highest scoring documents in our index for a given query
 		dex::pair < dex::vector < dex::ranker::searchResult >, int > getTopN(
 				size_t n, dex::string query, dex::ranker::ranker *rankerPointer,
 				dex::vector < dex::index::indexChunk * > chunkPointers, bool printInfo = false );

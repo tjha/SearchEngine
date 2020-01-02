@@ -1,6 +1,7 @@
 // ranker.cpp
 // This ranks the stuff
 
+// 2020-01-02: Cleaned up memory usage when dealing with threads, fixed topN: combsc
 // 2020-01-01: Got code working using get( ), made function for getting documentInfo
 //             moved maxNumSpans to dynamicScores instead of getDesiredSpans, add kendallTau,
 //             add scoreBodySpan and scoreTitleSpan: combsc
@@ -144,6 +145,7 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDocumentIn
 		dex::vector < dex::string > &documentTitles,
 		dex::vector < dex::Url > &documentUrls ) const
 	{
+	// Initialize values needed for searching through the documents
 	documentTitles.clear( );
 	documentUrls.clear( );
 	size_t isrCount = isrs.size( );
@@ -169,6 +171,7 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDocumentIn
 				isrs[ isrIndex ]->next( );
 				}
 			}
+		// get the wordCount, title, and url of the document
 		wordCount.pushBack( currentWordCount );
 		if ( chunk )
 			{
@@ -235,6 +238,7 @@ dex::vector < dex::vector < dex::pair < size_t, double > > > dex::ranker::dynami
 	ends->seek( endDocument );
 	size_t documentNumber = 0;
 
+	// search through each document for spans
 	while ( endDocument != dex::constraintSolver::ISR::npos )
 		{
 		beginDocument = endDocument - ends->documentSize( ) + 1;
@@ -247,15 +251,16 @@ dex::vector < dex::vector < dex::pair < size_t, double > > > dex::ranker::dynami
 			if ( wordCount[ documentNumber ][ index ] < wordCount[ documentNumber ][ rarest ] )
 				rarest = index;
 
+		// position all ISRs to the front of this document
 		for ( size_t index = 0;  index < isrCount;  ++index )
 			{
 			previous[ index ] = isrs[ index ]->seek( beginDocument );
 			if ( index != rarest )
 				isrs[ index ]->next( );
 			}
-
-		// Should be setup such that ISR is one past previous.
 		dex::vector < size_t > closestLocations( isrCount );
+
+		// find a span for each iteration of the rarest word in this document
 		while ( isrs[ rarest ]->get( ) < endDocument )
 			{
 			closestLocations[ rarest ] = isrs[ rarest ]->get( );
@@ -386,6 +391,7 @@ dex::vector < double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector
 			wordCount );
 	dex::vector < double > bodySpanScores;
 
+	// Score body spans
 	for ( size_t i = 0;  i < bodySpans.size( );  ++i )
 		{
 		double bodySpanScore = 0;
@@ -400,6 +406,7 @@ dex::vector < double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector
 			}
 		}
 
+	// bag of word scoring
 	dex::vector < double > dynamicWordScores;
 
 	size_t beginDocument = 0;
@@ -416,7 +423,8 @@ dex::vector < double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector
 		endDocument = matching->next( );
 		}
 
-	wordCount.clear( );
+	// score titleSpans
+	wordCount = getDocumentInfo( titleISRs, matching, ends, nullptr, titles, urls );
 	dex::vector < dex::vector < size_t > > titleWordCount;
 	dex::vector < dex::vector < dex::pair < size_t, double > > > titleSpans = getDesiredSpans( titleISRs, matching, ends,
 			wordCount );
@@ -446,7 +454,7 @@ dex::vector < double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector
 	}
 
 // returns a pair. First is the scores. second is error code. if error code is -1, you messed up.
-dex::pair < dex::vector < double >, int > dex::ranker::ranker::scoreDocuments( dex::ranker::matchedDocuments *documents,
+dex::pair < dex::vector < double >, int > dex::ranker::ranker::scoreDocuments( dex::queryCompiler::matchedDocuments *documents,
 		dex::constraintSolver::endOfDocumentISR *ends, dex::vector < dex::string > &titles, dex::vector < dex::Url > &urls,
 		bool printInfo ) const
 	{
@@ -476,50 +484,48 @@ dex::pair < dex::vector < double >, int > dex::ranker::ranker::scoreDocuments( d
 	return { totalScores, 0 };
 	}
 
-void *dex::ranker::parseQueryScoreDocuments( void *args )
+void *dex::ranker::findAndScoreDocuments( void *args )
 	{
-		dex::ranker::queryRequest queryRequest = *( ( dex::ranker::queryRequest * ) args );
-		dex::queryCompiler::parser parser;
-		dex::queryCompiler::matchedDocumentsGenerator generator = parser.parse( queryRequest.query );
-		dex::ranker::matchedDocuments *documents = generator( queryRequest.chunkPointer );
-		dex::ranker::ranker *rankerPointer = queryRequest.rankerPointer;
-		bool printInfo = queryRequest.printInfo;
+		dex::ranker::scoreRequest request = *( ( dex::ranker::scoreRequest * ) args );
+		// Find the matched documents using the generator passed in
+		pthread_mutex_lock( request.generatorLockPointer );
+		dex::queryCompiler::matchedDocuments *documents = request.generatorPointer->operator( )( request.chunkPointer );
+		pthread_mutex_unlock( request.generatorLockPointer );
+		dex::ranker::ranker *rankerPointer = request.rankerPointer;
+		bool printInfo = request.printInfo;
 
 		dex::pair < dex::vector < dex::ranker::searchResult >, int > *searchResults =
 				new dex::pair < dex::vector < dex::ranker::searchResult >, int >( );
-		// need to get the end ISR from the chunk
 		if ( !documents )
 			{
 			*searchResults = { { }, -1 };
 			return reinterpret_cast < void * >( searchResults );
 			}
+		// build the endISR from the index chunk
 		dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr =
 				new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents->chunk, "" );
 		dex::vector < dex::string > titles;
 		dex::vector < dex::Url > urls;
 		dex::pair < dex::vector < double >, int > scoresPair = rankerPointer->scoreDocuments( documents, eodisr,
 		titles, urls, printInfo );
-		if ( scoresPair.second == -1 )
-			{
-			*searchResults = { { }, -1 };
-			return reinterpret_cast < void * >( searchResults );
-			}
-		dex::vector < double > scores = scoresPair.first;
-		// Now that we're done with these ISRs we delete them
+		// Now that we're done with the matched documents, delete them
 		if ( documents )
 			{
 			if ( documents->matchingDocumentISR )
 				delete documents->matchingDocumentISR;
 			delete documents;
 			}
+		// Done with the endISR so delete it
 		if ( eodisr )
 			delete eodisr;
-		// We will be receiving the things in matched documents!
-		if ( scores.size( ) != titles.size( ) || scores.size( ) != urls.size( ) )
+
+		if ( scoresPair.second == -1 )
 			{
-			std::cerr << "Sizes of urls, titles, and scores don't match." << std::endl;
-			throw dex::invalidArgumentException( );
+			*searchResults = { { }, -1 };
+			return reinterpret_cast < void * >( searchResults );
 			}
+		dex::vector < double > scores = scoresPair.first;
+
 		searchResults->second = 0;
 		for ( size_t index = 0;  index < scores.size( );  ++index )
 			{
@@ -529,61 +535,72 @@ void *dex::ranker::parseQueryScoreDocuments( void *args )
 		return reinterpret_cast < void * >( searchResults );
 	}
 
-// second is error, if -1 there was a bad query.
 dex::pair < dex::vector < dex::ranker::searchResult >, int > dex::ranker::getTopN( size_t n, dex::string query, dex::ranker::ranker *rankerPointer,
 dex::vector < dex::index::indexChunk * > chunkPointers, bool printInfo )
 	{
-		dex::vector < dex::ranker::searchResult > results;
-		results.reserve( n );
-		dex::vector < double > scores;
-		dex::vector < dex::ranker::queryRequest > requests;
-		requests.resize( chunkPointers.size( ) );
+	// Parse query passed in
+	dex::queryCompiler::parser parser;
+	dex::queryCompiler::matchedDocumentsGenerator generator = parser.parse( query );
+	if ( !generator.isValid( ) )
+		return { { }, -1 };
 
-		pthread_t *workerThreads = new pthread_t[ chunkPointers.size( ) ];
-		for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
-			{
-			requests[ index ].query = query;
-			requests[ index ].chunkPointer = chunkPointers[ index ];
-			requests[ index ].rankerPointer = rankerPointer;
-			requests[ index ].printInfo = printInfo;
-			pthread_create( &workerThreads[ index ], nullptr, dex::ranker::parseQueryScoreDocuments,
-					( void * ) &requests[ index ] );
-			}
+	// Build objects needed to return the topN searchResult objects
+	pthread_t *workerThreads = new pthread_t[ chunkPointers.size( ) ];
+	pthread_mutex_t generatorLock = PTHREAD_MUTEX_INITIALIZER;
+	dex::vector < dex::ranker::searchResult > results;
+	results.reserve( n );
+	dex::vector < double > scores;
+	dex::vector < dex::ranker::scoreRequest > requests;
+	requests.resize( chunkPointers.size( ) );
+	for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+		{
+		// build our scoreRequest object and make a thread that scores documents
+		requests[ index ].generatorPointer = &generator;
+		requests[ index ].generatorLockPointer = &generatorLock;
+		requests[ index ].chunkPointer = chunkPointers[ index ];
+		requests[ index ].rankerPointer = rankerPointer;
+		requests[ index ].printInfo = printInfo;
+		pthread_create( &workerThreads[ index ], nullptr, dex::ranker::findAndScoreDocuments,
+				( void * ) &requests[ index ] );
+		}
 
-		for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
-			{
-			void *returnValue;
-			pthread_join( workerThreads[ index ], &returnValue );
-			dex::pair < dex::vector < dex::ranker::searchResult >, int > *returnedResults =
-					( dex::pair < dex::vector < dex::ranker::searchResult >, int > * ) returnValue;
-			// If the query results in an error, propogate up.
-			if ( returnedResults->second == -1 )
+	bool errorReturned = false;
+	for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+		{
+		void *returnValue;
+		pthread_join( workerThreads[ index ], &returnValue );
+		dex::pair < dex::vector < dex::ranker::searchResult >, int > *returnedResults =
+				( dex::pair < dex::vector < dex::ranker::searchResult >, int > * ) returnValue;
+		// If the query results in an error, propogate up.
+		if ( returnedResults->second == -1 )
+			errorReturned = true;
+		// Otherwise, add the results from this index chunk to the results and scores vectors
+		else
+			for ( size_t index = 0;  index < returnedResults->first.size( );  ++index )
 				{
-				delete [ ] workerThreads;
-				return { { }, -1 };
+				results.pushBack( returnedResults->first[ index ] );
+				scores.pushBack( results[ index ].score );
 				}
-			// Otherwise, add the results from this index chunk to the results and scores vectors
-			else
-				for ( size_t index = 0;  index < returnedResults->first.size( );  ++index )
-					{
-					results.pushBack( returnedResults->first[ index ] );
-					scores.pushBack( results[ index ].score );
-					}
-			}
-
-		dex::documentInfo **topN, *p;
-		dex::vector< dex::ranker::searchResult > topDocuments;
-
-		topN = findTopN( scores, n );
-
-		for ( size_t index = 0;  index < n && ( p = topN[ index ] );  index++ )
-			{
-			topDocuments.pushBack( results[ p->documentIndex ] );
-			if ( printInfo )
-				std::cout << results[ p->documentIndex ].score << "\t" << results[ p->documentIndex ].url.completeUrl( ) << "\t"
-						<< results[ p->documentIndex ].title << "\n";
-			}
-
+		delete returnedResults;
+		}
+	if ( errorReturned )
+		{
 		delete [ ] workerThreads;
-		return { results, 0 };
+		return { { }, -1 };
+		}
+
+	// Out of all the documents returned, find the topN documents
+	dex::documentInfo **topN, *p;
+	dex::vector< dex::ranker::searchResult > topDocuments;
+	topN = findTopN( scores, n );
+	for ( size_t index = 0;  index < n && ( p = topN[ index ] );  index++ )
+		{
+		topDocuments.pushBack( results[ p->documentIndex ] );
+		if ( printInfo )
+			std::cout << results[ p->documentIndex ].score << "\t" << results[ p->documentIndex ].url.completeUrl( ) << "\t"
+					<< results[ p->documentIndex ].title << "\n";
+		}
+
+	delete [ ] workerThreads;
+	return { topDocuments, 0 };
 	}
