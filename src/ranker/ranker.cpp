@@ -162,6 +162,7 @@ dex::vector < dex::vector < size_t > > dex::ranker::dynamicRanker::getDocumentIn
 			if ( isrs[ isrIndex ]->get( ) < beginDocument || isrs[ isrIndex ]->get( ) == dex::constraintSolver::ISR::npos )
 				isrs[ isrIndex ]->seek( beginDocument );
 
+			// Count the occurances for the word in this document
 			while ( isrs[ isrIndex ]->get( ) < endDocument )
 				{
 				++currentWordCount[ isrIndex ];
@@ -187,7 +188,7 @@ double dex::ranker::dynamicRanker::kendallsTau( const dex::vector < size_t > &or
 	for ( size_t left = 0;  left < ordering.size( ) - 1;  ++left )
 		for ( size_t right = left + 1;  right < ordering.size( );  ++right )
 			{
-			if ( ordering[ left ] < ordering [ right ] )
+			if ( ordering[ left ] < ordering[ right ] )
 				numOrderedPairs++;
 			else
 				numUnorderedPairs++;
@@ -203,7 +204,7 @@ double dex::ranker::dynamicRanker::scoreBodySpan( size_t queryLength, size_t spa
 	// The higher the tauWeight, the higher the score
 	// The shorter our span, the higher the score
 	// very rudamentary scoring function, really just for compiling right now.
-	return tauWeight / ( spanProportion );
+	return tauWeight / spanProportion;
 	}
 
 double dex::ranker::dynamicRanker::scoreTitleSpan( size_t queryLength, size_t spanLength, double tau) const
@@ -214,29 +215,26 @@ double dex::ranker::dynamicRanker::scoreTitleSpan( size_t queryLength, size_t sp
 	// The higher the tauWeight, the higher the score
 	// The shorter our span, the higher the score
 	// very rudamentary scoring function, really just for compiling right now.
-	return 10 * tauWeight / ( spanProportion );
+	return 10 * tauWeight / spanProportion;
 	}
 
 
 dex::vector < dex::vector < dex::pair < size_t, double > > > dex::ranker::dynamicRanker::getDesiredSpans(
-		// Body ISRs are assumed to be pointing to the beginning of the document.
 		dex::vector < dex::constraintSolver::ISR * > &isrs,
 		dex::constraintSolver::ISR *matching,
 		dex::constraintSolver::endOfDocumentISR *ends,
-		// Because we need to run this on both title and body words, we need to include the
-		// heuristics and maxNumSpans variables.
 		const dex::vector < dex::vector < size_t > > &wordCount ) const
 	{
 	dex::vector < dex::vector < dex::pair < size_t, double > > > documentSpans;
 	size_t isrCount = isrs.size( );
 	size_t endDocument;
 	size_t beginDocument;
-	// find spans
 	dex::vector < size_t > previous( isrCount, 0 );
+
 	endDocument = matching->seek( 0 );
 	ends->seek( endDocument );
-
 	size_t documentNumber = 0;
+
 	while ( endDocument != dex::constraintSolver::ISR::npos )
 		{
 		beginDocument = endDocument - ends->documentSize( ) + 1;
@@ -301,8 +299,8 @@ dex::vector < dex::vector < dex::pair < size_t, double > > > dex::ranker::dynami
 							}
 						}
 					else
+						// When both ISR and previous are in the document
 						{
-						// If both ISR and previous are in the document
 						if ( desiredPosition + desiredPosition < isrs[ index ]->get( ) + previous[ index ] )
 							{
 							closest = previous[ index ];
@@ -312,7 +310,6 @@ dex::vector < dex::vector < dex::pair < size_t, double > > > dex::ranker::dynami
 							closest = isrs[ index ]->get( );
 							}
 						}
-
 					closestLocations[ index ] = closest;
 					}
 				}
@@ -331,7 +328,7 @@ dex::vector < dex::vector < dex::pair < size_t, double > > > dex::ranker::dynami
 					min = closestLocations[ index ];
 					}
 				}
-			// If max is greater than or equal to end document, one of the words is not in our document.
+			// If max >= end document or min < beginDoc, one of the words is not in our document.
 			// Therefore the span should be npos.
 			size_t span;
 			double tau;

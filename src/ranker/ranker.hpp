@@ -65,7 +65,6 @@ namespace dex
 		class dynamicRanker
 			{
 			private:
-				// pair of < inclusive upper bound on span range, score weighting of that range >
 				double maxBodySpanScore;
 				double maxTitleSpanScore;
 				double emphasizedWordWeight;
@@ -93,7 +92,6 @@ namespace dex
 				// { 3, 2, 1, 0 }
 				double kendallsTau( const dex::vector < size_t > &ordering ) const;
 
-				// Score the span passed in
 				double scoreBodySpan( size_t queryLength, size_t spanLength, double tau ) const;
 				double scoreTitleSpan( size_t queryLength, size_t spanLength, double tau ) const;
 
