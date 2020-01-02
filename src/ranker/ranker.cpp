@@ -353,7 +353,7 @@ dex::vector < dex::vector < dex::pair < size_t, double > > > dex::ranker::dynami
 	return documentSpans;
 	}
 
-double dex::ranker::dynamicRanker::dynamicScoreWords( const dex::vector < size_t > &wordCount,
+double dex::ranker::dynamicRanker::scoreBagOfWords( const dex::vector < size_t > &wordCount,
 		const size_t documentLength, const dex::vector < bool > &emphasized ) const
 	{
 	double score = 0;
@@ -406,11 +406,11 @@ dex::vector < double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector
 	size_t endDocument = matching->seek( 0 );
 	for ( size_t i = 0;  i < wordCount.size( );  ++i )
 		{
-		double dynamicWordScore = dynamicScoreWords( wordCount[ i ], endDocument - beginDocument, emphasized );
+		double dynamicWordScore = scoreBagOfWords( wordCount[ i ], endDocument - beginDocument, emphasized );
 		dynamicWordScores.pushBack( dynamicWordScore );
 		if ( printInfo )
 			{
-			std::cout << "Index: " << i << ", Dynamic Word Score: " << dynamicWordScore << std::endl;
+			std::cout << "Index: " << i << ", Bag of Words Score: " << dynamicWordScore << std::endl;
 			}
 		beginDocument = endDocument;
 		endDocument = matching->next( );

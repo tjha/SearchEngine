@@ -106,7 +106,7 @@ namespace dex
 						const vector < vector < size_t > > &wordCount ) const;
 
 				// Returns bag of words scoring of the number of words in the given document
-				double dynamicScoreWords(
+				double scoreBagOfWords(
 						// Number of each query word for a given document
 						const vector < size_t > &wordCount,
 						const size_t documentLength,

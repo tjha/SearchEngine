@@ -632,10 +632,7 @@ TEST_CASE( "scoring" )
 		dex::vector < dex::string > titles;
 		dex::vector < dex::Url > urls;
 		dex::vector < double > dynamicScores = judge.rankerDynamic.getDynamicScores( isrs, titleisrs, &matchingISR, &endisr, nullptr,
-				emphasized, titles, urls, true );
-		std::cout << dynamicScores[ 0 ] << std::endl;
-		std::cout << dynamicScores[ 1 ] << std::endl;
-		std::cout << dynamicScores[ 2 ] << std::endl;
+				emphasized, titles, urls );
 		REQUIRE( dynamicScores[ 0 ] > dynamicScores[ 1 ] );
 		REQUIRE( dynamicScores[ 1 ] > dynamicScores[ 2 ] );
 		}
