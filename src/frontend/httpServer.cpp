@@ -154,8 +154,8 @@ void *Talk( void *p )
 		}
 
 	// ranker stuff
-	dex::ranker rankerObject( indexChunkObjects );
-	dex::pair < dex::vector < dex::searchResult >, int > searchResults = rankerObject.getTopN( 10, query );
+	dex::ranker rankerObject;
+	dex::pair < dex::vector < dex::searchResult >, int > searchResults = dex::getTopN( 10, query, &rankerObject, indexChunkObjects );
 	if ( searchResults.second == -1 )
 		{
 		// THE QUERY PASSED IN WAS BAD, DO SOMETHING

@@ -339,12 +339,12 @@ TEST_CASE( "encode and decode", "[utf]" )
 		REQUIRE( s == decoder < string >( )( array ) );
 
 		vector < string > words = {
-			// string( 1 << 17, '1' ),
-			string( 1 << 4, 203 ),
-			// string( 1 << 13, 'a' ),
-			// string( 1 << 12, 1 ),
-			// string( 1 << 3, 'r' ),
-			// string( 1 << 14, 'u' )
+			string( 1 << 17, '1' ),
+			string( 1 << 4, static_cast < char >( 203 ) ),
+			string( 1 << 13, 'a' ),
+			string( 1 << 12, 1 ),
+			string( 1 << 3, 'r' ),
+			string( 1 << 14, 'u' )
 		};
 
 		encoder < string > stringEncoder;
