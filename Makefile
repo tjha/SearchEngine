@@ -51,7 +51,7 @@ test: $(TEST_EXECUTABLES)
 	@for file in $^; do\
 		echo ./$$file;\
 		./$$file;\
-		if test $$? -eq 1; then\
+		if test $$? -ne 0; then\
 			exit 1;\
 		fi;\
 	done;
