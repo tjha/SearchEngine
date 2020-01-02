@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <fcntl.h>
+#include <iostream>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -19,8 +20,6 @@
 #include "utils/utility.hpp"
 #include "utils/vector.hpp"
 
-// TODO: remove this
-#include <iostream>
 
 // postsChunk
 dex::index::indexChunk::postsChunk::postsChunk( ) : nextPostsChunkOffset( 0 ), currentPostOffset( 0 )
@@ -53,11 +52,6 @@ dex::index::indexChunk::postsMetadata::postsMetadata( size_t chunkOffset ) :
 bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk *postsChunkArray )
 	{
 	size_t delta = location - lastLocation;
-	if ( lastPostsChunkOffset > ( 1L << 19 ) - 1 )
-		{
-		std::cout << "not good! lastPostsChunkOffset: " << lastPostsChunkOffset << "\n";
-		// exit(1);
-		}
 	size_t originalPostOffset = postsChunkArray[ lastPostsChunkOffset ].currentPostOffset;
 	bool successful = postsChunkArray[ lastPostsChunkOffset ].append( delta );
 
@@ -88,20 +82,14 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	if ( fileDescriptor == -1 )
 		throw dex::exception( );
 
-	std::cout << "Creating new indexChunk yo\n";
 	if ( initialize )
 		{
-		std::cout << "\tfrom scratch\n";
 		int result = lseek( fileDescriptor, fileSize - 1, SEEK_SET );
 		if ( result == -1 )
 			throw dex::exception( );
 		result = write( fileDescriptor, "", 1 );
 		if ( result == -1 )
 			throw dex::exception( );
-		}
-	else
-		{
-		std::cout << "\tfrom existing indexChunk\n";
 		}
 
 	filePointer = mmap( nullptr, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0 );
@@ -135,32 +123,22 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		postsChunkArray[ 0 ] = postsChunk( );
 		postsMetadataArray[ 0 ] = postsMetadata( 0 );
 		dictionary[ "" ] = 0;
-		std::cout << "\tlocation: " << *location << "\n";
 		}
 	else
 		{
-		std::cout << "reading indexChunk from file\n";
-		std::cout << "filepointer: " << filePointer << "\n";
-		std::cout << "postsChunkCount: " << postsChunkCount << "\n*postsChunkCount" << *postsChunkCount << "\n";
 		urlsToOffsets = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedURLsToOffsets );
 		offsetsToEndOfDocumentMetadatas = dex::utf::decoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
 				( encodedOffsetsToEndOfDocumentMetadatas );
 		dictionary = dex::utf::decoder < dex::unorderedMap < dex::string, size_t > >( )( encodedDictionary );
-		std::cout << "number of unqiue words: " << dictionary.size( ) << "\n";
-		std::cout << "number of URLs: " << urlsToOffsets.size( ) << "\n";
 		}
 	}
 
 dex::index::indexChunk::~indexChunk( )
 	{
-	std::cout << "urlsToOffsets.size( ) == " << urlsToOffsets.size( ) << std::endl;
-	std::cout << "offsetsToEndOfDocumentMetadatas.size( ) == " << offsetsToEndOfDocumentMetadatas.size( ) << std::endl;
 	dex::utf::encoder < dex::unorderedMap < dex::string, size_t > >( )( urlsToOffsets, encodedURLsToOffsets );
 	dex::utf::encoder < dex::unorderedMap < size_t, endOfDocumentMetadataType > >( )
 			( offsetsToEndOfDocumentMetadatas, encodedOffsetsToEndOfDocumentMetadatas );
 	dex::utf::encoder < dex::unorderedMap < dex::string, size_t > >( )( dictionary, encodedDictionary );
-
-	std::cout << "closing indexChunk!\n" << "\tnumberOfDocuments: " << urlsToOffsets.size( ) << "\n\tpostsChunkCount: " << *postsChunkCount << "\n\tdictionary.size( ): " << dictionary.size( ) << "\n";
 
 	msync( filePointer, fileSize, MS_SYNC );
 	munmap( filePointer, fileSize );

@@ -325,9 +325,9 @@ TEST_CASE( "ISR functions on multiple documents" )
 
 		hamiltonISR = indexChunk::indexStreamReader( &initializingIndexChunk, "#hamilton" );
 		REQUIRE( hamiltonISR.next( ) == 8 );
-		REQUIRE( hamiltonISR.next( ) == 26 );
-		REQUIRE( hamiltonISR.next( ) == 31);
-		REQUIRE( hamiltonISR.next( ) == 41 );
+		REQUIRE( hamiltonISR.next( ) == 25 );
+		REQUIRE( hamiltonISR.next( ) == 30);
+		REQUIRE( hamiltonISR.next( ) == 40 );
 
 		close( fd );
 		}
