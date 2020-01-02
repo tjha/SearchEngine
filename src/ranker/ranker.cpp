@@ -2,7 +2,8 @@
 // This ranks the stuff
 
 // 2020-01-01: Got code working using get( ), made function for getting documentInfo
-//             moved maxNumSpans to dynamicScores instead of getDesiredSpans, add kendallTau: combsc
+//             moved maxNumSpans to dynamicScores instead of getDesiredSpans, add kendallTau,
+//             add scoreBodySpan and scoreTitleSpan: combsc
 // 2019-12-31: Refactored code: jasina + combsc
 // 2019-12-29: Updated the parser interface, fixed documentSize bug: combsc
 // 2019-12-28: Remove bad debug statements, fixed parseQueryScoreDocuments, moved topN out of ranker: combsc
@@ -202,7 +203,7 @@ double dex::ranker::dynamicRanker::scoreBodySpan( size_t queryLength, size_t spa
 	// The higher the tauWeight, the higher the score
 	// The shorter our span, the higher the score
 	// very rudamentary scoring function, really just for compiling right now.
-	return tauWeight / ( 5 - spanProportion );
+	return tauWeight / ( spanProportion );
 	}
 
 double dex::ranker::dynamicRanker::scoreTitleSpan( size_t queryLength, size_t spanLength, double tau) const
@@ -213,7 +214,7 @@ double dex::ranker::dynamicRanker::scoreTitleSpan( size_t queryLength, size_t sp
 	// The higher the tauWeight, the higher the score
 	// The shorter our span, the higher the score
 	// very rudamentary scoring function, really just for compiling right now.
-	return 10 * tauWeight / ( 5 - spanProportion );
+	return 10 * tauWeight / ( spanProportion );
 	}
 
 

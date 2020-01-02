@@ -1,7 +1,7 @@
 // ranker.hpp
 // this ranks the stuff
 //
-// 2020-01-01: Add kendallsTau function: combsc
+// 2020-01-01: Add kendallsTau function, scoring functions: combsc
 // 2019-12-31: Refactored code: jasina + combsc
 // 2019-12-11: Init Commit: combsc
 
