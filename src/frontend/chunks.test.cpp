@@ -58,7 +58,7 @@ int main( int argc, char **argv )
 		dex::string url = "hamiltoncshell.com";
 		dex::vector < dex::string > title = { "hamilton", "c", "shell" };
 		dex::string titleString = "Hamilton C Shell 2012";
-		dex::vector < dex::string > body = { "some", "junk", "and", "more", "junk" };
+		dex::vector < dex::string > body = { "some", "junk", "and", "more", "junk", "and", "junk" };
 
 		initializingIndexChunk.addDocument( url, title, titleString, body );
 		}
@@ -68,9 +68,13 @@ int main( int argc, char **argv )
 	close( fd );
 
 	dex::index::indexChunk *chunkPointer = indexChunkPointers.front( );
-	dex::index::indexChunk::indexStreamReader andISR = dex::index::indexChunk::indexStreamReader( chunkPointer );
-	assert( andISR.next( ) == 2 );
-	assert( andISR.next( ) == 5 );
+	dex::index::indexChunk::indexStreamReader andISR = dex::index::indexChunk::indexStreamReader( chunkPointer, "and" );
+	size_t next = andISR.next( );
+	std::cout << next << std::endl;
+	assert( next == 2 );
+	next = andISR.next( );
+	std::cout << next << std::endl;
+	assert( next == 5 );
 	assert( andISR.next( ) == static_cast < size_t >( -1 ) );
 
 
@@ -83,8 +87,15 @@ int main( int argc, char **argv )
 	dex::queryCompiler::matchedDocuments *testdocs = mdg( indexChunkPointers.front( ) );
 	std::cout << "Asserting that the matchingDocumentsISR for 'junk' is not empty" << std::endl;
 	size_t isrLength = 0;
-	while( testdocs->matchingDocumentISR->next( ) != dex::constraintSolver::ISR::npos )
-		++isrLength;
+	assert( testdocs );
+	assert( testdocs->matchingDocumentISR );
+	next = testdocs->matchingDocumentISR->next( );
+	while( next != dex::constraintSolver::ISR::npos )
+		{
+		std::cout << next << std::endl;
+		next = testdocs->matchingDocumentISR->next( );
+		isrLength++;
+		}
 	delete testdocs->matchingDocumentISR;
 	delete testdocs;
 	assert( isrLength > 0 );
@@ -95,8 +106,15 @@ int main( int argc, char **argv )
 	std::cout << "Asserting that the matchingDocumentsISR for 'qubfiqebfoqbgoqbe' is empty" << std::endl;
 	isrLength = 0;
 	isrLength = 0;
-	while( testdocs->matchingDocumentISR->next( ) != dex::constraintSolver::ISR::npos )
-		++isrLength;
+	assert( testdocs );
+        assert( testdocs->matchingDocumentISR );
+	next = testdocs->matchingDocumentISR->next( );
+        while( next != dex::constraintSolver::ISR::npos )
+                {
+                std::cout << next << std::endl;
+                next = testdocs->matchingDocumentISR->next( );
+                isrLength++;
+                }
 	delete testdocs->matchingDocumentISR;
 	delete testdocs;
 	assert( isrLength == 0 );
