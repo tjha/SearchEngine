@@ -87,6 +87,12 @@ indexerDriver: $(SOURCE_DIR)/indexer/driver.o $(SOURCE_DIR)/indexer/index.o
 	mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/indexerDriver.exe
 
+PORT=8000
+server: $(SOURCE_DIR)/frontend/httpServer.cpp
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/server.exe
+	./$(BUILD_DIR)/server.exe $(EXECUTABLE)
+
 printOS:
 	$(info Your OS is '$(UNAME_S)')
 

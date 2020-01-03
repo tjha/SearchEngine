@@ -27,8 +27,10 @@ dex::vector< dex::searchResult > tmpSearchResults =
 	{ "http://www.nicolehamilton.com/", "#1 teacher" }
 	};
 
-//  Multipurpose Internet Mail Extensions (MIME) types
+// Global variables for ranker
+dex::vector < dex::index::indexChunk * > indexChunkObjects;
 
+//  Multipurpose Internet Mail Extensions (MIME) types
 struct MimetypeMap
 	{
 	const char *Extension,
@@ -212,9 +214,6 @@ void *Talk( void *p )
 	return nullptr;
 	}
 
-
-// Global variables for ranker
-dex::vector < dex::index::indexChunk * > indexChunkObjects;
 
 int main( int argc, char **argv )
 	{

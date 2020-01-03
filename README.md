@@ -56,6 +56,10 @@ Sanity Checks:
 
 ### Frontend
 
+The frontend is served on an http server that listens on the port number specified by a command line argument.
+
+`make server` builds `httpServer.cpp` and serves on port 8000 (defined in Makefile).
+
 ## Components
 
 ### Crawler
