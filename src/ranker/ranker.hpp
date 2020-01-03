@@ -11,7 +11,7 @@
 #include <pthread.h>
 #include "constraintSolver/constraintSolver.hpp"
 #include "queryCompiler/parser.hpp"
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "utils/url.hpp"
 #include "utils/utility.hpp"
 #include "utils/vector.hpp"

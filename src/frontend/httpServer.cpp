@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <stdio.h>
 
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "ranker/ranker.hpp"
 #include "utils/basicString.hpp"
 #include "utils/file.hpp"
@@ -117,7 +117,6 @@ void *Talk( void *p )
 
 		if ( path.substr( t + 8, pathEnd - t - 8 ) == "true" )
 			toggle = true;
-
 		path = "results.html";
 		}
 
@@ -161,7 +160,6 @@ void *Talk( void *p )
 		// THE QUERY PASSED IN WAS BAD, DO SOMETHING
 		return nullptr;
 		}
-
 	// TODO: populate webpage with content
 	std::cout << request << std::endl;
 
@@ -269,7 +267,6 @@ int main( int argc, char **argv )
 
 	// Create indexChunkObjects
 	// TODO: have Stephen take a look at this :)
-
 	dex::string indexChunkDirector = "../smallerIndexChunks/"; // Top directory of search
 	dex::string pattern = "_in.dex";
 	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirector, pattern );

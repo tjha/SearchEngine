@@ -320,7 +320,6 @@ void *worker( void *args )
 
 				addToCrawled( toCrawl );
 
-
 				dex::vector < dex::Url > links;
 				try
 					{

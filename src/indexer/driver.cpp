@@ -2,14 +2,14 @@
 //
 // 2019-12-11:	edited to call correct functions to index and use lexicoComp: jhirsh, loghead
 //             brought in dex::matchingFilenames, write statistics: combsc
-// 2019-12-10:	edits to attach to index.hpp functions: combsc, loghead
+// 2019-12-10:	edits to attach to indexer.hpp functions: combsc, loghead
 // 2019-12-08:	created index driver to read through directory: jhirsh
 //
 
 #include <dirent.h>
 #include <iostream>
 #include <time.h>
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "parser/parser.hpp"
 #include "utils/basicString.hpp"
 #include "utils/exception.hpp"
@@ -58,7 +58,6 @@ int main ( int argc, char ** argv )
 		}
 
 	dex::utf::decoder < dex::string > stringDecoder;
-
 	dex::vector < dex::string > existingIndexChunks = dex::matchingFilenames( outputFolder, "_in.dex");
 	int indexChunkCount = existingIndexChunks.size( );
 	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
@@ -69,7 +68,6 @@ int main ( int argc, char ** argv )
 	unsigned checkpoint = 100;
 	time_t start = time( nullptr );
 	int statisticsFileDescriptor = open( ( outputFolder + "statistics.txt").cStr( ), O_RDWR | O_CREAT, 0777 );
-
 	size_t totalDocumentsProcessed = 0;
 	size_t totalBytesProcessed = 0;
 	for ( unsigned index = 0;  index < toProcess.size( );  ++index )
@@ -81,7 +79,6 @@ int main ( int argc, char ** argv )
 		// Decode the current file
 		unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( fileName.cStr( ), 0 ) );
 		unsigned char *ptr = savedHtml;
-
 		size_t filesize = dex::getFileSize( fileName.cStr( ) );
 		while ( static_cast < size_t >( ptr - savedHtml ) < filesize )
 			{
@@ -102,7 +99,7 @@ int main ( int argc, char ** argv )
 					}
 
 				// TODO this should go in parser but didn't want to break dependent functionality
-				// TODO add default argument for anchorText in index.hpp
+				// TODO add default argument for anchorText in indexer.hpp
 				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{
@@ -160,7 +157,6 @@ int main ( int argc, char ** argv )
 			}
 		close( fileDescriptor );
 		}
-
 
 	}
 

@@ -23,7 +23,7 @@
 #include <cstddef>
 #include <pthread.h>
 #include "constraintSolver/constraintSolver.hpp"
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "queryCompiler/parser.hpp"
 #include "ranker/ranker.hpp"
 #include "ranker/topN.hpp"

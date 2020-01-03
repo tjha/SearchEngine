@@ -233,6 +233,7 @@ namespace dex
 		{
 		return anchors;
 		}
+	
 	vector < string > HTMLparser::ReturnTitle ( )
 		{
 		return title ;
