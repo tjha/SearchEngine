@@ -33,7 +33,7 @@ BUILD_SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.cpp')
 # .exe files corresponding to TEST_SOURCES. This is pretty contrived, but make wasn't playing nice otherwise
 ALL_TEST_EXECUTABLES :=\
 		$(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.exe,$(shell find $(SOURCE_DIR) -type f -name '*.test.cpp'))
-TESTS_TO_SKIP := $(BUILD_DIR)/indexer/index.test.exe $(BUILD_DIR)/crawler/crawler.test.exe
+TESTS_TO_SKIP := $(BUILD_DIR)/indexer/index.test.exe $(BUILD_DIR)/crawler/crawler.test.exe $(BUILD_DIR)/frontend/chunks.test.exe
 TEST_EXECUTABLES := $(patsubst $(SOURCE_DIR)/%,$(BUILD_DIR)/%.test.exe,$(case))
 ifndef $(case)
 	case := all
@@ -65,6 +65,12 @@ $(BUILD_DIR)/queryCompiler/queryCompiler.test.exe: $(BUILD_DIR)/queryCompiler/qu
 	$(CXX) $(CXXFLAGS) $^ -o $@;
 
 $(BUILD_DIR)/ranker/ranker.test.exe: $(BUILD_DIR)/ranker/ranker.test.o $(BUILD_DIR)/main.o\
+		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
+		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
+		$(BUILD_DIR)/indexer/index.o $(BUILD_DIR)/ranker/ranker.o
+	$(CXX) $(CXXFLAGS) $^ -o $@;
+
+$(BUILD_DIR)/frontend/chunks.test.exe: $(BUILD_DIR)/ranker/ranker.test.o $(BUILD_DIR)/main.o\
 		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
 		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
 		$(BUILD_DIR)/indexer/index.o $(BUILD_DIR)/ranker/ranker.o
