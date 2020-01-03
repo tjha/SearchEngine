@@ -19,10 +19,10 @@
 
 namespace dex
 	{
-	template < class Key >
+	template< class Key >
 	struct hash;
 
-	template < class Key, class Hash = dex::hash < Key > >
+	template< class Key, class Hash = dex::hash< Key > >
 	class unorderedSet
 		{
 		private:
@@ -108,16 +108,16 @@ namespace dex
 				insert( first, last );
 				}
 
-			unorderedSet( const unorderedSet < Key, Hash > &other )
+			unorderedSet( const unorderedSet< Key, Hash > &other )
 				{
 				table = nullptr;
-				unorderedSet < Key, Hash > temp( other.cbegin( ), other.cend( ), other.bucketCount( ), other.hasher );
+				unorderedSet< Key, Hash > temp( other.cbegin( ), other.cend( ), other.bucketCount( ), other.hasher );
 				swap( temp );
 				}
 
-			unorderedSet &operator=( const unorderedSet < Key, Hash > &other )
+			unorderedSet &operator=( const unorderedSet< Key, Hash > &other )
 				{
-				unorderedSet < Key, Hash > temp( other );
+				unorderedSet< Key, Hash > temp( other );
 				swap( temp );
 				return *this;
 				}
@@ -134,15 +134,15 @@ namespace dex
 				}
 
 		private:
-			template < bool isConst >
+			template< bool isConst >
 			class _iterator
 				{
 				private:
-					friend class unorderedSet < Key, Hash >;
+					friend class unorderedSet< Key, Hash >;
 
-					typedef typename dex::conditional < isConst, const unorderedSet < Key, Hash >,
-							unorderedSet < Key, Hash > >::type setType;
-					typedef typename dex::conditional < isConst, const Key, Key >::type datumType;
+					typedef typename dex::conditional< isConst, const unorderedSet< Key, Hash >,
+							unorderedSet< Key, Hash > >::type setType;
+					typedef typename dex::conditional< isConst, const Key, Key >::type datumType;
 
 					setType *set;
 					size_t position;
@@ -156,8 +156,8 @@ namespace dex
 						this->position = position;
 						}
 				public:
-					template < typename = typename dex::enableIf < isConst > >
-					_iterator( const _iterator < false > &other ) :
+					template< typename = typename dex::enableIf< isConst > >
+					_iterator( const _iterator< false > &other ) :
 							set( other.set ), position( other.position ) { }
 
 					friend bool operator==( const _iterator &a, const _iterator &b )
@@ -201,14 +201,14 @@ namespace dex
 						}
 				};
 
-			template < bool isConst >
-			void swap( _iterator < isConst > &a, _iterator < isConst > &b )
+			template< bool isConst >
+			void swap( _iterator< isConst > &a, _iterator< isConst > &b )
 				{
 				dex::swap( a.set, b.set );
 				dex::swap( a.position, b.position );
 				}
 		public:
-			typedef _iterator < false > iterator;
+			typedef _iterator< false > iterator;
 			iterator begin( )
 				{
 				return iterator( *this, 0 );
@@ -218,7 +218,7 @@ namespace dex
 				return iterator( *this, bucketCount( ) );
 				}
 
-			typedef _iterator < true > constIterator;
+			typedef _iterator< true > constIterator;
 			constIterator cbegin( ) const
 				{
 				return constIterator( *this, 0 );
@@ -297,7 +297,7 @@ namespace dex
 				erase( cbegin( ), cend( ) );
 				}
 
-			dex::pair < iterator, bool > insert( const Key &key )
+			dex::pair< iterator, bool > insert( const Key &key )
 				{
 				bool inserted = false;
 				size_t location = probe( key );
@@ -319,10 +319,10 @@ namespace dex
 						}
 					}
 
-				return dex::pair < iterator, bool >{ iterator( *this, location ), inserted };
+				return dex::pair< iterator, bool >{ iterator( *this, location ), inserted };
 				}
 
-			template < class InputIt >
+			template< class InputIt >
 			void insert( InputIt first, InputIt last )
 				{
 				for ( ;  first != last;  insert( *( first++ ) ) );
@@ -339,7 +339,7 @@ namespace dex
 			void rehash( size_t newSize )
 				{
 				// TODO: Maybe reuse precalculated hashes
-				swap( unorderedSet < Key, Hash > ( cbegin( ), cend( ), dex::max( newSize, size( ) * 2 ) ) );
+				swap( unorderedSet< Key, Hash > ( cbegin( ), cend( ), dex::max( newSize, size( ) * 2 ) ) );
 				}
 
 			void swap( unorderedSet &other )
@@ -370,8 +370,8 @@ namespace dex
 				}
 		};
 
-		template < class Key, class Hash >
-		void swap( unorderedSet < Key, Hash > &a, unorderedSet < Key, Hash > &b )
+		template< class Key, class Hash >
+		void swap( unorderedSet< Key, Hash > &a, unorderedSet< Key, Hash > &b )
 			{
 			a.swap( b );
 			}

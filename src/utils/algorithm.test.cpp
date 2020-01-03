@@ -13,7 +13,7 @@
 
 TEST_CASE( "test find" )
 	{
-	dex::vector < int > a;
+	dex::vector< int > a;
 	for ( int i = 0;  i != 10;  ++i )
 		a.pushBack( i );
 	REQUIRE( dex::find( a.begin( ), a.end( ), 0) == a.begin( ) );
@@ -24,7 +24,7 @@ TEST_CASE( "test find" )
 
 TEST_CASE( "test search" )
 	{
-	dex::vector < int > a, b;
+	dex::vector< int > a, b;
 	for ( int i = 0;  i != 10;  ++i )
 		a.pushBack( i % 5 );
 
@@ -51,7 +51,7 @@ TEST_CASE( "test search" )
 
 TEST_CASE( "test findEnd" )
 	{
-	dex::vector < int > a, b;
+	dex::vector< int > a, b;
 	for ( int i = 0;  i != 10;  ++i )
 		a.pushBack( i % 5 );
 
@@ -78,7 +78,7 @@ TEST_CASE( "test findEnd" )
 
 TEST_CASE( "test copy" )
 	{
-	dex::vector < int > a, b;
+	dex::vector< int > a, b;
 	b.resize( 20 );
 	for ( int i = 0;  i != 10;  ++i )
 		a.pushBack( i );
@@ -100,7 +100,7 @@ TEST_CASE( "test copy" )
 
 TEST_CASE( "test fill" )
 	{
-	dex::vector < int > a;
+	dex::vector< int > a;
 	for ( int i = 0;  i != 10;  ++i )
 		a.pushBack( i );
 	dex::fill( a.begin( ), a.end( ), 489 );
@@ -130,7 +130,7 @@ TEST_CASE( "test swap" )
 
 TEST_CASE( "test lexicographical compare" )
 	{
-	dex::vector < int > a, b;
+	dex::vector< int > a, b;
 	for ( int i = 0;  i != 10;  ++i )
 		a.pushBack( i % 5 );
 	for ( int i = 0;  i != 10;  ++i )
@@ -154,7 +154,7 @@ TEST_CASE( "test lexicographical compare" )
 
 TEST_CASE( "test lowerBound" )
 	{
-	dex::vector < int > a, b, c;
+	dex::vector< int > a, b, c;
 	for ( int number = 0;  number < 30;  ++number )
 		{
 		a.pushBack( number );

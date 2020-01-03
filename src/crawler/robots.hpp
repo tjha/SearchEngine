@@ -77,13 +77,13 @@ namespace dex
 
 			// Paths that are disallowed. All extensions on the paths within this set are
 			// also disallowed, unless explicitly allowed in allowedPaths.
-			dex::unorderedSet < dex::string > disallowedPaths { 10 };
+			dex::unorderedSet< dex::string > disallowedPaths { 10 };
 			// Paths that are exceptions to disallowed paths above. All extensions on the paths
 			// within this set are also allowed.
-			dex::unorderedSet < dex::string > allowedPaths { 10 };
+			dex::unorderedSet< dex::string > allowedPaths { 10 };
 			// This datastructure is for checking wildcard paths
-			dex::vector < dex::string > allowedWildcards;
-			dex::vector < dex::string > disallowedWildcards;
+			dex::vector< dex::string > allowedWildcards;
+			dex::vector< dex::string > disallowedWildcards;
 
 
 
@@ -260,19 +260,19 @@ namespace dex
 				}
 
 			// Set the disallowed paths for the domain
-			template < class InputIt >
+			template< class InputIt >
 			void setPathsDisallowed( const InputIt &begin, const InputIt &end )
 				{
 				disallowedPaths.clear( );
 				addPathsDisallowed( begin, end );
 				}
-			void setPathsDisallowed( const dex::unorderedSet < dex::string > &paths )
+			void setPathsDisallowed( const dex::unorderedSet< dex::string > &paths )
 				{
 				setPathsDisallowed( paths.cbegin( ), paths.cend( ) );
 				}
 
 			// Add paths to the disallowed paths for the domain
-			template < class InputIt >
+			template< class InputIt >
 			void addPathsDisallowed( const InputIt &begin, const InputIt &end )
 				{
 				for ( InputIt it = begin;  it != end;  ++it )
@@ -284,11 +284,11 @@ namespace dex
 					}
 
 				}
-			void addPathsDisallowed( const dex::unorderedSet < dex::string > &paths )
+			void addPathsDisallowed( const dex::unorderedSet< dex::string > &paths )
 				{
 				addPathsDisallowed( paths.cbegin( ), paths.cend( ) );
 				}
-			void addPathsDisallowed( const dex::vector < dex::string > &paths )
+			void addPathsDisallowed( const dex::vector< dex::string > &paths )
 				{
 				addPathsDisallowed( paths.cbegin( ), paths.cend( ) );
 				}
@@ -304,19 +304,19 @@ namespace dex
 				}
 
 			// Set the allowed paths for the domain
-			template < class InputIt >
+			template< class InputIt >
 			void setPathsAllowed( const InputIt &begin, const InputIt &end )
 				{
 				allowedPaths.clear( );
 				addPathsAllowed( begin, end );
 				}
-			void setPathsAllowed( const dex::unorderedSet < dex::string > &paths )
+			void setPathsAllowed( const dex::unorderedSet< dex::string > &paths )
 				{
 				setPathsAllowed( paths.cbegin( ), paths.cend( ) );
 				}
 
 			// Add paths to the allowed paths for the domain
-			template < class InputIt >
+			template< class InputIt >
 			void addPathsAllowed( const InputIt &begin, const InputIt &end )
 				{
 				for ( InputIt it = begin;  it != end;  ++it )
@@ -328,11 +328,11 @@ namespace dex
 					}
 
 				}
-			void addPathsAllowed( const dex::unorderedSet < dex::string > &paths )
+			void addPathsAllowed( const dex::unorderedSet< dex::string > &paths )
 				{
 				addPathsAllowed( paths.cbegin( ), paths.cend( ) );
 				}
-			void addPathsAllowed( const dex::vector < dex::string > &paths )
+			void addPathsAllowed( const dex::vector< dex::string > &paths )
 				{
 				addPathsAllowed( paths.cbegin( ), paths.cend( ) );
 				}
@@ -406,12 +406,12 @@ namespace dex
 				{
 				return allowedVisitTime - time( nullptr );
 				}
-			const dex::unorderedSet < dex::string > getAllowedPaths( ) const
+			const dex::unorderedSet< dex::string > getAllowedPaths( ) const
 				{
 				return allowedPaths;
 				}
 
-			const dex::unorderedSet < dex::string > getDisallowedPaths( ) const
+			const dex::unorderedSet< dex::string > getDisallowedPaths( ) const
 				{
 				return disallowedPaths;
 				}

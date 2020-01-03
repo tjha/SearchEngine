@@ -9,7 +9,6 @@
 #include "queryCompiler/tokenstream.hpp"
 #include "ranker/ranker.hpp"
 #include "utils/basicString.hpp"
-#include "utils/stemming.hpp"
 
 
 TEST_CASE( "token stream", "[queryCompiler]" )
@@ -26,23 +25,23 @@ TEST_CASE( "token stream", "[queryCompiler]" )
 		ts = dex::queryCompiler::tokenStream( s );
 		REQUIRE( ts.input == "here&is&check&number&two" );
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == dex::porterStemmer::stem( "here" ) );
+		REQUIRE( wordy->str == "here" );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == dex::porterStemmer::stem( "is" ) );
+		REQUIRE( wordy->str == "is" );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == dex::porterStemmer::stem( "check" ) );
+		REQUIRE( wordy->str == "check" );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == dex::porterStemmer::stem( "number" ) );
+		REQUIRE( wordy->str == "number" );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == dex::porterStemmer::stem( "two" ) );
+		REQUIRE( wordy->str == "two" );
 		delete wordy;
 
 		s = "      here    is     check    number three";
@@ -70,23 +69,23 @@ TEST_CASE( "token stream", "[queryCompiler]" )
 		ts = dex::queryCompiler::tokenStream( s );
 		REQUIRE( ts.input == "here&is&check&number&two" );
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == dex::porterStemmer::stem( "here" ) );
+		REQUIRE( wordy->str == "here" );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == dex::porterStemmer::stem( "is" ) );
+		REQUIRE( wordy->str == "is" );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == dex::porterStemmer::stem( "check" ) );
+		REQUIRE( wordy->str == "check" );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == dex::porterStemmer::stem( "number" ) );
+		REQUIRE( wordy->str == "number" );
 		REQUIRE( ts.match( '&' ) );
 		delete wordy;
 		wordy = ts.parseWord( );
-		REQUIRE( wordy->str == dex::porterStemmer::stem( "two" ) );
+		REQUIRE( wordy->str == "two" );
 		delete wordy;
 
 		s = "			here 			  is 	  check 		 number three";
@@ -142,23 +141,23 @@ TEST_CASE( "token stream", "[queryCompiler]" )
 
 		REQUIRE( ts.input == "here&is&check|number&one" );
 		REQUIRE( ts.emphasizedWords.size( ) == 1 );
-		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "is" ) ) == 1 );
+		REQUIRE( ts.emphasizedWords.count( "is" ) == 1 );
 
 		s = "$here    $ is     check    number $two";
 		ts = dex::queryCompiler::tokenStream( s );
 		REQUIRE( ts.input == "here&is&check&number&two" );
 		REQUIRE( ts.emphasizedWords.size( ) == 3 );
-		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "here" ) ) );
-		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "is" ) ) );
-		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "two" ) ) );
+		REQUIRE( ts.emphasizedWords.count( "here" ) );
+		REQUIRE( ts.emphasizedWords.count( "is" ) );
+		REQUIRE( ts.emphasizedWords.count( "two" ) );
 
 		s = "$here    $ is     check				number	$three";
 		ts = dex::queryCompiler::tokenStream( s );
 		REQUIRE( ts.input == "here&is&check&number&three" );
 		REQUIRE( ts.emphasizedWords.size( ) == 3 );
-		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "here" ) ) );
-		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "is" ) ) );
-		REQUIRE( ts.emphasizedWords.count( dex::porterStemmer::stem( "three" ) ) );
+		REQUIRE( ts.emphasizedWords.count( "here" ) );
+		REQUIRE( ts.emphasizedWords.count( "is" ) );
+		REQUIRE( ts.emphasizedWords.count( "three" ) );
 		}
 	}
 
@@ -172,11 +171,11 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
 			dex::queryCompiler::matchedDocuments *md = mdg( nullptr );
-			REQUIRE( mdg.getQuery( ) == "(first&(check&stuff)&~bad)");
+			REQUIRE( mdg.getQuery( ) == "(first&(check&stuff)&~badness)");
 			REQUIRE( md->flattenedQuery.size( ) == 3 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "first" ) );
-			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "check" ) );
-			REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "stuff" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == "first" );
+			REQUIRE( md->flattenedQuery[ 1 ] == "check" );
+			REQUIRE( md->flattenedQuery[ 2 ] == "stuff" );
 			REQUIRE( md->emphasizedWords.size( ) == 3 );
 			REQUIRE( md->emphasizedWords[ 0 ] == false );
 			REQUIRE( md->emphasizedWords[ 1 ] == true );
@@ -190,10 +189,10 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
 			dex::queryCompiler::matchedDocuments *md = mdg( nullptr );
-			REQUIRE( mdg.getQuery( ) == "(two&word)");
+			REQUIRE( mdg.getQuery( ) == "(two&words)");
 			REQUIRE( md->flattenedQuery.size( ) == 2 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "two" ) );
-			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "words" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == "two" );
+			REQUIRE( md->flattenedQuery[ 1 ] == "words" );
 			delete md;
 			}
 
@@ -205,8 +204,8 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(alpha|~(beta&~gamma))" );
 			REQUIRE( md->flattenedQuery.size( ) == 2 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "alpha" ) );
-			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "gamma" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == "alpha" );
+			REQUIRE( md->flattenedQuery[ 1 ] == "gamma" );
 			delete md;
 			}
 
@@ -216,12 +215,12 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query );
 			dex::queryCompiler::matchedDocuments *md = mdg( nullptr );
-			REQUIRE( mdg.getQuery( ) == "((now&\"with some\")|phrase)" );
+			REQUIRE( mdg.getQuery( ) == "((now&\"with some\")|phrases)" );
 			REQUIRE( md->flattenedQuery.size( ) == 4 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "now" ) );
-			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "with" ) );
-			REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "some" ) );
-			REQUIRE( md->flattenedQuery[ 3 ] == dex::porterStemmer::stem( "phrases" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == "now" );
+			REQUIRE( md->flattenedQuery[ 1 ] == "with" );
+			REQUIRE( md->flattenedQuery[ 2 ] == "some" );
+			REQUIRE( md->flattenedQuery[ 3 ] == "phrases" );
 			REQUIRE( md->emphasizedWords.size( ) == 4 );
 			REQUIRE( md->emphasizedWords[ 0 ] == true );
 			REQUIRE( md->emphasizedWords[ 1 ] == false );
@@ -238,7 +237,7 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(alpha)" );
 			REQUIRE( md->flattenedQuery.size( ) == 1 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "alpha" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == "alpha" );
 			REQUIRE( md->emphasizedWords.size( ) == 1 );
 			REQUIRE( md->emphasizedWords[ 0 ] == false );
 			delete md;
@@ -255,8 +254,8 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(basic&and)");
 			REQUIRE( md->flattenedQuery.size( ) == 2 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "basic" ) );
-			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "and" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == "basic" );
+			REQUIRE( md->flattenedQuery[ 1 ] == "and" );
 			REQUIRE( md->emphasizedWords.size( ) == 2 );
 			REQUIRE( md->emphasizedWords[ 0 ] == false );
 			REQUIRE( md->emphasizedWords[ 1 ] == false );
@@ -271,8 +270,8 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(basic|or)");
 			REQUIRE( md->flattenedQuery.size( ) == 2 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "basic" ) );
-			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "or" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == "basic" );
+			REQUIRE( md->flattenedQuery[ 1 ] == "or" );
 			REQUIRE( md->emphasizedWords.size( ) == 2 );
 			REQUIRE( md->emphasizedWords[ 0 ] == false );
 			REQUIRE( md->emphasizedWords[ 1 ] == false );
@@ -287,8 +286,8 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::matchedDocuments *md = mdg( nullptr );
 			REQUIRE( mdg.getQuery( ) == "(alpha|~(beta&~gamma))");
 			REQUIRE( md->flattenedQuery.size( ) == 2 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "alpha" ) );
-			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "gamma" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == "alpha" );
+			REQUIRE( md->flattenedQuery[ 1 ] == "gamma" );
 			REQUIRE( md->emphasizedWords.size( ) == 2 );
 			REQUIRE( md->emphasizedWords[ 0 ] == false );
 			REQUIRE( md->emphasizedWords[ 1 ] == false );
@@ -301,14 +300,14 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query, false );
 			dex::queryCompiler::matchedDocuments *md = mdg( nullptr );
-			REQUIRE( mdg.getQuery( ) == "(((thi|i)&\"a comprehens test\")&(that|~\"doe stuff\"))");
+			REQUIRE( mdg.getQuery( ) == "(((this|is)&\"a comprehensive test\")&(that|~\"does stuff\"))");
 			REQUIRE( md->flattenedQuery.size( ) == 6 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "this" ) );
-			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "is" ) );
-			REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "a" ) );
-			REQUIRE( md->flattenedQuery[ 3 ] == dex::porterStemmer::stem( "comprehensive" ) );
-			REQUIRE( md->flattenedQuery[ 4 ] == dex::porterStemmer::stem( "test" ) );
-			REQUIRE( md->flattenedQuery[ 5 ] == dex::porterStemmer::stem( "that" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == "this" );
+			REQUIRE( md->flattenedQuery[ 1 ] == "is" );
+			REQUIRE( md->flattenedQuery[ 2 ] == "a" );
+			REQUIRE( md->flattenedQuery[ 3 ] == "comprehensive" );
+			REQUIRE( md->flattenedQuery[ 4 ] == "test" );
+			REQUIRE( md->flattenedQuery[ 5 ] == "that" );
 			REQUIRE( md->emphasizedWords.size( ) == 6 );
 			REQUIRE( md->emphasizedWords[ 0 ] == true );
 			REQUIRE( md->emphasizedWords[ 1 ] == false );
@@ -325,14 +324,14 @@ TEST_CASE( "parsing check", "[queryCompiler]" )
 			dex::queryCompiler::parser parsyMcParseface;
 			dex::queryCompiler::matchedDocumentsGenerator mdg = parsyMcParseface.parse( query, false );
 			dex::queryCompiler::matchedDocuments *md = mdg( nullptr );
-			REQUIRE( mdg.getQuery( ) == "(((thi|i)&\"a comprehens test\")&(that|~\"doe stuff\"))");
+			REQUIRE( mdg.getQuery( ) == "(((this|is)&\"a comprehensive test\")&(that|~\"does stuff\"))");
 			REQUIRE( md->flattenedQuery.size( ) == 6 );
-			REQUIRE( md->flattenedQuery[ 0 ] == dex::porterStemmer::stem( "this" ) );
-			REQUIRE( md->flattenedQuery[ 1 ] == dex::porterStemmer::stem( "is" ) );
-			REQUIRE( md->flattenedQuery[ 2 ] == dex::porterStemmer::stem( "a" ) );
-			REQUIRE( md->flattenedQuery[ 3 ] == dex::porterStemmer::stem( "comprehensive" ) );
-			REQUIRE( md->flattenedQuery[ 4 ] == dex::porterStemmer::stem( "test" ) );
-			REQUIRE( md->flattenedQuery[ 5 ] == dex::porterStemmer::stem( "that" ) );
+			REQUIRE( md->flattenedQuery[ 0 ] == "this" );
+			REQUIRE( md->flattenedQuery[ 1 ] == "is" );
+			REQUIRE( md->flattenedQuery[ 2 ] == "a" );
+			REQUIRE( md->flattenedQuery[ 3 ] == "comprehensive" );
+			REQUIRE( md->flattenedQuery[ 4 ] == "test" );
+			REQUIRE( md->flattenedQuery[ 5 ] == "that" );
 			REQUIRE( md->emphasizedWords.size( ) == 6 );
 			REQUIRE( md->emphasizedWords[ 0 ] == true );
 			REQUIRE( md->emphasizedWords[ 1 ] == false );

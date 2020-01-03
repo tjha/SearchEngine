@@ -92,15 +92,15 @@ TEST_CASE( "Shared", "[shared]" )
 
 	for ( int i = 0;  i < 3;  ++i )
 		{
-		pthread_create( &readers[ i ], nullptr, read, static_cast < void * > ( &st ) );
+		pthread_create( &readers[ i ], nullptr, read, static_cast< void * > ( &st ) );
 		}
-	pthread_create( &writers[ 0 ], nullptr, write, static_cast < void * > ( &wst1 ) );
+	pthread_create( &writers[ 0 ], nullptr, write, static_cast< void * > ( &wst1 ) );
 
 	for ( int i = 3;  i < 6;  ++i )
 		{
-		pthread_create( &readers[ i ], nullptr, read, static_cast < void * > ( &st ) );
+		pthread_create( &readers[ i ], nullptr, read, static_cast< void * > ( &st ) );
 		}
-	pthread_create( &writers[ 1 ], nullptr, write, static_cast < void * > ( &wst2 ) );
+	pthread_create( &writers[ 1 ], nullptr, write, static_cast< void * > ( &wst2 ) );
 
 	for ( int i = 0;  i < 6;  ++i )
 		{

@@ -11,7 +11,7 @@
 
 namespace dex
 	{
-	template < class Key >
+	template< class Key >
 	struct hash
 		{
 		private:
@@ -23,7 +23,7 @@ namespace dex
 			unsigned long operator( )( const Key &key ) const
 				{
 				// Convert key to be a byte array
-				byte *convertedKey = reinterpret_cast < byte * >( &key );
+				byte *convertedKey = reinterpret_cast< byte * >( &key );
 				size_t size = sizeof( key );
 
 				// Compute hash using FNV-1a algorithm

@@ -4,7 +4,7 @@
 // 2019-12-09: Fix bugs in building index: lougheem, jasina
 // 2019-12-08: Begin IndexStreamReader class: lougheem
 // 2019-11-22: Wrote addDocument, update sync points, encoder/decoder for metadata, add stemming, change how to go
-//             between offsets and posts,move things to index.cpp: jasina, lougheem
+//             between offsets and posts,move things to indexer.cpp: jasina, lougheem
 // 2019-11-13: Define most of index chunk internals: jasina, lougheem
 // 2019-11-10: Outline of main classes and functions created: jasina, lougheem
 // 2019-11-03: File created
@@ -40,10 +40,10 @@ namespace dex
 			private:
 				typedef unsigned char byte;
 
-				template < class T, class InputIt >
+				template< class T, class InputIt >
 				friend class dex::utf::decoder;
 
-				template < class T >
+				template< class T >
 				friend class dex::utf::encoder;
 
 				class postsChunk
@@ -85,7 +85,7 @@ namespace dex
 
 						struct synchronizationPoint
 							{
-							static const size_t npos = static_cast < size_t >( -1 );
+							static const size_t npos = static_cast< size_t >( -1 );
 
 							size_t postsChunkArrayOffset;
 							size_t postsChunkOffset;
@@ -112,10 +112,10 @@ namespace dex
 					dex::string url;
 					dex::string title;
 
-					template < class T, class InputIt >
+					template< class T, class InputIt >
 					friend class dex::utf::decoder;
 
-					template < class T >
+					template< class T >
 					friend class dex::utf::encoder;
 					};
 
@@ -163,13 +163,13 @@ namespace dex
 
 				// Use urls.size( ) to get how many documents there are in the index.
 				// The following two maps are effectively inverses of each other.
-				dex::unorderedMap < dex::string, size_t > urlsToOffsets;
-				dex::unorderedMap < size_t, endOfDocumentMetadataType > offsetsToEndOfDocumentMetadatas;
+				dex::unorderedMap< dex::string, size_t > urlsToOffsets;
+				dex::unorderedMap< size_t, endOfDocumentMetadataType > offsetsToEndOfDocumentMetadatas;
 				byte *encodedURLsToOffsets;
 				byte *encodedOffsetsToEndOfDocumentMetadatas;
 
 				// Use dictionary.size( ) to get "postsMetadataCount" (cf. postsChunkCount).
-				dex::unorderedMap < dex::string, size_t > dictionary;
+				dex::unorderedMap< dex::string, size_t > dictionary;
 				byte *encodedDictionary;
 
 				postsMetadata *postsMetadataArray;
@@ -184,12 +184,12 @@ namespace dex
 			private:
 				// InputIt should dereference to a string.
 				// Note: This has to be defined in the header due to the templating.
-				template < class InputIt >
-				bool append( InputIt first, InputIt last, dex::unorderedMap < dex::string, size_t > &postsMetadataChanges,
+				template< class InputIt >
+				bool append( InputIt first, InputIt last, dex::unorderedMap< dex::string, size_t > &postsMetadataChanges,
 						const dex::string &decorator = "" )
 					{
 					// Need to keep track of our old state in case the appendation fails.
-					dex::unorderedMap < dex::string, size_t > newWords;
+					dex::unorderedMap< dex::string, size_t > newWords;
 					size_t newLocation = *location;
 
 					for ( ;  first != last;  ++first, ++newLocation )
@@ -250,7 +250,7 @@ namespace dex
 						}
 
 					// Copy over newWords into dict.
-					for ( dex::unorderedMap < dex::string, size_t >::constIterator it = newWords.cbegin( );
+					for ( dex::unorderedMap< dex::string, size_t >::constIterator it = newWords.cbegin( );
 							it != newWords.cend( );  ++it )
 						dictionary.insert( *it );
 
@@ -260,8 +260,8 @@ namespace dex
 					}
 
 			public:
-				bool addDocument( const dex::string &url, const dex::vector < dex::string > &title,
-						const dex::string &titleString, const dex::vector < dex::string > &body );
+				bool addDocument( const dex::string &url, const dex::vector< dex::string > &title,
+						const dex::string &titleString, const dex::vector< dex::string > &body );
 
 				class indexStreamReader : public dex::constraintSolver::ISR
 					{
@@ -279,7 +279,7 @@ namespace dex
 
 					public:
 						// An ISR for the empty string is just and end of document ISR.
-						indexStreamReader( indexChunk *chunk, dex::string word = "" );
+						indexStreamReader( indexChunk *chunk, dex::string word = "", dex::string decorator = "" );
 						size_t seek( size_t target );
 						size_t next( );
 						size_t nextDocument( );
@@ -308,20 +308,20 @@ namespace dex
 
 	namespace utf
 		{
-		template < class InputIt >
-		class decoder < dex::index::indexChunk::endOfDocumentMetadataType, InputIt > {
+		template< class InputIt >
+		class decoder< dex::index::indexChunk::endOfDocumentMetadataType, InputIt > {
 			public:
 				dex::index::indexChunk::endOfDocumentMetadataType operator( )
 						( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					size_t documentLength = dex::utf::decoder < size_t, InputIt >( )
+					size_t documentLength = dex::utf::decoder< size_t, InputIt >( )
 							( *localAdvancedEncoding, localAdvancedEncoding );
-					size_t numberUniqueWords = dex::utf::decoder < size_t, InputIt >( )
+					size_t numberUniqueWords = dex::utf::decoder< size_t, InputIt >( )
 							( *localAdvancedEncoding, localAdvancedEncoding );
-					dex::string url = dex::utf::decoder < dex::string, InputIt >( )
+					dex::string url = dex::utf::decoder< dex::string, InputIt >( )
 							( *localAdvancedEncoding, localAdvancedEncoding );
-					dex::string title = dex::utf::decoder < dex::string, InputIt >( )
+					dex::string title = dex::utf::decoder< dex::string, InputIt >( )
 							( *localAdvancedEncoding, localAdvancedEncoding );
 
 					if ( advancedEncoding )
@@ -332,30 +332,30 @@ namespace dex
 					}
 			};
 
-		template < >
-		class encoder < dex::index::indexChunk::endOfDocumentMetadataType >
+		template< >
+		class encoder< dex::index::indexChunk::endOfDocumentMetadataType >
 			{
 			public:
-				template < class InputIt >
+				template< class InputIt >
 				InputIt operator( )( const dex::index::indexChunk::endOfDocumentMetadataType &data, InputIt it ) const
 					{
-					it = dex::utf::encoder < size_t >( )( data.documentLength, it );
-					it = dex::utf::encoder < size_t >( )( data.numberUniqueWords, it );
-					it = dex::utf::encoder < dex::string >( )( data.url, it );
-					it = dex::utf::encoder < dex::string >( )( data.title, it );
+					it = dex::utf::encoder< size_t >( )( data.documentLength, it );
+					it = dex::utf::encoder< size_t >( )( data.numberUniqueWords, it );
+					it = dex::utf::encoder< dex::string >( )( data.url, it );
+					it = dex::utf::encoder< dex::string >( )( data.title, it );
 					return it;
 					}
 
-				dex::vector < unsigned char > operator( )
+				dex::vector< unsigned char > operator( )
 						( const dex::index::indexChunk::endOfDocumentMetadataType &data) const
 					{
-					dex::vector < unsigned char > encodedData = dex::utf::encoder < size_t >( )( data.documentLength );
-					dex::vector < unsigned char > encodedDataNext = dex::utf::encoder < size_t >( )
+					dex::vector< unsigned char > encodedData = dex::utf::encoder< size_t >( )( data.documentLength );
+					dex::vector< unsigned char > encodedDataNext = dex::utf::encoder< size_t >( )
 							( data.numberUniqueWords );
 					encodedData.insert( encodedData.cend( ), encodedDataNext.cbegin( ), encodedDataNext.cend( ) );
-					encodedDataNext =  dex::utf::encoder < dex::string >( )( data.url );
+					encodedDataNext =  dex::utf::encoder< dex::string >( )( data.url );
 					encodedData.insert( encodedData.cend( ), encodedDataNext.cbegin( ), encodedDataNext.cend( ) );
-					encodedDataNext =  dex::utf::encoder < dex::string >( )( data.title );
+					encodedDataNext =  dex::utf::encoder< dex::string >( )( data.title );
 					encodedData.insert( encodedData.cend( ), encodedDataNext.cbegin( ), encodedDataNext.cend( ) );
 					return encodedData;
 					}

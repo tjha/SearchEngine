@@ -11,15 +11,15 @@ TEST_CASE( "topN" )
 	{
 	SECTION( "reversed" )
 		{
-		dex::vector < double > scores;
+		dex::vector< double > scores;
 
 		for ( size_t index = 0;  index < 1500;  ++index )
-			scores.pushBack( static_cast < double >( index ) / 2 );
+			scores.pushBack( static_cast< double >( index ) / 2 );
 
 		size_t N = 100;
 		dex::documentInfo **topN = dex::findTopN( scores, N );
 		for ( size_t index = 0;  index < N;  ++index )
-			REQUIRE( topN[ index ]->score == static_cast < double >( 1499 - index ) / 2 );
+			REQUIRE( topN[ index ]->score == static_cast< double >( 1499 - index ) / 2 );
 
 		for ( size_t index = 0;  index < N;  ++index )
 			delete topN[ index ];
@@ -28,7 +28,7 @@ TEST_CASE( "topN" )
 
 	SECTION( "gamma" )
 		{
-		dex::vector < double > scores = { 0, 5, 7, 7, 2, 1, 5, 6, 6, 4, 9 };
+		dex::vector< double > scores = { 0, 5, 7, 7, 2, 1, 5, 6, 6, 4, 9 };
 
 		size_t N = 5;
 		dex::documentInfo **topN = dex::findTopN( scores, N );

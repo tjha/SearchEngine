@@ -678,19 +678,19 @@ inline auto operator "" _catch_sr( char const* rawChars, std::size_t size ) noex
 namespace Catch{
 
 #ifdef CATCH_CPP17_OR_GREATER
-	template <typename...>
+	template<typename...>
 	inline constexpr auto is_unique = std::true_type{};
 
-	template <typename T, typename... Rest>
+	template<typename T, typename... Rest>
 	inline constexpr auto is_unique<T, Rest...> = std::bool_constant<
 		(!std::is_same_v<T, Rest> && ...) && is_unique<Rest...>
 	>{};
 #else
 
-template <typename...>
+template<typename...>
 struct is_unique : std::true_type{};
 
-template <typename T0, typename T1, typename... Rest>
+template<typename T0, typename T1, typename... Rest>
 struct is_unique<T0, T1, Rest...> : std::integral_constant
 <bool,
      !std::is_same<T0, T1>::value
@@ -811,9 +811,9 @@ struct is_unique<T0, T1, Rest...> : std::integral_constant
     template< template<typename...> class Container, template<typename...> class List, class...Elems, typename...Elements>\
     constexpr auto rewrap(List<Elems...>,Elements...) noexcept -> decltype(append(TypeList<Container<Elems...>>{}, rewrap<Container>(Elements{}...))) { return {}; }\
     \
-    template<template <typename...> class Final, template< typename...> class...Containers, typename...Types>\
+    template<template<typename...> class Final, template< typename...> class...Containers, typename...Types>\
     constexpr auto create(TypeList<Types...>) noexcept -> decltype(append(Final<>{}, rewrap<Containers>(Types{}...)...)) { return {}; }\
-    template<template <typename...> class Final, template <typename...> class List, typename...Ts>\
+    template<template<typename...> class Final, template<typename...> class List, typename...Ts>\
     constexpr auto convert(List<Ts...>) noexcept -> decltype(append(Final<>{},TypeList<Ts>{}...)) { return {}; }
 
 #define INTERNAL_CATCH_NTTP_1(signature, ...)\
@@ -825,7 +825,7 @@ struct is_unique<T0, T1, Rest...> : std::integral_constant
     constexpr auto rewrap(List<__VA_ARGS__>) noexcept -> TypeList<Container<__VA_ARGS__>> { return {}; }\
     template< template<INTERNAL_CATCH_REMOVE_PARENS(signature)> class Container, template<INTERNAL_CATCH_REMOVE_PARENS(signature)> class List, INTERNAL_CATCH_REMOVE_PARENS(signature), typename...Elements>\
     constexpr auto rewrap(List<__VA_ARGS__>,Elements...elems) noexcept -> decltype(append(TypeList<Container<__VA_ARGS__>>{}, rewrap<Container>(elems...))) { return {}; }\
-    template<template <typename...> class Final, template<INTERNAL_CATCH_REMOVE_PARENS(signature)> class...Containers, typename...Types>\
+    template<template<typename...> class Final, template<INTERNAL_CATCH_REMOVE_PARENS(signature)> class...Containers, typename...Types>\
     constexpr auto create(TypeList<Types...>) noexcept -> decltype(append(Final<>{}, rewrap<Containers>(Types{}...)...)) { return {}; }
 
 #define INTERNAL_CATCH_DECLARE_SIG_TEST0(TestName)
@@ -925,18 +925,18 @@ namespace Catch {
 template<typename T>
 struct always_false : std::false_type {};
 
-template <typename> struct true_given : std::true_type {};
+template<typename> struct true_given : std::true_type {};
 struct is_callable_tester {
-    template <typename Fun, typename... Args>
+    template<typename Fun, typename... Args>
     true_given<decltype(std::declval<Fun>()(std::declval<Args>()...))> static test(int);
-    template <typename...>
+    template<typename...>
     std::false_type static test(...);
 };
 
-template <typename T>
+template<typename T>
 struct is_callable;
 
-template <typename Fun, typename... Args>
+template<typename Fun, typename... Args>
 struct is_callable<Fun(Args...)> : decltype(is_callable_tester::test<Fun, Args...>(0)) {};
 
 } // namespace Catch
@@ -1588,9 +1588,9 @@ namespace Catch {
     } // namespace Detail
 
     // If we decide for C++14, change these to enable_if_ts
-    template <typename T, typename = void>
+    template<typename T, typename = void>
     struct StringMaker {
-        template <typename Fake = T>
+        template<typename Fake = T>
         static
         typename std::enable_if<::Catch::Detail::IsStreamInsertable<Fake>::value, std::string>::type
             convert(const Fake& value) {
@@ -1601,7 +1601,7 @@ namespace Catch {
                 return rss.str();
         }
 
-        template <typename Fake = T>
+        template<typename Fake = T>
         static
         typename std::enable_if<!::Catch::Detail::IsStreamInsertable<Fake>::value, std::string>::type
             convert( const Fake& value ) {
@@ -1617,7 +1617,7 @@ namespace Catch {
 
         // This function dispatches all stringification requests inside of Catch.
         // Should be preferably called fully qualified, like ::Catch::Detail::stringify
-        template <typename T>
+        template<typename T>
         std::string stringify(const T& e) {
             return ::Catch::StringMaker<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::convert(e);
         }
@@ -1628,7 +1628,7 @@ namespace Catch {
         }
 
 #if defined(_MANAGED)
-        template <typename T>
+        template<typename T>
         std::string stringify( T^ e ) {
             return ::Catch::StringMaker<T^>::convert(e);
         }
@@ -1769,9 +1769,9 @@ namespace Catch {
         static int precision;
     };
 
-    template <typename T>
+    template<typename T>
     struct StringMaker<T*> {
-        template <typename U>
+        template<typename U>
         static std::string convert(U* p) {
             if (p) {
                 return ::Catch::Detail::rawMemoryToString(p);
@@ -1781,7 +1781,7 @@ namespace Catch {
         }
     };
 
-    template <typename R, typename C>
+    template<typename R, typename C>
     struct StringMaker<R C::*> {
         static std::string convert(R C::* p) {
             if (p) {
@@ -1793,7 +1793,7 @@ namespace Catch {
     };
 
 #if defined(_MANAGED)
-    template <typename T>
+    template<typename T>
     struct StringMaker<T^> {
         static std::string convert( T^ ref ) {
             return ::Catch::Detail::clrReferenceToString(ref);
@@ -1970,7 +1970,7 @@ namespace Catch {
     not_this_one begin( ... );
     not_this_one end( ... );
 
-    template <typename T>
+    template<typename T>
     struct is_range {
         static const bool value =
             !std::is_same<decltype(begin(std::declval<T>())), not_this_one>::value &&
@@ -1978,7 +1978,7 @@ namespace Catch {
     };
 
 #if defined(_MANAGED) // Managed types are never ranges
-    template <typename T>
+    template<typename T>
     struct is_range<T^> {
         static const bool value = false;
     };
@@ -2013,7 +2013,7 @@ namespace Catch {
         }
     };
 
-    template <typename T, int SZ>
+    template<typename T, int SZ>
     struct StringMaker<T[SZ]> {
         static std::string convert(T const(&arr)[SZ]) {
             return rangeToString(arr);
@@ -2030,39 +2030,39 @@ namespace Catch {
 
 namespace Catch {
 
-template <class Ratio>
+template<class Ratio>
 struct ratio_string {
     static std::string symbol();
 };
 
-template <class Ratio>
+template<class Ratio>
 std::string ratio_string<Ratio>::symbol() {
     Catch::ReusableStringStream rss;
     rss << '[' << Ratio::num << '/'
         << Ratio::den << ']';
     return rss.str();
 }
-template <>
+template<>
 struct ratio_string<std::atto> {
     static std::string symbol();
 };
-template <>
+template<>
 struct ratio_string<std::femto> {
     static std::string symbol();
 };
-template <>
+template<>
 struct ratio_string<std::pico> {
     static std::string symbol();
 };
-template <>
+template<>
 struct ratio_string<std::nano> {
     static std::string symbol();
 };
-template <>
+template<>
 struct ratio_string<std::micro> {
     static std::string symbol();
 };
-template <>
+template<>
 struct ratio_string<std::milli> {
     static std::string symbol();
 };
@@ -2409,7 +2409,7 @@ namespace Catch {
 
 #if defined(CATCH_CONFIG_ENABLE_BENCHMARKING)
     struct BenchmarkInfo;
-    template <typename Duration = std::chrono::duration<double, std::nano>>
+    template<typename Duration = std::chrono::duration<double, std::nano>>
     struct BenchmarkStats;
 #endif // CATCH_CONFIG_ENABLE_BENCHMARKING
 
@@ -3042,7 +3042,7 @@ namespace Detail {
 
         Approx operator-() const;
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         Approx operator()( T const& value ) {
             Approx approx( static_cast<double>(value) );
             approx.m_epsilon = m_epsilon;
@@ -3051,66 +3051,66 @@ namespace Detail {
             return approx;
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         explicit Approx( T const& value ): Approx(static_cast<double>(value))
         {}
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         friend bool operator == ( const T& lhs, Approx const& rhs ) {
             auto lhs_v = static_cast<double>(lhs);
             return rhs.equalityComparisonImpl(lhs_v);
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         friend bool operator == ( Approx const& lhs, const T& rhs ) {
             return operator==( rhs, lhs );
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         friend bool operator != ( T const& lhs, Approx const& rhs ) {
             return !operator==( lhs, rhs );
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         friend bool operator != ( Approx const& lhs, T const& rhs ) {
             return !operator==( rhs, lhs );
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         friend bool operator <= ( T const& lhs, Approx const& rhs ) {
             return static_cast<double>(lhs) < rhs.m_value || lhs == rhs;
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         friend bool operator <= ( Approx const& lhs, T const& rhs ) {
             return lhs.m_value < static_cast<double>(rhs) || lhs == rhs;
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         friend bool operator >= ( T const& lhs, Approx const& rhs ) {
             return static_cast<double>(lhs) > rhs.m_value || lhs == rhs;
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         friend bool operator >= ( Approx const& lhs, T const& rhs ) {
             return lhs.m_value > static_cast<double>(rhs) || lhs == rhs;
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         Approx& epsilon( T const& newEpsilon ) {
             double epsilonAsDouble = static_cast<double>(newEpsilon);
             setEpsilon(epsilonAsDouble);
             return *this;
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         Approx& margin( T const& newMargin ) {
             double marginAsDouble = static_cast<double>(newMargin);
             setMargin(marginAsDouble);
             return *this;
         }
 
-        template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+        template<typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
         Approx& scale( T const& newScale ) {
             m_scale = static_cast<double>(newScale);
             return *this;
@@ -3391,7 +3391,7 @@ namespace Detail {
     std::string finalizeDescription(const std::string& desc);
 }
 
-template <typename T>
+template<typename T>
 class PredicateMatcher : public MatcherBase<T> {
     std::function<bool(T const&)> m_predicate;
     std::string m_description;
@@ -3593,17 +3593,17 @@ namespace Matchers {
             std::string describe() const override {
                 return "is approx: " + ::Catch::Detail::stringify( m_comparator );
             }
-            template <typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+            template<typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
             ApproxMatcher& epsilon( T const& newEpsilon ) {
                 approx.epsilon(newEpsilon);
                 return *this;
             }
-            template <typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+            template<typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
             ApproxMatcher& margin( T const& newMargin ) {
                 approx.margin(newMargin);
                 return *this;
             }
-            template <typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
+            template<typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
             ApproxMatcher& scale( T const& newScale ) {
                 approx.scale(newScale);
                 return *this;
@@ -3774,7 +3774,7 @@ namespace Catch {
 
 namespace Catch {
 #if !defined(CATCH_CONFIG_DISABLE_EXCEPTIONS)
-    template <typename Ex>
+    template<typename Ex>
     [[noreturn]]
     void throw_exception(Ex const& e) {
         throw e;
@@ -3885,7 +3885,7 @@ namespace Generators {
         }
     };
 
-    template <typename T>
+    template<typename T>
     class GeneratorWrapper final {
         std::unique_ptr<IGenerator<T>> m_generator;
     public:
@@ -3900,11 +3900,11 @@ namespace Generators {
         }
     };
 
-    template <typename T>
+    template<typename T>
     GeneratorWrapper<T> value(T&& value) {
         return GeneratorWrapper<T>(pf::make_unique<SingleValueGenerator<T>>(std::forward<T>(value)));
     }
-    template <typename T>
+    template<typename T>
     GeneratorWrapper<T> values(std::initializer_list<T> values) {
         return GeneratorWrapper<T>(pf::make_unique<FixedValuesGenerator<T>>(values));
     }
@@ -3931,7 +3931,7 @@ namespace Generators {
         }
 
     public:
-        template <typename... Gs>
+        template<typename... Gs>
         Generators(Gs... moreGenerators) {
             m_generators.reserve(sizeof...(Gs));
             populate(std::forward<Gs>(moreGenerators)...);
@@ -3959,7 +3959,7 @@ namespace Generators {
     }
 
     // Tag type to signal that a generator sequence should convert arguments to a specific type
-    template <typename T>
+    template<typename T>
     struct as {};
 
     template<typename T, typename... Gs>
@@ -4013,7 +4013,7 @@ namespace Generators {
 namespace Catch {
 namespace Generators {
 
-    template <typename T>
+    template<typename T>
     class TakeGenerator : public IGenerator<T> {
         GeneratorWrapper<T> m_generator;
         size_t m_returned = 0;
@@ -4044,17 +4044,17 @@ namespace Generators {
         }
     };
 
-    template <typename T>
+    template<typename T>
     GeneratorWrapper<T> take(size_t target, GeneratorWrapper<T>&& generator) {
         return GeneratorWrapper<T>(pf::make_unique<TakeGenerator<T>>(target, std::move(generator)));
     }
 
-    template <typename T, typename Predicate>
+    template<typename T, typename Predicate>
     class FilterGenerator : public IGenerator<T> {
         GeneratorWrapper<T> m_generator;
         Predicate m_predicate;
     public:
-        template <typename P = Predicate>
+        template<typename P = Predicate>
         FilterGenerator(P&& pred, GeneratorWrapper<T>&& generator):
             m_generator(std::move(generator)),
             m_predicate(std::forward<P>(pred))
@@ -4083,12 +4083,12 @@ namespace Generators {
         }
     };
 
-    template <typename T, typename Predicate>
+    template<typename T, typename Predicate>
     GeneratorWrapper<T> filter(Predicate&& pred, GeneratorWrapper<T>&& generator) {
         return GeneratorWrapper<T>(std::unique_ptr<IGenerator<T>>(pf::make_unique<FilterGenerator<T, Predicate>>(std::forward<Predicate>(pred), std::move(generator))));
     }
 
-    template <typename T>
+    template<typename T>
     class RepeatGenerator : public IGenerator<T> {
         static_assert(!std::is_same<T, bool>::value,
             "RepeatGenerator currently does not support bools"
@@ -4139,12 +4139,12 @@ namespace Generators {
         }
     };
 
-    template <typename T>
+    template<typename T>
     GeneratorWrapper<T> repeat(size_t repeats, GeneratorWrapper<T>&& generator) {
         return GeneratorWrapper<T>(pf::make_unique<RepeatGenerator<T>>(repeats, std::move(generator)));
     }
 
-    template <typename T, typename U, typename Func>
+    template<typename T, typename U, typename Func>
     class MapGenerator : public IGenerator<T> {
         // TBD: provide static assert for mapping function, for friendly error message
         GeneratorWrapper<U> m_generator;
@@ -4152,7 +4152,7 @@ namespace Generators {
         // To avoid returning dangling reference, we have to save the values
         T m_cache;
     public:
-        template <typename F2 = Func>
+        template<typename F2 = Func>
         MapGenerator(F2&& function, GeneratorWrapper<U>&& generator) :
             m_generator(std::move(generator)),
             m_function(std::forward<F2>(function)),
@@ -4175,28 +4175,28 @@ namespace Generators {
     // std::result_of is deprecated in C++17 and removed in C++20. Hence, it is
     // replaced with std::invoke_result here. Also *_t format is preferred over
     // typename *::type format.
-    template <typename Func, typename U>
+    template<typename Func, typename U>
     using MapFunctionReturnType = std::remove_reference_t<std::remove_cv_t<std::invoke_result_t<Func, U>>>;
 #else
-    template <typename Func, typename U>
+    template<typename Func, typename U>
     using MapFunctionReturnType = typename std::remove_reference<typename std::remove_cv<typename std::result_of<Func(U)>::type>::type>::type;
 #endif
 
-    template <typename Func, typename U, typename T = MapFunctionReturnType<Func, U>>
+    template<typename Func, typename U, typename T = MapFunctionReturnType<Func, U>>
     GeneratorWrapper<T> map(Func&& function, GeneratorWrapper<U>&& generator) {
         return GeneratorWrapper<T>(
             pf::make_unique<MapGenerator<T, U, Func>>(std::forward<Func>(function), std::move(generator))
         );
     }
 
-    template <typename T, typename U, typename Func>
+    template<typename T, typename U, typename Func>
     GeneratorWrapper<T> map(Func&& function, GeneratorWrapper<U>&& generator) {
         return GeneratorWrapper<T>(
             pf::make_unique<MapGenerator<T, U, Func>>(std::forward<Func>(function), std::move(generator))
         );
     }
 
-    template <typename T>
+    template<typename T>
     class ChunkGenerator final : public IGenerator<std::vector<T>> {
         std::vector<T> m_chunk;
         size_t m_chunk_size;
@@ -4232,7 +4232,7 @@ namespace Generators {
         }
     };
 
-    template <typename T>
+    template<typename T>
     GeneratorWrapper<std::vector<T>> chunk(size_t size, GeneratorWrapper<T>&& generator) {
         return GeneratorWrapper<std::vector<T>>(
             pf::make_unique<ChunkGenerator<T>>(size, std::move(generator))
@@ -4445,7 +4445,7 @@ namespace Catch {
 namespace Catch {
 namespace Generators {
 
-template <typename Float>
+template<typename Float>
 class RandomFloatingGenerator final : public IGenerator<Float> {
     // FIXME: What is the right seed?
     std::minstd_rand m_rand;
@@ -4468,7 +4468,7 @@ public:
     }
 };
 
-template <typename Integer>
+template<typename Integer>
 class RandomIntegerGenerator final : public IGenerator<Integer> {
     std::minstd_rand m_rand;
     std::uniform_int_distribution<Integer> m_dist;
@@ -4492,7 +4492,7 @@ public:
 
 // TODO: Ideally this would be also constrained against the various char types,
 //       but I don't expect users to run into that in practice.
-template <typename T>
+template<typename T>
 typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value,
 GeneratorWrapper<T>>::type
 random(T a, T b) {
@@ -4501,7 +4501,7 @@ random(T a, T b) {
     );
 }
 
-template <typename T>
+template<typename T>
 typename std::enable_if<std::is_floating_point<T>::value,
 GeneratorWrapper<T>>::type
 random(T a, T b) {
@@ -4510,7 +4510,7 @@ random(T a, T b) {
     );
 }
 
-template <typename T>
+template<typename T>
 class RangeGenerator final : public IGenerator<T> {
     T m_current;
     T m_end;
@@ -4543,13 +4543,13 @@ public:
     }
 };
 
-template <typename T>
+template<typename T>
 GeneratorWrapper<T> range(T const& start, T const& end, T const& step) {
     static_assert(std::is_integral<T>::value && !std::is_same<T, bool>::value, "Type must be an integer");
     return GeneratorWrapper<T>(pf::make_unique<RangeGenerator<T>>(start, end, step));
 }
 
-template <typename T>
+template<typename T>
 GeneratorWrapper<T> range(T const& start, T const& end) {
     static_assert(std::is_integral<T>::value && !std::is_same<T, bool>::value, "Type must be an integer");
     return GeneratorWrapper<T>(pf::make_unique<RangeGenerator<T>>(start, end));
@@ -5234,14 +5234,14 @@ namespace Catch {
 
 namespace Catch {
     namespace Benchmark {
-        template <typename Duration>
+        template<typename Duration>
         struct Estimate {
             Duration point;
             Duration lower_bound;
             Duration upper_bound;
             double confidence_interval;
 
-            template <typename Duration2>
+            template<typename Duration2>
             operator Estimate<Duration2>() const {
                 return { point, lower_bound, upper_bound, confidence_interval };
             }
@@ -5425,7 +5425,7 @@ namespace Catch {
         double clockCost;
     };
 
-    template <class Duration>
+    template<class Duration>
     struct BenchmarkStats {
         BenchmarkInfo info;
 
@@ -5435,7 +5435,7 @@ namespace Catch {
         Benchmark::OutlierClassification outliers;
         double outlierVariance;
 
-        template <typename Duration2>
+        template<typename Duration2>
         operator BenchmarkStats<Duration2>() const {
             std::vector<Duration2> samples2;
             samples2.reserve(samples.size());
@@ -6232,17 +6232,17 @@ namespace Catch {
 
 namespace Catch {
     namespace Benchmark {
-        template <typename Clock>
+        template<typename Clock>
         using ClockDuration = typename Clock::duration;
-        template <typename Clock>
+        template<typename Clock>
         using FloatDuration = std::chrono::duration<double, typename Clock::period>;
 
-        template <typename Clock>
+        template<typename Clock>
         using TimePoint = typename Clock::time_point;
 
         using default_clock = std::chrono::steady_clock;
 
-        template <typename Clock>
+        template<typename Clock>
         struct now {
             TimePoint<Clock> operator()() const {
                 return Clock::now();
@@ -6266,7 +6266,7 @@ namespace Catch {
 namespace Catch {
     namespace Benchmark {
 #if defined(__GNUC__) || defined(__clang__)
-        template <typename T>
+        template<typename T>
         inline void keep_memory(T* p) {
             asm volatile("" : : "g"(p) : "memory");
         }
@@ -6280,7 +6280,7 @@ namespace Catch {
 #elif defined(_MSC_VER)
 
 #pragma optimize("", off)
-        template <typename T>
+        template<typename T>
         inline void keep_memory(T* p) {
             // thanks @milleniumbug
             *reinterpret_cast<char volatile*>(p) = *reinterpret_cast<char const volatile*>(p);
@@ -6296,17 +6296,17 @@ namespace Catch {
 
 #endif
 
-        template <typename T>
+        template<typename T>
         inline void deoptimize_value(T&& x) {
             keep_memory(&x);
         }
 
-        template <typename Fn, typename... Args>
+        template<typename Fn, typename... Args>
         inline auto invoke_deoptimized(Fn&& fn, Args&&... args) -> typename std::enable_if<!std::is_same<void, decltype(fn(args...))>::value>::type {
             deoptimize_value(std::forward<Fn>(fn) (std::forward<Args...>(args...)));
         }
 
-        template <typename Fn, typename... Args>
+        template<typename Fn, typename... Args>
         inline auto invoke_deoptimized(Fn&& fn, Args&&... args) -> typename std::enable_if<std::is_same<void, decltype(fn(args...))>::value>::type {
             std::forward<Fn>(fn) (std::forward<Args...>(args...));
         }
@@ -6325,34 +6325,34 @@ namespace Catch {
 namespace Catch {
     namespace Benchmark {
         namespace Detail {
-            template <typename T>
+            template<typename T>
             struct CompleteType { using type = T; };
-            template <>
+            template<>
             struct CompleteType<void> { struct type {}; };
 
-            template <typename T>
+            template<typename T>
             using CompleteType_t = typename CompleteType<T>::type;
 
-            template <typename Result>
+            template<typename Result>
             struct CompleteInvoker {
-                template <typename Fun, typename... Args>
+                template<typename Fun, typename... Args>
                 static Result invoke(Fun&& fun, Args&&... args) {
                     return std::forward<Fun>(fun)(std::forward<Args>(args)...);
                 }
             };
-            template <>
+            template<>
             struct CompleteInvoker<void> {
-                template <typename Fun, typename... Args>
+                template<typename Fun, typename... Args>
                 static CompleteType_t<void> invoke(Fun&& fun, Args&&... args) {
                     std::forward<Fun>(fun)(std::forward<Args>(args)...);
                     return {};
                 }
             };
-            template <typename Sig>
+            template<typename Sig>
             using ResultOf_t = typename std::result_of<Sig>::type;
 
             // invoke and not return void :(
-            template <typename Fun, typename... Args>
+            template<typename Fun, typename... Args>
             CompleteType_t<ResultOf_t<Fun(Args...)>> complete_invoke(Fun&& fun, Args&&... args) {
                 return CompleteInvoker<ResultOf_t<Fun(Args...)>>::invoke(std::forward<Fun>(fun), std::forward<Args>(args)...);
             }
@@ -6360,7 +6360,7 @@ namespace Catch {
             const std::string benchmarkErrorMsg = "a benchmark failed to run successfully";
         } // namespace Detail
 
-        template <typename Fun>
+        template<typename Fun>
         Detail::CompleteType_t<Detail::ResultOf_t<Fun()>> user_code(Fun&& fun) {
             CATCH_TRY{
                 return Detail::complete_invoke(std::forward<Fun>(fun));
@@ -6381,7 +6381,7 @@ namespace Catch {
                 virtual void finish() = 0;
                 virtual ~ChronometerConcept() = default;
             };
-            template <typename Clock>
+            template<typename Clock>
             struct ChronometerModel final : public ChronometerConcept {
                 void start() override { started = Clock::now(); }
                 void finish() override { finished = Clock::now(); }
@@ -6395,7 +6395,7 @@ namespace Catch {
 
         struct Chronometer {
         public:
-            template <typename Fun>
+            template<typename Fun>
             void measure(Fun&& fun) { measure(std::forward<Fun>(fun), is_callable<Fun(int)>()); }
 
             int runs() const { return k; }
@@ -6405,12 +6405,12 @@ namespace Catch {
                 , k(k) {}
 
         private:
-            template <typename Fun>
+            template<typename Fun>
             void measure(Fun&& fun, std::false_type) {
                 measure([&fun](int) { return fun(); }, std::true_type());
             }
 
-            template <typename Fun>
+            template<typename Fun>
             void measure(Fun&& fun, std::true_type) {
                 Detail::optimizer_barrier();
                 impl->start();
@@ -6433,17 +6433,17 @@ namespace Catch {
 
 namespace Catch {
     namespace Benchmark {
-        template <typename Duration>
+        template<typename Duration>
         struct EnvironmentEstimate {
             Duration mean;
             OutlierClassification outliers;
 
-            template <typename Duration2>
+            template<typename Duration2>
             operator EnvironmentEstimate<Duration2>() const {
                 return { mean, outliers };
             }
         };
-        template <typename Clock>
+        template<typename Clock>
         struct Environment {
             using clock_type = Clock;
             EnvironmentEstimate<FloatDuration<Clock>> clock_resolution;
@@ -6471,9 +6471,9 @@ namespace Catch {
 namespace Catch {
     namespace Benchmark {
         namespace Detail {
-            template <typename T>
+            template<typename T>
             using Decay = typename std::decay<T>::type;
-            template <typename T, typename U>
+            template<typename T, typename U>
             struct is_related
                 : std::is_same<Decay<T>, Decay<U>> {};
 
@@ -6491,7 +6491,7 @@ namespace Catch {
                     virtual callable* clone() const = 0;
                     virtual ~callable() = default;
                 };
-                template <typename Fun>
+                template<typename Fun>
                 struct model : public callable {
                     model(Fun&& fun) : fun(std::move(fun)) {}
                     model(Fun const& fun) : fun(fun) {}
@@ -6513,14 +6513,14 @@ namespace Catch {
 
                 struct do_nothing { void operator()() const {} };
 
-                template <typename T>
+                template<typename T>
                 BenchmarkFunction(model<T>* c) : f(c) {}
 
             public:
                 BenchmarkFunction()
                     : f(new model<do_nothing>{ {} }) {}
 
-                template <typename Fun,
+                template<typename Fun,
                     typename std::enable_if<!is_related<Fun, BenchmarkFunction>::value, int>::type = 0>
                     BenchmarkFunction(Fun&& fun)
                     : f(new model<typename std::decay<Fun>::type>(std::forward<Fun>(fun))) {}
@@ -6562,7 +6562,7 @@ namespace Catch {
 namespace Catch {
     namespace Benchmark {
         namespace Detail {
-            template <typename Fun>
+            template<typename Fun>
             struct repeater {
                 void operator()(int k) const {
                     for (int i = 0; i < k; ++i) {
@@ -6571,7 +6571,7 @@ namespace Catch {
                 }
                 Fun fun;
             };
-            template <typename Fun>
+            template<typename Fun>
             repeater<typename std::decay<Fun>::type> repeat(Fun&& fun) {
                 return { std::forward<Fun>(fun) };
             }
@@ -6600,13 +6600,13 @@ namespace Catch {
 
 namespace Catch {
     namespace Benchmark {
-        template <typename Duration, typename Result>
+        template<typename Duration, typename Result>
         struct Timing {
             Duration elapsed;
             Result result;
             int iterations;
         };
-        template <typename Clock, typename Sig>
+        template<typename Clock, typename Sig>
         using TimingOf = Timing<ClockDuration<Clock>, Detail::CompleteType_t<Detail::ResultOf_t<Sig>>>;
     } // namespace Benchmark
 } // namespace Catch
@@ -6617,7 +6617,7 @@ namespace Catch {
 namespace Catch {
     namespace Benchmark {
         namespace Detail {
-            template <typename Clock, typename Fun, typename... Args>
+            template<typename Clock, typename Fun, typename... Args>
             TimingOf<Clock, Fun(Args...)> measure(Fun&& fun, Args&&... args) {
                 auto start = Clock::now();
                 auto&& r = Detail::complete_invoke(fun, std::forward<Args>(args)...);
@@ -6636,11 +6636,11 @@ namespace Catch {
 namespace Catch {
     namespace Benchmark {
         namespace Detail {
-            template <typename Clock, typename Fun>
+            template<typename Clock, typename Fun>
             TimingOf<Clock, Fun(int)> measure_one(Fun&& fun, int iters, std::false_type) {
                 return Detail::measure<Clock>(fun, iters);
             }
-            template <typename Clock, typename Fun>
+            template<typename Clock, typename Fun>
             TimingOf<Clock, Fun(Chronometer)> measure_one(Fun&& fun, int iters, std::true_type) {
                 Detail::ChronometerModel<Clock> meter;
                 auto&& result = Detail::complete_invoke(fun, Chronometer(meter, iters));
@@ -6648,7 +6648,7 @@ namespace Catch {
                 return { meter.elapsed(), std::move(result), iters };
             }
 
-            template <typename Clock, typename Fun>
+            template<typename Clock, typename Fun>
             using run_for_at_least_argument_t = typename std::conditional<is_callable<Fun(Chronometer)>::value, Chronometer, int>::type;
 
             struct optimized_away_error : std::exception {
@@ -6657,7 +6657,7 @@ namespace Catch {
                 }
             };
 
-            template <typename Clock, typename Fun>
+            template<typename Clock, typename Fun>
             TimingOf<Clock, Fun(run_for_at_least_argument_t<Clock, Fun>)> run_for_at_least(ClockDuration<Clock> how_long, int seed, Fun&& fun) {
                 auto iters = seed;
                 while (iters < (1 << 30)) {
@@ -6679,7 +6679,7 @@ namespace Catch {
 
 namespace Catch {
     namespace Benchmark {
-        template <typename Duration>
+        template<typename Duration>
         struct ExecutionPlan {
             int iterations_per_sample;
             Duration estimated_duration;
@@ -6687,12 +6687,12 @@ namespace Catch {
             Duration warmup_time;
             int warmup_iterations;
 
-            template <typename Duration2>
+            template<typename Duration2>
             operator ExecutionPlan<Duration2>() const {
                 return { iterations_per_sample, estimated_duration, benchmark, warmup_time, warmup_iterations };
             }
 
-            template <typename Clock>
+            template<typename Clock>
             std::vector<FloatDuration<Clock>> run(const IConfig &cfg, Environment<FloatDuration<Clock>> env) const {
                 // warmup a bit
                 Detail::run_for_at_least<Clock>(std::chrono::duration_cast<ClockDuration<Clock>>(warmup_time), warmup_iterations, Detail::repeat(now<Clock>{}));
@@ -6739,7 +6739,7 @@ namespace Catch {
 
             double weighted_average_quantile(int k, int q, std::vector<double>::iterator first, std::vector<double>::iterator last);
 
-            template <typename Iterator>
+            template<typename Iterator>
             OutlierClassification classify_outliers(Iterator first, Iterator last) {
                 std::vector<double> copy(first, last);
 
@@ -6763,14 +6763,14 @@ namespace Catch {
                 return o;
             }
 
-            template <typename Iterator>
+            template<typename Iterator>
             double mean(Iterator first, Iterator last) {
                 auto count = last - first;
                 double sum = std::accumulate(first, last, 0.);
                 return sum / count;
             }
 
-            template <typename URng, typename Iterator, typename Estimator>
+            template<typename URng, typename Iterator, typename Estimator>
             sample resample(URng& rng, int resamples, Iterator first, Iterator last, Estimator& estimator) {
                 auto n = last - first;
                 std::uniform_int_distribution<decltype(n)> dist(0, n - 1);
@@ -6787,7 +6787,7 @@ namespace Catch {
                 return out;
             }
 
-            template <typename Estimator, typename Iterator>
+            template<typename Estimator, typename Iterator>
             sample jackknife(Estimator&& estimator, Iterator first, Iterator last) {
                 auto n = last - first;
                 auto second = std::next(first);
@@ -6810,7 +6810,7 @@ namespace Catch {
 
             double normal_quantile(double p);
 
-            template <typename Iterator, typename Estimator>
+            template<typename Iterator, typename Estimator>
             Estimate<double> bootstrap(double confidence_level, Iterator first, Iterator last, sample const& resample, Estimator&& estimator) {
                 auto n_samples = last - first;
 
@@ -6873,7 +6873,7 @@ namespace Catch {
 namespace Catch {
     namespace Benchmark {
         namespace Detail {
-            template <typename Clock>
+            template<typename Clock>
             std::vector<double> resolution(int k) {
                 std::vector<TimePoint<Clock>> times;
                 times.reserve(k + 1);
@@ -6898,12 +6898,12 @@ namespace Catch {
             const auto clock_cost_estimation_time = std::chrono::milliseconds(10);
             const auto clock_cost_estimation_iterations = 10000;
 
-            template <typename Clock>
+            template<typename Clock>
             int warmup() {
                 return run_for_at_least<Clock>(std::chrono::duration_cast<ClockDuration<Clock>>(warmup_time), warmup_seed, &resolution<Clock>)
                     .iterations;
             }
-            template <typename Clock>
+            template<typename Clock>
             EnvironmentEstimate<FloatDuration<Clock>> estimate_clock_resolution(int iterations) {
                 auto r = run_for_at_least<Clock>(std::chrono::duration_cast<ClockDuration<Clock>>(clock_resolution_estimation_time), iterations, &resolution<Clock>)
                     .result;
@@ -6912,7 +6912,7 @@ namespace Catch {
                     classify_outliers(r.begin(), r.end()),
                 };
             }
-            template <typename Clock>
+            template<typename Clock>
             EnvironmentEstimate<FloatDuration<Clock>> estimate_clock_cost(FloatDuration<Clock> resolution) {
                 auto time_limit = std::min(resolution * clock_cost_estimation_tick_limit, FloatDuration<Clock>(clock_cost_estimation_time_limit));
                 auto time_clock = [](int k) {
@@ -6938,7 +6938,7 @@ namespace Catch {
                 };
             }
 
-            template <typename Clock>
+            template<typename Clock>
             Environment<FloatDuration<Clock>> measure_environment() {
                 static Environment<FloatDuration<Clock>>* env = nullptr;
                 if (env) {
@@ -6974,7 +6974,7 @@ namespace Catch {
 
 namespace Catch {
     namespace Benchmark {
-        template <typename Duration>
+        template<typename Duration>
         struct SampleAnalysis {
             std::vector<Duration> samples;
             Estimate<Duration> mean;
@@ -6982,7 +6982,7 @@ namespace Catch {
             OutlierClassification outliers;
             double outlier_variance;
 
-            template <typename Duration2>
+            template<typename Duration2>
             operator SampleAnalysis<Duration2>() const {
                 std::vector<Duration2> samples2;
                 samples2.reserve(samples.size());
@@ -7007,7 +7007,7 @@ namespace Catch {
 namespace Catch {
     namespace Benchmark {
         namespace Detail {
-            template <typename Duration, typename Iterator>
+            template<typename Duration, typename Iterator>
             SampleAnalysis<Duration> analyse(const IConfig &cfg, Environment<Duration>, Iterator first, Iterator last) {
                 if (!cfg.benchmarkNoAnalysis()) {
                     std::vector<double> samples;
@@ -7073,11 +7073,11 @@ namespace Catch {
             Benchmark(std::string &&name)
                 : name(std::move(name)) {}
 
-            template <class FUN>
+            template<class FUN>
             Benchmark(std::string &&name, FUN &&func)
                 : fun(std::move(func)), name(std::move(name)) {}
 
-            template <typename Clock>
+            template<typename Clock>
             ExecutionPlan<FloatDuration<Clock>> prepare(const IConfig &cfg, Environment<FloatDuration<Clock>> env) const {
                 auto min_time = env.clock_resolution.mean * Detail::minimum_ticks;
                 auto run_time = std::max(min_time, std::chrono::duration_cast<decltype(min_time)>(Detail::warmup_time));
@@ -7086,7 +7086,7 @@ namespace Catch {
                 return { new_iters, test.elapsed / test.iterations * new_iters * cfg.benchmarkSamples(), fun, std::chrono::duration_cast<FloatDuration<Clock>>(Detail::warmup_time), Detail::warmup_iterations };
             }
 
-            template <typename Clock = default_clock>
+            template<typename Clock = default_clock>
             void run() {
                 IConfigPtr cfg = getCurrentContext().getConfig();
 
@@ -7125,7 +7125,7 @@ namespace Catch {
             }
 
             // sets lambda to be used in fun *and* executes benchmark!
-            template <typename Fun,
+            template<typename Fun,
                 typename std::enable_if<!Detail::is_related<Fun, Benchmark>::value, int>::type = 0>
                 Benchmark & operator=(Fun func) {
                 fun = Detail::BenchmarkFunction(func);
@@ -11013,7 +11013,7 @@ namespace Catch {
 #include <string>
 
 namespace Catch {
-    template <typename T>
+    template<typename T>
     std::string to_string(T const& t) {
 #if defined(CATCH_CONFIG_CPP11_TO_STRING)
         return std::to_string(t);
@@ -11046,10 +11046,10 @@ enum class FloatingPointKind : uint8_t {
 
 namespace {
 
-template <typename T>
+template<typename T>
 struct Converter;
 
-template <>
+template<>
 struct Converter<float> {
     static_assert(sizeof(float) == sizeof(int32_t), "Important ULP matcher assumption violated");
     Converter(float f) {
@@ -11058,7 +11058,7 @@ struct Converter<float> {
     int32_t i;
 };
 
-template <>
+template<>
 struct Converter<double> {
     static_assert(sizeof(double) == sizeof(int64_t), "Important ULP matcher assumption violated");
     Converter(double d) {
@@ -11067,12 +11067,12 @@ struct Converter<double> {
     int64_t i;
 };
 
-template <typename T>
+template<typename T>
 auto convert(T t) -> Converter<T> {
     return Converter<T>(t);
 }
 
-template <typename FP>
+template<typename FP>
 bool almostEqualUlps(FP lhs, FP rhs, int maxUlpDiff) {
     // Comparison with NaN should always be false.
     // This way we can rule it out before getting into the ugly details
@@ -11092,7 +11092,7 @@ bool almostEqualUlps(FP lhs, FP rhs, int maxUlpDiff) {
     return ulpDiff <= maxUlpDiff;
 }
 
-template <typename FP>
+template<typename FP>
 FP step(FP start, FP direction, int steps) {
     for (int i = 0; i < steps; ++i) {
         start = std::nextafter(start, direction);

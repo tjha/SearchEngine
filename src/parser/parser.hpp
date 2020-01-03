@@ -17,7 +17,7 @@
 // 2019-11-20:  Fixed cstdef to cstddef, modified size-t to std::size_t: tjha
 // 2019-11-19:  Changed BreakAnchors, Getlinks; made removePunctuation: medhak
 // 2019-11-11:  Implemented ParseTag function to aid in recursive parsing: tjha
-// 2019-11-06:  Fixed whitespace errors, changed to paired to <size_t vector <size_t>>, : medhak
+// 2019-11-06:  Fixed whitespace errors, changed to paired to <size_t vector<size_t>>, : medhak
 // 2019-11-05:  Implemented return functions, fixed errors in breakanchor.
 // 2019-11-04:  Created parser class, some basic functions - constructor, BreakAnchor. Merged GetAnchorText and
 //              GetLinks into GetLinks - makes it easier to build anchorText vector : medhak
@@ -73,10 +73,10 @@ namespace dex
 
 
 		void GetLinks( dex::string &htmlFile, bool isIndex );
-		vector < Positions > findScripts( Positions body, dex::string &htmlFile );
+		vector< Positions > findScripts( Positions body, dex::string &htmlFile );
 		void GetWords( dex::string &htmlFile );
 		void GetTitle( dex::string &htmlFile );
-		bool inAvoid(size_t pos, vector <Positions> avoidThis);
+		bool inAvoid(size_t pos, vector<Positions> avoidThis);
 
 		vector<string> tagger (string temp)
 			{
@@ -112,7 +112,7 @@ namespace dex
 			if ( newPos.end == string::npos )
 				{
 				string temp = endTag.substr(2, endTag.size() - 3);
-				vector <string> possibleVars = tagger(temp);
+				vector<string> possibleVars = tagger(temp);
 				size_t i = 0;
 				while ( i < possibleVars.size( ) )
 					{
@@ -134,15 +134,15 @@ namespace dex
 		HTMLparser( );
 		HTMLparser( dex::Url &url, dex::string& html, bool isIndex );
 		void removePunctuation( string &word );
-		// static vector < string > BreakAnchorsOG ( const string anchor );
+		// static vector< string > BreakAnchorsOG ( const string anchor );
 		void BreakAnchors ( string& anchor );
 		// void GetAnchorText( );
-		vector < dex::Url > ReturnLinks ( );
-		// vector < dex::pair <size_t, size_t > > ReturnAnchorText ( );
-		vector < AncWord > ReturnAnchorText ( );
-		vector <string > ReturnTitle ( );
+		vector< dex::Url > ReturnLinks ( );
+		// vector< dex::pair<size_t, size_t > > ReturnAnchorText ( );
+		vector< AncWord > ReturnAnchorText ( );
+		vector<string > ReturnTitle ( );
 		size_t ReturnAnchorTextLength( );
-		vector < string > ReturnWords ( );
+		vector< string > ReturnWords ( );
 		void fixDots (string &url);
 		void changeToLowercase( string &word );
 		void buildAnchors( );
@@ -220,21 +220,21 @@ namespace dex
 		return lenAnchors;
 		}
 
-	vector < dex::Url > HTMLparser::ReturnLinks ( )
+	vector< dex::Url > HTMLparser::ReturnLinks ( )
 		{
 		return links;
 		}
-	vector < string > HTMLparser::ReturnWords ( )
+	vector< string > HTMLparser::ReturnWords ( )
 		{
 		return words;
 		}
 
-	vector < AncWord > HTMLparser::ReturnAnchorText ( )
+	vector< AncWord > HTMLparser::ReturnAnchorText ( )
 		{
 		return anchors;
 		}
 	
-	vector < string > HTMLparser::ReturnTitle ( )
+	vector< string > HTMLparser::ReturnTitle ( )
 		{
 		return title ;
 		}
@@ -612,9 +612,9 @@ namespace dex
 // WORKING ON WORDS BELOW
 
 
-	vector < Positions > HTMLparser::findScripts( Positions body, string &htmlFile )
+	vector< Positions > HTMLparser::findScripts( Positions body, string &htmlFile )
 		{
-		vector <Positions> avoider;
+		vector<Positions> avoider;
 		string s = "<script";
 		string t = "</script>";
 		Positions strt = ParseTag( body, s, t, htmlFile ), temp;
@@ -668,7 +668,7 @@ namespace dex
 			return;
 			}
 
-		vector < Positions > avoidThis;
+		vector< Positions > avoidThis;
 		avoidThis = findScripts( body, htmlFile );
 
 		string text;
@@ -710,7 +710,7 @@ namespace dex
 			}
 		}
 
-	bool HTMLparser::inAvoid(size_t pos, vector <Positions> avoidThis)
+	bool HTMLparser::inAvoid(size_t pos, vector<Positions> avoidThis)
 		{
 		for(size_t i = 0; i< avoidThis.size(); i++)
 			{

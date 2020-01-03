@@ -47,9 +47,9 @@ int main ( int argc, char ** argv )
 		outputFolder.pushBack( '/' );
 		}
 	//dex::makeDirectory( outputFolder.cStr( ) );
-	dex::vector < dex::string > toProcess;
+	dex::vector< dex::string > toProcess;
 	toProcess = dex::matchingFilenames( batch, "_forIndexer" );
-	dex::vector < dex::string > toDelete;
+	dex::vector< dex::string > toDelete;
 	toDelete = dex::matchingFilenames( batch, "_processed" );
 	for ( int index = 0;  index < toDelete.size( );  index++ )
 		{
@@ -57,8 +57,8 @@ int main ( int argc, char ** argv )
 			std::cout << "error deleting " << toDelete[ index ] << "\n";
 		}
 
-	dex::utf::decoder < dex::string > stringDecoder;
-	dex::vector < dex::string > existingIndexChunks = dex::matchingFilenames( outputFolder, "_in.dex");
+	dex::utf::decoder< dex::string > stringDecoder;
+	dex::vector< dex::string > existingIndexChunks = dex::matchingFilenames( outputFolder, "_in.dex");
 	int indexChunkCount = existingIndexChunks.size( );
 	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
 	dex::index::indexChunk *initializingIndexChunk = new dex::index::indexChunk( fileDescriptor );
@@ -80,7 +80,7 @@ int main ( int argc, char ** argv )
 		unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( fileName.cStr( ), 0 ) );
 		unsigned char *ptr = savedHtml;
 		size_t filesize = dex::getFileSize( fileName.cStr( ) );
-		while ( static_cast < size_t >( ptr - savedHtml ) < filesize )
+		while ( static_cast< size_t >( ptr - savedHtml ) < filesize )
 			{
 			// retrieve the saved url + html pair
 			dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );

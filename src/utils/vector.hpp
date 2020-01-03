@@ -31,7 +31,7 @@
 
 namespace dex
 	{
-	template < class T >
+	template< class T >
 	class vector
 		{
 		public:
@@ -39,8 +39,8 @@ namespace dex
 			vector( size_t numElements );
 			vector( size_t numElements, const T &val );
 			// Only use the next constructor if InputIterator isn't integral type
-			template < class InputIterator,
-					typename = typename dex::enableIf < !dex::isIntegral< InputIterator >::value >::type >
+			template< class InputIterator,
+					typename = typename dex::enableIf< !dex::isIntegral< InputIterator >::value >::type >
 			vector( InputIterator first, InputIterator last )
 				{
 				array = new T[ 1 ];
@@ -53,29 +53,29 @@ namespace dex
 					array[ vectorSize++ ] = *first;
 					}
 				}
-			vector( const vector < T > &other );
-			vector( vector < T > &&other );
-			vector( std::initializer_list < T > l );
+			vector( const vector< T > &other );
+			vector( vector< T > &&other );
+			vector( std::initializer_list< T > l );
 
 			~vector( );
-			vector < T > operator=( const vector < T > &v );
-			vector < T > operator=( vector < T > &&v );
-			bool operator>( const vector < T > &v ) const;
-			bool operator>=( const vector < T > &v ) const;
-			bool operator<( const vector < T > &v ) const;
-			bool operator<=( const vector < T > &v ) const;
-			bool operator!=( const vector < T > &v ) const;
-			bool operator==( const vector < T > &v ) const;
+			vector< T > operator=( const vector< T > &v );
+			vector< T > operator=( vector< T > &&v );
+			bool operator>( const vector< T > &v ) const;
+			bool operator>=( const vector< T > &v ) const;
+			bool operator<( const vector< T > &v ) const;
+			bool operator<=( const vector< T > &v ) const;
+			bool operator!=( const vector< T > &v ) const;
+			bool operator==( const vector< T > &v ) const;
 
 		private:
 			// Iterators
-			template < bool isConst, bool isForward >
+			template< bool isConst, bool isForward >
 			class _iterator;
 		public:
-			typedef _iterator < false, true > iterator;
-			typedef _iterator < true, true > constIterator;
-			typedef _iterator < false, false > reverseIterator;
-			typedef _iterator < true, false > constReverseIterator;
+			typedef _iterator< false, true > iterator;
+			typedef _iterator< true, true > constIterator;
+			typedef _iterator< false, false > reverseIterator;
+			typedef _iterator< true, false > constReverseIterator;
 
 			iterator begin( );
 			iterator end( );
@@ -109,7 +109,7 @@ namespace dex
 			const T *data( ) const;
 
 			// Modifiers
-			template < class InputIterator >
+			template< class InputIterator >
 			void assign( InputIterator first, InputIterator last );
 			void assign( size_t newVectorSize, const T &value );
 			void pushBack( const T &obj );
@@ -134,8 +134,8 @@ namespace dex
 				dex::copyBackward( index, cend( ) - count, end( ) );
 				}
 		public:
-			template < class InputIterator,
-					typename = typename dex::enableIf < !dex::isIntegral< InputIterator >::value >::type >
+			template< class InputIterator,
+					typename = typename dex::enableIf< !dex::isIntegral< InputIterator >::value >::type >
 			void insert( constIterator index, InputIterator first, InputIterator last )
 				{
 				size_t count = 0;
@@ -172,27 +172,27 @@ namespace dex
 			void grow( );
 		};
 
-	template < class T >
+	template< class T >
 	// default constructor
-	vector < T >::vector( )
+	vector< T >::vector( )
 		{
 		array = new T[ 1 ]( );
 		arraySize = 1;
 		vectorSize = 0;
 		}
 
-	template < class T >
+	template< class T >
 	// constructor for vector of num elements
-	vector < T >::vector( size_t numElements )
+	vector< T >::vector( size_t numElements )
 		{
 		array = new T[ numElements ]( );
 		arraySize = numElements;
 		vectorSize = numElements;
 		}
 
-	template < class T >
+	template< class T >
 	// constructor for vector of num elements each initialized to val
-	vector < T >::vector( size_t numElements, const T &val )
+	vector< T >::vector( size_t numElements, const T &val )
 		{
 		array = new T[ numElements ];
 		arraySize = numElements;
@@ -201,8 +201,8 @@ namespace dex
 		}
 
 	// Copy Contructor
-	template < class T >
-	vector < T >::vector( const vector < T > &other )
+	template< class T >
+	vector< T >::vector( const vector< T > &other )
 		{
 		array = new T[ other.arraySize ];
 		arraySize = other.arraySize;
@@ -211,8 +211,8 @@ namespace dex
 		}
 
 	// Move Constructor
-	template < class T >
-	vector < T >::vector( vector < T > &&other )
+	template< class T >
+	vector< T >::vector( vector< T > &&other )
 		{
 		arraySize = other.arraySize;
 		vectorSize = other.vectorSize;
@@ -223,8 +223,8 @@ namespace dex
 		}
 
 	// Initializer List Constructor
-	template < class T >
-	vector < T >::vector( std::initializer_list < T > l )
+	template< class T >
+	vector< T >::vector( std::initializer_list< T > l )
 		{
 		array = new T[ l.size( ) ];
 		arraySize = l.size( );
@@ -233,38 +233,38 @@ namespace dex
 		}
 
 	// Assignment Operator
-	template < class T >
-	vector < T > vector < T >::operator=( const vector < T > &other )
+	template< class T >
+	vector< T > vector< T >::operator=( const vector< T > &other )
 		{
-		vector < T > otherCopy( other );
+		vector< T > otherCopy( other );
 		swap( otherCopy );
 		return *this;
 		}
 
 	// Move Assignment Operator
-	template < class T >
-	vector < T > vector < T >::operator=( vector < T > &&other )
+	template< class T >
+	vector< T > vector< T >::operator=( vector< T > &&other )
 		{
 		swap( other );
 		return *this;
 		}
 
-	template < class T >
+	template< class T >
 	// destructor
-	vector < T >::~vector( )
+	vector< T >::~vector( )
 		{
 		if ( array )
 			delete[ ] array;
 		}
 
-	template < class T >
-	void vector < T >::insert( vector< T >::constIterator index, const T &obj )
+	template< class T >
+	void vector< T >::insert( vector< T >::constIterator index, const T &obj )
 		{
 		insert( index, 1, obj );
 		}
 
-	template < class T >
-	void vector < T >::insert( vector< T >::constIterator index, size_t count, const T &obj )
+	template< class T >
+	void vector< T >::insert( vector< T >::constIterator index, size_t count, const T &obj )
 		{
 		shiftRight( index, count );
 		iterator writeLocation = begin( ) + ( index - cbegin( ) );
@@ -272,14 +272,14 @@ namespace dex
 		}
 
 
-	template < class T >
-	bool vector < T >::empty( ) const
+	template< class T >
+	bool vector< T >::empty( ) const
 		{
 		return size( ) == 0;
 		}
 
-	template < class T >
-	void vector < T >::reserve( size_t newCapacity )
+	template< class T >
+	void vector< T >::reserve( size_t newCapacity )
 		{
 		if ( capacity( ) >= newCapacity )
 			return;
@@ -293,147 +293,147 @@ namespace dex
 		}
 
 
-	template < class T >
-	void vector < T >::clear( )
+	template< class T >
+	void vector< T >::clear( )
 		{
 		vectorSize = 0;
 		}
 
-	template < class T >
-	void vector < T >::grow( )
+	template< class T >
+	void vector< T >::grow( )
 		{
 		reserve( dex::max( size_t( 1 ), arraySize << 1 ) );
 		}
 
-	template < class T >
-	void vector < T >::erase( size_t index )
+	template< class T >
+	void vector< T >::erase( size_t index )
 		{
 		dex::copy( cbegin( ) + index + 1, cend( ), begin( ) + index );
 		--vectorSize;
 		}
 
-	template < class T >
-	void vector < T >::erase( vector < T >::constIterator index )
+	template< class T >
+	void vector< T >::erase( vector< T >::constIterator index )
 		{
 		erase( index, index + 1 );
 		}
 
-	template < class T >
-	void vector < T >::erase( vector < T >::constIterator first, vector < T > ::constIterator last )
+	template< class T >
+	void vector< T >::erase( vector< T >::constIterator first, vector< T > ::constIterator last )
 		{
 		dex::copy( last, cend( ), begin( ) + ( first - cbegin( ) ) );
 		vectorSize -= last - first;
 		}
 
-	template < class T >
-	template < class InputIterator >
-	void vector < T >::assign( InputIterator first, InputIterator last )
+	template< class T >
+	template< class InputIterator >
+	void vector< T >::assign( InputIterator first, InputIterator last )
 		{
 		vector temporaryVector( first, last );
 		swap( temporaryVector );
 		}
-	template < class T >
-	void vector < T >::assign( size_t newVectorSize, const T &value )
+	template< class T >
+	void vector< T >::assign( size_t newVectorSize, const T &value )
 		{
 		vector temporaryVector( newVectorSize, value );
 		swap( temporaryVector );
 		}
 
-	template < class T >
-	void vector < T >::pushBack( const T &obj )
+	template< class T >
+	void vector< T >::pushBack( const T &obj )
 		{
 		if ( size( ) == capacity( ) )
 			grow( );
 		array[ vectorSize++ ] = obj;
 		}
 
-	template < class T >
-	void vector < T >::pushBack( T &&obj )
+	template< class T >
+	void vector< T >::pushBack( T &&obj )
 		{
 		if ( size( ) == capacity( ) )
 			grow( );
 		dex::swap( array[ vectorSize++ ], obj );
 		}
 
-	template < class T >
-	void vector < T >::popBack( )
+	template< class T >
+	void vector< T >::popBack( )
 		{
 		--vectorSize;
 		}
 
-	template < class T >
-	typename vector < T >::iterator vector < T >::begin( )
+	template< class T >
+	typename vector< T >::iterator vector< T >::begin( )
 		{
-		return vector < T >::iterator( *this, 0 );
+		return vector< T >::iterator( *this, 0 );
 		}
 
-	template < class T >
-	typename vector < T >::iterator vector < T >::end( )
+	template< class T >
+	typename vector< T >::iterator vector< T >::end( )
 		{
-		return vector < T >::iterator( *this, size( ) );
+		return vector< T >::iterator( *this, size( ) );
 		}
 
-	template < class T >
-	typename vector < T >::constIterator vector < T >::cbegin( ) const
+	template< class T >
+	typename vector< T >::constIterator vector< T >::cbegin( ) const
 		{
-		return vector < T >::constIterator( *this, 0 );
+		return vector< T >::constIterator( *this, 0 );
 		}
 
-	template < class T >
-	typename vector < T >::constIterator vector < T >::cend( ) const
+	template< class T >
+	typename vector< T >::constIterator vector< T >::cend( ) const
 		{
-		return vector < T >::constIterator( *this, size( ) );
+		return vector< T >::constIterator( *this, size( ) );
 		}
 
-	template < class T >
-	typename vector < T >::reverseIterator vector < T >::rbegin( )
+	template< class T >
+	typename vector< T >::reverseIterator vector< T >::rbegin( )
 		{
-		return vector < T >::reverseIterator( *this, 0 );
+		return vector< T >::reverseIterator( *this, 0 );
 		}
 
-	template < class T >
-	typename vector < T >::reverseIterator vector < T >::rend( )
+	template< class T >
+	typename vector< T >::reverseIterator vector< T >::rend( )
 		{
-		return vector < T >::reverseIterator( *this, size( ) );
+		return vector< T >::reverseIterator( *this, size( ) );
 		}
 
-	template < class T >
-	typename vector < T >::constReverseIterator vector < T >::crbegin( ) const
+	template< class T >
+	typename vector< T >::constReverseIterator vector< T >::crbegin( ) const
 		{
-		return vector < T >::constReverseIterator( *this, 0 );
+		return vector< T >::constReverseIterator( *this, 0 );
 		}
 
-	template < class T >
-	typename vector < T >::constReverseIterator vector < T >::crend( ) const
+	template< class T >
+	typename vector< T >::constReverseIterator vector< T >::crend( ) const
 		{
-		return vector < T >::constReverseIterator( *this, size( ) );
+		return vector< T >::constReverseIterator( *this, size( ) );
 		}
 
-	template < class T >
-	size_t vector < T >::capacity( ) const
+	template< class T >
+	size_t vector< T >::capacity( ) const
 		{
 		return arraySize;
 		}
 
-	template < class T >
-	size_t vector < T >::size( ) const
+	template< class T >
+	size_t vector< T >::size( ) const
 		{
 		return vectorSize;
 		}
 
-	template < class T >
-	size_t vector < T >::maxSize( ) const
+	template< class T >
+	size_t vector< T >::maxSize( ) const
 		{
 		return size_t( -1 );
 		}
 
-	template < class T >
-	void vector < T >::resize( size_t newVectorSize )
+	template< class T >
+	void vector< T >::resize( size_t newVectorSize )
 		{
 		resize( newVectorSize, T( ) );
 		}
-	template < class T >
-	void vector < T >::resize( size_t newVectorSize, const T &val )
+	template< class T >
+	void vector< T >::resize( size_t newVectorSize, const T &val )
 		{
 		if ( newVectorSize > capacity( ) )
 			reserve( newVectorSize );
@@ -443,36 +443,36 @@ namespace dex
 		vectorSize = newVectorSize;
 		}
 
-	template < class T >
-	T &vector < T >::at( size_t index )
+	template< class T >
+	T &vector< T >::at( size_t index )
 		{
 		if( index >= vectorSize )
 			throw dex::outOfRangeException( );
 		return array[ index ];
 		}
 
-	template < class T >
-	const T &vector < T >::at( size_t index ) const
+	template< class T >
+	const T &vector< T >::at( size_t index ) const
 		{
 		if( index >= vectorSize )
 			throw dex::outOfRangeException( );
 		return array[ index ];
 		}
 
-	template < class T >
-	void vector < T >::pushFront( const T &obj )
+	template< class T >
+	void vector< T >::pushFront( const T &obj )
 		{
 		insert( cbegin( ), obj );
 		}
 
-	template < class T >
-	void vector < T >::popFront( )
+	template< class T >
+	void vector< T >::popFront( )
 		{
 		erase( 0 );
 		}
 
-	template < class T >
-	void vector < T >::shrinkToFit( )
+	template< class T >
+	void vector< T >::shrinkToFit( )
 		{
 		if ( size( ) == capacity( ) )
 			return;
@@ -484,111 +484,111 @@ namespace dex
 		arraySize = vectorSize;
 		}
 
-	template < class T >
-	void vector < T >::swap( vector &other )
+	template< class T >
+	void vector< T >::swap( vector &other )
 		{
 		dex::swap( array, other.array );
 		dex::swap( vectorSize, other.vectorSize );
 		dex::swap( arraySize, other.arraySize );
 		}
 
-	template < class T >
-	T &vector < T >::operator [ ]( size_t index )
+	template< class T >
+	T &vector< T >::operator [ ]( size_t index )
 		{
 		return array[ index ];
 		}
 
-	template < class T >
-	T &vector < T >::front( )
+	template< class T >
+	T &vector< T >::front( )
 		{
 		return array[ 0 ];
 		}
-	template < class T >
-	const T &vector < T >::front( ) const
+	template< class T >
+	const T &vector< T >::front( ) const
 		{
 		return array[ 0 ];
 		}
 
-	template < class T >
-	T &vector < T >::back( )
+	template< class T >
+	T &vector< T >::back( )
 		{
 		return array[ size( ) - 1 ];
 		}
-	template < class T >
-	const T &vector < T >::back( ) const
+	template< class T >
+	const T &vector< T >::back( ) const
 		{
 		return array[ size( ) - 1 ];
 		}
 
-	template < class T >
-	T *vector < T >::data( )
+	template< class T >
+	T *vector< T >::data( )
 		{
 		return array;
 		}
 
-	template < class T >
-	const T *vector < T >::data( ) const
+	template< class T >
+	const T *vector< T >::data( ) const
 		{
 		return array;
 		}
 
-	template < class T >
-	const T &vector < T >::operator [ ]( size_t index ) const
+	template< class T >
+	const T &vector< T >::operator [ ]( size_t index ) const
 		{
 		return array[ index ];
 		}
 
-	template < class T >
-	bool vector < T >::operator>( const vector < T > &v ) const
+	template< class T >
+	bool vector< T >::operator>( const vector< T > &v ) const
 		{
 		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) > 0;
 		}
 
-	template < class T >
-	bool vector < T >::operator>=( const vector < T > &v ) const
+	template< class T >
+	bool vector< T >::operator>=( const vector< T > &v ) const
 		{
 		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) >= 0;
 		}
 
-	template < class T >
-	bool vector < T >::operator<( const vector < T > &v ) const
+	template< class T >
+	bool vector< T >::operator<( const vector< T > &v ) const
 		{
 		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) < 0;
 		}
 
-	template < class T >
-	bool vector < T >::operator<=( const vector < T > &v ) const
+	template< class T >
+	bool vector< T >::operator<=( const vector< T > &v ) const
 		{
 		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) <= 0;
 		}
 
-	template < class T >
-	bool vector < T >::operator!=( const vector < T > &v ) const
+	template< class T >
+	bool vector< T >::operator!=( const vector< T > &v ) const
 		{
 		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) != 0;
 		}
 
-	template < class T >
-	bool vector < T >::operator==( const vector < T > &v ) const
+	template< class T >
+	bool vector< T >::operator==( const vector< T > &v ) const
 		{
 		return dex::lexicographicalCompare( cbegin( ), cend( ), v.cbegin( ), v.cend( ) ) == 0;
 		}
 
-	template < class T >
-	template < bool isConst, bool isForward >
-	class vector < T >::_iterator
+	template< class T >
+	template< bool isConst, bool isForward >
+	class vector< T >::_iterator
 		{
 		private:
-			typedef typename dex::conditional < isConst, const vector < T >, vector < T > >::type vectorType;
-			typedef typename dex::conditional < isConst, const T, T >::type dataType;
+			typedef typename dex::conditional< isConst, const vector< T >, vector< T > >::type vectorType;
+			typedef typename dex::conditional< isConst, const T, T >::type dataType;
 
-			friend class vector < T >;
+			friend class vector< T >;
 			vectorType *vec;
 			size_t position;
 			_iterator( vectorType &vec, size_t position ) : vec( &vec ), position( position ) { }
 		public:
-			template < typename = typename dex::enableIf < isConst > >
-			_iterator( const _iterator < false, isForward > &other ) : vec( other.vec ), position( other.position ) { }
+			template< typename = typename dex::enableIf< isConst > >
+			_iterator( const _iterator< false, isForward > &other ) : vec( other.vec ), position( other.position ) { }
 
 			friend bool operator==( const _iterator &a, const _iterator &b )
 				{
@@ -711,8 +711,8 @@ namespace dex
 				}
 		};
 
-	template < class T >
-	void swap( vector < T > &a, vector < T > &b )
+	template< class T >
+	void swap( vector< T > &a, vector< T > &b )
 		{
 		a.swap( b );
 		}

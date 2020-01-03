@@ -24,10 +24,10 @@
 
 namespace dex
 	{
-	template < class Key >
+	template< class Key >
 	struct hash;
 
-	template < class Key, class Value, class Hash = dex::hash < Key > >
+	template< class Key, class Value, class Hash = dex::hash< Key > >
 	class unorderedMap
 		{
 		private:
@@ -44,14 +44,14 @@ namespace dex
 
 			struct wrappedPair
 				{
-				dex::pair < Key, Value > *pairPtr;
+				dex::pair< Key, Value > *pairPtr;
 				bool isEmpty;
 				bool isGhost;
 
 				wrappedPair( ) : pairPtr( nullptr ), isEmpty( true ), isGhost( false ) { }
 				wrappedPair( Key key, Value value ) : isEmpty( false ), isGhost( false )
 					{
-					pairPtr = new dex::pair < Key, Value >( key, value );
+					pairPtr = new dex::pair< Key, Value >( key, value );
 					}
 				};
 
@@ -113,17 +113,17 @@ namespace dex
 				insert( first, last );
 				}
 
-			unorderedMap( const unorderedMap < Key, Value, Hash > &other )
+			unorderedMap( const unorderedMap< Key, Value, Hash > &other )
 				{
 				table = nullptr;
-				unorderedMap < Key, Value, Hash > temp( other.cbegin( ), other.cend( ),
+				unorderedMap< Key, Value, Hash > temp( other.cbegin( ), other.cend( ),
 						other.bucketCount( ), other.hasher );
 				swap( temp );
 				}
 
-			unorderedMap &operator=( const unorderedMap < Key, Value, Hash > &other )
+			unorderedMap &operator=( const unorderedMap< Key, Value, Hash > &other )
 				{
-				unorderedMap < Key, Value, Hash > temp( other );
+				unorderedMap< Key, Value, Hash > temp( other );
 				swap( temp );
 				return *this;
 				}
@@ -140,16 +140,16 @@ namespace dex
 				}
 
 		private:
-			template < bool isConst >
+			template< bool isConst >
 			class _iterator
 				{
 				private:
-					friend class unorderedMap < Key, Value, Hash >;
+					friend class unorderedMap< Key, Value, Hash >;
 
-					typedef typename dex::conditional < isConst, const unorderedMap < Key, Value, Hash >,
-							unorderedMap < Key, Value, Hash > >::type mapType;
-					typedef typename dex::conditional < isConst, const dex::pair < Key, Value >,
-							dex::pair < Key, Value > >::type pairType;
+					typedef typename dex::conditional< isConst, const unorderedMap< Key, Value, Hash >,
+							unorderedMap< Key, Value, Hash > >::type mapType;
+					typedef typename dex::conditional< isConst, const dex::pair< Key, Value >,
+							dex::pair< Key, Value > >::type pairType;
 
 					mapType *map;
 					size_t position;
@@ -163,8 +163,8 @@ namespace dex
 						this->position = position;
 						}
 				public:
-					template < typename = typename dex::enableIf < isConst > >
-					_iterator( const _iterator < false > &other ) :
+					template< typename = typename dex::enableIf< isConst > >
+					_iterator( const _iterator< false > &other ) :
 							map( other.map ), position( other.position ) { }
 
 					friend bool operator==( const _iterator &a, const _iterator &b )
@@ -208,14 +208,14 @@ namespace dex
 						}
 				};
 
-			template < bool isConst >
-			void swap( _iterator < isConst > &a, _iterator < isConst > &b )
+			template< bool isConst >
+			void swap( _iterator< isConst > &a, _iterator< isConst > &b )
 				{
 				dex::swap( a.map, b.map );
 				dex::swap( a.position, b.position );
 				}
 		public:
-			typedef _iterator < false > iterator;
+			typedef _iterator< false > iterator;
 			iterator begin( )
 				{
 				return iterator( *this, 0 );
@@ -225,7 +225,7 @@ namespace dex
 				return iterator( *this, bucketCount( ) );
 				}
 
-			typedef _iterator < true > constIterator;
+			typedef _iterator< true > constIterator;
 			constIterator cbegin( ) const
 				{
 				return constIterator( *this, 0 );
@@ -257,7 +257,7 @@ namespace dex
 
 			Value &operator[ ]( const Key &key )
 				{
-				return insert( dex::pair < Key, Value >{ key, Value{ } } ).first->second;
+				return insert( dex::pair< Key, Value >{ key, Value{ } } ).first->second;
 				}
 
 			const Value &at( const Key &key ) const
@@ -324,7 +324,7 @@ namespace dex
 				erase( cbegin( ), cend( ) );
 				}
 
-			dex::pair < iterator, bool > insert( const dex::pair < Key, Value > &datum )
+			dex::pair< iterator, bool > insert( const dex::pair< Key, Value > &datum )
 				{
 				bool inserted = false;
 				const Key &key = datum.first;
@@ -334,7 +334,7 @@ namespace dex
 				if ( bucket->isEmpty || bucket->isGhost )
 					{
 					inserted = true;
-					bucket->pairPtr = new dex::pair < Key, Value >( datum );
+					bucket->pairPtr = new dex::pair< Key, Value >( datum );
 					bucket->isEmpty = false;
 					ghostCount -= bucket->isGhost;
 					bucket->isGhost = false;
@@ -347,7 +347,7 @@ namespace dex
 						}
 					}
 
-				return dex::pair < iterator, bool >{ iterator( *this, location ), inserted };
+				return dex::pair< iterator, bool >{ iterator( *this, location ), inserted };
 				}
 
 			bool insertionWillRehash( const Key key )
@@ -359,7 +359,7 @@ namespace dex
 				return bucket->isEmpty;
 				}
 
-			template < class InputIt >
+			template< class InputIt >
 			void insert( InputIt first, InputIt last )
 				{
 				for ( ;  first != last;  insert( *( first++ ) ) );
@@ -376,7 +376,7 @@ namespace dex
 			void rehash( size_t newSize )
 				{
 				// TODO: Maybe reuse precalculated hashes
-				swap( unorderedMap < Key, Value, Hash > ( cbegin( ), cend( ),
+				swap( unorderedMap< Key, Value, Hash > ( cbegin( ), cend( ),
 						dex::max( newSize, size( ) * 2 ) ) );
 				}
 
@@ -408,8 +408,8 @@ namespace dex
 				}
 		};
 
-		template < class Key, class Value, class Hash >
-		void swap( unorderedMap < Key, Value, Hash > &a, unorderedMap < Key, Value, Hash > &b )
+		template< class Key, class Value, class Hash >
+		void swap( unorderedMap< Key, Value, Hash > &a, unorderedMap< Key, Value, Hash > &b )
 			{
 			a.swap( b );
 			}

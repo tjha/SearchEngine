@@ -58,7 +58,7 @@ TEST_CASE( "basic get links with relative paths", "[parser]" )
 
 		vector<string> words = testParser.ReturnWords();
 		vector<string> titleWords = testParser.ReturnTitle();
-		vector <string> firstTen;
+		vector<string> firstTen;
 		firstTen.pushBack( "hamilton" );
 		firstTen.pushBack( "c" );
 		firstTen.pushBack( "shell" );
@@ -268,7 +268,7 @@ TEST_CASE( "man7.org: simple page where relative links don't have slashes" )
 			vector< dex::Url > links = testParser.ReturnLinks( );
 
 			// Create vector with expected links on page
-			vector < string > expectedLinks;
+			vector< string > expectedLinks;
 
 			expectedLinks.pushBack( "http://man7.org/tlpi/index.html" );
 			expectedLinks.pushBack( "http://man7.org/training/index.html" );
@@ -314,7 +314,7 @@ TEST_CASE( "enneagraminstitute.com: simple page using Squarespace" )
 			vector< dex::Url > links = testParser.ReturnLinks( );
 
 			// Create vector with expected links on page
-			vector < string > expectedLinks;
+			vector< string > expectedLinks;
 
 			expectedLinks.pushBack( "https://www.enneagraminstitute.com/" );
 			expectedLinks.pushBack( "https://www.enneagraminstitute.com/how-the-enneagram-system-works" );
@@ -399,7 +399,7 @@ TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
 			vector< dex::Url > links = testParser.ReturnLinks( );
 
 			// Create vector with expected links on page
-			vector < string > expectedLinks;
+			vector< string > expectedLinks;
 
 			// Validate correct number of links were extracted
 			REQUIRE ( links.size( ) == 10813 ); // TODO: figure out why not 10812

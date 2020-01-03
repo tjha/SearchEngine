@@ -154,7 +154,7 @@ void *Talk( void *p )
 
 	// ranker stuff
 	dex::ranker rankerObject;
-	dex::pair < dex::vector < dex::searchResult >, int > searchResults = dex::getTopN( 10, query, &rankerObject, indexChunkObjects );
+	dex::pair< dex::vector< dex::searchResult >, int > searchResults = dex::getTopN( 10, query, &rankerObject, indexChunkObjects );
 	if ( searchResults.second == -1 )
 		{
 		// THE QUERY PASSED IN WAS BAD, DO SOMETHING
@@ -212,7 +212,7 @@ void *Talk( void *p )
 
 
 // Global variables for ranker
-dex::vector < dex::index::indexChunk * > indexChunkObjects;
+dex::vector< dex::index::indexChunk * > indexChunkObjects;
 
 int main( int argc, char **argv )
 	{
@@ -277,7 +277,7 @@ int main( int argc, char **argv )
 		int fd = open( filenameIterator->cStr( ), O_RDWR );
 		if ( fd == -1 )
 			{
-			std::cerr << "fd is -1 for " << *filenameIterator << " something's gone wrong" << std::endl;
+			std::cerr << "fd is -1 for " << *filenameiterator<< " something's gone wrong" << std::endl;
 			return 1;
 			}
 		indexChunkObjects.pushBack( new dex::index::indexChunk( fd, false ) );
@@ -294,7 +294,7 @@ int main( int argc, char **argv )
 		pthread_detach( child );
 		}
 
-	for ( dex::vector < dex::index::indexChunk * >::constIterator indexChunkObjectIterator = indexChunkObjects.cbegin( );
+	for ( dex::vector< dex::index::indexChunk * >::constIterator indexChunkObjectIterator = indexChunkObjects.cbegin( );
 			indexChunkObjectIterator != indexChunkObjects.cend( );  indexChunkObjectIterator++ )
 		delete *indexChunkObjectIterator;
 

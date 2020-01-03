@@ -2,15 +2,15 @@
 // Utilities for dealing with UTF-8 encodings
 // Usage:
 //    T data;
-//    dex::utf::encoder < T > tEncoder;
-//    dex::utf::decoder < T > tDecoder;
+//    dex::utf::encoder< T > tEncoder;
+//    dex::utf::decoder< T > tDecoder;
 //    unsigned char *pt; // In this example, we just assume that this has been allocated and assigned
 //
 //    // Populate data from an unsigned char *
 //    data = tDecoder( pt );
 //
 //    // store to mmapped file (or just to pt)
-//    dex::vector < unsigned char > encodedData = encoder( data );
+//    dex::vector< unsigned char > encodedData = encoder( data );
 //    dex::copy( encodedData.cbegin( ), encodedData.cend( ), pt );
 //
 //   // Additional arugments can be passed into the decoder's and encoder's operator( ) to keep track of where the
@@ -37,11 +37,11 @@ namespace dex
 	{
 	namespace utf
 		{
-		template < class T >
+		template< class T >
 		class encoder
 			{
 			public:
-				template < class InputIt >
+				template< class InputIt >
 				InputIt operator( )( T number, InputIt it ) const
 					{
 					if ( number > 0x7FFFFFFF )
@@ -71,12 +71,12 @@ namespace dex
 					return it;
 					}
 
-				dex::vector < unsigned char > operator( )( T number ) const
+				dex::vector< unsigned char > operator( )( T number ) const
 					{
 					if ( number > 0x7FFFFFFF )
 						throw invalidArgumentException( );
 
-					dex::vector < unsigned char > returnVector;
+					dex::vector< unsigned char > returnVector;
 
 					if ( number < 0x80 )
 						{
@@ -102,53 +102,53 @@ namespace dex
 					}
 			};
 
-		template < class T1, class T2 >
-		class encoder < dex::pair < T1, T2 > >
+		template< class T1, class T2 >
+		class encoder< dex::pair< T1, T2 > >
 			{
 			public:
-				template < class InputIt >
-				InputIt operator( )( const dex::pair < T1, T2 > &data, InputIt it ) const
+				template< class InputIt >
+				InputIt operator( )( const dex::pair< T1, T2 > &data, InputIt it ) const
 					{
-					dex::vector < unsigned char > encodedFirst = encoder < T1 >( )( data.first );
+					dex::vector< unsigned char > encodedFirst = encoder< T1 >( )( data.first );
 					it = dex::copy( encodedFirst.cbegin( ), encodedFirst.cend( ), it );
 
-					dex::vector < unsigned char > encodedSecond = encoder < T2 >( )( data.second );
+					dex::vector< unsigned char > encodedSecond = encoder< T2 >( )( data.second );
 					it = dex::copy( encodedSecond.cbegin( ), encodedSecond.cend( ), it );
 
 					return it;
 					}
 
-				dex::vector < unsigned char > operator( )( const dex::pair < T1, T2 > &data ) const
+				dex::vector< unsigned char > operator( )( const dex::pair< T1, T2 > &data ) const
 					{
-					dex::vector < unsigned char > encodedData = encoder < T1 >( )( data.first );
-					dex::vector < unsigned char > encodedSecond = encoder < T2 >( )( data.second );
+					dex::vector< unsigned char > encodedData = encoder< T1 >( )( data.first );
+					dex::vector< unsigned char > encodedSecond = encoder< T2 >( )( data.second );
 					encodedData.insert( encodedData.cend( ), encodedSecond.cbegin( ), encodedSecond.cend( ) );
 					return encodedData;
 					}
 			};
 
-		template < class T >
-		class encoder < dex::vector < T > >
+		template< class T >
+		class encoder< dex::vector< T > >
 			{
 			public:
-				template < class InputIt >
-				InputIt operator( )( const dex::vector < T > &data, InputIt it ) const
+				template< class InputIt >
+				InputIt operator( )( const dex::vector< T > &data, InputIt it ) const
 					{
-					encoder < T > TEncoder;
+					encoder< T > TEncoder;
 					it = encoder< size_t >( )( data.size( ), it );
-					for ( typename dex::vector < T >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );
+					for ( typename dex::vector< T >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );
 							++dataIt )
 						it = TEncoder( *dataIt, it );
 					return it;
 					}
 
-				dex::vector < unsigned char > operator( )( const dex::vector < T > &data ) const
+				dex::vector< unsigned char > operator( )( const dex::vector< T > &data ) const
 					{
-					encoder < T > TEncoder;
-					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
-					for ( typename dex::vector < T >::constIterator it = data.cbegin( );  it != data.cend( );  ++it )
+					encoder< T > TEncoder;
+					dex::vector< unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
+					for ( typename dex::vector< T >::constIterator it = data.cbegin( );  it != data.cend( );  ++it )
 						{
-						dex::vector < unsigned char > encodedDatum = TEncoder( *it );
+						dex::vector< unsigned char > encodedDatum = TEncoder( *it );
 						encodedData.insert( encodedData.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
 						}
 					return encodedData;
@@ -156,147 +156,147 @@ namespace dex
 			};
 
 		// Assume that strings are ASCII only.
-		template < class T >
-		class encoder < dex::basicString < T > >
+		template< class T >
+		class encoder< dex::basicString< T > >
 			{
 			public:
-				template < class InputIt >
-				InputIt operator( )( const dex::basicString < T > &data, InputIt it ) const
+				template< class InputIt >
+				InputIt operator( )( const dex::basicString< T > &data, InputIt it ) const
 					{
 					it = encoder< size_t >( )( data.size( ), it );
-					for ( typename dex::basicString < T >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );
+					for ( typename dex::basicString< T >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );
 							*( it++ ) = *( dataIt++ ) );
 					return it;
 					}
 
-				dex::vector < unsigned char > operator( )( const dex::basicString < T > &data ) const
+				dex::vector< unsigned char > operator( )( const dex::basicString< T > &data ) const
 					{
-					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
-					for ( typename dex::basicString < T >::constIterator it = data.cbegin( );  it != data.cend( );  ++it )
-						encodedData.pushBack( static_cast < T >( *it ) );
+					dex::vector< unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
+					for ( typename dex::basicString< T >::constIterator it = data.cbegin( );  it != data.cend( );  ++it )
+						encodedData.pushBack( static_cast< T >( *it ) );
 					return encodedData;
 					}
 			};
 
-		template < class Key, class Value >
-		class encoder < dex::unorderedMap < Key, Value > >
+		template< class Key, class Value >
+		class encoder< dex::unorderedMap< Key, Value > >
 			{
 			public:
-				template < class InputIt >
-				InputIt operator( )( const dex::unorderedMap < Key, Value > &data, InputIt it ) const
+				template< class InputIt >
+				InputIt operator( )( const dex::unorderedMap< Key, Value > &data, InputIt it ) const
 					{
-					encoder < dex::pair < Key, Value > > KeyValueEncoder;
+					encoder< dex::pair< Key, Value > > KeyValueEncoder;
 					it = encoder< size_t >( )( data.size( ), it );
-					for ( typename dex::unorderedMap < Key, Value >::constIterator dataIt = data.cbegin( );
+					for ( typename dex::unorderedMap< Key, Value >::constIterator dataIt = data.cbegin( );
 							dataIt != data.cend( );  ++dataIt )
 						it = KeyValueEncoder( *dataIt, it );
 					return it;
 					}
 
-				dex::vector < unsigned char > operator( )( const dex::unorderedMap < Key, Value > &data ) const
+				dex::vector< unsigned char > operator( )( const dex::unorderedMap< Key, Value > &data ) const
 					{
-					encoder < dex::pair < Key, Value > > KeyValueEncoder;
-					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
-					for ( typename dex::unorderedMap < Key, Value >::constIterator it = data.cbegin( );
+					encoder< dex::pair< Key, Value > > KeyValueEncoder;
+					dex::vector< unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
+					for ( typename dex::unorderedMap< Key, Value >::constIterator it = data.cbegin( );
 							it != data.cend( );  ++it )
 						{
-						dex::vector < unsigned char > encodedDatum = KeyValueEncoder( *it );
+						dex::vector< unsigned char > encodedDatum = KeyValueEncoder( *it );
 						encodedData.insert( encodedData.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
 						}
 					return encodedData;
 					}
 			};
 
-		template < class Key >
-		class encoder < dex::unorderedSet < Key > >
+		template< class Key >
+		class encoder< dex::unorderedSet< Key > >
 			{
 			public:
-				template < class InputIt >
-				InputIt operator( )( const dex::unorderedSet < Key > &data, InputIt it ) const
+				template< class InputIt >
+				InputIt operator( )( const dex::unorderedSet< Key > &data, InputIt it ) const
 					{
-					encoder < Key > KeyEncoder;
+					encoder< Key > KeyEncoder;
 					it = encoder< size_t >( )( data.size( ), it );
-					for ( typename dex::unorderedSet < Key >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );
+					for ( typename dex::unorderedSet< Key >::constIterator dataIt = data.cbegin( );  dataIt != data.cend( );
 							++dataIt )
 						it = KeyEncoder( *dataIt, it );
 					return it;
 					}
 
-				dex::vector < unsigned char > operator( )( const dex::unorderedSet < Key > &data ) const
+				dex::vector< unsigned char > operator( )( const dex::unorderedSet< Key > &data ) const
 					{
-					encoder < Key > KeyEncoder;
-					dex::vector < unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
-					for ( typename dex::unorderedSet < Key >::constIterator it = data.cbegin( ); it != data.cend( );  ++it )
+					encoder< Key > KeyEncoder;
+					dex::vector< unsigned char > encodedData = encoder< size_t >( )( data.size( ) );
+					for ( typename dex::unorderedSet< Key >::constIterator it = data.cbegin( ); it != data.cend( );  ++it )
 						{
-						dex::vector < unsigned char > encodedDatum = KeyEncoder( *it );
+						dex::vector< unsigned char > encodedDatum = KeyEncoder( *it );
 						encodedData.insert( encodedData.cend( ), encodedDatum.cbegin( ), encodedDatum.cend( ) );
 						}
 					return encodedData;
 					}
 			};
 
-		template <>
-		class encoder < dex::RobotTxt >
+		template<>
+		class encoder< dex::RobotTxt >
 			{
 			public:
-				/*template < class InputIt >
+				/*template< class InputIt >
 				InputIt operator( )( const dex::RobotTxt &robot, InputIt it ) const
 					{
-					encoder < dex::string > StringEncoder;
-					encoder < time_t > TimeEncoder;
-					encoder < int > IntegerEncoder;
-					encoder < dex::unorderedSet < dex::string > > PathEncoder;
-					encoder < Key > KeyEncoder;
+					encoder< dex::string > StringEncoder;
+					encoder< time_t > TimeEncoder;
+					encoder< int > IntegerEncoder;
+					encoder< dex::unorderedSet< dex::string > > PathEncoder;
+					encoder< Key > KeyEncoder;
 					it = encoder< size_t >( )( data.size( ), it );
 					return it;
 					}*/
 
-				dex::vector < unsigned char > operator( )( const dex::RobotTxt &robot ) const
+				dex::vector< unsigned char > operator( )( const dex::RobotTxt &robot ) const
 					{
 					// All encoders RobotTxt needs
-					encoder < dex::basicString < char > > StringEncoder;
-					encoder < int > IntegerEncoder;
-					encoder < dex::unorderedSet < dex::string > > PathEncoder;
+					encoder< dex::basicString< char > > StringEncoder;
+					encoder< int > IntegerEncoder;
+					encoder< dex::unorderedSet< dex::string > > PathEncoder;
 
 					// Data Vector for encoding
-					dex::vector < unsigned char > encodedData;
+					dex::vector< unsigned char > encodedData;
 
 					// Domain
-					vector < unsigned char > domainEncoding = StringEncoder( robot.getDomain( ) );
+					vector< unsigned char > domainEncoding = StringEncoder( robot.getDomain( ) );
 					encodedData.insert( encodedData.cend( ), domainEncoding.cbegin( ), domainEncoding.cend( ) );
 
 					// Crawl-Delay
-					vector < unsigned char > crawlEncoding = IntegerEncoder( robot.getDelay( ) );
+					vector< unsigned char > crawlEncoding = IntegerEncoder( robot.getDelay( ) );
 					encodedData.insert( encodedData.cend( ), crawlEncoding.cbegin( ), crawlEncoding.cend( ) );
 
 					// Last-Visit-Time
-					vector < unsigned char > lastVisitEncoding = IntegerEncoder(
+					vector< unsigned char > lastVisitEncoding = IntegerEncoder(
 							( long int ) robot.getLastVisit( ) );
 					encodedData.insert( encodedData.cend( ), lastVisitEncoding.cbegin( ), lastVisitEncoding.cend( ) );
 
 					// Allowed-Visit-Time
-					vector < unsigned char > allowedVisitEncoding = IntegerEncoder(
+					vector< unsigned char > allowedVisitEncoding = IntegerEncoder(
 							( long int ) robot.getAllowedVisitTime( ) );
 					encodedData.insert( encodedData.cend( ), allowedVisitEncoding.cbegin( ), allowedVisitEncoding.cend( ) );
 
 					// Expire-Time
-					vector < unsigned char > expireTimeEncoding = IntegerEncoder(
+					vector< unsigned char > expireTimeEncoding = IntegerEncoder(
 							( long int ) robot.getExpireTime( ) );
 					encodedData.insert( encodedData.cend( ), expireTimeEncoding.cbegin( ), expireTimeEncoding.cend( ) );
 
 					// Allowed-Paths
-					vector < unsigned char > allowedPathsEncoding = PathEncoder( robot.getAllowedPaths( ) );
+					vector< unsigned char > allowedPathsEncoding = PathEncoder( robot.getAllowedPaths( ) );
 					encodedData.insert( encodedData.cend( ), allowedPathsEncoding.cbegin( ), allowedPathsEncoding.cend( ) );
 
 					// Disallowed-Paths
-					vector < unsigned char > disallowedPathsEncoding = PathEncoder( robot.getDisallowedPaths( ) );
+					vector< unsigned char > disallowedPathsEncoding = PathEncoder( robot.getDisallowedPaths( ) );
 					encodedData.insert( encodedData.cend( ), disallowedPathsEncoding.cbegin( ), disallowedPathsEncoding.cend( ) );
 
 					return encodedData;
 					}
 			};
 
-		template < class InputIt >
+		template< class InputIt >
 		unsigned long decodeSafe( InputIt encoding )
 			{
 			// How many bits of the first byte we need to care about
@@ -330,13 +330,13 @@ namespace dex
 
 			// Check that the encoded sequence is not overly long
 			if ( ( count == 5 && decodedValue < 0x80 )
-					|| decodedValue < static_cast < unsigned long >( 1 << ( 31 - 5 * count ) ) )
+					|| decodedValue < static_cast< unsigned long >( 1 << ( 31 - 5 * count ) ) )
 				throw invalidArgumentException( );
 
 			return decodedValue;
 			}
 
-		template < class T, class InputIt = unsigned char * >
+		template< class T, class InputIt = unsigned char * >
 		class decoder
 			{
 			public:
@@ -373,33 +373,33 @@ namespace dex
 					}
 			};
 
-		template < class T1, class T2, class InputIt >
-		class decoder < dex::pair < T1, T2 >, InputIt >
+		template< class T1, class T2, class InputIt >
+		class decoder< dex::pair< T1, T2 >, InputIt >
 			{
 			public:
-				dex::pair < T1, T2 > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
+				dex::pair< T1, T2 > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					T1 first = decoder < T1, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
-					T2 second = decoder < T2, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					T1 first = decoder< T1, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					T2 second = decoder< T2, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
 
 					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;
 
-					return dex::pair < T1, T2 >( first, second );
+					return dex::pair< T1, T2 >( first, second );
 					}
 			};
 
-		template < class T, class InputIt >
-		class decoder < dex::vector < T >, InputIt >
+		template< class T, class InputIt >
+		class decoder< dex::vector< T >, InputIt >
 			{
 			public:
-				dex::vector < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
+				dex::vector< T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					decoder < T, InputIt > TDecoder;
-					dex::vector < T > decodedData;
-					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					decoder< T, InputIt > TDecoder;
+					dex::vector< T > decodedData;
+					size_t size = decoder< size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
 
 					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
 						decodedData.pushBack( TDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
@@ -411,19 +411,19 @@ namespace dex
 					}
 			};
 
-		template < class T, class InputIt >
-		class decoder < dex::basicString < T >, InputIt >
+		template< class T, class InputIt >
+		class decoder< dex::basicString< T >, InputIt >
 			{
 			public:
-				dex::basicString < T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
+				dex::basicString< T > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					dex::basicString < T > decodedData;
-					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					dex::basicString< T > decodedData;
+					size_t size = decoder< size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
 					decodedData.reserve( size );
 
 					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex, ++*localAdvancedEncoding )
-						decodedData.pushBack( static_cast < T >( **localAdvancedEncoding ) );
+						decodedData.pushBack( static_cast< T >( **localAdvancedEncoding ) );
 
 					if ( advancedEncoding )
 						*advancedEncoding = *localAdvancedEncoding;
@@ -432,16 +432,16 @@ namespace dex
 					}
 			};
 
-		template < class Key, class Value, class InputIt >
-		class decoder < dex::unorderedMap < Key, Value >, InputIt >
+		template< class Key, class Value, class InputIt >
+		class decoder< dex::unorderedMap< Key, Value >, InputIt >
 			{
 			public:
-				dex::unorderedMap < Key, Value > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
+				dex::unorderedMap< Key, Value > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					decoder < dex::pair < Key, Value >, InputIt > KeyValueDecoder;
-					dex::unorderedMap < Key, Value > decodedData;
-					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					decoder< dex::pair< Key, Value >, InputIt > KeyValueDecoder;
+					dex::unorderedMap< Key, Value > decodedData;
+					size_t size = decoder< size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
 
 					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
 						decodedData.insert( KeyValueDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
@@ -453,16 +453,16 @@ namespace dex
 					}
 			};
 
-		template < class Key, class InputIt >
-		class decoder < dex::unorderedSet < Key >, InputIt >
+		template< class Key, class InputIt >
+		class decoder< dex::unorderedSet< Key >, InputIt >
 			{
 			public:
-				dex::unorderedSet < Key > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
+				dex::unorderedSet< Key > operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					decoder < Key, InputIt > KeyDecoder;
-					dex::unorderedSet < Key > decodedData;
-					size_t size = decoder < size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
+					decoder< Key, InputIt > KeyDecoder;
+					dex::unorderedSet< Key > decodedData;
+					size_t size = decoder< size_t, InputIt >( )( *localAdvancedEncoding, localAdvancedEncoding );
 
 					for ( size_t encodingIndex = 0;  encodingIndex != size;  ++encodingIndex )
 						decodedData.insert( KeyDecoder( *localAdvancedEncoding, localAdvancedEncoding ) );
@@ -477,22 +477,22 @@ namespace dex
 		// TODO not sure if this should actually go into utf-8 or in a separate
 		// encoding function
 		/*
-		template < class InputIt >
-		class decoder < dex::RobotTxt, InputIt >
+		template< class InputIt >
+		class decoder< dex::RobotTxt, InputIt >
 			{
 			public:
 				dex::RobotTxt operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
 					{
 					InputIt *localAdvancedEncoding = &encoding;
-					decoder < dex::basicString > StringDecoder;
-					decoder < int > IntegerDecoder;
-					decoder < dex::unorderedSet < dex::string > > PathDecoder;
+					decoder< dex::basicString > StringDecoder;
+					decoder< int > IntegerDecoder;
+					decoder< dex::unorderedSet< dex::string > > PathDecoder;
 					}
 			};*/
 
 		// We'll say a byte is a sentinel if it looks like 11111111
 		const unsigned char sentinel = 0xFF;
-		template < class InputIt >
+		template< class InputIt >
 		bool isSentinel( InputIt encoding )
 			{
 			return *encoding == sentinel;

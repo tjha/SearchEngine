@@ -24,8 +24,8 @@ namespace dex
 		{
 		private:
 			robotsMap *robotsPointer = nullptr;
-			vector < Url > toVisit;
-			unorderedSet < Url > *toCheck;
+			vector< Url > toVisit;
+			unorderedSet< Url > *toCheck;
 
 			size_t maximumSize;
 
@@ -106,7 +106,7 @@ namespace dex
 				{
 				robotsPointer = robot;
 				maximumSize = maxSize;
-				toCheck = new dex::unorderedSet < dex::Url >( maxSize );
+				toCheck = new dex::unorderedSet< dex::Url >( maxSize );
 				}
 			size_t size( )
 				{
@@ -225,12 +225,12 @@ namespace dex
 				return toVisit;
 				}
 
-			dex::vector < Url > ::iterator begin( )
+			dex::vector< Url > ::iterator begin( )
 				{
 				return toVisit.begin( );
 				}
 
-			dex::vector < Url > ::iterator end( )
+			dex::vector< Url > ::iterator end( )
 				{
 				return toVisit.end( );
 				}

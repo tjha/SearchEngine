@@ -9,7 +9,9 @@
 #include "constraintSolver.hpp"
 #include "utils/vector.hpp"
 
-size_t argMin( const dex::vector < size_t > &v )
+#include <iostream>
+
+size_t argMin( const dex::vector< size_t > &v )
 	{
 	size_t minIndex = 0;
 	for ( size_t index = 1;  index < v.size( );  ++index )
@@ -19,7 +21,7 @@ size_t argMin( const dex::vector < size_t > &v )
 	return minIndex;
 	}
 
-size_t argMax( const dex::vector < size_t > &v )
+size_t argMax( const dex::vector< size_t > &v )
 	{
 	size_t maxIndex = 0;
 	for ( size_t index = 1;  index < v.size( );  ++index )
@@ -30,7 +32,7 @@ size_t argMax( const dex::vector < size_t > &v )
 	}
 
 
-const size_t dex::constraintSolver::ISR::npos = static_cast < size_t >( -1 );
+const size_t dex::constraintSolver::ISR::npos = static_cast< size_t >( -1 );
 
 
 bool dex::constraintSolver::andISR::align( )
@@ -43,7 +45,7 @@ bool dex::constraintSolver::andISR::align( )
 
 		size_t minIndex = argMin( locations );
 
-		size_t startOfDocLocation = endOfDocLocation - endOfDocISR->documentSize( );
+		size_t startOfDocLocation = endOfDocLocation - endOfDocISR->documentSize( ) + 1;
 		if ( locations[ minIndex ] >= startOfDocLocation )
 			return true;
 
@@ -55,7 +57,7 @@ bool dex::constraintSolver::andISR::align( )
 		}
 	}
 
-dex::constraintSolver::andISR::andISR( dex::vector < dex::constraintSolver::ISR * > factors,
+dex::constraintSolver::andISR::andISR( dex::vector< dex::constraintSolver::ISR * > factors,
 		endOfDocumentISR *endOfDocISR ) : factors( factors ), endOfDocISR( endOfDocISR ), toGet( npos )
 	{
 	locations.resize( factors.size( ) );
@@ -94,6 +96,7 @@ size_t dex::constraintSolver::andISR::next( )
 
 size_t dex::constraintSolver::andISR::nextDocument( )
 	{
+	std::cout << "andISR::nextDocument( )\n";
 	locations[ 0 ] = factors[ 0 ]->nextDocument( );
 	if ( align( ) )
 		return toGet = endOfDocLocation;
@@ -106,7 +109,7 @@ size_t dex::constraintSolver::andISR::get( )
 	}
 
 
-dex::constraintSolver::orISR::orISR( dex::vector < dex::constraintSolver::ISR * > summands,
+dex::constraintSolver::orISR::orISR( dex::vector< dex::constraintSolver::ISR * > summands,
 		endOfDocumentISR *endOfDocISR ) : summands( summands ), endOfDocISR( endOfDocISR )
 	{
 	locations.resize( summands.size( ) );
@@ -138,6 +141,7 @@ size_t dex::constraintSolver::orISR::next(  )
 
 size_t dex::constraintSolver::orISR::nextDocument( )
 	{
+	std::cout << "orISR::nextDocument( )\n";
 	size_t minIndex = argMin( locations );
 	size_t previousMinLocation = locations[ minIndex ];
 	size_t endOfDocLocation = endOfDocISR->seek( locations[ argMin( locations ) ] );
@@ -173,7 +177,7 @@ dex::constraintSolver::notISR::~notISR( )
 size_t dex::constraintSolver::notISR::seek( size_t target )
 	{
 	endOfDocLocation = endOfDocISR->seek( target );
-	size_t startOfDoc = endOfDocLocation - endOfDocISR->documentSize( );
+	size_t startOfDoc = endOfDocLocation - endOfDocISR->documentSize( ) + 1;
 	location = neg->seek( startOfDoc );
 	if ( endOfDocLocation < location )
 		return toGet = endOfDocLocation;
@@ -188,6 +192,7 @@ size_t dex::constraintSolver::notISR::next( )
 
 size_t dex::constraintSolver::notISR::nextDocument( )
 	{
+	std::cout << "notISR::nextDocument( )\n";
 	while ( ( endOfDocLocation = endOfDocISR->next( ) ) > location )
 		location = neg->seek( endOfDocLocation );
 	return toGet = endOfDocLocation;
@@ -226,7 +231,7 @@ bool dex::constraintSolver::phraseISR::align( )
 		}
 	}
 
-dex::constraintSolver::phraseISR::phraseISR( vector < dex::constraintSolver::ISR * > words,
+dex::constraintSolver::phraseISR::phraseISR( vector< dex::constraintSolver::ISR * > words,
 		dex::constraintSolver::endOfDocumentISR *endOfDocISR ) : words( words ), endOfDocISR( endOfDocISR )
 	{
 	locations.resize( words.size( ) );
@@ -265,6 +270,7 @@ size_t dex::constraintSolver::phraseISR::next(  )
 
 size_t dex::constraintSolver::phraseISR::nextDocument( )
 	{
+	std::cout << "phraseISR::nextDocument( )\n";
 	locations[ 0 ] = words[ 0 ]->nextDocument( );
 	if ( align( ) )
 		return toGet = endOfDocISR->seek( locations[ 0 ] );

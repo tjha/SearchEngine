@@ -7,7 +7,6 @@
 #include "queryCompiler/tokenstream.hpp"
 #include "utils/algorithm.hpp"
 #include "utils/basicString.hpp"
-#include "utils/stemming.hpp"
 #include "utils/unorderedSet.hpp"
 
 bool dex::queryCompiler::isAlpha ( char c )
@@ -180,7 +179,7 @@ dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix 
 			{
 			dex::string word = semiparsed.substr(
 					index + 1, semiparsed.findFirstOf( "|&$\"~() ", index + 1, 8 ) - index - 1 );
-			emphasizedWords.insert( dex::porterStemmer::stem( word ) );
+			emphasizedWords.insert( word );
 			if ( index != 0 && semiparsed[ index - 1 ] != '(' && semiparsed[ index - 1 ] != '|'
 					&& semiparsed[ index - 1 ] != '&' && semiparsed[ index - 1 ] != '~' )
 				input.pushBack( '&' );
@@ -225,5 +224,5 @@ dex::queryCompiler::word *dex::queryCompiler::tokenStream::parseWord( )
 	dex::string word = input.substr( location, nextSymbolLocation - location );
 	location = dex::min( nextSymbolLocation, input.size( ) );
 
-	return new dex::queryCompiler::word( dex::porterStemmer::stem( word ) );
+	return new dex::queryCompiler::word( word );
 	}

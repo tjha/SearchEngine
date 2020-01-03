@@ -34,9 +34,9 @@ TEST_CASE( "create index chunk" )
 	indexChunk initializingIndexChunk = indexChunk( fd );
 
 	string url = "hamiltoncshell.com";
-	vector < string > title = { "hamilton", "c", "shell" };
+	vector< string > title = { "hamilton", "c", "shell" };
 	string titleString = "Hamilton C Shell 2012";
-	vector < string > body = { "some", "junk", "and", "more", "junk" };
+	vector< string > body = { "some", "junk", "and", "more", "junk" };
 
 	initializingIndexChunk.addDocument( url, title, titleString, body );
 
@@ -55,16 +55,16 @@ TEST_CASE( "create index chunk with bad HTML" )
 		indexChunk initializingIndexChunk = indexChunk( fd );
 
 		string url = "hamiltoncshell.com";
-		vector < string > title = { };
+		vector< string > title = { };
 		string titleString = "Hamilton C Shell 2012";
-		vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
+		vector< string > body = { "some", "junk", "and", "more", "junk", "and" };
 
 		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 
 		string url2 = "hammyseeshell.biz";
-		vector < string > title2 = { "good", "website" };
+		vector< string > title2 = { "good", "website" };
 		string titleString2 = "This is a good website";
-		vector < string > body2 = { "this", "is", "the", "body", "text" };
+		vector< string > body2 = { "this", "is", "the", "body", "text" };
 
 		REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
 
@@ -81,16 +81,16 @@ TEST_CASE( "create index chunk with bad HTML" )
 		indexChunk initializingIndexChunk = indexChunk( fd );
 
 		string url = "hamiltoncshell.com";
-		vector < string > title = { "hamilton", "c", "shell" };
+		vector< string > title = { "hamilton", "c", "shell" };
 		string titleString = "Hamilton C Shell 2012";
-		vector < string > body = { };
+		vector< string > body = { };
 
 		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 
 		string url2 = "hammyseeshell.biz";
-		vector < string > title2 = { "good", "website" };
+		vector< string > title2 = { "good", "website" };
 		string titleString2 = "This is a good website";
-		vector < string > body2 = { "this", "is", "the", "body", "text" };
+		vector< string > body2 = { "this", "is", "the", "body", "text" };
 
 		REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
 
@@ -166,9 +166,9 @@ TEST_CASE( "ISR functions on one document" )
 	indexChunk initializingIndexChunk = indexChunk( fd );
 
 	string url = "hamiltoncshell.com";
-	vector < string > title = { "hamilton", "c", "shell" };
+	vector< string > title = { "hamilton", "c", "shell" };
 	string titleString = "Hamilton C Shell 2012";
-	vector < string > body = { "some", "junk", "and", "more", "junk", "and", "junk" };
+	vector< string > body = { "some", "junk", "and", "more", "junk", "and", "junk" };
 
 	REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 
@@ -179,12 +179,12 @@ TEST_CASE( "ISR functions on one document" )
 		{
 		REQUIRE( andISR.next( ) == 2 );
 		REQUIRE( andISR.next( ) == 5 );
-		REQUIRE( andISR.next( ) == static_cast < size_t >( -1 ) );
+		REQUIRE( andISR.next( ) == static_cast< size_t >( -1 ) );
 
 		REQUIRE( junkISR.next( ) == 1 );
 		REQUIRE( junkISR.next( ) == 4 );
 		REQUIRE( junkISR.next( ) == 6 );
-		REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
+		REQUIRE( junkISR.next( ) == static_cast< size_t >( -1 ) );
 		}
 
 	SECTION( "seek" )
@@ -193,7 +193,7 @@ TEST_CASE( "ISR functions on one document" )
 		REQUIRE( andISR.seek( 0 ) == 2 );
 		REQUIRE( andISR.seek( 2 ) == 2 );
 		REQUIRE( andISR.seek( 3 ) == 5 );
-		REQUIRE( andISR.seek( 6 ) == static_cast < size_t >( -1 ) );
+		REQUIRE( andISR.seek( 6 ) == static_cast< size_t >( -1 ) );
 
 		REQUIRE( andISR.seek( 4 ) == 5 );
 		REQUIRE( andISR.seek( 1 ) == 2 );
@@ -238,14 +238,14 @@ TEST_CASE( "ISR functions on multiple documents" )
 		indexChunk initializingIndexChunk = indexChunk( fd );
 
 		string url = "hamiltoncshell.com";
-		vector < string > title = { "hamilton", "c", "shell" };
+		vector< string > title = { "hamilton", "c", "shell" };
 		string titleString = "Hamilton C Shell 2012";
-		vector < string > body = { "some", "junk", "and", "more", "junk", "and" };
+		vector< string > body = { "some", "junk", "and", "more", "junk", "and" };
 
 		string url2 = "google.com";
-		vector < string > title2 = { "evil", "company", "sell", "your", "data" };
+		vector< string > title2 = { "evil", "company", "sell", "your", "data" };
 		string titleString2 = "Evil company sell your data";
-		vector < string > body2 = { "click", "this", "ad", "and", "you", "can", "live" };
+		vector< string > body2 = { "click", "this", "ad", "and", "you", "can", "live" };
 
 		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 		REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
@@ -256,15 +256,15 @@ TEST_CASE( "ISR functions on multiple documents" )
 		REQUIRE( andISR.next( ) == 2 );
 		REQUIRE( andISR.next( ) == 5 );
 		REQUIRE( andISR.next( ) == 14 );
-		REQUIRE( andISR.next( ) == static_cast < size_t >( -1 ) );
+		REQUIRE( andISR.next( ) == static_cast< size_t >( -1 ) );
 		REQUIRE( junkISR.next( ) == 1 );
 		REQUIRE( junkISR.next( ) == 4 );
-		REQUIRE( junkISR.next( ) == static_cast < size_t >( -1 ) );
+		REQUIRE( junkISR.next( ) == static_cast< size_t >( -1 ) );
 
 		indexChunk::indexStreamReader endOfDocumentISR( &initializingIndexChunk, "" );
 		REQUIRE( endOfDocumentISR.next( ) == 10 );
 		REQUIRE( endOfDocumentISR.next( ) == 24 );
-		REQUIRE( endOfDocumentISR.next( ) == static_cast < size_t >( -1 ) );
+		REQUIRE( endOfDocumentISR.next( ) == static_cast< size_t >( -1 ) );
 
 		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
@@ -295,16 +295,16 @@ TEST_CASE( "ISR functions on multiple documents" )
 		string url3 = "fannywanny.io";
 		string url4 = "marypoppins.io";
 		string url5 = "soundofmusic.io";
-		vector < string > title = { "hamilton", "c", "shell" };
-		vector < string > emptyTitle = { };
+		vector< string > title = { "hamilton", "c", "shell" };
+		vector< string > emptyTitle = { };
 		string titleString0 = "Hamilton C Shell 2012";
 		string titleString1 = "Best Website";
 		string titleString2 = "Second Best Website";
 		string titleString3 = "Third Best Website";
 		string titleString4 = "Movie";
 		string titleString5 = "Other Movie";
-		vector < string > body = { "this", "is", "the", "body", "text" };
-		vector < string > emptyBody = { };
+		vector< string > body = { "this", "is", "the", "body", "text" };
+		vector< string > emptyBody = { };
 
 		REQUIRE( initializingIndexChunk.addDocument( url0, emptyTitle, titleString0, emptyBody ) );
 		REQUIRE( initializingIndexChunk.addDocument( url1, title, titleString1, body ) );
@@ -346,11 +346,11 @@ TEST_CASE( "ONE BIG DOC" )
 
 		string word = "someWord";
 		string url = "hamiltoncshell.com";
-		vector < string > title = { "hamilton", "c", "shell" };
+		vector< string > title = { "hamilton", "c", "shell" };
 		string titleString = "Hamilton C Shell 2012";
 
 		// Each postsChunk has a byte posts[ ] of size 1 << 10, so we just choose something larger than that
-		vector < string > body( 1 << 12, word );
+		vector< string > body( 1 << 12, word );
 
 		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 
@@ -391,12 +391,12 @@ TEST_CASE( "ONE BIG DOC" )
 		string uno = "uno";
 		string dos = "dos";
 		string url = "hamiltoncshell.com";
-		vector < string > title = { "hamilton", "c", "shell" };
+		vector< string > title = { "hamilton", "c", "shell" };
 		string titleString = "Hamilton C Shell 2012";
 
 		// Each postsChunk has a byte posts[ ] of size 1 << 10
-		vector < string > body1( 1 << 11, "uno" );
-		vector < string > body2( 1 << 11, "dos" );
+		vector< string > body1( 1 << 11, "uno" );
+		vector< string > body2( 1 << 11, "dos" );
 
 		// This is a helper variable for the for loops below
 		size_t offset;
@@ -438,7 +438,7 @@ TEST_CASE( "Read indexChunk from a file" )
 
 		string word = "someWord";
 		string url = "hamiltoncshell.com";
-		vector < string > title = { "hamilton", "c", "shell" };
+		vector< string > title = { "hamilton", "c", "shell" };
 		string titleString = "Hamilton C Shell 2012";
 
 		// Create a scope here so that the index chunk calls its destructor
@@ -446,7 +446,7 @@ TEST_CASE( "Read indexChunk from a file" )
 			indexChunk initializingIndexChunk = indexChunk( fd );
 
 			// Each postsChunk has a byte posts[ ] of size 1 << 10
-			vector < string > body( 1 << 12, word );
+			vector< string > body( 1 << 12, word );
 
 			REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 			indexChunk::indexStreamReader wordISR = indexChunk::indexStreamReader( &initializingIndexChunk, word );
@@ -481,7 +481,7 @@ TEST_CASE( "Read indexChunk from a file" )
 		indexChunk::indexStreamReader wordISR2 = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
 		for ( size_t iters = 0;  iters < ( 1 << 12 );  ++iters )
 			REQUIRE( wordISR2.next( ) == iters );
-		REQUIRE( wordISR2.next( ) == static_cast < size_t >( -1 ) );
+		REQUIRE( wordISR2.next( ) == static_cast< size_t >( -1 ) );
 
 		indexChunk::indexStreamReader wordISR3 = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
 		for ( size_t iters = 0;  iters < ( 1 << 4 );  ++iters )
@@ -515,9 +515,9 @@ TEST_CASE( "Read indexChunk from a file" )
 			indexChunk initializingIndexChunk = indexChunk( fd );
 
 			string url = "hamiltoncshell.com";
-			vector < string > title = { "hamilton", "c", "shell" };
+			vector< string > title = { "hamilton", "c", "shell" };
 			string titleString = "Hamilton C Shell 2012";
-			vector < string > body = { "some", "junk", "and", "more", "junk", "and", "junk" };
+			vector< string > body = { "some", "junk", "and", "more", "junk", "and", "junk" };
 
 			REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 			}

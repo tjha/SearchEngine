@@ -142,7 +142,7 @@ namespace dex
 			struct wordForm
 				{
 				string word;
-				vector < size_t > deltas; // lengths of each part
+				vector< size_t > deltas; // lengths of each part
 				bool firstIsVowel;
 				bool lastIsVowel;
 
@@ -280,7 +280,7 @@ namespace dex
 				{
 				bool firstIsVowel;
 				bool previousWasVowel;
-				vector < size_t > deltas;
+				vector< size_t > deltas;
 
 				if ( word.empty( ) )
 					return wordForm{ word, deltas, false, false };
