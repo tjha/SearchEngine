@@ -88,10 +88,12 @@ indexerDriver: $(SOURCE_DIR)/indexer/driver.o $(SOURCE_DIR)/indexer/index.o
 	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/indexerDriver.exe
 
 PORT=8000
-server: $(SOURCE_DIR)/frontend/httpServer.cpp
-	mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/server.exe
-	./$(BUILD_DIR)/server.exe $(EXECUTABLE)
+server: $(SOURCE_DIR)/frontend/httpServer.cpp\
+		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
+		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
+		$(BUILD_DIR)/indexer/index.o
+	$(CXX) $(CXXFLAGS) -O3 -g3 $^ -o $(BUILD_DIR)/server.exe
+	./$(BUILD_DIR)/server.exe $(PORT)
 
 printOS:
 	$(info Your OS is '$(UNAME_S)')
