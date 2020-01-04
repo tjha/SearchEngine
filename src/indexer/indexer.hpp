@@ -120,18 +120,20 @@ namespace dex
 					};
 
 				// These consts can be adjusted if necessary.
-				// static const size_t maxURLCount = 1L << 17;
-				// static const size_t maxURLLength = 1L << 10;
-				// static const size_t maxTitleLength = 1 << 10;
-				// static const size_t maxWordLength = 64;
-				// static const size_t postsChunkArraySize = 1L << 19;
-				// static const size_t postsMetadataArraySize = 1L << 19;
-				static const size_t maxURLCount = 1L << 8;
+				static const size_t maxURLCount = 1L << 17;
 				static const size_t maxURLLength = 1L << 10;
 				static const size_t maxTitleLength = 1 << 10;
 				static const size_t maxWordLength = 64;
-				static const size_t postsChunkArraySize = 1L << 10;
-				static const size_t postsMetadataArraySize = 1L << 10;
+				static const size_t postsChunkArraySize = 1L << 19;
+				static const size_t postsMetadataArraySize = 1L << 19;
+
+				// Keep these for testing
+				// static const size_t maxURLCount = 1L << 8;
+				// static const size_t maxURLLength = 1L << 10;
+				// static const size_t maxTitleLength = 1 << 10;
+				// static const size_t maxWordLength = 64;
+				// static const size_t postsChunkArraySize = 1L << 10;
+				// static const size_t postsMetadataArraySize = 1L << 10;
 
 				// TODO: Double check these very carefully.
 				// Note: these sizes should be such that they are block-aligned. The required offest for block alignment
