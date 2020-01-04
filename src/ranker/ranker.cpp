@@ -156,8 +156,8 @@ dex::ranker::score dex::ranker::staticRanker::getStaticScore( const dex::string 
 
 	if ( printInfo )
 		{
-		std::cout << "Static Score Title: " << score.staticTitleScore << std::endl;
-		std::cout << "Static Score Url: " << score.staticUrlScore << std::endl;
+		std::cout << "Static Score Title: " << title << ": " << score.staticTitleScore << std::endl;
+		std::cout << "Static Score Url: " << url.completeUrl( ) << ": " << score.staticUrlScore << std::endl;
 		}
 
 	return score;
@@ -251,7 +251,7 @@ double dex::ranker::dynamicRanker::kendallsTau( const dex::vector< size_t > &ord
 			else
 				numUnorderedPairs++;
 			}
-	return ( numOrderedPairs - numUnorderedPairs ) / ( numOrderedPairs + numUnorderedPairs);
+	return dex::min( ( numOrderedPairs - numUnorderedPairs ) / ( numOrderedPairs + numUnorderedPairs), 1.0 ) ;
 	}
 
 double dex::ranker::dynamicRanker::scoreBodySpan( size_t queryLength, size_t spanLength, double tau) const
@@ -262,7 +262,7 @@ double dex::ranker::dynamicRanker::scoreBodySpan( size_t queryLength, size_t spa
 	// The higher the tauWeight, the higher the score
 	// The shorter our span, the higher the score
 	// very rudamentary scoring function, really just for compiling right now.
-	return tauWeight / spanProportion;
+	return 5 * tauWeight / spanProportion;
 	}
 
 double dex::ranker::dynamicRanker::scoreTitleSpan( size_t queryLength, size_t spanLength, double tau) const
@@ -273,7 +273,7 @@ double dex::ranker::dynamicRanker::scoreTitleSpan( size_t queryLength, size_t sp
 	// The higher the tauWeight, the higher the score
 	// The shorter our span, the higher the score
 	// very rudamentary scoring function, really just for compiling right now.
-	return 10 * tauWeight / spanProportion;
+	return 50 * tauWeight / spanProportion;
 	}
 
 
@@ -447,13 +447,14 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 	dex::vector< dex::ranker::score > scores( numberOfDocuments );
 
 	// Score body spans
-	for ( size_t i = 0;  i < bodySpans.size( );  ++i )
+	for ( size_t i = 0;  i < numberOfDocuments;  ++i )
 		{
 		double bodySpanScore = 0;
 		for ( size_t j = 0;  j < bodySpans[ i ].size( );  ++j )
 			{
 			bodySpanScore += scoreBodySpan( bodyISRs.size( ), bodySpans[ i ][ j ].first, bodySpans[ i ][ j ].second );
 			}
+		
 		scores[ i ].setDynamicBodySpanScore( dex::min( bodySpanScore, maxBodySpanScore ) );
 		if ( printInfo )
 			{
@@ -517,7 +518,7 @@ dex::pair< dex::vector< dex::ranker::score >, int > dex::ranker::ranker::scoreDo
 		titleISRs.pushBack( new dex::index::indexChunk::indexStreamReader( documents->chunk, '#' + documents->flattenedQuery[ i ] ) );
 	dex::vector< dex::ranker::score > totalScores = rankerDynamic.getDynamicScores( bodyISRs, titleISRs,
 			documents->matchingDocumentISR, ends, documents->chunk, documents->emphasizedWords, titles, urls, printInfo );
-	for ( size_t i = 0;  i < titles.size( );  ++i )
+	for ( size_t i = 0;  i < totalScores.size( );  ++i )
 		{
 		dex::ranker::score staticScore = rankerStatic.getStaticScore( titles[ i ], urls[ i ], printInfo );
 		totalScores[ i ].setStaticTitleScore( staticScore.staticTitleScore );

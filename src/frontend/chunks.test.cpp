@@ -429,7 +429,7 @@ TEST_CASE( "ranker" )
 	// Making two financial documents
 		{
 		dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fd );
-		dex::string url = "www.mlb.edu/moenyball";
+		dex::string url = "www.mlb.edu/moneyball";
 		dex::vector< dex::string > title = { "oakland", "athletics", "baseball", "performance" };
 		dex::string titleString = "oakland athletics baseball performance";
 		dex::vector< dex::string > body = { "the", "oakland", "athletics", "baseball", "program",
@@ -467,5 +467,19 @@ TEST_CASE( "ranker" )
 		REQUIRE( results.first.size( ) == 4 );
 		for ( size_t i = 0;  i < results.first.size( ) - 1;  ++i )
 			REQUIRE( results.first[ i ].score.getTotalScore( ) >= results.first[ i + 1 ].score.getTotalScore( ) );
+		}
+
+	SECTION( "personal ranker testing" )
+		{
+		dex::ranker::ranker rankerObject;
+		dex::string query = "short market";
+		dex::pair< dex::vector< dex::ranker::searchResult >, int > results = dex::ranker::getTopN( 10, query,
+				&rankerObject, indexChunkPointers, false );
+		// for ( size_t i = 0;  i < results.first.size( );  ++i )
+		// 	{
+		// 	std::cout << std::endl << results.first[ i ].title << std::endl << results.first[ i ].url.completeUrl( ) << std::endl;
+		// 	std::cout << results.first[ i ].score << std::endl << std::endl;
+		// 	}
+			
 		}
 	}

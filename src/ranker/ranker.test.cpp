@@ -14,6 +14,19 @@
 #include "indexer/indexer.hpp"
 #include "ranker/ranker.hpp"
 #include "ranker/testingISRs.hpp"
+#include "utils/file.hpp"
+
+TEST_CASE( "score", "[ranker]" )
+	{
+	dex::ranker::score score;
+	REQUIRE( score.getTotalScore( ) == 0 );
+	score.setStaticUrlScore( 15 );
+	REQUIRE( score.getTotalScore( ) == 15 );
+	REQUIRE( score.staticUrlScore == 15 );
+	score.setStaticUrlScore( 10 );
+	REQUIRE( score.getTotalScore( ) == 10 );
+	REQUIRE( score.staticUrlScore == 10 );
+	}
 
 TEST_CASE( "static ranking", "[ranker]" )
 	{
@@ -631,149 +644,49 @@ TEST_CASE( "scoring" )
 		dex::vector< bool > emphasized = { false, false, false };
 		dex::vector< dex::string > titles;
 		dex::vector< dex::Url > urls;
-		dex::vector< double > dynamicScores = judge.rankerDynamic.getDynamicScores( isrs, titleisrs, &matchingISR, &endisr, nullptr,
+		dex::vector< dex::ranker::score > dynamicScores = judge.rankerDynamic.getDynamicScores( isrs, titleisrs, &matchingISR, &endisr, nullptr,
 				emphasized, titles, urls );
-		REQUIRE( dynamicScores[ 0 ] > dynamicScores[ 1 ] );
-		REQUIRE( dynamicScores[ 1 ] > dynamicScores[ 2 ] );
+		REQUIRE( dynamicScores[ 0 ].getTotalScore( ) > dynamicScores[ 1 ].getTotalScore( ) );
+		REQUIRE( dynamicScores[ 1 ].getTotalScore( ) > dynamicScores[ 2 ].getTotalScore( ) );
 		}
 
-	/*
-	SECTION( "total scoring" )
+	
+	SECTION( "dynamic scoring" )
 		{
-		dex::vector< size_t > ends = { 1000, 6000, 7000 };
-		dex::rankerTesting::endOfDocumentISR endisr( ends );
-		dex::rankerTesting::ISR matchingISR( "", ends, endisr );
-		dex::vector< dex::Url > urls = { "https://www.good.com", "http://www.good.com/somethingabitlonger", "http://bad.good.bad" };
-		dex::vector< size_t > quick = {
-				62, 69, 84, 311, 421, 430, 566, 619, 794, 952,
-				3500, 5500,
-				6500 };
-		dex::rankerTesting::ISR quickISR( "quick", quick, endisr );
-		dex::vector< size_t > brown = {
-				83, 94, 170, 179, 216, 227, 400, 417, 422, 575, 795, 826, 828, 957,
-				3501, 5501,
-				6504 };
-		dex::rankerTesting::ISR brownISR( "brown", brown, endisr );
-		dex::vector< size_t > fox = {
-				284, 423, 580, 612, 796, 912, 958,
-				3502, 5502,
-				6508 };
-		dex::rankerTesting::ISR foxISR( "fox", fox, endisr );
-		dex::vector< dex::constraintSolver::ISR * > isrs;
-		isrs.pushBack( &quickISR );
-		isrs.pushBack( &brownISR );
-		isrs.pushBack( &foxISR );
-		dex::vector< dex::string > titles = { "good title", "slightly longer but reasonable",
-				"much longer and insanely unreasonable by any standard for a title" };
-		dex::vector< size_t > titlequick = {
-				60,
-				2000,
-				6500 };
-		dex::rankerTesting::ISR titlequickISR( "quick", titlequick, endisr );
-		dex::vector< size_t > titlebrown = {
-				61,
-				2002,
-				6504 };
-		dex::rankerTesting::ISR titlebrownISR( "brown", titlebrown, endisr );
-		dex::vector< size_t > titlefox = {
-				62,
-				2004,
-				6508 };
-		dex::rankerTesting::ISR titlefoxISR( "fox", titlefox, endisr );
-		dex::vector< dex::constraintSolver::ISR * > titleisrs;
-		titleisrs.pushBack( &titlequickISR );
-		titleisrs.pushBack( &titlebrownISR );
-		titleisrs.pushBack( &titlefoxISR );
-		dex::ranker::ranker judge( titleWeights, urlWeight,
-			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
-		dex::vector< bool > emphasized = { false, false, false };
+		dex::string filePath = "test_in.dex";
+		int fd = open( filePath.cStr( ), O_RDWR | O_CREAT | O_TRUNC, 0777 );
 
+		REQUIRE( fd != -1 );
+			// Scope to make sure we call the destructor
+			{
+			dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fd );
+			dex::string url = "www.robinhood.com/shortthehousingmarket";
+			dex::vector< dex::string > title = { "learn", "to", "short", "the", "housing", "market" };
+			dex::string titleString = "Learn to short the housing market";
+			dex::vector< dex::string > body = { "short", "the", "housing", "market" };
 
-		dex::matchedDocuments documentsObject;
-		dex::matchedDocuments *documents = &documentsObject;
-		documents->matchingDocumentISR = &matchingISR;
-		documents->emphasizedWords = emphasized;
-		documents->chunk = nullptr;
-		dex::vector< dex::string > nulltitles;
-		dex::vector< dex::string > nullurls;
-		dex::pair< dex::vector< double >, int > totalScoresPair = judge.scoreDocuments( documents, &endisr, nulltitles, nullurls, true );
-		dex::vector< double > totalScores = totalScoresPair.first;
-		std::cout << totalScores[ 0 ] << std::endl;
-		std::cout << totalScores[ 1 ] << std::endl;
-		std::cout << totalScores[ 2 ] << std::endl;
-		REQUIRE( totalScores[ 0 ] > totalScores[ 1 ] );
-		REQUIRE( totalScores[ 1 ] > totalScores[ 2 ] );
+			REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+
+			url = "goldmansachs.com/unrelated/garbo/garbo/stuff";
+			title = { "buy", "bonds", "in", "the", "housing", "market" };
+			titleString = "buy bonds in the housing market";
+			body = { "short", "the", "not", "a", "a", "a", "housing", "market" };
+
+			REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+			}
+
+		dex::index::indexChunk *chunkPointer = new dex::index::indexChunk( fd, false );
+		dex::ranker::ranker rankerObject;
+		dex::vector < dex::index::indexChunk * > pointers;
+		pointers.pushBack( chunkPointer );
+
+		dex::string query = "short the housing market";
+		dex::pair< dex::vector< dex::ranker::searchResult >, int > results = dex::ranker::getTopN( 10, query,
+				&rankerObject, pointers, true );
+		for ( size_t i = 0;  i < results.first.size( );  ++i )
+			{
+			std::cout << results.first[ i ].title << std::endl;
+			std::cout << results.first[ i ].score << std::endl << std::endl;
+			}
 		}
-
-	SECTION( "total scoring w/ more ends than matching" )
-		{
-		dex::vector< size_t > ends = { 1000, 2000, 3000, 4000, 5000, 6000, 7000 };
-		dex::vector< size_t > matching = { 1000, 6000, 7000 };
-		dex::rankerTesting::endOfDocumentISR endisr( ends );
-		dex::rankerTesting::ISR matchingISR( "", matching, endisr );
-		dex::vector< dex::Url > urls = { "https://www.good.com", "http://www.good.com/somethingabitlonger", "http://bad.good.bad" };
-		dex::vector< size_t > quick = {
-				62, 69, 84, 311, 421, 430, 566, 619, 794, 952,
-				3500, 5500,
-				6500 };
-		dex::rankerTesting::ISR quickISR( "quick", quick, endisr );
-		dex::vector< size_t > brown = {
-				83, 94, 170, 179, 216, 227, 400, 417, 422, 575, 795, 826, 828, 957,
-				3501, 5501,
-				6504 };
-		dex::rankerTesting::ISR brownISR( "brown", brown, endisr );
-		dex::vector< size_t > fox = {
-				284, 423, 580, 612, 796, 912, 958,
-				3502, 5502,
-				6508 };
-		dex::rankerTesting::ISR foxISR( "fox", fox, endisr );
-		dex::vector< dex::constraintSolver::ISR * > isrs;
-		isrs.pushBack( &quickISR );
-		isrs.pushBack( &brownISR );
-		isrs.pushBack( &foxISR );
-		dex::vector< dex::string > titles = { "good title", "slightly longer but reasonable",
-				"much longer and insanely unreasonable by any standard for a title" };
-		dex::vector< size_t > titlequick = {
-				60,
-				2000,
-				6500 };
-		dex::rankerTesting::ISR titlequickISR( "quick", titlequick, endisr );
-		dex::vector< size_t > titlebrown = {
-				61,
-				2002,
-				6504 };
-		dex::rankerTesting::ISR titlebrownISR( "brown", titlebrown, endisr );
-		dex::vector< size_t > titlefox = {
-				62,
-				2004,
-				6508 };
-		dex::rankerTesting::ISR titlefoxISR( "fox", titlefox, endisr );
-		dex::vector< dex::constraintSolver::ISR * > titleisrs;
-		titleisrs.pushBack( &titlequickISR );
-		titleisrs.pushBack( &titlebrownISR );
-		titleisrs.pushBack( &titlefoxISR );
-		dex::ranker::ranker judge( titleWeights, urlWeight,
-			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
-		dex::vector< bool > emphasized = { false, false, false };
-
-
-		dex::matchedDocuments documents;
-		documents.titleISRs = titleisrs;
-		documents.bodyISRs = isrs;
-		documents.matchingDocumentISR = &matchingISR;
-		documents.emphasizedWords = emphasized;
-		documents.urls = urls;
-		documents.titles = titles;
-		documents.chunk = nullptr;
-		dex::vector< dex::string > nulltitles;
-		dex::vector< dex::string > nullurls;
-		dex::pair< dex::vector< double >, int > totalScoresPair = judge.scoreDocuments( documents, &endisr, nulltitles, nullurls, true );
-		dex::vector< double > totalScores = totalScoresPair.first;
-		std::cout << totalScores[ 0 ] << std::endl;
-		std::cout << totalScores[ 1 ] << std::endl;
-		std::cout << totalScores[ 2 ] << std::endl;
-		REQUIRE( totalScores[ 0 ] > totalScores[ 1 ] );
-		REQUIRE( totalScores[ 1 ] > totalScores[ 2 ] );
-		}
-	*/
 	}
