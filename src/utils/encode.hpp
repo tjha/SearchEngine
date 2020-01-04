@@ -23,7 +23,7 @@ namespace dex
 		{
 
 		// Number types are stored as there maximum amount of bytes used
-		template< class T >
+		template < class T >
 		class encoder
 			{
 			public:
@@ -43,7 +43,7 @@ namespace dex
 					return encodedData;
 					}
 
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( T number, InputIt it = nullptr ) const
 					{
 					dex::vector< unsigned char > encodedData;
@@ -77,7 +77,7 @@ namespace dex
 
 		// basicString Encoding
 		// ( size of string as int ) + ( string )
-		template< class T >
+		template < class T >
 		class encoder< dex::basicString< T > >
 			{
 			public:
@@ -95,7 +95,7 @@ namespace dex
 					return encodedVector;
 					}
 
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( const dex::basicString< T > &data, InputIt it = nullptr ) const
 					{
 					encoder< char > TEncoder;
@@ -123,7 +123,7 @@ namespace dex
 			};
 
 		// encode a url object to just encoded the complete URL
-		template< >
+		template < >
 		class encoder< dex::Url >
 			{
 			public:
@@ -132,7 +132,7 @@ namespace dex
 					return encoder< dex::basicString< char > >( )( data.completeUrl( ) );
 					}
 
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( const Url &data, InputIt it = nullptr ) const
 					{
 					encoder< dex::basicString< char > > TEncoder;
@@ -155,7 +155,7 @@ namespace dex
 			};
 
 		// Encode a vector of type T
-		template< class T >
+		template < class T >
 		class encoder< dex::vector< T > >
 			{
 			public:
@@ -174,7 +174,7 @@ namespace dex
 					return encodedVector;
 					}
 
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( const dex::vector< T > &data, InputIt it = nullptr ) const
 					{
 					encoder< T > TEncoder;
@@ -199,7 +199,7 @@ namespace dex
 
 		// Encode a vector of type T
 		/*
-		template< class T >
+		template < class T >
 		class encoder< dex::unorderedSet< T > >
 			{
 			public:
@@ -217,7 +217,7 @@ namespace dex
 					return encodedVector;
 					}
 
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( const dex::unorderedSet< T > &data, InputIt it = nullptr ) const
 					{
 					encoder< T > TEncoder;
@@ -240,11 +240,11 @@ namespace dex
 					}
 			};*/
 
-		template< >
+		template < >
 		class encoder< dex::RobotTxt >
 			{
 			public:
-				/*template< class InputIt >
+				/*template < class InputIt >
 				InputIt operator( )( const dex::RobotTxt &robot, InputIt it ) const
 					{
 					encoder< dex::string > StringEncoder;
@@ -301,7 +301,7 @@ namespace dex
 					}
 			};
 
-		template< class T, class InputIt = unsigned char * >
+		template < class T, class InputIt = unsigned char * >
 		class decoder
 			{
 			public:
@@ -326,7 +326,7 @@ namespace dex
 					}
 			};
 
-		template< class T, class InputIt >
+		template < class T, class InputIt >
 		class decoder< dex::basicString< T >, InputIt >
 			{
 			public:
@@ -349,7 +349,7 @@ namespace dex
 					}
 			};
 
-		template< class InputIt >
+		template < class InputIt >
 		class decoder< dex::Url, InputIt >
 			{
 			public:
@@ -364,7 +364,7 @@ namespace dex
 					}
 			};
 
-		template< class T, class InputIt >
+		template < class T, class InputIt >
 		class decoder< vector< T >, InputIt >
 			{
 			public:
@@ -388,7 +388,7 @@ namespace dex
 			};
 
 		/*
-		template< class T, class InputIt >
+		template < class T, class InputIt >
 		class decoder< unorderedSet< T >, InputIt >
 			{
 			public:

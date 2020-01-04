@@ -11,7 +11,7 @@
 
 namespace dex
 	{
-	template< class Key >
+	template < class Key >
 	struct hash
 		{
 		private:

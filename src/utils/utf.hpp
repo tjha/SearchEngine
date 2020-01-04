@@ -37,11 +37,11 @@ namespace dex
 	{
 	namespace utf
 		{
-		template< class T >
+		template < class T >
 		class encoder
 			{
 			public:
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( T number, InputIt it ) const
 					{
 					if ( number > 0x7FFFFFFF )
@@ -102,11 +102,11 @@ namespace dex
 					}
 			};
 
-		template< class T1, class T2 >
+		template < class T1, class T2 >
 		class encoder< dex::pair< T1, T2 > >
 			{
 			public:
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( const dex::pair< T1, T2 > &data, InputIt it ) const
 					{
 					dex::vector< unsigned char > encodedFirst = encoder< T1 >( )( data.first );
@@ -127,11 +127,11 @@ namespace dex
 					}
 			};
 
-		template< class T >
+		template < class T >
 		class encoder< dex::vector< T > >
 			{
 			public:
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( const dex::vector< T > &data, InputIt it ) const
 					{
 					encoder< T > TEncoder;
@@ -156,11 +156,11 @@ namespace dex
 			};
 
 		// Assume that strings are ASCII only.
-		template< class T >
+		template < class T >
 		class encoder< dex::basicString< T > >
 			{
 			public:
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( const dex::basicString< T > &data, InputIt it ) const
 					{
 					it = encoder< size_t >( )( data.size( ), it );
@@ -178,11 +178,11 @@ namespace dex
 					}
 			};
 
-		template< class Key, class Value >
+		template < class Key, class Value >
 		class encoder< dex::unorderedMap< Key, Value > >
 			{
 			public:
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( const dex::unorderedMap< Key, Value > &data, InputIt it ) const
 					{
 					encoder< dex::pair< Key, Value > > KeyValueEncoder;
@@ -207,11 +207,11 @@ namespace dex
 					}
 			};
 
-		template< class Key >
+		template < class Key >
 		class encoder< dex::unorderedSet< Key > >
 			{
 			public:
-				template< class InputIt >
+				template < class InputIt >
 				InputIt operator( )( const dex::unorderedSet< Key > &data, InputIt it ) const
 					{
 					encoder< Key > KeyEncoder;
@@ -235,11 +235,11 @@ namespace dex
 					}
 			};
 
-		template<>
+		template <>
 		class encoder< dex::RobotTxt >
 			{
 			public:
-				/*template< class InputIt >
+				/*template < class InputIt >
 				InputIt operator( )( const dex::RobotTxt &robot, InputIt it ) const
 					{
 					encoder< dex::string > StringEncoder;
@@ -296,7 +296,7 @@ namespace dex
 					}
 			};
 
-		template< class InputIt >
+		template < class InputIt >
 		unsigned long decodeSafe( InputIt encoding )
 			{
 			// How many bits of the first byte we need to care about
@@ -336,7 +336,7 @@ namespace dex
 			return decodedValue;
 			}
 
-		template< class T, class InputIt = unsigned char * >
+		template < class T, class InputIt = unsigned char * >
 		class decoder
 			{
 			public:
@@ -373,7 +373,7 @@ namespace dex
 					}
 			};
 
-		template< class T1, class T2, class InputIt >
+		template < class T1, class T2, class InputIt >
 		class decoder< dex::pair< T1, T2 >, InputIt >
 			{
 			public:
@@ -390,7 +390,7 @@ namespace dex
 					}
 			};
 
-		template< class T, class InputIt >
+		template < class T, class InputIt >
 		class decoder< dex::vector< T >, InputIt >
 			{
 			public:
@@ -411,7 +411,7 @@ namespace dex
 					}
 			};
 
-		template< class T, class InputIt >
+		template < class T, class InputIt >
 		class decoder< dex::basicString< T >, InputIt >
 			{
 			public:
@@ -432,7 +432,7 @@ namespace dex
 					}
 			};
 
-		template< class Key, class Value, class InputIt >
+		template < class Key, class Value, class InputIt >
 		class decoder< dex::unorderedMap< Key, Value >, InputIt >
 			{
 			public:
@@ -453,7 +453,7 @@ namespace dex
 					}
 			};
 
-		template< class Key, class InputIt >
+		template < class Key, class InputIt >
 		class decoder< dex::unorderedSet< Key >, InputIt >
 			{
 			public:
@@ -477,7 +477,7 @@ namespace dex
 		// TODO not sure if this should actually go into utf-8 or in a separate
 		// encoding function
 		/*
-		template< class InputIt >
+		template < class InputIt >
 		class decoder< dex::RobotTxt, InputIt >
 			{
 			public:
@@ -492,7 +492,7 @@ namespace dex
 
 		// We'll say a byte is a sentinel if it looks like 11111111
 		const unsigned char sentinel = 0xFF;
-		template< class InputIt >
+		template < class InputIt >
 		bool isSentinel( InputIt encoding )
 			{
 			return *encoding == sentinel;

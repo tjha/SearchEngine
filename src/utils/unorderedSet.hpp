@@ -19,10 +19,10 @@
 
 namespace dex
 	{
-	template< class Key >
+	template < class Key >
 	struct hash;
 
-	template< class Key, class Hash = dex::hash< Key > >
+	template < class Key, class Hash = dex::hash< Key > >
 	class unorderedSet
 		{
 		private:
@@ -95,7 +95,7 @@ namespace dex
 
 				table = new wrappedDatum[ this->tableSize ]( );
 				}
-			template< class InputIt >
+			template < class InputIt >
 			unorderedSet( InputIt first, InputIt last,
 					size_t tableSize = DEFAULT_TABLE_SIZE, const Hash &hasher = Hash( ) )
 				{
@@ -134,7 +134,7 @@ namespace dex
 				}
 
 		private:
-			template< bool isConst >
+			template < bool isConst >
 			class _iterator
 				{
 				private:
@@ -156,7 +156,7 @@ namespace dex
 						this->position = position;
 						}
 				public:
-					template< typename = typename dex::enableIf< isConst > >
+					template < typename = typename dex::enableIf< isConst > >
 					_iterator( const _iterator< false > &other ) :
 							set( other.set ), position( other.position ) { }
 
@@ -201,7 +201,7 @@ namespace dex
 						}
 				};
 
-			template< bool isConst >
+			template < bool isConst >
 			void swap( _iterator< isConst > &a, _iterator< isConst > &b )
 				{
 				dex::swap( a.set, b.set );
@@ -322,7 +322,7 @@ namespace dex
 				return dex::pair< iterator, bool >{ iterator( *this, location ), inserted };
 				}
 
-			template< class InputIt >
+			template < class InputIt >
 			void insert( InputIt first, InputIt last )
 				{
 				for ( ;  first != last;  insert( *( first++ ) ) );
@@ -370,7 +370,7 @@ namespace dex
 				}
 		};
 
-		template< class Key, class Hash >
+		template < class Key, class Hash >
 		void swap( unorderedSet< Key, Hash > &a, unorderedSet< Key, Hash > &b )
 			{
 			a.swap( b );

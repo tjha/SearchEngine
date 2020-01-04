@@ -54,7 +54,7 @@
 
 namespace dex
 	{
-	template< typename charT >
+	template < typename charT >
 	class basicString
 		{
 		private:
@@ -120,7 +120,7 @@ namespace dex
 				dex::fill( array, array + stringSize, character );
 				array[ stringSize ] = charT { };
 				}
-			template< class InputIt,
+			template < class InputIt,
 					typename = typename dex::enableIf< !dex::isIntegral< InputIt >::value >::type >
 			basicString( InputIt first, InputIt last )
 				{
@@ -250,7 +250,7 @@ namespace dex
 
 		private:
 			// CTRLF Iterators
-			template< bool isConst, bool isForward >
+			template < bool isConst, bool isForward >
 			class _iterator
 				{
 				private:
@@ -266,7 +266,7 @@ namespace dex
 							size_t position ) :
 							string( string ), position( position ) { }
 				public:
-					template< typename = typename dex::enableIf< isConst > >
+					template < typename = typename dex::enableIf< isConst > >
 					_iterator( const _iterator< false, isForward > &other ) :
 							string( other.string ), position( other.position ) { }
 
@@ -494,7 +494,7 @@ namespace dex
 				{
 				return append( 1, character );
 				}
-			template< class InputIt,
+			template < class InputIt,
 					typename = typename dex::enableIf< !dex::isIntegral< InputIt >::value >::type >
 			basicString< charT > &append( InputIt first, InputIt last )
 				{
@@ -537,7 +537,7 @@ namespace dex
 				swap( temporaryString );
 				return *this;
 				}
-			template< class InputIt,
+			template < class InputIt,
 					typename = typename dex::enableIf< !dex::isIntegral< InputIt >::value >::type >
 			basicString< charT > &assign( InputIt first, InputIt last )
 				{
@@ -605,7 +605,7 @@ namespace dex
 				{
 				return insert( first, 1, character );
 				}
-			template< class InputIt,
+			template < class InputIt,
 					typename = typename dex::enableIf< !dex::isIntegral< InputIt >::value >::type >
 			iterator insert( constIterator insertionPoint, InputIt first, InputIt last )
 				{
@@ -705,7 +705,7 @@ namespace dex
 
 				return *this;
 				}
-			template< class InputIt,
+			template < class InputIt,
 					typename = typename dex::enableIf< !dex::isIntegral< InputIt >::value >::type >
 			basicString< charT > &replace( constIterator first, constIterator last,
 					InputIt inputFirst, InputIt inputLast )
@@ -908,7 +908,7 @@ namespace dex
 				}
 
 		private:
-			template< class InputIt1 >
+			template < class InputIt1 >
 			int lexicographicalCompare( InputIt1 first1, InputIt1 last1, const charT *first2 ) const
 				{
 				for ( ;  first1 != last1 && *first2 != charT { };  ++first1, ++first2 )
@@ -1004,13 +1004,13 @@ namespace dex
 		};
 
 	// CTRLF Non-member Functions
-	template< class charT >
+	template < class charT >
 	void swap( basicString< charT > &a, basicString< charT > &b )
 		{
 		a.swap( b );
 		}
 
-	template< class charT >
+	template < class charT >
 	std::ostream &operator<<( std::ostream &os, const basicString< charT > &str )
 		{
 		for ( typename basicString< charT >::constIterator it = str.cbegin( );  it != str.cend( );  ++it )
@@ -1018,92 +1018,92 @@ namespace dex
 		return os;
 		}
 
-	template< class charT >
+	template < class charT >
 	bool operator==( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return !lhs.compare( rhs );
 		}
-	template< class charT >
+	template < class charT >
 	bool operator==( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return !rhs.compare( lhs );
 		}
-	template< class charT >
+	template < class charT >
 	bool operator==( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return !lhs.compare( rhs );
 		}
-	template< class charT >
+	template < class charT >
 	bool operator!=( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return lhs.compare( rhs );
 		}
-	template< class charT >
+	template < class charT >
 	bool operator!=( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return rhs.compare( lhs );
 		}
-	template< class charT >
+	template < class charT >
 	bool operator!=( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs );
 		}
-	template< class charT >
+	template < class charT >
 	bool operator>( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return lhs.compare( rhs ) > 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator>( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return rhs.compare( lhs ) < 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator>( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs ) > 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator<( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return lhs.compare( rhs ) < 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator<( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return rhs.compare( lhs ) > 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator<( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs ) < 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator>=( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return lhs.compare( rhs ) >= 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator>=( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return rhs.compare( lhs ) <= 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator>=( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs ) >= 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator<=( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return lhs.compare( rhs ) <= 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator<=( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return rhs.compare( lhs ) >= 0;
 		}
-	template< class charT >
+	template < class charT >
 	bool operator<=( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs ) <= 0;
@@ -1162,7 +1162,7 @@ namespace dex
 		return toReturn;
 		}
 
-	template< > struct hash< dex::string >
+	template < > struct hash< dex::string >
 		{
 		private:
 			static const unsigned long prime = 16777619;
@@ -1182,7 +1182,7 @@ namespace dex
 				}
 		};
 
-	template< > struct hash< const dex::string >
+	template < > struct hash< const dex::string >
 		{
 		private:
 			static const unsigned long prime = 16777619;

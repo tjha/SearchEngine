@@ -300,7 +300,7 @@ namespace dex
 		{
 		return lhs.completeUrl( ) == rhs.completeUrl( );
 		}
-	template< >
+	template < >
 	struct hash< dex::Url >
 		{
 		unsigned long operator()( const dex::Url &url ) const

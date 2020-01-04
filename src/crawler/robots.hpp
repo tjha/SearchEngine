@@ -260,7 +260,7 @@ namespace dex
 				}
 
 			// Set the disallowed paths for the domain
-			template< class InputIt >
+			template < class InputIt >
 			void setPathsDisallowed( const InputIt &begin, const InputIt &end )
 				{
 				disallowedPaths.clear( );
@@ -272,7 +272,7 @@ namespace dex
 				}
 
 			// Add paths to the disallowed paths for the domain
-			template< class InputIt >
+			template < class InputIt >
 			void addPathsDisallowed( const InputIt &begin, const InputIt &end )
 				{
 				for ( InputIt it = begin;  it != end;  ++it )
@@ -304,7 +304,7 @@ namespace dex
 				}
 
 			// Set the allowed paths for the domain
-			template< class InputIt >
+			template < class InputIt >
 			void setPathsAllowed( const InputIt &begin, const InputIt &end )
 				{
 				allowedPaths.clear( );
@@ -316,7 +316,7 @@ namespace dex
 				}
 
 			// Add paths to the allowed paths for the domain
-			template< class InputIt >
+			template < class InputIt >
 			void addPathsAllowed( const InputIt &begin, const InputIt &end )
 				{
 				for ( InputIt it = begin;  it != end;  ++it )
@@ -417,7 +417,7 @@ namespace dex
 				}
 		};
 
-	template< >
+	template < >
 	struct hash< dex::RobotTxt >
 		{
 		unsigned long operator()( const dex::RobotTxt &robot ) const
