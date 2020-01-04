@@ -66,17 +66,6 @@ void dex::ranker::score::setDynamicBagOfWordsScore( double score )
 	dynamicBagOfWordsScore = score;
 	}
 
-std::ostream &dex::ranker::operator<<( std::ostream &os, const dex::ranker::score &score )
-	{
-	os << "Static URL Score: " << score.staticUrlScore << "\n"
-			<< "Static Title Score: " << score.staticTitleScore << "\n"
-			<< "Dynamic Body Span Score: " << score.dynamicBodySpanScore << "\n"
-			<< "Dynamic Title Span Score: " << score.dynamicTitleSpanScore << "\n"
-			<< "Dynamic Bag of Words Score: " << score.dynamicBagOfWordsScore << "\n"
-			<< "Total Score: " << score.getTotalScore( );
-	return os;
-	}
-
 dex::ranker::staticRanker::staticRanker( dex::vector< dex::pair< size_t, double > > titleWeights, double urlWeight ) :
 	titleWeights( titleWeights ), urlWeight( urlWeight ) { }
 

@@ -43,7 +43,16 @@ namespace dex
 				void setDynamicBodySpanScore( double score );
 				void setDynamicTitleSpanScore( double score );
 				void setDynamicBagOfWordsScore( double score );
-				friend std::ostream &operator<<( std::ostream &os, const dex::ranker::score &s);
+				friend std::ostream &operator<<( std::ostream &os, const dex::ranker::score &score)
+					{
+					os << "Static URL Score: " << score.staticUrlScore << "\n"
+							<< "Static Title Score: " << score.staticTitleScore << "\n"
+							<< "Dynamic Body Span Score: " << score.dynamicBodySpanScore << "\n"
+							<< "Dynamic Title Span Score: " << score.dynamicTitleSpanScore << "\n"
+							<< "Dynamic Bag of Words Score: " << score.dynamicBagOfWordsScore << "\n"
+							<< "Total Score: " << score.getTotalScore( );
+					return os;
+					}
 			};
 
 		// What is returned after scoring documents
