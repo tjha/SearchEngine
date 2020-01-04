@@ -6,6 +6,13 @@
 #include "queryCompiler/expression.hpp"
 #include "queryCompiler/parser.hpp"
 
+
+dex::queryCompiler::matchedDocuments::~matchedDocuments( )
+	{
+	if ( matchingDocumentISR )
+		delete matchingDocumentISR;
+	}
+
 dex::queryCompiler::matchedDocumentsGenerator::matchedDocumentsGenerator(
 		dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream ) : root( root ), stream( stream )
 	{

@@ -117,12 +117,15 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	if ( initialize )
 		{
 		*postsChunkCount = 1;
-		*location = 0;
-		*maxLocation = 0;
+		*location = 1;
+		*maxLocation = 1;
 
 		postsChunkArray[ 0 ] = postsChunk( );
 		postsMetadataArray[ 0 ] = postsMetadata( 0 );
 		dictionary[ "" ] = 0;
+
+		offsetsToEndOfDocumentMetadatas[ 0 ] = endOfDocumentMetadataType { 1, 0, "", "" };
+		postsMetadataArray[ 0 ].append( 0, postsChunkArray );
 		}
 	else
 		{
@@ -178,9 +181,9 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 		postsMetadataArray[ dictionary[ *uniqueWord ] ].occurenceCount += postsMetadataChanges[ *uniqueWord ];
 		}
 
-	offsetsToEndOfDocumentMetadatas[ documentOffset ] = endOfDocumentMetadataType
+	offsetsToEndOfDocumentMetadatas[ *location ] = endOfDocumentMetadataType
 		{
-		title.size( ) + body.size( ) + 1,
+		title.size( ) + 1 + body.size( ) + 1,
 		uniqueWords.size( ),
 		url,
 		titleString,
@@ -202,7 +205,7 @@ void dex::index::indexChunk::printDictionary( )
 
 dex::index::indexChunk::indexStreamReader::indexStreamReader(
 		indexChunk *chunk, dex::string word, dex::string decorator ) :
-		indexChunkum( chunk ), absoluteLocation( 0 ), toGet( npos )
+		indexChunkum( chunk ), absoluteLocation( 0 ), word( word )
 	{
 	dex::string stemmedWord = decorator + dex::porterStemmer::stem( word );
 	if ( !chunk->dictionary.count( stemmedWord ) )
@@ -222,17 +225,17 @@ dex::index::indexChunk::indexStreamReader::indexStreamReader(
 size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 	{
 	if ( !postsMetadatum )
-		return ( npos );
+		return absoluteLocation = npos;
 
 	// // TODO: Make this do something
 	// postsMetadata::synchronizationPoint *syncPoint
 	// 		= postsMetadatum->synchronizationPoints + ( target >> ( 8 * sizeof( target ) - 8 ) );
 
 	// if ( target > *( indexChunkum->maxLocation ) )
-	// 	return toGet = npos;
+	// 	return absoluteLocation = npos;
 
 	// if ( ~syncPoint->inverseLocation == syncPoint->npos )
-	// 	return toGet = npos;
+	// 	return absoluteLocation = npos;
 
 	// // Jump to the point the synchronization table tells us to.
 	// if ( ~syncPoint->inverseLocation != absoluteLocation )
@@ -245,22 +248,20 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 	post = postsChunkum->posts;
 	absoluteLocation = 0;
 
-	if ( target == 0 )
-		return toGet = next( );
-
 	// Keep scanning until we find the first place not before our target. We'll return -1 if we fail to reach it.
-	while ( absoluteLocation < target )
+	do
 		if ( next( ) == npos )
-			return toGet = npos;
+			return absoluteLocation = npos;
+	while ( absoluteLocation < target );
 
-	return toGet = absoluteLocation;
+	return absoluteLocation;
 	}
 
 size_t dex::index::indexChunk::indexStreamReader::next( )
 	{
 	if ( !postsMetadatum || postsMetadatum->occurenceCount == 0 || absoluteLocation > *( indexChunkum->maxLocation )
 			|| ( dex::utf::isSentinel( post ) && !postsChunkum->nextPostsChunkOffset ) )
-		return toGet = npos;
+		return absoluteLocation = npos;
 
 	if ( dex::utf::isSentinel( post ) )
 		// This operation returns a "good" postsChunk because we only add a new chunk if we have data to add (i.e. we
@@ -271,53 +272,52 @@ size_t dex::index::indexChunk::indexStreamReader::next( )
 		}
 
 	// Post is a pointer to a valid encoded size_t.
-	absoluteLocation += dex::utf::decoder< size_t >( )( post, &post );
-
-	return toGet = absoluteLocation;
+	return absoluteLocation += dex::utf::decoder< size_t >( )( post, &post );
 	}
 
 size_t dex::index::indexChunk::indexStreamReader::nextDocument( )
 	{
 	if ( !postsMetadatum )
-		return toGet = npos;
+		return absoluteLocation = npos;
 	dex::index::indexChunk::indexStreamReader endOfDocumentISR( indexChunkum, "" );
-	size_t endOfDocumentLocation = endOfDocumentISR.seek( absoluteLocation + 1 );
+	size_t endOfDocumentLocation = endOfDocumentISR.seek( absoluteLocation );
 	if ( endOfDocumentLocation == npos )
-		return toGet = npos;
-	return toGet = seek( endOfDocumentLocation + 1 );
+		return absoluteLocation = npos;
+
+	return seek( endOfDocumentLocation + 1 );
 	}
 
-size_t dex::index::indexChunk::indexStreamReader::get( )
+size_t dex::index::indexChunk::indexStreamReader::get( ) const
 	{
-	return toGet;
+	return absoluteLocation;
 	}
 
 dex::index::indexChunk::endOfDocumentIndexStreamReader::endOfDocumentIndexStreamReader( indexChunk *chunk, dex::string )
-		: dex::index::indexChunk::indexStreamReader( chunk, "" ), toGet( this->npos ) { }
+		: dex::index::indexChunk::indexStreamReader( chunk, "" ) { }
 
 size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::seek( size_t target )
 	{
-	return toGet = dex::index::indexChunk::indexStreamReader::seek( target );
+	return dex::index::indexChunk::indexStreamReader::seek( target );
 	}
 
 size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::next( )
 	{
-	return toGet = dex::index::indexChunk::indexStreamReader::next( );
+	return dex::index::indexChunk::indexStreamReader::next( );
 	}
 
 size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::nextDocument( )
 	{
-	return toGet = next( );
+	return next( );
 	}
 
-size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::documentSize( )
+size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::get( ) const
+	{
+	return dex::index::indexChunk::indexStreamReader::get( );
+	}
+
+size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::documentSize( ) const
 	{
 	if ( indexChunkum->offsetsToEndOfDocumentMetadatas.count( absoluteLocation ) )
 		return indexChunkum->offsetsToEndOfDocumentMetadatas[ absoluteLocation ].documentLength;
 	return dex::index::indexChunk::indexStreamReader::npos;
-	}
-
-size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::get( )
-	{
-	return toGet;
 	}

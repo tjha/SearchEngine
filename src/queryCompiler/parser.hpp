@@ -16,12 +16,14 @@ namespace dex
 	namespace queryCompiler
 		{
 		// Information to pass to the ranker
-		struct matchedDocuments
+		class matchedDocuments
 			{
-			dex::vector< dex::string > flattenedQuery;
-			dex::constraintSolver::ISR *matchingDocumentISR;
-			dex::index::indexChunk *chunk;
-			dex::vector< bool > emphasizedWords;
+			public:
+				~matchedDocuments( );
+				dex::vector< dex::string > flattenedQuery;
+				dex::constraintSolver::ISR *matchingDocumentISR;
+				dex::index::indexChunk *chunk;
+				dex::vector< bool > emphasizedWords;
 			};
 
 		class matchedDocumentsGenerator

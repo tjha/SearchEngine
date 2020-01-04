@@ -283,7 +283,7 @@ namespace dex
 						size_t absoluteLocation;
 						bool begun;
 
-						size_t toGet;
+						dex::string word;
 
 					public:
 						// An ISR for the empty string is just and end of document ISR.
@@ -291,7 +291,7 @@ namespace dex
 						size_t seek( size_t target );
 						size_t next( );
 						size_t nextDocument( );
-						size_t get( );
+						size_t get( ) const;
 
 						// Need functions to get metadata for a word for entire posting list
 						// 	and for in the current document
@@ -300,16 +300,13 @@ namespace dex
 				class endOfDocumentIndexStreamReader
 						: public indexStreamReader, public dex::constraintSolver::endOfDocumentISR
 					{
-					private:
-						//indexChunk *chunk;
-						size_t toGet;
 					public:
 						endOfDocumentIndexStreamReader( indexChunk *chunk, dex::string );
 						size_t seek( size_t target );
 						size_t next( );
 						size_t nextDocument( );
-						size_t get( );
-						size_t documentSize( );
+						size_t get( ) const;
+						size_t documentSize( ) const;
 					};
 			};
 		}

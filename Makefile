@@ -33,7 +33,7 @@ BUILD_SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.cpp')
 # .exe files corresponding to TEST_SOURCES. This is pretty contrived, but make wasn't playing nice otherwise
 ALL_TEST_EXECUTABLES :=\
 		$(patsubst $(SOURCE_DIR)/%.cpp,$(BUILD_DIR)/%.exe,$(shell find $(SOURCE_DIR) -type f -name '*.test.cpp'))
-TESTS_TO_SKIP := $(BUILD_DIR)/crawler/crawler.test.exe $(BUILD_DIR)/frontend/chunks.test.exe
+TESTS_TO_SKIP := $(BUILD_DIR)/crawler/crawler.test.exe
 TEST_EXECUTABLES := $(patsubst $(SOURCE_DIR)/%,$(BUILD_DIR)/%.test.exe,$(case))
 ifndef $(case)
 	case := all

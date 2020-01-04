@@ -166,7 +166,7 @@ dex::vector< dex::vector< size_t > > dex::ranker::dynamicRanker::getDocumentInfo
 		for ( size_t isrIndex = 0;  isrIndex < isrCount;  ++isrIndex )
 			{
 			// Avoid accidental backwards seeks
-			if ( isrs[ isrIndex ]->get( ) < beginDocument || isrs[ isrIndex ]->get( ) == dex::constraintSolver::ISR::npos )
+			if ( isrs[ isrIndex ]->get( ) < beginDocument )
 				isrs[ isrIndex ]->seek( beginDocument );
 
 			// Count the occurances for the word in this document
@@ -531,8 +531,6 @@ void *dex::ranker::findAndScoreDocuments( void *args )
 		// Now that we're done with the matched documents, delete them
 		if ( documents )
 			{
-			if ( documents->matchingDocumentISR )
-				delete documents->matchingDocumentISR;
 			delete documents;
 			}
 		// Done with the endISR so delete it

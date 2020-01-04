@@ -35,7 +35,7 @@ namespace dex
 				virtual size_t nextDocument( ) = 0;
 
 				// Return the last returned value.
-				virtual size_t get( ) = 0;
+				virtual size_t get( ) const = 0;
 
 				virtual ~ISR( ) = default;
 			};
@@ -46,8 +46,8 @@ namespace dex
 				virtual size_t seek( size_t target ) = 0;
 				virtual size_t next( ) = 0;
 				virtual size_t nextDocument( ) = 0;
-				virtual size_t get( ) = 0;
-				virtual size_t documentSize( ) = 0;
+				virtual size_t get( ) const = 0;
+				virtual size_t documentSize( ) const = 0;
 			};
 
 		class andISR : public dex::constraintSolver::ISR
@@ -72,7 +72,7 @@ namespace dex
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
-				virtual size_t get( );
+				virtual size_t get( ) const;
 			};
 
 		class orISR : public dex::constraintSolver::ISR
@@ -94,7 +94,7 @@ namespace dex
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
-				virtual size_t get( );
+				virtual size_t get( ) const;
 			};
 
 		class notISR : public dex::constraintSolver::ISR
@@ -115,7 +115,7 @@ namespace dex
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
-				virtual size_t get( );
+				virtual size_t get( ) const;
 			};
 
 		class phraseISR : public dex::constraintSolver::ISR
@@ -139,7 +139,7 @@ namespace dex
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
-				virtual size_t get( );
+				virtual size_t get( ) const;
 			};
 		}
 	}

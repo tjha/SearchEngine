@@ -9,6 +9,8 @@
 #include "catch.hpp"
 #include <pthread.h>
 
+#include <iostream>
+
 
 TEST_CASE( "Sans QC" )
 	{
@@ -20,6 +22,7 @@ TEST_CASE( "Sans QC" )
 		if ( fd == -1 )
 			exit( 1 );
 
+		// Create a scope here so that the index chunk calls its destructor
 			{
 			dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fd );
 
@@ -59,12 +62,12 @@ TEST_CASE( "Sans QC" )
 
 		dex::constraintSolver::andISR isrAnd( dex::vector< dex::constraintSolver::ISR * >( { isrSome, isrJunk } ), isrEndAnd );
 
-		REQUIRE( isrAnd.next( ) == 11 );
+		REQUIRE( isrAnd.next( ) == 12 );
 		REQUIRE( isrAnd.next( ) == isrAnd.npos );
 		}
 	}
 
-TEST_CASE( "matching document ISR")
+TEST_CASE( "matching document generator 1")
 	{
 	dex::string filePath = "test_in.dex";
 	int fd = open( filePath.cStr( ), O_RDWR | O_CREAT | O_TRUNC, 0777 );
@@ -72,6 +75,7 @@ TEST_CASE( "matching document ISR")
 	if ( fd == -1 )
 		exit( 1 );
 
+	// Create a scope here so that the index chunk calls its destructor
 		{
 		dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fd );
 
@@ -94,18 +98,18 @@ TEST_CASE( "matching document ISR")
 	close( fd );
 
 	dex::index::indexChunk::indexStreamReader andISR = dex::index::indexChunk::indexStreamReader( chunkPointer, "and" );
-	REQUIRE( andISR.next( ) == 2 );
-	REQUIRE( andISR.next( ) == 5 );
+	REQUIRE( andISR.next( ) == 3 );
+	REQUIRE( andISR.next( ) == 6 );
 	REQUIRE( andISR.next( ) == static_cast< size_t >( -1 ) );
 
 	dex::index::indexChunk::indexStreamReader junkISR = dex::index::indexChunk::indexStreamReader( chunkPointer, "junk" );
-	REQUIRE( junkISR.next( ) == 1 );
-	REQUIRE( junkISR.next( ) == 4 );
-	REQUIRE( junkISR.next( ) == 6 );
+	REQUIRE( junkISR.next( ) == 2 );
+	REQUIRE( junkISR.next( ) == 5 );
+	REQUIRE( junkISR.next( ) == 7 );
 	REQUIRE( junkISR.next( ) == static_cast< size_t >( -1 ) );
 
 	dex::index::indexChunk::indexStreamReader someISR = dex::index::indexChunk::indexStreamReader( chunkPointer, "some" );
-	REQUIRE( someISR.next( ) == 0 );
+	REQUIRE( someISR.next( ) == 1 );
 	REQUIRE( someISR.next( ) == static_cast< size_t >( -1 ) );
 
 	dex::index::indexChunk::indexStreamReader nonexistentISR = dex::index::indexChunk::indexStreamReader( chunkPointer, "qubfiqebfoqbgoqbe" );
@@ -121,9 +125,8 @@ TEST_CASE( "matching document ISR")
 		REQUIRE( testdocs );
 		REQUIRE( testdocs->matchingDocumentISR );
 		size_t next = testdocs->matchingDocumentISR->next( );
-		REQUIRE( next == 11 );
+		REQUIRE( next == 12 );
 		REQUIRE( testdocs->matchingDocumentISR->next( ) == dex::constraintSolver::ISR::npos );
-		delete testdocs->matchingDocumentISR;
 		delete testdocs;
 		}
 
@@ -137,9 +140,8 @@ TEST_CASE( "matching document ISR")
 		REQUIRE( testdocs );
 		REQUIRE( testdocs->matchingDocumentISR );
 		size_t next = testdocs->matchingDocumentISR->next( );
-		REQUIRE( next == 11 );
+		REQUIRE( next == 12 );
 		REQUIRE( testdocs->matchingDocumentISR->next( ) == dex::constraintSolver::ISR::npos );
-		delete testdocs->matchingDocumentISR;
 		delete testdocs;
 		}
 
@@ -153,23 +155,20 @@ TEST_CASE( "matching document ISR")
 		REQUIRE( testdocs->matchingDocumentISR );
 		size_t next = testdocs->matchingDocumentISR->next( );
 		REQUIRE( next == dex::constraintSolver::ISR::npos );
-		delete testdocs->matchingDocumentISR;
 		delete testdocs;
 		}
 
 	SECTION( "longer matching query" )
 		{
-		std::cout << "===================================================================" << std::endl;
-
 		dex::index::indexChunk::indexStreamReader andISR = dex::index::indexChunk::indexStreamReader( chunkPointer, "and" );
-		REQUIRE( andISR.next( ) == 2 );
-		REQUIRE( andISR.next( ) == 5 );
+		REQUIRE( andISR.next( ) == 3 );
+		REQUIRE( andISR.next( ) == 6 );
 		REQUIRE( andISR.next( ) == static_cast< size_t >( -1 ) );
 
 		dex::index::indexChunk::indexStreamReader junkISR = dex::index::indexChunk::indexStreamReader( chunkPointer, "junk" );
-		REQUIRE( junkISR.next( ) == 1 );
-		REQUIRE( junkISR.next( ) == 4 );
-		REQUIRE( junkISR.next( ) == 6 );
+		REQUIRE( junkISR.next( ) == 2 );
+		REQUIRE( junkISR.next( ) == 5 );
+		REQUIRE( junkISR.next( ) == 7 );
 		REQUIRE( junkISR.next( ) == static_cast< size_t >( -1 ) );
 
 		dex::index::indexChunk::indexStreamReader andBody = dex::index::indexChunk::indexStreamReader( chunkPointer, "and" );
@@ -186,27 +185,119 @@ TEST_CASE( "matching document ISR")
 
 		dex::string query = "more junk";
 		dex::queryCompiler::parser parser;
-		std::cout << "about to parse query\n";
 		dex::queryCompiler::matchedDocumentsGenerator mdg = parser.parse( query );
-		std::cout << "about to get matchedDocuments\n";
 		dex::queryCompiler::matchedDocuments *testdocs = mdg( chunkPointer );
 		REQUIRE( testdocs );
 		REQUIRE( testdocs->matchingDocumentISR );
-		std::cout << "about to get query\n";
-		std::cout << "mdg.getQuery( ): " << mdg.getQuery( ) << std::endl;
-		REQUIRE( testdocs->matchingDocumentISR->next( ) == 11 );
+		REQUIRE( testdocs->matchingDocumentISR->next( ) == 12 );
 		REQUIRE( testdocs->matchingDocumentISR->next( ) == dex::constraintSolver::ISR::npos );
-		delete testdocs->matchingDocumentISR;
 		delete testdocs;
 		}
 	}
 
-TEST_CASE( )
+TEST_CASE( "matching document generator 2" )
 	{
-	SECTION( "single word query on multiple documents" )
-		{
+	dex::string filePath = "test_in.dex";
+	int fd = open( filePath.cStr( ), O_RDWR | O_CREAT | O_TRUNC, 0777 );
 
+	REQUIRE( fd != -1 );
+		// Scope to make sure we call the destructor
+		{
+		dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fd );
+		dex::string url = "www.robinhood.com/shortthehousingmarket";
+		dex::vector< dex::string > title = { "learn", "to", "short", "the", "housing", "market" };
+		dex::string titleString = "Learn to short the housing market";
+		dex::vector< dex::string > body = { "short", "the", "housing", "market" };
+
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+
+		url = "goldmansachs.com/unrelated/garbo/garbo/stuff";
+		title = { "buy", "bonds", "in", "the", "housing", "market" };
+		titleString = "buy bonds in the housing market";
+		body = { "short", "the", "not", "a", "a", "a", "housing", "market" };
+
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 		}
+
+	dex::index::indexChunk *chunkPointer = new dex::index::indexChunk( fd, false );
+
+	dex::queryCompiler::parser parser;
+	dex::queryCompiler::matchedDocumentsGenerator mdg = parser.parse( "$short the $housing market" );
+	dex::queryCompiler::matchedDocuments *documents = mdg( chunkPointer );
+	documents->chunk = chunkPointer;
+
+	SECTION( "Flattened Query" )
+		{
+		// Test all things returned from the matchedDocumentsGenerator
+		REQUIRE( documents->flattenedQuery[ 0 ] == "short" );
+		REQUIRE( documents->flattenedQuery[ 1 ] == "the" );
+		REQUIRE( documents->flattenedQuery[ 2 ] == "housing" );
+		REQUIRE( documents->flattenedQuery[ 3 ] == "market" );
+
+		dex::vector< dex::constraintSolver::ISR * > bodyISRs;
+		dex::vector< dex::constraintSolver::ISR * > titleISRs;
+		for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
+			bodyISRs.pushBack( new dex::index::indexChunk::indexStreamReader( documents->chunk, documents->flattenedQuery[ i ] ) );
+		for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
+			titleISRs.pushBack( new dex::index::indexChunk::indexStreamReader( documents->chunk, '#' + documents->flattenedQuery[ i ] ) );
+		REQUIRE( bodyISRs[ 0 ]->next( ) == 1 );
+		REQUIRE( bodyISRs[ 0 ]->next( ) == 13 );
+		REQUIRE( bodyISRs[ 1 ]->next( ) == 2 );
+		REQUIRE( bodyISRs[ 1 ]->next( ) == 14 );
+		REQUIRE( bodyISRs[ 2 ]->next( ) == 3 );
+		REQUIRE( bodyISRs[ 2 ]->next( ) == 19 );
+		REQUIRE( bodyISRs[ 3 ]->next( ) == 4 );
+		REQUIRE( bodyISRs[ 3 ]->next( ) == 20 );
+		REQUIRE( titleISRs[ 0 ]->next( ) == 8 );
+		REQUIRE( titleISRs[ 1 ]->next( ) == 9 );
+		REQUIRE( titleISRs[ 1 ]->next( ) == 25 );
+		REQUIRE( titleISRs[ 2 ]->next( ) == 10 );
+		REQUIRE( titleISRs[ 2 ]->next( ) == 26 );
+		REQUIRE( titleISRs[ 3 ]->next( ) == 11 );
+		REQUIRE( titleISRs[ 3 ]->next( ) == 27 );
+
+		for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
+			{
+			delete bodyISRs[ i ];
+			delete titleISRs[ i ];
+			}
+		}
+	
+	SECTION( "end isrs" )
+		{
+		dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr =
+			new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents->chunk, "" );
+		REQUIRE( eodisr->next( ) == 0 );
+		REQUIRE( eodisr->next( ) == 12 );
+		REQUIRE( eodisr->next( ) == 28 );
+		REQUIRE( eodisr->next( ) == dex::constraintSolver::ISR::npos );
+		delete eodisr;
+
+		dex::index::indexChunk::endOfDocumentIndexStreamReader *ends = dex::queryCompiler::getEndOfDocumentISR( documents->chunk );
+		REQUIRE( ends->next( ) == 0 );
+		REQUIRE( ends->next( ) == 12 );
+		REQUIRE( ends->next( ) == 28 );
+		REQUIRE( ends->next( ) == dex::constraintSolver::ISR::npos );
+		delete ends;
+		}
+	
+	SECTION( "matching ISR" )
+		{
+		dex::constraintSolver::ISR *matches = documents->matchingDocumentISR;
+		REQUIRE( matches->next( ) == 12 );
+		REQUIRE( matches->next( ) == 28 );
+		REQUIRE( matches->next( ) == dex::constraintSolver::ISR::npos );
+		}
+
+	SECTION( "emphasized words" )
+		{
+		REQUIRE( documents->emphasizedWords[ 0 ] );
+		REQUIRE( !documents->emphasizedWords[ 1 ] );
+		REQUIRE( documents->emphasizedWords[ 2 ] );
+		REQUIRE( !documents->emphasizedWords[ 3 ] );
+		}
+
+	close( fd );
 	}
 
 TEST_CASE( "ranker" )
@@ -222,7 +313,7 @@ TEST_CASE( "ranker" )
 	if ( fd == -1 )
 		exit( 1 );
 
-
+	// Create a scope here so that the index chunk calls its destructor
 		{
 		// dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fd );
 		// dex::string url = "www.robinhood.com/shortthehousingmarket";
@@ -263,85 +354,30 @@ TEST_CASE( "ranker" )
 		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 		}
 
-	dex::index::indexChunk *chunkPointer = new dex::index::indexChunk( fd, false );
+	// dex::index::indexChunk *chunkPointer = new dex::index::indexChunk( fd, false );
 
 	close( fd );
 
 	SECTION( "Simple ranker internals tests" )
 		{
+		// dex::ranker::ranker rankerObject;
 
+		// dex::vector< dex::index::indexChunk * > indexChunkPointers;
+		// indexChunkPointers.pushBack( chunkPointer );
 
-		dex::ranker::ranker rankerObject;
+		// dex::ranker::scoreRequest request;
+		// request.chunkPointer = chunkPointer;
+		// pthread_mutex_t generatorLock = PTHREAD_MUTEX_INITIALIZER;
+		// request.generatorLockPointer = &generatorLock;
+		// dex::queryCompiler::parser parser;
+		// dex::queryCompiler::matchedDocumentsGenerator mdg = parser.parse( "short the housing market" );
+		// dex::queryCompiler::matchedDocuments *documents = mdg( chunkPointer );
+		// documents->chunk = chunkPointer;
 
-		dex::vector< dex::index::indexChunk * > indexChunkPointers;
-		indexChunkPointers.pushBack( chunkPointer );
+		// request.generatorPointer = &mdg;
+		// request.printInfo = true;
+		// request.rankerPointer = &rankerObject;
 
-		dex::ranker::scoreRequest request;
-		request.chunkPointer = chunkPointer;
-		pthread_mutex_t generatorLock = PTHREAD_MUTEX_INITIALIZER;
-		request.generatorLockPointer = &generatorLock;
-		dex::queryCompiler::parser parser;
-		dex::queryCompiler::matchedDocumentsGenerator mdg = parser.parse( "short the housing market" );
-		dex::queryCompiler::matchedDocuments *documents = mdg( chunkPointer );
-		documents->chunk = chunkPointer;
-		REQUIRE( documents->flattenedQuery[ 0 ] == "short" );
-		REQUIRE( documents->flattenedQuery[ 1 ] == "the" );
-		REQUIRE( documents->flattenedQuery[ 2 ] == "housing" );
-		REQUIRE( documents->flattenedQuery[ 3 ] == "market" );
-
-		dex::index::indexChunk::endOfDocumentIndexStreamReader *eodisr =
-				new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents->chunk, "" );
-		REQUIRE( eodisr->next( ) == 11 );
-		REQUIRE( eodisr->next( ) == 27 );
-		REQUIRE( eodisr->next( ) == dex::constraintSolver::ISR::npos );
-		delete eodisr;
-
-		dex::index::indexChunk::endOfDocumentIndexStreamReader *ends = dex::queryCompiler::getEndOfDocumentISR( documents->chunk );
-		REQUIRE( ends->next( ) == 11 );
-		REQUIRE( ends->next( ) == 27 );
-		REQUIRE( ends->next( ) == dex::constraintSolver::ISR::npos );
-		delete ends;
-
-		dex::constraintSolver::ISR *matches = documents->matchingDocumentISR;
-		REQUIRE( matches->next( ) == 11 );
-		REQUIRE( matches->next( ) == 27 );
-		REQUIRE( matches->next( ) == dex::constraintSolver::ISR::npos );
-
-		dex::vector< dex::constraintSolver::ISR * > bodyISRs;
-		dex::vector< dex::constraintSolver::ISR * > titleISRs;
-		for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
-			bodyISRs.pushBack( new dex::index::indexChunk::indexStreamReader( documents->chunk, documents->flattenedQuery[ i ] ) );
-		for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
-			titleISRs.pushBack( new dex::index::indexChunk::indexStreamReader( documents->chunk, '#' + documents->flattenedQuery[ i ] ) );
-		REQUIRE( bodyISRs[ 0 ]->next( ) == 0 );
-		REQUIRE( bodyISRs[ 0 ]->next( ) == 12 );
-		REQUIRE( bodyISRs[ 1 ]->next( ) == 1 );
-		REQUIRE( bodyISRs[ 1 ]->next( ) == 13 );
-		REQUIRE( bodyISRs[ 2 ]->next( ) == 2 );
-		REQUIRE( bodyISRs[ 2 ]->next( ) == 18 );
-		REQUIRE( bodyISRs[ 3 ]->next( ) == 3 );
-		REQUIRE( bodyISRs[ 3 ]->next( ) == 19 );
-		REQUIRE( titleISRs[ 0 ]->next( ) == 7 );
-		REQUIRE( titleISRs[ 1 ]->next( ) == 8 );
-		REQUIRE( titleISRs[ 1 ]->next( ) == 24 );
-		REQUIRE( titleISRs[ 2 ]->next( ) == 9 );
-		REQUIRE( titleISRs[ 2 ]->next( ) == 25 );
-		REQUIRE( titleISRs[ 3 ]->next( ) == 10 );
-		REQUIRE( titleISRs[ 3 ]->next( ) == 26 );
-
-
-		request.generatorPointer = &mdg;
-		request.printInfo = true;
-		request.rankerPointer = &rankerObject;
-
-		for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
-			{
-			delete bodyISRs[ i ];
-			delete titleISRs[ i ];
-			}
-
-
-		//std::cout << documents->matchingDocumentISR->next( ) << " " << documents->matchingDocumentISR->next( ) << " " << documents->matchingDocumentISR->next( ) << " " << std::endl;
 
 		// void *returnValue = dex::ranker::findAndScoreDocuments( static_cast< void * > ( &request ) );
 		// dex::pair< dex::vector< dex::ranker::searchResult >, int > *returnedResults =

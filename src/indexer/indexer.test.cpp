@@ -116,8 +116,8 @@ TEST_CASE( "Basic ISR functions for body and title" )
 		indexChunk::indexStreamReader bodyISR = indexChunk::indexStreamReader( &initializingIndexChunk, "body" );
 
 		// initializingIndexChunk.printDictionary( );
-		REQUIRE( bodyISR.next( ) == 0 );
-		REQUIRE( decoratedArtISR.next( ) == 2 );
+		REQUIRE( bodyISR.next( ) == 1 );
+		REQUIRE( decoratedArtISR.next( ) == 3 );
 		}
 
 	SECTION( "ISR functions on nondecorated title" )
@@ -128,7 +128,7 @@ TEST_CASE( "Basic ISR functions for body and title" )
 
 		indexChunk::indexStreamReader nondecoratedArtISR = indexChunk::indexStreamReader( &initializingIndexChunk, "art" );
 
-		REQUIRE( nondecoratedArtISR.next( ) == static_cast< size_t >( -1 ) );
+		REQUIRE( nondecoratedArtISR.next( ) == nondecoratedArtISR.npos );
 		}
 
 	SECTION( "ISR functions on empty body" )
@@ -141,8 +141,8 @@ TEST_CASE( "Basic ISR functions for body and title" )
 		indexChunk::indexStreamReader artISR = indexChunk::indexStreamReader( &initializingIndexChunk, "art" );
 		indexChunk::indexStreamReader decoratedArtISR = indexChunk::indexStreamReader( &initializingIndexChunk, "#art" );
 
-		REQUIRE( decoratedArtISR.next( ) == 1 );
-		REQUIRE( artISR.next( ) == static_cast< size_t >( - 1 ) );
+		REQUIRE( decoratedArtISR.next( ) == 2 );
+		REQUIRE( artISR.next( ) == artISR.npos );
 		}
 
 	SECTION( "Nonexistent word ISR" )
@@ -177,49 +177,49 @@ TEST_CASE( "ISR functions on one document" )
 
 	SECTION( "next" )
 		{
-		REQUIRE( andISR.next( ) == 2 );
-		REQUIRE( andISR.next( ) == 5 );
-		REQUIRE( andISR.next( ) == static_cast< size_t >( -1 ) );
+		REQUIRE( andISR.next( ) == 3 );
+		REQUIRE( andISR.next( ) == 6 );
+		REQUIRE( andISR.next( ) == andISR.npos );
 
-		REQUIRE( junkISR.next( ) == 1 );
-		REQUIRE( junkISR.next( ) == 4 );
-		REQUIRE( junkISR.next( ) == 6 );
-		REQUIRE( junkISR.next( ) == static_cast< size_t >( -1 ) );
+		REQUIRE( junkISR.next( ) == 2 );
+		REQUIRE( junkISR.next( ) == 5 );
+		REQUIRE( junkISR.next( ) == 7 );
+		REQUIRE( junkISR.next( ) == junkISR.npos );
 		}
 
 	SECTION( "seek" )
 		{
 		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
-		REQUIRE( andISR.seek( 0 ) == 2 );
-		REQUIRE( andISR.seek( 2 ) == 2 );
-		REQUIRE( andISR.seek( 3 ) == 5 );
-		REQUIRE( andISR.seek( 6 ) == static_cast< size_t >( -1 ) );
+		REQUIRE( andISR.seek( 0 ) == 3 );
+		REQUIRE( andISR.seek( 3 ) == 3 );
+		REQUIRE( andISR.seek( 4 ) == 6 );
+		REQUIRE( andISR.seek( 7 ) == andISR.npos );
 
-		REQUIRE( andISR.seek( 4 ) == 5 );
-		REQUIRE( andISR.seek( 1 ) == 2 );
-		REQUIRE( andISR.seek( 0 ) == 2 );
+		REQUIRE( andISR.seek( 5 ) == 6 );
+		REQUIRE( andISR.seek( 2 ) == 3 );
+		REQUIRE( andISR.seek( 0 ) == 3 );
 		}
 
 	SECTION( "seek with next" )
 		{
 		junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
-		REQUIRE( junkISR.next( ) == 1 );
-		REQUIRE( junkISR.seek( 3 ) == 4 );
-		REQUIRE( junkISR.next( ) == 6 );
+		REQUIRE( junkISR.next( ) == 2 );
+		REQUIRE( junkISR.seek( 4 ) == 5 );
+		REQUIRE( junkISR.next( ) == 7 );
 
 		junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
-		REQUIRE( junkISR.seek( 1 ) == 1 );
-		REQUIRE( junkISR.next( ) == 4 );
-		REQUIRE( junkISR.next( ) == 6 );
+		REQUIRE( junkISR.seek( 2 ) == 2 );
+		REQUIRE( junkISR.next( ) == 5 );
+		REQUIRE( junkISR.next( ) == 7 );
 
 		junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
-		REQUIRE( junkISR.seek( 0 ) == 1 );
-		REQUIRE( junkISR.next( ) == 4 );
-		REQUIRE( junkISR.next( ) == 6 );
+		REQUIRE( junkISR.seek( 0 ) == 2 );
+		REQUIRE( junkISR.next( ) == 5 );
+		REQUIRE( junkISR.next( ) == 7 );
 
 		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
-		REQUIRE( andISR.seek( 0 ) == 2 );
-		REQUIRE( andISR.next( ) == 5 );
+		REQUIRE( andISR.seek( 0 ) == 3 );
+		REQUIRE( andISR.next( ) == 6 );
 		}
 
 	close( fd );
@@ -253,29 +253,30 @@ TEST_CASE( "ISR functions on multiple documents" )
 		indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &initializingIndexChunk, "junk" );
 		indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
-		REQUIRE( andISR.next( ) == 2 );
-		REQUIRE( andISR.next( ) == 5 );
-		REQUIRE( andISR.next( ) == 14 );
-		REQUIRE( andISR.next( ) == static_cast< size_t >( -1 ) );
-		REQUIRE( junkISR.next( ) == 1 );
-		REQUIRE( junkISR.next( ) == 4 );
-		REQUIRE( junkISR.next( ) == static_cast< size_t >( -1 ) );
+		REQUIRE( andISR.next( ) == 3 );
+		REQUIRE( andISR.next( ) == 6 );
+		REQUIRE( andISR.next( ) == 15 );
+		REQUIRE( andISR.next( ) == andISR.npos );
+		REQUIRE( junkISR.next( ) == 2 );
+		REQUIRE( junkISR.next( ) == 5 );
+		REQUIRE( junkISR.next( ) == junkISR.npos );
 
 		indexChunk::indexStreamReader endOfDocumentISR( &initializingIndexChunk, "" );
-		REQUIRE( endOfDocumentISR.next( ) == 10 );
-		REQUIRE( endOfDocumentISR.next( ) == 24 );
-		REQUIRE( endOfDocumentISR.next( ) == static_cast< size_t >( -1 ) );
+		REQUIRE( endOfDocumentISR.next( ) == 0 );
+		REQUIRE( endOfDocumentISR.next( ) == 11 );
+		REQUIRE( endOfDocumentISR.next( ) == 25 );
+		REQUIRE( endOfDocumentISR.next( ) == endOfDocumentISR.npos );
 
 		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
-		REQUIRE( andISR.next( ) == 2 );
-		REQUIRE( andISR.nextDocument( ) == 14 );
+		REQUIRE( andISR.next( ) == 3 );
+		REQUIRE( andISR.nextDocument( ) == 15 );
 
 		andISR = indexChunk::indexStreamReader( &initializingIndexChunk, "and" );
 
-		REQUIRE( andISR.nextDocument( ) == 14 );
+		REQUIRE( andISR.nextDocument( ) == 3 );
 
-		REQUIRE( andISR.seek( 6 ) == 14 );
+		REQUIRE( andISR.seek( 7 ) == 15 );
 
 		close( fd );
 		}
@@ -315,19 +316,19 @@ TEST_CASE( "ISR functions on multiple documents" )
 
 		indexChunk::indexStreamReader bodyISR = indexChunk::indexStreamReader( &initializingIndexChunk, "body" );
 		indexChunk::indexStreamReader hamiltonISR = indexChunk::indexStreamReader( &initializingIndexChunk, "hamilton" );
-		REQUIRE( bodyISR.next( ) == 5 );
-		REQUIRE( bodyISR.next( ) == 15 );
-		REQUIRE( bodyISR.next( ) == 22 );
-		REQUIRE( bodyISR.next( ) == 37 );
+		REQUIRE( bodyISR.next( ) == 6 );
+		REQUIRE( bodyISR.next( ) == 16 );
+		REQUIRE( bodyISR.next( ) == 23 );
+		REQUIRE( bodyISR.next( ) == 38 );
 		REQUIRE( bodyISR.next( ) == bodyISR.npos );
 
 		REQUIRE( hamiltonISR.next( ) == hamiltonISR.npos );
 
 		hamiltonISR = indexChunk::indexStreamReader( &initializingIndexChunk, "#hamilton" );
-		REQUIRE( hamiltonISR.next( ) == 8 );
-		REQUIRE( hamiltonISR.next( ) == 25 );
-		REQUIRE( hamiltonISR.next( ) == 30);
-		REQUIRE( hamiltonISR.next( ) == 40 );
+		REQUIRE( hamiltonISR.next( ) == 9 );
+		REQUIRE( hamiltonISR.next( ) == 26 );
+		REQUIRE( hamiltonISR.next( ) == 31);
+		REQUIRE( hamiltonISR.next( ) == 41 );
 
 		close( fd );
 		}
@@ -356,24 +357,24 @@ TEST_CASE( "ONE BIG DOC" )
 
 		indexChunk::indexStreamReader wordISR = indexChunk::indexStreamReader( &initializingIndexChunk, word );
 		for ( size_t i = 0;  i < body.size( );  ++i )
-			REQUIRE( wordISR.next( ) == i );
+			REQUIRE( wordISR.next( ) == i + 1 );
 		REQUIRE( wordISR.next( ) == wordISR.npos );
 
 		wordISR = indexChunk::indexStreamReader( &initializingIndexChunk, word );
 		for ( size_t i = 0;  i < body.size( ) - 1;  ++i )
 			{
-			REQUIRE( wordISR.seek( 0 ) == 0 );
-			REQUIRE( wordISR.seek( i ) == i );
-			REQUIRE( wordISR.next( ) == i + 1 );
+			REQUIRE( wordISR.seek( 0 ) == 1 );
+			REQUIRE( wordISR.seek( i + 1 ) == i + 1 );
+			REQUIRE( wordISR.next( ) == i + 2 );
 			}
-		REQUIRE( wordISR.seek( body.size( ) ) == wordISR.npos );
+		REQUIRE( wordISR.seek( body.size( ) + 1 ) == wordISR.npos );
 		REQUIRE( wordISR.next( ) == wordISR.npos );
 
 		wordISR = indexChunk::indexStreamReader( &initializingIndexChunk, word );
 		for ( size_t i = 0;  i < ( 1 << 6 ) - 1;  ++i )
 			{
-			REQUIRE( wordISR.seek( i << 6 ) == i << 6 );
-			REQUIRE( wordISR.next( ) == ( i << 6 ) + 1 );
+			REQUIRE( wordISR.seek( ( i << 6 ) + 1 ) == ( i << 6 ) + 1 );
+			REQUIRE( wordISR.next( ) == ( i << 6 ) + 2 );
 			}
 
 		close( fd );
@@ -409,19 +410,19 @@ TEST_CASE( "ONE BIG DOC" )
 		indexChunk::indexStreamReader dosISR = indexChunk::indexStreamReader( &initializingIndexChunk, dos );
 
 		for ( size_t location = 0;  location < body1.size( );  ++location )
-			REQUIRE( unoISR.next( ) == location );
+			REQUIRE( unoISR.next( ) == location + 1 );
 		offset = body1.size( ) + 1 + title.size( ) + 1 + body2.size( ) + 1 + title.size( ) + 1;
 		for ( size_t location = offset; location < offset + body1.size( );  ++location )
-			REQUIRE( unoISR.next( ) == location );
+			REQUIRE( unoISR.next( ) == location + 1 );
 		REQUIRE( unoISR.next( ) == unoISR.npos );
 
 		offset = body1.size( ) + 1 + title.size( ) + 1;
 		for ( size_t location = offset;  location < offset + body2.size( );  ++location )
-			REQUIRE( dosISR.next( ) == location );
+			REQUIRE( dosISR.next( ) == location + 1 );
 		offset = body1.size( ) + 1 + title.size( ) + 1 + body2.size( ) + 1 + title.size( ) + 1
 				+ body1.size( ) + 1 + title.size( ) + 1;
 		for ( size_t location = offset;  location < offset + body2.size( );  ++location )
-			REQUIRE( dosISR.next( ) == location );
+			REQUIRE( dosISR.next( ) == location + 1 );
 		REQUIRE( dosISR.next( ) == dosISR.npos );
 		}
 	}
@@ -451,7 +452,7 @@ TEST_CASE( "Read indexChunk from a file" )
 			REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 			indexChunk::indexStreamReader wordISR = indexChunk::indexStreamReader( &initializingIndexChunk, word );
 			for ( size_t iters = 0;  iters < ( 1 << 12 );  ++iters )
-				REQUIRE( wordISR.next( ) == iters );
+				REQUIRE( wordISR.next( ) == iters + 1 );
 			REQUIRE( wordISR.next( ) == wordISR.npos );
 			}
 
@@ -464,40 +465,40 @@ TEST_CASE( "Read indexChunk from a file" )
 
 		indexChunk::indexStreamReader wordISR0 = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
 		for ( size_t iters = 0;  iters < ( 1 << 12 );  ++iters )
-			REQUIRE( wordISR0.next( ) == iters );
+			REQUIRE( wordISR0.next( ) == iters + 1 );
 		REQUIRE( wordISR0.next( ) == wordISR0.npos );
 
 		indexChunk::indexStreamReader wordISR1a = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
-		REQUIRE( wordISR1a.seek( 1 ) == 1 );
-		REQUIRE( wordISR1a.next( ) == 2 );
+		REQUIRE( wordISR1a.seek( 2 ) == 2 );
+		REQUIRE( wordISR1a.next( ) == 3 );
 
 		indexChunk::indexStreamReader wordISR1b = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
-		REQUIRE( wordISR1b.seek( 0 ) == 0 );
+		REQUIRE( wordISR1b.seek( 0 ) == 1 );
 
 		indexChunk::indexStreamReader wordISR1 = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
-		REQUIRE( wordISR1.seek( 0 ) == 0 );
-		REQUIRE( wordISR1.next( ) == 1 );
+		REQUIRE( wordISR1.seek( 0 ) == 1 );
+		REQUIRE( wordISR1.next( ) == 2 );
 
 		indexChunk::indexStreamReader wordISR2 = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
 		for ( size_t iters = 0;  iters < ( 1 << 12 );  ++iters )
-			REQUIRE( wordISR2.next( ) == iters );
-		REQUIRE( wordISR2.next( ) == static_cast< size_t >( -1 ) );
+			REQUIRE( wordISR2.next( ) == iters + 1 );
+		REQUIRE( wordISR2.next( ) == wordISR2.npos );
 
 		indexChunk::indexStreamReader wordISR3 = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
 		for ( size_t iters = 0;  iters < ( 1 << 4 );  ++iters )
 			{
-			size_t seekLoc = wordISR3.seek( iters << 2 );
+			size_t seekLoc = wordISR3.seek( ( iters << 2 ) + 1 );
 			size_t nextLoc = wordISR3.next( );
 			// Seek to 0, then next( ) does not return the next location after 0, but returns 0
-			REQUIRE( seekLoc == iters << 2 );
-			REQUIRE( nextLoc == ( iters << 2 ) + 1 );
+			REQUIRE( seekLoc == ( iters << 2 ) + 1);
+			REQUIRE( nextLoc == ( iters << 2 ) + 2 );
 			}
 
 		indexChunk::indexStreamReader thirdWordISR = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
 		for ( size_t iters = 0;  iters < ( 1 << 4 );  ++iters )
 			{
-			REQUIRE( thirdWordISR.seek( iters << 8 ) == iters << 8 );
-			REQUIRE( thirdWordISR.next( ) == ( iters << 8 ) + 1 );
+			REQUIRE( thirdWordISR.seek( ( iters << 8 ) + 1 ) == ( iters << 8 ) + 1);
+			REQUIRE( thirdWordISR.next( ) == ( iters << 8 ) + 2 );
 			}
 
 		close( fd );
@@ -531,43 +532,43 @@ TEST_CASE( "Read indexChunk from a file" )
 		indexChunk::indexStreamReader andISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "and" );
 		indexChunk::indexStreamReader junkISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "junk");
 
-		REQUIRE( andISR.next( ) == 2 );
-		REQUIRE( andISR.next( ) == 5 );
+		REQUIRE( andISR.next( ) == 3 );
+		REQUIRE( andISR.next( ) == 6 );
 		REQUIRE( andISR.next( ) == andISR.npos );
 
-		REQUIRE( junkISR.next( ) == 1 );
-		REQUIRE( junkISR.next( ) == 4 );
-		REQUIRE( junkISR.next( ) == 6 );
+		REQUIRE( junkISR.next( ) == 2 );
+		REQUIRE( junkISR.next( ) == 5 );
+		REQUIRE( junkISR.next( ) == 7 );
 		REQUIRE( junkISR.next( ) == junkISR.npos );
 
 		andISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "and" );
-		REQUIRE( andISR.seek( 0 ) == 2 );
-		REQUIRE( andISR.seek( 2 ) == 2 );
-		REQUIRE( andISR.seek( 3 ) == 5 );
-		REQUIRE( andISR.seek( 6 ) == andISR.npos );
+		REQUIRE( andISR.seek( 0 ) == 3 );
+		REQUIRE( andISR.seek( 3 ) == 3 );
+		REQUIRE( andISR.seek( 4 ) == 6 );
+		REQUIRE( andISR.seek( 7 ) == andISR.npos );
 
-		REQUIRE( andISR.seek( 4 ) == 5 );
-		REQUIRE( andISR.seek( 1 ) == 2 );
-		REQUIRE( andISR.seek( 0 ) == 2 );
-
-		junkISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "junk" );
-		REQUIRE( junkISR.next( ) == 1 );
-		REQUIRE( junkISR.seek( 3 ) == 4 );
-		REQUIRE( junkISR.next( ) == 6 );
+		REQUIRE( andISR.seek( 5 ) == 6 );
+		REQUIRE( andISR.seek( 2 ) == 3 );
+		REQUIRE( andISR.seek( 0 ) == 3 );
 
 		junkISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "junk" );
-		REQUIRE( junkISR.seek( 1 ) == 1 );
-		REQUIRE( junkISR.next( ) == 4 );
-		REQUIRE( junkISR.next( ) == 6 );
+		REQUIRE( junkISR.next( ) == 2 );
+		REQUIRE( junkISR.seek( 4 ) == 5 );
+		REQUIRE( junkISR.next( ) == 7 );
 
 		junkISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "junk" );
-		REQUIRE( junkISR.seek( 0 ) == 1 );
-		REQUIRE( junkISR.next( ) == 4 );
-		REQUIRE( junkISR.next( ) == 6 );
+		REQUIRE( junkISR.seek( 2 ) == 2 );
+		REQUIRE( junkISR.next( ) == 5 );
+		REQUIRE( junkISR.next( ) == 7 );
+
+		junkISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "junk" );
+		REQUIRE( junkISR.seek( 0 ) == 2 );
+		REQUIRE( junkISR.next( ) == 5 );
+		REQUIRE( junkISR.next( ) == 7 );
 
 		andISR = indexChunk::indexStreamReader( &fromFileIndexChunk, "and" );
-		REQUIRE( andISR.seek( 0 ) == 2 );
-		REQUIRE( andISR.next( ) == 5 );
+		REQUIRE( andISR.seek( 0 ) == 3 );
+		REQUIRE( andISR.next( ) == 6 );
 
 		close( fd );
 		}

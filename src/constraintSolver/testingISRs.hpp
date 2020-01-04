@@ -26,7 +26,7 @@ namespace dex
 
 			public:
 				testingEndOfDocumentISR( const dex::vector<size_t> &deltas )
-						: deltas( deltas ), index( 0 ), location( 0 ), toGet( npos ) { }
+						: deltas( deltas ), index( 0 ), location( 0 ), toGet( 0 ) { }
 
 				size_t seek( size_t target )
 					{
@@ -57,12 +57,12 @@ namespace dex
 					return toGet = next( );
 					}
 
-				size_t get( )
+				size_t get( ) const
 					{
 					return toGet;
 					}
 
-				size_t documentSize( )
+				size_t documentSize( ) const
 					{
 					if ( index == 0 || index > deltas.size( ) )
 						return npos;
@@ -86,7 +86,7 @@ namespace dex
 
 			public:
 				testingISR( const dex::vector<size_t> &deltas, testingEndOfDocumentISR *endOfDocumentISR )
-						: deltas( deltas ), endOfDocumentISR( endOfDocumentISR ), index( 0 ), location( 0 ), toGet( npos ) { }
+						: deltas( deltas ), endOfDocumentISR( endOfDocumentISR ), index( 0 ), location( 0 ), toGet( 0 ) { }
 
 				~testingISR( )
 					{
@@ -135,7 +135,7 @@ namespace dex
 					return toGet = location;
 					}
 
-				size_t get( )
+				size_t get( ) const
 					{
 					return toGet;
 					}

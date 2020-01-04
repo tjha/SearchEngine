@@ -19,10 +19,10 @@ TEST_CASE( "testISRs" )
 		{
 		testingEndOfDocumentISR *isrEnd
 				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
-		testingISR isr( locationsToDeltas( dex::vector< size_t >( { 0, 4, 5, 9, 10, 11 } ) ), isrEnd );
+		testingISR isr( locationsToDeltas( dex::vector< size_t >( { 1, 4, 5, 9, 10, 11 } ) ), isrEnd );
 
-		REQUIRE( isr.next( ) == 0 );
-		REQUIRE( isr.get( ) == 0 );
+		REQUIRE( isr.next( ) == 1 );
+		REQUIRE( isr.get( ) == 1 );
 		REQUIRE( isr.next( ) == 4 );
 		REQUIRE( isr.get( ) == 4 );
 		REQUIRE( isr.next( ) == 5 );
@@ -230,26 +230,26 @@ TEST_CASE( "andISR" )
 		SECTION( "Match near end of document" )
 			{
 			testingEndOfDocumentISR *isrEndA =
-					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 11 } ) ) );
+					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 12 } ) ) );
 			testingEndOfDocumentISR *isrEndB =
-					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 11 } ) ) );
+					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 12 } ) ) );
 			testingEndOfDocumentISR *isrEndC =
-					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 11 } ) ) );
+					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 12 } ) ) );
 			testingEndOfDocumentISR *isrEndD =
-					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 11 } ) ) );
+					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 12 } ) ) );
 			testingEndOfDocumentISR *isrEndOrE =
-					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 11 } ) ) );
+					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 12 } ) ) );
 			testingEndOfDocumentISR *isrEndOrF =
-					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 11 } ) ) );
+					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 12 } ) ) );
 			testingEndOfDocumentISR *isrEndAnd =
-					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 11 } ) ) );
+					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 12 } ) ) );
 
 			testingISR *isrA =
-					new testingISR( locationsToDeltas( dex::vector< size_t >( { 0 } ) ), isrEndA );
+					new testingISR( locationsToDeltas( dex::vector< size_t >( { 1 } ) ), isrEndA );
 			testingISR *isrB =
 					new testingISR( locationsToDeltas( dex::vector< size_t >( { } ) ), isrEndB );
 			testingISR *isrC =
-					new testingISR( locationsToDeltas( dex::vector< size_t >( { 1, 4, 6 } ) ), isrEndC );
+					new testingISR( locationsToDeltas( dex::vector< size_t >( { 2, 5, 7 } ) ), isrEndC );
 			testingISR *isrD =
 					new testingISR( locationsToDeltas( dex::vector< size_t >( { } ) ), isrEndD );
 
@@ -263,9 +263,65 @@ TEST_CASE( "andISR" )
 			andISR isrAnd( dex::vector< ISR * >(
 					{ isrOrE, isrOrF } ), isrEndAnd );
 
-			REQUIRE( isrAnd.next( ) == 11 );
+			REQUIRE( isrAnd.next( ) == 12 );
 			REQUIRE( isrAnd.next( ) == isrAnd.npos );
 			}
+
+		SECTION( "Another match near end of document" )
+			{
+			testingEndOfDocumentISR *isrEndA =
+					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 12 } ) ) );
+			testingEndOfDocumentISR *isrEndB =
+					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 12 } ) ) );
+			testingEndOfDocumentISR *isrEndAnd =
+					new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 12 } ) ) );
+
+			testingISR *isrA =
+					new testingISR( locationsToDeltas( dex::vector< size_t >( { 1 } ) ), isrEndA );
+			testingISR *isrB =
+					new testingISR( locationsToDeltas( dex::vector< size_t >( { 2, 5, 7 } ) ), isrEndB );
+
+			andISR isrAnd( dex::vector< ISR * >(
+					{ isrA, isrB } ), isrEndAnd );
+
+			REQUIRE( isrAnd.next( ) == 12 );
+			REQUIRE( isrAnd.next( ) == isrAnd.npos );
+			}
+		}
+	
+	SECTION( "Duplicate words" )
+		{
+		// Query:
+		// alpha beta alpha
+
+		// Test case 1:
+		// alpha alpha beta alpha
+		// should return 5, npos
+		testingEndOfDocumentISR *isrEndA
+					= new testingEndOfDocumentISR(
+							locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+		testingEndOfDocumentISR *isrEndB
+				= new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+		testingEndOfDocumentISR *isrEndC
+					= new testingEndOfDocumentISR(
+							locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+		testingEndOfDocumentISR *isrEndAnd
+				= new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+
+		testingISR *isrA = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 1, 2, 4 } ) ), isrEndA );
+		testingISR *isrB = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 3 } ) ), isrEndB );
+		testingISR *isrC = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 1, 2, 4 } ) ), isrEndC );
+
+		andISR isrAnd(
+				dex::vector< ISR * >( { isrA, isrB, isrC } ), isrEndAnd );
+
+		REQUIRE( isrAnd.next( ) == 5 );
+		REQUIRE( isrAnd.next( ) == isrAnd.npos );
 		}
 	}
 
@@ -314,37 +370,37 @@ TEST_CASE( "orISR" )
 			{
 			testingEndOfDocumentISR *isrEndA =
 					new testingEndOfDocumentISR(
-							locationsToDeltas( dex::vector< size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+							locationsToDeltas( dex::vector< size_t >( { 4, 8, 10, 13, 14, 15, 17 } ) ) );
 			testingEndOfDocumentISR *isrEndB =
 					new testingEndOfDocumentISR(
-							locationsToDeltas( dex::vector< size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+							locationsToDeltas( dex::vector< size_t >( { 4, 8, 10, 13, 14, 15, 17 } ) ) );
 			testingEndOfDocumentISR *isrEndC =
 					new testingEndOfDocumentISR(
-							locationsToDeltas( dex::vector< size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+							locationsToDeltas( dex::vector< size_t >( { 4, 8, 10, 13, 14, 15, 17 } ) ) );
 			testingEndOfDocumentISR *isrEndOR =
 					new testingEndOfDocumentISR(
-							locationsToDeltas( dex::vector< size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+							locationsToDeltas( dex::vector< size_t >( { 4, 8, 10, 13, 14, 15, 17 } ) ) );
 
 			testingISR *isrA =
-					new testingISR( locationsToDeltas( dex::vector< size_t >( { 0, 4, 5, 8, 10, 11 } ) ), isrEndA );
+					new testingISR( locationsToDeltas( dex::vector< size_t >( { 1, 5, 6, 9, 11, 12 } ) ), isrEndA );
 			testingISR *isrB =
-					new testingISR( locationsToDeltas( dex::vector< size_t >( { 1, 6, 15 } ) ), isrEndB );
+					new testingISR( locationsToDeltas( dex::vector< size_t >( { 2, 7, 16 } ) ), isrEndB );
 			testingISR *isrC =
-					new testingISR( locationsToDeltas( dex::vector< size_t >( { 2 } ) ), isrEndC );
+					new testingISR( locationsToDeltas( dex::vector< size_t >( { 3 } ) ), isrEndC );
 
 			orISR isrOR(
 					dex::vector< ISR * >( { isrA, isrB, isrC } ), isrEndOR );
 
-			REQUIRE( isrOR.next( ) == 3 );
-			REQUIRE( isrOR.get( ) == 3 );
-			REQUIRE( isrOR.next( ) == 7 );
-			REQUIRE( isrOR.get( ) == 7 );
-			REQUIRE( isrOR.next( ) == 9 );
-			REQUIRE( isrOR.get( ) == 9 );
-			REQUIRE( isrOR.next( ) == 12 );
-			REQUIRE( isrOR.get( ) == 12 );
-			REQUIRE( isrOR.next( ) == 16 );
-			REQUIRE( isrOR.get( ) == 16 );
+			REQUIRE( isrOR.next( ) == 4 );
+			REQUIRE( isrOR.get( ) == 4 );
+			REQUIRE( isrOR.next( ) == 8 );
+			REQUIRE( isrOR.get( ) == 8 );
+			REQUIRE( isrOR.next( ) == 10 );
+			REQUIRE( isrOR.get( ) == 10 );
+			REQUIRE( isrOR.next( ) == 13 );
+			REQUIRE( isrOR.get( ) == 13 );
+			REQUIRE( isrOR.next( ) == 17 );
+			REQUIRE( isrOR.get( ) == 17 );
 			REQUIRE( isrOR.next( ) == ISR::npos );
 			REQUIRE( isrOR.get( ) == ISR::npos );
 			}
@@ -444,8 +500,6 @@ TEST_CASE( "orISR" )
 			REQUIRE( isrOr.get( ) == 30 );
 			REQUIRE( isrOr.seek( 45 ) == 60 );
 			REQUIRE( isrOr.get( ) == 60 );
-			REQUIRE( isrOr.next( ) == 60 );
-			REQUIRE( isrOr.get( ) == 60 );
 			REQUIRE( isrOr.next( ) == ISR::npos );
 			REQUIRE( isrOr.get( ) == ISR::npos );
 			REQUIRE( isrOr.next( ) == ISR::npos );
@@ -495,27 +549,27 @@ TEST_CASE( "phraseISR" )
 			{
 			testingEndOfDocumentISR *isrEndA
 					= new testingEndOfDocumentISR(
-							locationsToDeltas( dex::vector< size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+							locationsToDeltas( dex::vector< size_t >( { 4, 8, 10, 13, 14, 15, 17 } ) ) );
 			testingEndOfDocumentISR *isrEndB
 					= new testingEndOfDocumentISR(
-							locationsToDeltas( dex::vector< size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+							locationsToDeltas( dex::vector< size_t >( { 4, 8, 10, 13, 14, 15, 17 } ) ) );
 			testingEndOfDocumentISR *isrEndC
 					= new testingEndOfDocumentISR(
-							locationsToDeltas( dex::vector< size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+							locationsToDeltas( dex::vector< size_t >( { 4, 8, 10, 13, 14, 15, 17 } ) ) );
 			testingEndOfDocumentISR *isrEndPhrase
 					= new testingEndOfDocumentISR(
-							locationsToDeltas( dex::vector< size_t >( { 3, 7, 9, 12, 13, 14, 16 } ) ) );
+							locationsToDeltas( dex::vector< size_t >( { 4, 8, 10, 13, 14, 15, 17 } ) ) );
 
 			testingISR *isrA = new testingISR(
-					locationsToDeltas( dex::vector< size_t >( { 0, 4, 5, 8, 10, 11 } ) ), isrEndA );
-			testingISR *isrB = new testingISR( locationsToDeltas( dex::vector< size_t >( { 1, 6, 15 } ) ), isrEndB );
-			testingISR *isrC = new testingISR( locationsToDeltas( dex::vector< size_t >( { 2 } ) ), isrEndC );
+					locationsToDeltas( dex::vector< size_t >( { 1, 5, 6, 9, 11, 12 } ) ), isrEndA );
+			testingISR *isrB = new testingISR( locationsToDeltas( dex::vector< size_t >( { 2, 7, 16 } ) ), isrEndB );
+			testingISR *isrC = new testingISR( locationsToDeltas( dex::vector< size_t >( { 3 } ) ), isrEndC );
 
 			phraseISR isrPhrase(
 					dex::vector< ISR * >( { isrA, isrB, isrC } ), isrEndPhrase );
 
-			REQUIRE( isrPhrase.next( ) == 3 );
-			REQUIRE( isrPhrase.get( ) == 3 );
+			REQUIRE( isrPhrase.next( ) == 4 );
+			REQUIRE( isrPhrase.get( ) == 4 );
 			REQUIRE( isrPhrase.next( ) == ISR::npos );
 			REQUIRE( isrPhrase.get( ) == ISR::npos );
 			}
@@ -607,6 +661,75 @@ TEST_CASE( "phraseISR" )
 			REQUIRE( isrPhrase.next( ) == ISR::npos );
 			REQUIRE( isrPhrase.get( ) == ISR::npos );
 			}
+		}
+
+	SECTION( "Duplicate words 1" )
+		{
+		// Query:
+		// alpha beta alpha
+
+		// Test case 1:
+		// alpha alpha beta alpha
+		// should return 5, npos
+		testingEndOfDocumentISR *isrEndA
+					= new testingEndOfDocumentISR(
+							locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+		testingEndOfDocumentISR *isrEndB
+				= new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+		testingEndOfDocumentISR *isrEndC
+					= new testingEndOfDocumentISR(
+							locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+		testingEndOfDocumentISR *isrEndPhrase
+				= new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+
+		testingISR *isrA = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 1, 2, 4 } ) ), isrEndA );
+		testingISR *isrB = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 3 } ) ), isrEndB );
+		testingISR *isrC = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 1, 2, 4 } ) ), isrEndC );
+
+		phraseISR isrPhrase(
+				dex::vector< ISR * >( { isrA, isrB, isrC } ), isrEndPhrase );
+
+		REQUIRE( isrPhrase.next( ) == 5 );
+		REQUIRE( isrPhrase.next( ) == isrPhrase.npos );
+		}
+
+	SECTION( "Duplicate words 2" )
+		{
+		// Query:
+		// alpha beta alpha
+
+		// Test case 2:
+		// alpha beta beta alpha
+		// Shoud just npos
+		testingEndOfDocumentISR *isrEndA
+					= new testingEndOfDocumentISR(
+							locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+		testingEndOfDocumentISR *isrEndB
+				= new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+		testingEndOfDocumentISR *isrEndC
+					= new testingEndOfDocumentISR(
+							locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+		testingEndOfDocumentISR *isrEndPhrase
+				= new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 5 } ) ) );
+
+		testingISR *isrA = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 1, 4 } ) ), isrEndA );
+		testingISR *isrB = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 2, 3 } ) ), isrEndB );
+		testingISR *isrC = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 1, 4 } ) ), isrEndC );
+
+		phraseISR isrPhrase(
+				dex::vector< ISR * >( { isrA, isrB, isrC } ), isrEndPhrase );
+
+		REQUIRE( isrPhrase.next( ) == isrPhrase.npos );
 		}
 	}
 
@@ -725,7 +848,7 @@ TEST_CASE( "nested ISRs" )
 		testingEndOfDocumentISR *isrOrOrEnd
 				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
 
-		testingISR *isr = new testingISR( locationsToDeltas( dex::vector< size_t >( { 0, 4, 5, 9, 10, 11 } ) ), isrEnd );
+		testingISR *isr = new testingISR( locationsToDeltas( dex::vector< size_t >( { 1, 4, 5, 9, 10, 11 } ) ), isrEnd );
 		orISR *orISR = new class orISR( dex::vector< ISR * >{ isr }, isrOrEnd );
 		class orISR orOrISR( dex::vector< ISR * >{ orISR }, isrOrOrEnd );
 
@@ -750,7 +873,7 @@ TEST_CASE( "nested ISRs" )
 		testingEndOfDocumentISR *isrAndAndEnd
 				= new testingEndOfDocumentISR( locationsToDeltas( dex::vector< size_t >( { 3, 7, 8, 12, 13, 14, 16 } ) ) );
 
-		testingISR *isr = new testingISR( locationsToDeltas( dex::vector< size_t >( { 0, 4, 5, 9, 10, 11 } ) ), isrEnd );
+		testingISR *isr = new testingISR( locationsToDeltas( dex::vector< size_t >( { 1, 4, 5, 9, 10, 11 } ) ), isrEnd );
 		andISR *andISR = new class andISR( dex::vector< ISR * >{ isr }, isrAndEnd );
 		class andISR andAndISR( dex::vector< ISR * >{ andISR }, isrAndAndEnd );
 
@@ -764,5 +887,135 @@ TEST_CASE( "nested ISRs" )
 		REQUIRE( andAndISR.get( ) == testingISR::npos );
 		REQUIRE( andAndISR.nextDocument( ) == testingISR::npos );
 		REQUIRE( andAndISR.get( ) == testingISR::npos );
+		}
+	}
+
+TEST_CASE( "seek backwards" )
+	{
+	SECTION( "seek andISR backwards" )
+		{
+		testingEndOfDocumentISR *isrEndA =
+				new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR *isrEndB =
+				new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR *isrEndC =
+				new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR *isrEndAnd =
+				new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+
+		testingISR *isrA = new testingISR( locationsToDeltas(
+				dex::vector< size_t >( { 9, 27, 45, 66, 75 } ) ), isrEndA );
+		testingISR *isrB = new testingISR( locationsToDeltas(
+				dex::vector< size_t >( { 1, 3, 4, 12, 48, 65, 77 } ) ), isrEndB );
+		testingISR *isrC = new testingISR( locationsToDeltas( dex::vector< size_t >( { 7, 49, 67 } ) ), isrEndC );
+
+		andISR isrAnd(
+				dex::vector< ISR * >( { isrA, isrB, isrC } ), isrEndAnd);
+		REQUIRE( isrAnd.seek( 71 ) == ISR::npos );
+		REQUIRE( isrAnd.seek( 62 ) == 70 );
+		REQUIRE( isrAnd.get( ) == 70 );
+		REQUIRE( isrAnd.next( ) == ISR::npos );
+		REQUIRE( isrAnd.seek( 10 ) == 50 );
+		REQUIRE( isrAnd.get( ) == 50 );
+		REQUIRE( isrAnd.next( ) == 70 );
+		REQUIRE( isrAnd.next( ) == ISR::npos );
+		REQUIRE( isrAnd.seek( 71 ) == ISR::npos );
+		REQUIRE( isrAnd.get( ) == ISR::npos );
+		}
+
+	SECTION( "seek ORISR Backwards" )
+		{
+		testingEndOfDocumentISR *isrEndA =
+				new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR *isrEndB =
+				new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR *isrEndC =
+				new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR *isrEndOr =
+				new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+
+		testingISR *isrA =
+				new testingISR( locationsToDeltas( dex::vector< size_t >( { 9, 27, 45, 66, 75 } ) ), isrEndA );
+		testingISR *isrB =
+				new testingISR( locationsToDeltas( dex::vector< size_t >( { 1, 3, 4, 12, 48, 65, 77 } ) ), isrEndB );
+		testingISR *isrC =
+				new testingISR( locationsToDeltas( dex::vector< size_t >( { 7, 49, 67 } ) ), isrEndC );
+
+		orISR isrOr(
+				dex::vector< ISR * >( { isrA, isrB, isrC } ), isrEndOr );
+
+		REQUIRE( isrOr.seek( 78 ) == ISR::npos );
+		REQUIRE( isrOr.get( ) == ISR::npos );
+
+		REQUIRE( isrOr.seek( 71 ) == 80 );
+		REQUIRE( isrOr.get( ) == 80 );
+		REQUIRE( isrOr.next( ) == ISR::npos );
+
+		REQUIRE( isrOr.seek( 40 ) == 50 );
+		REQUIRE( isrOr.get( ) == 50 );
+		REQUIRE( isrOr.next( ) == 70 );
+		REQUIRE( isrOr.next( ) == 80 );
+		REQUIRE( isrOr.next( ) == ISR::npos );
+
+		REQUIRE( isrOr.seek( 30 ) == 50 );
+		REQUIRE( isrOr.get( ) == 50 );
+		REQUIRE( isrOr.next( ) == 70 );
+		REQUIRE( isrOr.get( ) == 70 );
+		REQUIRE( isrOr.next( ) == 80 );
+		REQUIRE( isrOr.next( ) == ISR::npos );
+
+		REQUIRE( isrOr.seek( 10 ) == 20 );
+		REQUIRE( isrOr.get( ) == 20 );
+		REQUIRE( isrOr.next( ) == 30 );
+		REQUIRE( isrOr.next( ) == 50 );
+		REQUIRE( isrOr.next( ) == 70 );
+		REQUIRE( isrOr.next( ) == 80 );
+		REQUIRE( isrOr.next( ) == ISR::npos );
+		}
+
+	SECTION( "seek PhraseISR backwards" )
+		{
+		testingEndOfDocumentISR *isrEndA
+				= new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR *isrEndB
+				= new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR *isrEndC
+				= new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+		testingEndOfDocumentISR *isrEndPhrase
+				= new testingEndOfDocumentISR(
+						locationsToDeltas( dex::vector< size_t >( { 10, 20, 30, 40, 50, 60, 70, 80 } ) ) );
+
+		testingISR *isrA = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 9, 13, 27, 45, 66, 75 } ) ), isrEndA );
+		testingISR *isrB = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 1, 3, 4, 11, 14, 46, 65, 77 } ) ), isrEndB );
+		testingISR *isrC = new testingISR(
+				locationsToDeltas( dex::vector< size_t >( { 7, 12, 15, 47, 67 } ) ), isrEndC );
+
+		phraseISR isrPhrase(
+				dex::vector< ISR * >( { isrA, isrB, isrC } ), isrEndPhrase );
+
+		REQUIRE( isrPhrase.seek( 60 ) == ISR::npos );
+		REQUIRE( isrPhrase.get( ) == ISR::npos );
+
+		REQUIRE( isrPhrase.seek( 41 ) == 50 );
+		REQUIRE( isrPhrase.get( ) == 50 );
+		REQUIRE( isrPhrase.nextDocument( ) == ISR::npos );
+
+		REQUIRE( isrPhrase.seek( 10 ) == 20 );
+		REQUIRE( isrPhrase.get( ) == 20 );
+		REQUIRE( isrPhrase.nextDocument( ) == 50 );
+		REQUIRE( isrPhrase.nextDocument( ) == ISR::npos );
 		}
 	}

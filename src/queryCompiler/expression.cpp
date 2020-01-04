@@ -8,8 +8,6 @@
 #include "queryCompiler/expression.hpp"
 #include "utils/basicString.hpp"
 
-#include <iostream>
-
 
 dex::queryCompiler::expression::~expression( ) { }
 
@@ -58,19 +56,12 @@ dex::constraintSolver::ISR *dex::queryCompiler::orExpression::eval( dex::index::
 		return nullptr;
 
 	if ( terms.size( ) == 1 )
-		{
-		std::cout << "returning OR ISR with single child [" << terms.front( )->toString( ) << "]\n";
 		return terms.front( )->eval( chunk );
-		}
 
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector< dex::constraintSolver::ISR * > isrs;
-	std::cout << "returning OR ISR with children:\n";
 	for ( size_t i = 0;  i < terms.size( );  ++i )
-		{
-		std::cout << "\t[" << terms[ i ]->toString( ) << "]\n";
 		isrs.pushBack( terms[ i ]->eval( chunk ) );
-		}
 
 	return new dex::constraintSolver::orISR( isrs, endDocISR );
 	}
@@ -118,19 +109,12 @@ dex::constraintSolver::ISR *dex::queryCompiler::andExpression::eval( dex::index:
 		return nullptr;
 
 	if ( terms.size( ) == 1 )
-		{
-		std::cout << "returning AND ISR with single child [" << terms.front( )->toString( ) << "]\n";
 		return terms.front( )->eval( chunk );
-		}
 
 	dex::constraintSolver::endOfDocumentISR *endDocISR = getEndOfDocumentISR( chunk );
 	dex::vector< dex::constraintSolver::ISR * > isrs;
-	std::cout << "returning AND ISR with children:\n";
 	for ( size_t i = 0;  i < terms.size( );  ++i )
-		{
-		std::cout << "\t[" << terms[ i ]->toString( ) << "]\n";
 		isrs.pushBack( terms[ i ]->eval( chunk ) );
-		}
 
 	return new dex::constraintSolver::andISR( isrs, endDocISR );
 	}
