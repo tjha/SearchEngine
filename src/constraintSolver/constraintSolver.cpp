@@ -49,11 +49,13 @@ bool dex::constraintSolver::andISR::align( )
 		if ( locations[ minIndex ] >= startOfDocLocation )
 			return true;
 
-		locations[ minIndex ] = factors[ minIndex ]->seek( startOfDocLocation );
-
-		// This check is technically not necessary, but it keeps us from having to make an extra seek call.
-		if ( locations[ minIndex ] == npos )
-			return false;
+		for ( size_t index = 0;  index < factors.size( );  ++index )
+			{
+			if ( locations[ index ] < startOfDocLocation )
+				locations[ index ] = factors[ index ]->seek( startOfDocLocation );
+			if ( locations[ index ] == npos )
+				return false;
+			}
 		}
 	}
 

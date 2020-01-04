@@ -12,7 +12,7 @@
 
 TEST_CASE( "Sans QC" )
 	{
-	SECTION( "Match near end of document" )
+	SECTION( "Match" )
 		{
 		dex::string filePath = "test_in.dex";
 		int fd = open( filePath.cStr( ), O_RDWR | O_CREAT | O_TRUNC, 0777 );
@@ -35,27 +35,21 @@ TEST_CASE( "Sans QC" )
 
 		close( fd );
 
-		dex::index::indexChunk::endOfDocumentIndexStreamReader *isrEndOrA =
-				new dex::index::indexChunk::endOfDocumentIndexStreamReader( chunkPointer, "" );
-		dex::index::indexChunk::endOfDocumentIndexStreamReader *isrEndOrB =
-				new dex::index::indexChunk::endOfDocumentIndexStreamReader( chunkPointer, "" );
-		// dex::index::indexChunk::endOfDocumentIndexStreamReader *isrEndAnd =
+		// dex::index::indexChunk::endOfDocumentIndexStreamReader *isrEndOrA =
 		// 		new dex::index::indexChunk::endOfDocumentIndexStreamReader( chunkPointer, "" );
+		// dex::index::indexChunk::endOfDocumentIndexStreamReader *isrEndOrB =
+		// 		new dex::index::indexChunk::endOfDocumentIndexStreamReader( chunkPointer, "" );
+		dex::index::indexChunk::endOfDocumentIndexStreamReader *isrEndAnd =
+				new dex::index::indexChunk::endOfDocumentIndexStreamReader( chunkPointer, "" );
 
 		dex::index::indexChunk::indexStreamReader *isrSome =
 				new dex::index::indexChunk::indexStreamReader( chunkPointer, "some" );
-		dex::index::indexChunk::indexStreamReader *isrHashSome =
-				new dex::index::indexChunk::indexStreamReader( chunkPointer, "#some" );
+		// dex::index::indexChunk::indexStreamReader *isrHashSome =
+		// 		new dex::index::indexChunk::indexStreamReader( chunkPointer, "#some" );
 		dex::index::indexChunk::indexStreamReader *isrJunk =
 				new dex::index::indexChunk::indexStreamReader( chunkPointer, "junk" );
-		dex::index::indexChunk::indexStreamReader *isrHashJunk =
-				new dex::index::indexChunk::indexStreamReader( chunkPointer, "#junk" );
-
-		// TODO: Issue is probably in seeking endOfDocument ISR. isrOrSome.next( ) should not return 0
-		dex::constraintSolver::orISR isrOrSome( dex::vector< dex::constraintSolver::ISR * >( { isrSome, isrHashSome } ), isrEndOrA );
-		REQUIRE( isrOrSome.next( ) == 11 );
-		dex::constraintSolver::orISR isrOrJunk( dex::vector< dex::constraintSolver::ISR * >( { isrJunk, isrHashJunk } ), isrEndOrB );
-		REQUIRE( isrOrJunk.next( ) == 11 );
+		// dex::index::indexChunk::indexStreamReader *isrHashJunk =
+		// 		new dex::index::indexChunk::indexStreamReader( chunkPointer, "#junk" );
 
 		// dex::constraintSolver::orISR *isrOrA =
 		// 		new dex::constraintSolver::orISR( dex::vector< dex::constraintSolver::ISR * >( { isrSome, isrHashSome } ), isrEndOrA );
@@ -63,11 +57,10 @@ TEST_CASE( "Sans QC" )
 		// dex::constraintSolver::orISR *isrOrB =
 		// 		new dex::constraintSolver::orISR( dex::vector< dex::constraintSolver::ISR * >( { isrJunk, isrHashJunk } ), isrEndOrB );
 
-		// dex::constraintSolver::andISR isrAnd( dex::vector< dex::constraintSolver::ISR * >(
-		// 		{ isrOrA, isrOrB } ), isrEndAnd );
+		dex::constraintSolver::andISR isrAnd( dex::vector< dex::constraintSolver::ISR * >( { isrSome, isrJunk } ), isrEndAnd );
 
-		// REQUIRE( isrAnd.next( ) == 11 );
-		// REQUIRE( isrAnd.next( ) == isrAnd.npos );
+		REQUIRE( isrAnd.next( ) == 11 );
+		REQUIRE( isrAnd.next( ) == isrAnd.npos );
 		}
 	}
 

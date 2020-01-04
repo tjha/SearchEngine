@@ -245,6 +245,9 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 	post = postsChunkum->posts;
 	absoluteLocation = 0;
 
+	if ( target == 0 )
+		return toGet = next( );
+
 	// Keep scanning until we find the first place not before our target. We'll return -1 if we fail to reach it.
 	while ( absoluteLocation < target )
 		if ( next( ) == npos )
@@ -255,10 +258,7 @@ size_t dex::index::indexChunk::indexStreamReader::seek( size_t target )
 
 size_t dex::index::indexChunk::indexStreamReader::next( )
 	{
-	if ( !postsMetadatum )
-		return npos;
-
-	if ( postsMetadatum->occurenceCount == 0 || absoluteLocation >= *( indexChunkum->maxLocation )
+	if ( !postsMetadatum || postsMetadatum->occurenceCount == 0 || absoluteLocation > *( indexChunkum->maxLocation )
 			|| ( dex::utf::isSentinel( post ) && !postsChunkum->nextPostsChunkOffset ) )
 		return toGet = npos;
 
@@ -281,7 +281,7 @@ size_t dex::index::indexChunk::indexStreamReader::nextDocument( )
 	if ( !postsMetadatum )
 		return toGet = npos;
 	dex::index::indexChunk::indexStreamReader endOfDocumentISR( indexChunkum, "" );
-	size_t endOfDocumentLocation = endOfDocumentISR.seek( absoluteLocation );
+	size_t endOfDocumentLocation = endOfDocumentISR.seek( absoluteLocation + 1 );
 	if ( endOfDocumentLocation == npos )
 		return toGet = npos;
 	return toGet = seek( endOfDocumentLocation + 1 );
@@ -307,7 +307,7 @@ size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::next( )
 
 size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::nextDocument( )
 	{
-	return next( );
+	return toGet = next( );
 	}
 
 size_t dex::index::indexChunk::endOfDocumentIndexStreamReader::documentSize( )
