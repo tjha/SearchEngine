@@ -682,11 +682,8 @@ TEST_CASE( "scoring" )
 
 		dex::string query = "short the housing market";
 		dex::pair< dex::vector< dex::ranker::searchResult >, int > results = dex::ranker::getTopN( 10, query,
-				&rankerObject, pointers, true );
-		for ( size_t i = 0;  i < results.first.size( );  ++i )
-			{
-			std::cout << results.first[ i ].title << std::endl;
-			std::cout << results.first[ i ].score << std::endl << std::endl;
-			}
+				&rankerObject, pointers, false );
+		delete chunkPointer;
+		close( fd );
 		}
 	}
