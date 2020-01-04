@@ -95,7 +95,7 @@ The source for the query compiler can be found in `src/queryCompiler/`. The code
 In terms of the actual language, we support NOT (~), AND (&), OR (|), and PHRASE (""). There is also an option to choose between infix and prefix notations.
 
 ### Ranker
-
+The source for the ranker can be found in `src/ranker`. This ranks any documents for the frontend that are returned by the constraint solver. Static ranking involves simple heuristics for the title and url of the document. Dynamic ranking involves finding spans for the query in the document title and body and using a bag of words scoring strategy for the document body. Scoring a span takes into account the length and the ordering of the span. Spans currently must have all words in the query, partial spanning has not been implemented.
 ### Frontend
 
 The frontend provides an entry-point for search queries. The server runs on `src/frontend/httpServer.cpp` and listens on port 8000. It is an extension of the server lab assignment and is modified to serve the HTML and CSS files for rendering the content of the search engine.
