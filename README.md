@@ -79,6 +79,9 @@ The `driver.cpp` spins up 100 threads that are all crawler workers. We use the p
 Saving the HTML for the index, and saving the work done by the crawler is handled in `checkpointing.hpp` so the crawler doesn't have to restart every time it crashes.
 
 ### Parser
+The parser code is contained in src/parser/. The HTMLParser class contains the methods used in text-based HTML parsing to extract links, anchor text, and document text. It follows a simple approach where tags are itertively identified by their positions in the document to determine the type of content contained within. Steps were also taken to avoid parsing of content within script and comment tags.
+
+An HTML document is parsed when the HTMLParser object is initialized through its constructor. This constructor requires the document url, its text in string format, and a boolean to indicate whether the crawler or indexer is creating this object. The boolean provides allows to avoid parsing of unnecessary content for the crawler and indexer respectively.
 
 ### Indexer
 The indexer code is all in `src/indexer/`. We build our index into chunks, which contain an inverse word index for a set of URLs. We also define index stream readers (ISRs) for reading through the chunks. These ISRs have functions `next`, `nextDocument`, `seek`, and `get`, which allow for quick navigation.
