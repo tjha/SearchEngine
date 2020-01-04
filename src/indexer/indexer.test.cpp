@@ -439,20 +439,24 @@ TEST_CASE( "Read indexChunk from a file" )
 
 		string word = "someWord";
 		string url = "hamiltoncshell.com";
-		vector< string > title = { "hamilton", "c", "shell" };
-		string titleString = "Hamilton C Shell 2012";
+		vector< string > title = { "hammy" };
+		string titleString = "Hammy";
 
 		// Create a scope here so that the index chunk calls its destructor
 			{
 			indexChunk initializingIndexChunk = indexChunk( fd );
 
 			// Each postsChunk has a byte posts[ ] of size 1 << 10
-			vector< string > body( 1 << 12, word );
+			vector< string > body( 1 << 10, word );
 
 			REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+			initializingIndexChunk.skip( 1 << 28 );
+			REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 			indexChunk::indexStreamReader wordISR = indexChunk::indexStreamReader( &initializingIndexChunk, word );
-			for ( size_t iters = 0;  iters < ( 1 << 12 );  ++iters )
+			for ( size_t iters = 0;  iters < ( 1 << 10 );  ++iters )
 				REQUIRE( wordISR.next( ) == iters + 1 );
+			for ( size_t iters = 0;  iters < ( 1 << 10 );  ++iters )
+				REQUIRE( wordISR.next( ) == ( ( 1 << 10 ) + 1 + 1 + 1 ) + ( 1 << 28 ) + iters + 1 );
 			REQUIRE( wordISR.next( ) == wordISR.npos );
 			}
 
@@ -463,43 +467,12 @@ TEST_CASE( "Read indexChunk from a file" )
 
 		indexChunk fromFileIndexChunk = indexChunk( fd, false );
 
-		indexChunk::indexStreamReader wordISR0 = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
-		for ( size_t iters = 0;  iters < ( 1 << 12 );  ++iters )
-			REQUIRE( wordISR0.next( ) == iters + 1 );
-		REQUIRE( wordISR0.next( ) == wordISR0.npos );
-
-		indexChunk::indexStreamReader wordISR1a = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
-		REQUIRE( wordISR1a.seek( 2 ) == 2 );
-		REQUIRE( wordISR1a.next( ) == 3 );
-
-		indexChunk::indexStreamReader wordISR1b = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
-		REQUIRE( wordISR1b.seek( 0 ) == 1 );
-
-		indexChunk::indexStreamReader wordISR1 = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
-		REQUIRE( wordISR1.seek( 0 ) == 1 );
-		REQUIRE( wordISR1.next( ) == 2 );
-
-		indexChunk::indexStreamReader wordISR2 = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
-		for ( size_t iters = 0;  iters < ( 1 << 12 );  ++iters )
-			REQUIRE( wordISR2.next( ) == iters + 1 );
-		REQUIRE( wordISR2.next( ) == wordISR2.npos );
-
-		indexChunk::indexStreamReader wordISR3 = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
-		for ( size_t iters = 0;  iters < ( 1 << 4 );  ++iters )
-			{
-			size_t seekLoc = wordISR3.seek( ( iters << 2 ) + 1 );
-			size_t nextLoc = wordISR3.next( );
-			// Seek to 0, then next( ) does not return the next location after 0, but returns 0
-			REQUIRE( seekLoc == ( iters << 2 ) + 1);
-			REQUIRE( nextLoc == ( iters << 2 ) + 2 );
-			}
-
-		indexChunk::indexStreamReader thirdWordISR = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
-		for ( size_t iters = 0;  iters < ( 1 << 4 );  ++iters )
-			{
-			REQUIRE( thirdWordISR.seek( ( iters << 8 ) + 1 ) == ( iters << 8 ) + 1);
-			REQUIRE( thirdWordISR.next( ) == ( iters << 8 ) + 2 );
-			}
+		indexChunk::indexStreamReader wordISR = indexChunk::indexStreamReader( &fromFileIndexChunk, word );
+		for ( size_t iters = 0;  iters < ( 1 << 10 );  ++iters )
+				REQUIRE( wordISR.next( ) == iters + 1 );
+		for ( size_t iters = 0;  iters < ( 1 << 10 );  ++iters )
+			REQUIRE( wordISR.next( ) == ( ( 1 << 10 ) + 1 + 1 + 1 ) + ( 1 << 28 ) + iters + 1 );
+		REQUIRE( wordISR.next( ) == wordISR.npos );
 
 		close( fd );
 		}

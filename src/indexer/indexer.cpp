@@ -60,10 +60,9 @@ bool dex::index::indexChunk::postsMetadata::append( uint32_t location, postsChun
 		{
 		lastLocation = location;
 
-		// TOOD: Fix this
-		// The first 8 bits of our location determine our synchronization point. We only update the table if we haven't
-		// been "this high" before.
-		for ( synchronizationPoint *syncPoint = synchronizationPoints + ( location >> ( 8 * sizeof( location ) - 8 ) );
+		// The first 8 bits of the 31-bit location determine our synchronization point. We only update the table if we
+		// haven't been "this high" before.
+		for ( synchronizationPoint *syncPoint = synchronizationPoints + ( location >> 20 );
 				syncPoint >= synchronizationPoints && ~syncPoint->inverseLocation == syncPoint->npos;  --syncPoint )
 			{
 			syncPoint->postsChunkArrayOffset = lastPostsChunkOffset;

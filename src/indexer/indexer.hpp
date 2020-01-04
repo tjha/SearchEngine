@@ -80,6 +80,7 @@ namespace dex
 						struct synchronizationPoint
 							{
 							static const uint32_t npos = static_cast< uint32_t >( -1 );
+							static const uint32_t synchronizationPointCount = 1 << 11;
 
 							uint32_t postsChunkArrayOffset;
 							uint32_t postsChunkOffset;
@@ -87,8 +88,7 @@ namespace dex
 							};
 						// First 32 bits of each long long form the seek offset in posting. The last 32 bits are actual
 						// location of that post. We use a long long since it is (practically) guaranteed to be 64 bits.
-						static const uint32_t synchronizationPointCount = 1 << 8;
-						synchronizationPoint synchronizationPoints[ synchronizationPointCount ];
+						synchronizationPoint synchronizationPoints[ synchronizationPoint::synchronizationPointCount ];
 
 					public:
 						postsMetadata( uint32_t chunkOffset );
@@ -114,20 +114,20 @@ namespace dex
 					};
 
 				// These consts can be adjusted if necessary.
-				// static const uint32_t maxURLCount = 1L << 17;
-				// static const uint32_t maxURLLength = 1L << 10;
-				// static const uint32_t maxTitleLength = 1 << 10;
-				// static const uint32_t maxWordLength = 64;
-				// static const uint32_t postsChunkArraySize = 1L << 19;
-				// static const uint32_t postsMetadataArraySize = 1L << 19;
-
-				// Keep these for testing
-				static const uint32_t maxURLCount = 1L << 8;
+				static const uint32_t maxURLCount = 1L << 17;
 				static const uint32_t maxURLLength = 1L << 10;
 				static const uint32_t maxTitleLength = 1 << 10;
 				static const uint32_t maxWordLength = 64;
-				static const uint32_t postsChunkArraySize = 1L << 10;
-				static const uint32_t postsMetadataArraySize = 1L << 10;
+				static const uint32_t postsChunkArraySize = 1L << 24;
+				static const uint32_t postsMetadataArraySize = 1L << 24;
+
+				// Keep these for testing
+				// static const uint32_t maxURLCount = 1L << 8;
+				// static const uint32_t maxURLLength = 1L << 10;
+				// static const uint32_t maxTitleLength = 1 << 10;
+				// static const uint32_t maxWordLength = 64;
+				// static const uint32_t postsChunkArraySize = 1L << 10;
+				// static const uint32_t postsMetadataArraySize = 1L << 10;
 
 				// TODO: Double check these very carefully.
 				// Note: these sizes should be such that they are block-aligned. The required offest for block alignment
@@ -254,6 +254,12 @@ namespace dex
 					}
 
 			public:
+				void skip( const uint32_t distance )
+					{
+					*location += distance;
+					*maxLocation += distance;
+					}
+
 				bool addDocument( const dex::string &url, const dex::vector< dex::string > &title,
 						const dex::string &titleString, const dex::vector< dex::string > &body );
 
