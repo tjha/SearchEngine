@@ -32,6 +32,50 @@
 #include "utils/url.hpp"
 #include <iostream>
 
+dex::ranker::score::score( ) : totalScore( 0 ), staticUrlScore( 0 ), staticTitleScore( 0 ),
+		dynamicBodySpanScore( 0 ), dynamicTitleSpanScore( 0 ), dynamicBagOfWordsScore( 0 ) { }
+
+double dex::ranker::score::getTotalScore( ) const
+	{
+	return totalScore;
+	}
+
+void dex::ranker::score::setStaticUrlScore( double score )
+	{
+	totalScore += score - staticUrlScore;
+	staticUrlScore = score;
+	}
+void dex::ranker::score::setStaticTitleScore( double score )
+	{
+	totalScore += score - staticTitleScore;
+	staticTitleScore = score;
+	}
+void dex::ranker::score::setDynamicBodySpanScore( double score )
+	{
+	totalScore += score - dynamicBodySpanScore;
+	dynamicBodySpanScore = score;
+	}
+void dex::ranker::score::setDynamicTitleSpanScore( double score )
+	{
+	totalScore += score - dynamicTitleSpanScore;
+	dynamicTitleSpanScore = score;
+	}
+void dex::ranker::score::setDynamicBagOfWordsScore( double score )
+	{
+	totalScore += score - dynamicBagOfWordsScore;
+	dynamicBagOfWordsScore = score;
+	}
+
+std::ostream &dex::ranker::operator<<( std::ostream &os, const dex::ranker::score &score )
+	{
+	os << "Static URL Score: " << score.staticUrlScore << "\n"
+			<< "Static Title Score: " << score.staticTitleScore << "\n"
+			<< "Dynamic Body Span Score: " << score.dynamicBodySpanScore << "\n"
+			<< "Dynamic Title Span Score: " << score.dynamicTitleSpanScore << "\n"
+			<< "Dynamic Bag of Words Score: " << score.dynamicBagOfWordsScore << "\n"
+			<< "Total Score: " << score.getTotalScore( );
+	return os;
+	}
 
 dex::ranker::staticRanker::staticRanker( dex::vector< dex::pair< size_t, double > > titleWeights, double urlWeight ) :
 	titleWeights( titleWeights ), urlWeight( urlWeight ) { }
@@ -104,18 +148,19 @@ double dex::ranker::staticRanker::staticScoreTitle( const dex::string &title ) c
 	return 0;
 	}
 
-double dex::ranker::staticRanker::getStaticScore( const dex::string &title, const dex::Url &url, bool printInfo ) const
+dex::ranker::score dex::ranker::staticRanker::getStaticScore( const dex::string &title, const dex::Url &url, bool printInfo ) const
 	{
-	double titleScore = staticScoreTitle( title );
-	double urlScore = staticScoreUrl( url );
+	dex::ranker::score score;
+	score.setStaticTitleScore( staticScoreTitle( title ) );
+	score.setStaticUrlScore( staticScoreUrl( url ) );
 
 	if ( printInfo )
 		{
-		std::cout << "Static Score Title: " << titleScore << std::endl;
-		std::cout << "Static Score Url: " << urlScore << std::endl;
+		std::cout << "Static Score Title: " << score.staticTitleScore << std::endl;
+		std::cout << "Static Score Url: " << score.staticUrlScore << std::endl;
 		}
 
-	return titleScore + urlScore;
+	return score;
 	}
 
 
@@ -384,31 +429,22 @@ double dex::ranker::dynamicRanker::scoreBagOfWords( const dex::vector< size_t > 
 			}
 		}
 	score /= double ( documentLength );
-	return dex::min( score * wordsWeight, maxBagOfWordsScore );
+	return score * wordsWeight;
 	}
 
-dex::vector< double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector< constraintSolver::ISR * > &bodyISRs,
+dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( dex::vector< constraintSolver::ISR * > &bodyISRs,
 		dex::vector< constraintSolver::ISR * > &titleISRs, dex::constraintSolver::ISR *matching,
 		dex::constraintSolver::endOfDocumentISR *ends, dex::index::indexChunk *chunk,
 		const dex::vector< bool > &emphasized, dex::vector< dex::string > &titles, dex::vector< dex::Url > &urls,
 		bool printInfo ) const
 	{
-	if ( printInfo )
-		{
-		std::cout << "print info on for getDynamicScores" << std::endl;
-		}
 	titles.clear( );
 	urls.clear( );
 	dex::vector< dex::vector< size_t > > wordCount = getDocumentInfo( bodyISRs, matching, ends, chunk, titles, urls, printInfo );
-	if ( printInfo )
-		{
-		for ( size_t title = 0;  title < titles.size( );  title++ )
-			std::cout << titles[ title ] << " " << urls[ title ].completeUrl( ) << std::endl;
-		}
+	dex::vector< dex::vector< dex::pair< size_t, double > > > bodySpans = getDesiredSpans( bodyISRs, matching, ends, wordCount );
+	size_t numberOfDocuments = bodySpans.size( );
 
-	dex::vector< dex::vector< dex::pair< size_t, double > > > bodySpans = getDesiredSpans( bodyISRs, matching, ends, 
-			wordCount );
-	dex::vector< double > bodySpanScores;
+	dex::vector< dex::ranker::score > scores( numberOfDocuments );
 
 	// Score body spans
 	for ( size_t i = 0;  i < bodySpans.size( );  ++i )
@@ -418,25 +454,22 @@ dex::vector< double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector<
 			{
 			bodySpanScore += scoreBodySpan( bodyISRs.size( ), bodySpans[ i ][ j ].first, bodySpans[ i ][ j ].second );
 			}
-		bodySpanScores.pushBack( dex::min( bodySpanScore, maxBodySpanScore ) );
+		scores[ i ].setDynamicBodySpanScore( dex::min( bodySpanScore, maxBodySpanScore ) );
 		if ( printInfo )
 			{
-			std::cout << "Index " << i << ", Body Span Score: " << bodySpanScore << std::endl;
+			std::cout << "Index " << i << ", Body Span Score: " << scores[ i ].dynamicBodySpanScore << std::endl;
 			}
 		}
-
-	// bag of word scoring
-	dex::vector< double > dynamicWordScores;
 
 	size_t beginDocument = 0;
 	size_t endDocument = matching->seek( 0 );
 	for ( size_t i = 0;  i < wordCount.size( );  ++i )
 		{
 		double dynamicWordScore = scoreBagOfWords( wordCount[ i ], endDocument - beginDocument, emphasized );
-		dynamicWordScores.pushBack( dynamicWordScore );
+		scores[ i ].setDynamicBagOfWordsScore( dex::min( dynamicWordScore, maxBagOfWordsScore ) );
 		if ( printInfo )
 			{
-			std::cout << "Index: " << i << ", Bag of Words Score: " << dynamicWordScore << std::endl;
+			std::cout << "Index: " << i << ", Bag of Words Score: " << scores[ i ].dynamicBagOfWordsScore << std::endl;
 			}
 		beginDocument = endDocument;
 		endDocument = matching->next( );
@@ -456,31 +489,24 @@ dex::vector< double > dex::ranker::dynamicRanker::getDynamicScores( dex::vector<
 			{
 			titleSpanScore += scoreTitleSpan( titleISRs.size( ), titleSpans[ i ][ j ].first, titleSpans[ i ][ j ].second );
 			}
-		titleSpanScores.pushBack( dex::min( titleSpanScore, maxTitleSpanScore ) );
+		scores[ i ].setDynamicTitleSpanScore( dex::min( titleSpanScore, maxTitleSpanScore ) );
 		if ( printInfo )
 			{
-			std::cout << "Index: " << i << ", Title Span Score: " << titleSpanScore << std::endl;
+			std::cout << "Index: " << i << ", Title Span Score: " << scores[ i ].dynamicTitleSpanScore << std::endl;
 			}
 		}
-
-
-	dex::vector< double > totalScores;
-	for ( size_t i = 0;  i < dynamicWordScores.size( );  ++i )
-		{
-		totalScores.pushBack( bodySpanScores[ i ] + titleSpanScores[ i ] + dynamicWordScores[ i ] );
-		}
-	return totalScores;
+	return scores;
 	}
 
 // returns a pair. First is the scores. second is error code. if error code is -1, you messed up.
-dex::pair< dex::vector< double >, int > dex::ranker::ranker::scoreDocuments( dex::queryCompiler::matchedDocuments *documents,
+dex::pair< dex::vector< dex::ranker::score >, int > dex::ranker::ranker::scoreDocuments( dex::queryCompiler::matchedDocuments *documents,
 		dex::constraintSolver::endOfDocumentISR *ends, dex::vector< dex::string > &titles, dex::vector< dex::Url > &urls,
 		bool printInfo ) const
 	{
 	// if the query is bad return -1
 	if ( !documents->matchingDocumentISR )
 		{
-		dex::vector< double > scores;
+		dex::vector< dex::ranker::score > scores;
 		return { scores, -1 };
 		}
 	dex::vector< dex::constraintSolver::ISR * > bodyISRs;
@@ -489,10 +515,14 @@ dex::pair< dex::vector< double >, int > dex::ranker::ranker::scoreDocuments( dex
 		bodyISRs.pushBack( new dex::index::indexChunk::indexStreamReader( documents->chunk, documents->flattenedQuery[ i ] ) );
 	for ( size_t i = 0;  i < documents->flattenedQuery.size( );  ++i )
 		titleISRs.pushBack( new dex::index::indexChunk::indexStreamReader( documents->chunk, '#' + documents->flattenedQuery[ i ] ) );
-	dex::vector< double > totalScores = rankerDynamic.getDynamicScores( bodyISRs, titleISRs,
+	dex::vector< dex::ranker::score > totalScores = rankerDynamic.getDynamicScores( bodyISRs, titleISRs,
 			documents->matchingDocumentISR, ends, documents->chunk, documents->emphasizedWords, titles, urls, printInfo );
 	for ( size_t i = 0;  i < titles.size( );  ++i )
-		totalScores[ i ] += rankerStatic.getStaticScore( titles[ i ], urls[ i ], printInfo );
+		{
+		dex::ranker::score staticScore = rankerStatic.getStaticScore( titles[ i ], urls[ i ], printInfo );
+		totalScores[ i ].setStaticTitleScore( staticScore.staticTitleScore );
+		totalScores[ i ].setStaticUrlScore( staticScore.staticUrlScore );
+		}
 
 	for ( size_t i = 0;  i < bodyISRs.size( );  ++i )
 		if ( bodyISRs[ i ] )
@@ -526,7 +556,7 @@ void *dex::ranker::findAndScoreDocuments( void *args )
 				new dex::index::indexChunk::endOfDocumentIndexStreamReader( documents->chunk, "" );
 		dex::vector< dex::string > titles;
 		dex::vector< dex::Url > urls;
-		dex::pair< dex::vector< double >, int > scoresPair = rankerPointer->scoreDocuments( documents, eodisr,
+		dex::pair< dex::vector< dex::ranker::score >, int > scoresPair = rankerPointer->scoreDocuments( documents, eodisr,
 		titles, urls, printInfo );
 		// Now that we're done with the matched documents, delete them
 		if ( documents )
@@ -542,7 +572,7 @@ void *dex::ranker::findAndScoreDocuments( void *args )
 			*searchResults = { { }, -1 };
 			return reinterpret_cast< void * >( searchResults );
 			}
-		dex::vector< double > scores = scoresPair.first;
+		dex::vector< dex::ranker::score > scores = scoresPair.first;
 
 		searchResults->second = 0;
 		for ( size_t index = 0;  index < scores.size( );  ++index )
@@ -566,7 +596,6 @@ dex::vector< dex::index::indexChunk * > chunkPointers, bool printInfo )
 	pthread_t *workerThreads = new pthread_t[ chunkPointers.size( ) ];
 	pthread_mutex_t generatorLock = PTHREAD_MUTEX_INITIALIZER;
 	dex::vector< dex::ranker::searchResult > results;
-	results.reserve( n );
 	dex::vector< double > scores;
 	dex::vector< dex::ranker::scoreRequest > requests;
 	requests.resize( chunkPointers.size( ) );
@@ -578,6 +607,8 @@ dex::vector< dex::index::indexChunk * > chunkPointers, bool printInfo )
 		requests[ index ].chunkPointer = chunkPointers[ index ];
 		requests[ index ].rankerPointer = rankerPointer;
 		requests[ index ].printInfo = printInfo;
+		if ( printInfo )
+			std::cout << "Create with chunk: " << requests[ index ].chunkPointer << std::endl;
 		pthread_create( &workerThreads[ index ], nullptr, dex::ranker::findAndScoreDocuments,
 				( void * ) &requests[ index ] );
 		}
@@ -596,8 +627,9 @@ dex::vector< dex::index::indexChunk * > chunkPointers, bool printInfo )
 		else
 			for ( size_t index = 0;  index < returnedResults->first.size( );  ++index )
 				{
-				results.pushBack( returnedResults->first[ index ] );
-				scores.pushBack( results[ index ].score );
+				dex::ranker::searchResult result = returnedResults->first[ index ];
+				results.pushBack( result );
+				scores.pushBack( result.score.getTotalScore( ) );
 				}
 		delete returnedResults;
 		}
@@ -608,11 +640,12 @@ dex::vector< dex::index::indexChunk * > chunkPointers, bool printInfo )
 		}
 
 	// Out of all the documents returned, find the topN documents
-	dex::documentInfo **topN, *p;
+	dex::documentInfo **topN;
 	dex::vector< dex::ranker::searchResult > topDocuments;
 	topN = findTopN( scores, n );
-	for ( size_t index = 0;  index < n && ( p = topN[ index ] );  index++ )
+	for ( size_t index = 0;  index < n && topN[ index ];  index++ )
 		{
+		dex::documentInfo *p = topN[ index ];
 		topDocuments.pushBack( results[ p->documentIndex ] );
 		if ( printInfo )
 			std::cout << results[ p->documentIndex ].score << "\t" << results[ p->documentIndex ].url.completeUrl( ) << "\t"

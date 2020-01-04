@@ -15,6 +15,7 @@
 #include "utils/url.hpp"
 #include "utils/utility.hpp"
 #include "utils/vector.hpp"
+#include <iostream>
 
 namespace dex
 	{
@@ -25,12 +26,32 @@ namespace dex
 		class dynamicRanker;
 		class ranker;
 
+		class score
+			{
+			private:
+				double totalScore;
+			public:
+				score( );
+				double staticUrlScore;
+				double staticTitleScore;
+				double dynamicBodySpanScore;
+				double dynamicTitleSpanScore;
+				double dynamicBagOfWordsScore;
+				double getTotalScore( ) const;
+				void setStaticUrlScore( double score );
+				void setStaticTitleScore( double score );
+				void setDynamicBodySpanScore( double score );
+				void setDynamicTitleSpanScore( double score );
+				void setDynamicBagOfWordsScore( double score );
+				friend std::ostream &operator<<( std::ostream &os, const dex::ranker::score &s);
+			};
+
 		// What is returned after scoring documents
 		struct searchResult
 			{
 			dex::Url url;
 			dex::string title;
-			double score;
+			dex::ranker::score score;
 			};
 
 		// All the information necessary for scoring documents in a chunk
@@ -59,7 +80,7 @@ namespace dex
 
 				double staticScoreUrl( const dex::Url &url ) const;
 				double staticScoreTitle( const dex::string &title ) const;
-				double getStaticScore( const dex::string &title, const dex::Url &url, bool printInfo = false ) const;
+				dex::ranker::score getStaticScore( const dex::string &title, const dex::Url &url, bool printInfo = false ) const;
 			};
 
 		class dynamicRanker
@@ -120,7 +141,7 @@ namespace dex
 
 				// getDynamicScores returns a vector of dynamic scores for the matching documents passed in.
 				// titles and urls are more return variables that correspond to the matching documents passed in.
-				vector< double > getDynamicScores( vector< constraintSolver::ISR * > &bodyISRs,
+				vector< dex::ranker::score > getDynamicScores( vector< constraintSolver::ISR * > &bodyISRs,
 					vector< constraintSolver::ISR * > &titleISRs, constraintSolver::ISR *matching,
 					constraintSolver::endOfDocumentISR *ends, index::indexChunk *chunk, const vector< bool > &emphasized,
 					vector< dex::string > &titles, vector< dex::Url > &urls, bool printInfo = false ) const;
@@ -155,7 +176,7 @@ namespace dex
 				);
 
 				// titles and urls act as extra return values
-				pair< vector< double >, int > scoreDocuments(
+				pair< vector< dex::ranker::score >, int > scoreDocuments(
 					dex::queryCompiler::matchedDocuments *documents,
 					constraintSolver::endOfDocumentISR *ends,
 					vector< dex::string > &titles,
