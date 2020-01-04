@@ -20,7 +20,7 @@
 
 // Temporary searchResults
 
-dex::vector< dex::searchResult > tmpSearchResults =
+dex::vector< dex::ranker::searchResult > tmpSearchResults =
 	{
 	{ "http://www.apple.com/", "The new iphone" },
 	{ "http://www.amazon.com/", "Tejas' work place" },
@@ -74,7 +74,7 @@ bool pathIsLegal( dex::string path )
 	return path.find( "/../" ) == dex::string::npos && ( path.size( ) < 3 || path.substr( path.size( ) - 3, 3) != "/.." ); // TODO ask stephen about path
 	}
 
-dex::string outputResult( dex::searchResult &result )
+dex::string outputResult( dex::ranker::searchResult &result )
 	{
 	return "<li class=\"result\"><a href=" + result.url.completeUrl( ) +
 			"\">" + result.url.getDomain( ) + "</a> " + result.title + "</li>";
@@ -153,13 +153,14 @@ void *Talk( void *p )
 		}
 
 	// ranker stuff
-	dex::ranker rankerObject;
-	dex::pair< dex::vector< dex::searchResult >, int > searchResults = dex::getTopN( 10, query, &rankerObject, indexChunkObjects );
-	if ( searchResults.second == -1 )
+	dex::ranker::ranker rankerObject;
+	dex::pair< dex::vector< dex::ranker::searchResult >, int > searchResultsPair = dex::ranker::getTopN( 10, query, &rankerObject, indexChunkObjects );
+	if ( searchResultsPair.second == -1 )
 		{
 		// THE QUERY PASSED IN WAS BAD, DO SOMETHING
 		return nullptr;
 		}
+	dex::vector< dex::ranker::searchResult > searchResults = searchResultsPair.first;
 	// TODO: populate webpage with content
 	std::cout << request << std::endl;
 
@@ -172,10 +173,10 @@ void *Talk( void *p )
 		{
 		content = dex::string( map );
 		content.insert( content.find( "placeholder=" ) + 13, query );
-		for ( size_t i = 0;  i < tmpSearchResults.size( );  ++i )
+		for ( size_t i = 0;  i < searchResults.size( );  ++i )
 			{
 			std::cout << "i = " << i << std::endl;
-			dex::string searchRes( outputResult( tmpSearchResults[ tmpSearchResults.size( ) - i - 1 ] ) );
+			dex::string searchRes( outputResult( searchResults[ searchResults.size( ) - i - 1 ] ) );
 			resultsSize += searchRes.size( );
 			content.insert( content.find( "class=\"results\">" ) + 16, searchRes );
 			}
@@ -277,7 +278,7 @@ int main( int argc, char **argv )
 		int fd = open( filenameIterator->cStr( ), O_RDWR );
 		if ( fd == -1 )
 			{
-			std::cerr << "fd is -1 for " << *filenameiterator<< " something's gone wrong" << std::endl;
+			std::cerr << "fd is -1 for " << *filenameIterator<< " something's gone wrong" << std::endl;
 			return 1;
 			}
 		indexChunkObjects.pushBack( new dex::index::indexChunk( fd, false ) );
