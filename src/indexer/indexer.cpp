@@ -6,6 +6,7 @@
 // 2019-11-21: File created
 
 #include <cstddef>
+#include <cstdint>
 #include <fcntl.h>
 #include <iostream>
 #include <sys/mman.h>
@@ -27,7 +28,7 @@ dex::index::indexChunk::postsChunk::postsChunk( ) : nextPostsChunkOffset( 0 ), c
 	posts[ 0 ] = dex::utf::sentinel;
 	}
 
-bool dex::index::indexChunk::postsChunk::append( size_t delta )
+bool dex::index::indexChunk::postsChunk::append( uint32_t delta )
 	{
 	// We're "full" if we can't insert a "widest" UTF-8 character. Write a sentinel instead.
 	if ( currentPostOffset + 8 > postsChunkSize )
@@ -36,29 +37,30 @@ bool dex::index::indexChunk::postsChunk::append( size_t delta )
 		return false;
 		}
 
-	currentPostOffset = dex::utf::encoder< size_t >( )( delta, posts + currentPostOffset ) - posts;
+	currentPostOffset = dex::utf::encoder< uint32_t >( )( delta, posts + currentPostOffset ) - posts;
 	posts[ currentPostOffset ] = dex::utf::sentinel;
 
 	return true;
 	}
 
 // postMetadata
-dex::index::indexChunk::postsMetadata::postsMetadata( size_t chunkOffset ) :
+dex::index::indexChunk::postsMetadata::postsMetadata( uint32_t chunkOffset ) :
 		occurenceCount( 0 ), documentCount( 0 ), firstPostsChunkOffset( chunkOffset ),
 		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ), synchronizationPoints( )
 	{
 	}
 
-bool dex::index::indexChunk::postsMetadata::append( size_t location, postsChunk *postsChunkArray )
+bool dex::index::indexChunk::postsMetadata::append( uint32_t location, postsChunk *postsChunkArray )
 	{
-	size_t delta = location - lastLocation;
-	size_t originalPostOffset = postsChunkArray[ lastPostsChunkOffset ].currentPostOffset;
+	uint32_t delta = location - lastLocation;
+	uint32_t originalPostOffset = postsChunkArray[ lastPostsChunkOffset ].currentPostOffset;
 	bool successful = postsChunkArray[ lastPostsChunkOffset ].append( delta );
 
 	if ( successful )
 		{
 		lastLocation = location;
 
+		// TOOD: Fix this
 		// The first 8 bits of our location determine our synchronization point. We only update the table if we haven't
 		// been "this high" before.
 		for ( synchronizationPoint *syncPoint = synchronizationPoints + ( location >> ( 8 * sizeof( location ) - 8 ) );
@@ -97,7 +99,7 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	if ( filePointer == MAP_FAILED )
 		throw dex::exception( );
 
-	postsChunkCount = reinterpret_cast< size_t * >( filePointer );
+	postsChunkCount = reinterpret_cast< uint32_t * >( filePointer );
 	location = postsChunkCount + 1;
 	maxLocation = postsChunkCount + 2;
 
@@ -129,19 +131,19 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		}
 	else
 		{
-		urlsToOffsets = dex::utf::decoder< dex::unorderedMap< dex::string, size_t > >( )( encodedURLsToOffsets );
-		offsetsToEndOfDocumentMetadatas = dex::utf::decoder< dex::unorderedMap< size_t, endOfDocumentMetadataType > >( )
+		urlsToOffsets = dex::utf::decoder< dex::unorderedMap< dex::string, uint32_t > >( )( encodedURLsToOffsets );
+		offsetsToEndOfDocumentMetadatas = dex::utf::decoder< dex::unorderedMap< uint32_t, endOfDocumentMetadataType > >( )
 				( encodedOffsetsToEndOfDocumentMetadatas );
-		dictionary = dex::utf::decoder< dex::unorderedMap< dex::string, size_t > >( )( encodedDictionary );
+		dictionary = dex::utf::decoder< dex::unorderedMap< dex::string, uint32_t > >( )( encodedDictionary );
 		}
 	}
 
 dex::index::indexChunk::~indexChunk( )
 	{
-	dex::utf::encoder< dex::unorderedMap< dex::string, size_t > >( )( urlsToOffsets, encodedURLsToOffsets );
-	dex::utf::encoder< dex::unorderedMap< size_t, endOfDocumentMetadataType > >( )
+	dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( urlsToOffsets, encodedURLsToOffsets );
+	dex::utf::encoder< dex::unorderedMap< uint32_t, endOfDocumentMetadataType > >( )
 			( offsetsToEndOfDocumentMetadatas, encodedOffsetsToEndOfDocumentMetadatas );
-	dex::utf::encoder< dex::unorderedMap< dex::string, size_t > >( )( dictionary, encodedDictionary );
+	dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( dictionary, encodedDictionary );
 
 	msync( filePointer, fileSize, MS_SYNC );
 	munmap( filePointer, fileSize );
@@ -153,9 +155,9 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	if ( url.size( ) > maxURLLength || titleString.size( ) > maxTitleLength )
 		return true;
 
-	dex::unorderedMap< dex::string, size_t > postsMetadataChanges;
+	dex::unorderedMap< dex::string, uint32_t > postsMetadataChanges;
 
-	size_t documentOffset = *location;
+	uint32_t documentOffset = *location;
 	if ( !append( body.cbegin( ), body.cend( ), postsMetadataChanges ) )
 		return false;
 	++( *location );
@@ -183,8 +185,8 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 
 	offsetsToEndOfDocumentMetadatas[ *location ] = endOfDocumentMetadataType
 		{
-		title.size( ) + 1 + body.size( ) + 1,
-		uniqueWords.size( ),
+		static_cast< uint32_t >( title.size( ) + 1 + body.size( ) + 1 ),
+		static_cast< uint32_t >( uniqueWords.size( ) ),
 		url,
 		titleString,
 		};
@@ -272,7 +274,7 @@ size_t dex::index::indexChunk::indexStreamReader::next( )
 		}
 
 	// Post is a pointer to a valid encoded size_t.
-	return absoluteLocation += dex::utf::decoder< size_t >( )( post, &post );
+	return absoluteLocation += dex::utf::decoder< uint32_t >( )( post, &post );
 	}
 
 size_t dex::index::indexChunk::indexStreamReader::nextDocument( )
