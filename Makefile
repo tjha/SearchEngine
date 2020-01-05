@@ -7,7 +7,7 @@ TEST_DIR := tst
 # Where to output
 BUILD_DIR := build
 
-CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -pthread -ltls
+CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -Werror -g3 -pthread -ltls
 # TODO: Is this block necessary?
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)

@@ -13,16 +13,10 @@
 #include "utils/file.hpp"
 #include "utils/utf.hpp"
 
+
 using namespace dex::index;
 using dex::vector;
 using dex::string;
-
-size_t getFileSize( int fileDescriptor )
-	{
-	struct stat fileInfo;
-	fstat( fileDescriptor, &fileInfo );
-	return fileInfo.st_size;
-	}
 
 TEST_CASE( "create index chunk" )
 	{
