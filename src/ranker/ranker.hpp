@@ -37,12 +37,14 @@ namespace dex
 				double dynamicBodySpanScore;
 				double dynamicTitleSpanScore;
 				double dynamicBagOfWordsScore;
+				double dynamicUrlScore;
 				double getTotalScore( ) const;
 				void setStaticUrlScore( double score );
 				void setStaticTitleScore( double score );
 				void setDynamicBodySpanScore( double score );
 				void setDynamicTitleSpanScore( double score );
 				void setDynamicBagOfWordsScore( double score );
+				void setDynamicUrlScore( double score );
 				friend std::ostream &operator<<( std::ostream &os, const dex::ranker::score &score)
 					{
 					os << "Static URL Score: " << score.staticUrlScore << "\n"
@@ -50,6 +52,7 @@ namespace dex
 							<< "Dynamic Body Span Score: " << score.dynamicBodySpanScore << "\n"
 							<< "Dynamic Title Span Score: " << score.dynamicTitleSpanScore << "\n"
 							<< "Dynamic Bag of Words Score: " << score.dynamicBagOfWordsScore << "\n"
+							<< "Dynamic Bag of Words Score: " << score.dynamicUrlScore << "\n"
 							<< "Total Score: " << score.getTotalScore( );
 					return os;
 					}
@@ -104,10 +107,12 @@ namespace dex
 				double maxBagOfWordsScore;
 				// increase this to increase the relevance of bagOfWords scoring
 				double wordsWeight;
+				// set a cap on how many points a URL can get
+				double maxUrlScore;
 
 			public:
 				dynamicRanker( double maxBodySpanScore, double maxTitleSpanScore, double emphasizedWordWeight,
-						double maxBagOfWordsScore,  double wordsWeight );
+						double maxBagOfWordsScore,  double wordsWeight, double maxUrlScore );
 
 				// Returns the word count of all the documents in the index chunk for the ISRs passed.
 				// also returns the titles and urls corresponding to each document in documentTitles and documentUrls
@@ -148,12 +153,16 @@ namespace dex
 						// Emphasized is a vector containing whether or not the word at that index was emphasized
 						const vector< bool > &emphasized ) const;
 
+				// Score the URL passed in given a flattened query
+				double scoreUrl( const vector< dex::string > &flattenedQuery, const dex::Url &url ) const;
+
 				// getDynamicScores returns a vector of dynamic scores for the matching documents passed in.
 				// titles and urls are more return variables that correspond to the matching documents passed in.
 				vector< dex::ranker::score > getDynamicScores( vector< constraintSolver::ISR * > &bodyISRs,
 					vector< constraintSolver::ISR * > &titleISRs, constraintSolver::ISR *matching,
 					constraintSolver::endOfDocumentISR *ends, index::indexChunk *chunk, const vector< bool > &emphasized,
-					vector< dex::string > &titles, vector< dex::Url > &urls, bool printInfo = false ) const;
+					vector< dex::string > &titles, vector< dex::Url > &urls, const vector< dex::string > &flattenedQuery,
+					bool printInfo = false ) const;
 			};
 
 		class ranker
@@ -169,10 +178,10 @@ namespace dex
 					// score weighting for URL
 					const double staticUrlWeight = 1,
 
-					// Maximum number of spans we measure for body ISRs
+					// Maximum score acceptbed for body ISRs
 					const double maxBodySpanScore = 500,
 
-					// Maximum number of spans we measure for title ISRs
+					// Maximum score accepted for title ISRs
 					const double maxTitleSpanScore = 500,
 
 					// double for the weighting applied to emphasized words in bag of words scoring
@@ -181,7 +190,10 @@ namespace dex
 					const double maxBagOfWordsScore = 150,
 
 					// Weighting for the bag of words scoring
-					const double wordWeight = 1000
+					const double wordWeight = 1000,
+
+					// Maximum score accepted for dynamic URL scores
+					const double maxDynamicUrlScore = 500
 				);
 
 				// titles and urls act as extra return values

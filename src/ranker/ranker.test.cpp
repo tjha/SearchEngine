@@ -593,8 +593,34 @@ TEST_CASE( "scoring" )
 	size_t maxBodySpanScore = 100;
 	size_t maxTitleSpanScore = 100;
 	double wordsWeight = 1000;
+	double maxUrlScore = 500;
 
+	SECTION( "url scores" )
+		{
+		dex::ranker::ranker judge( titleWeights, urlWeight,
+			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight, maxUrlScore );
+		
+		dex::Url url = "https://www.washingtonpost.com/";
+		dex::vector< dex::string > flattenedQuery = { "Washingtonpost" };
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url ) == maxUrlScore );
+		flattenedQuery = { "Washingtonpost.com" };
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url ) == maxUrlScore );
+		flattenedQuery = { "Washington", "Post" };
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url ) == maxUrlScore );
+		flattenedQuery = { "Washington" , "Post", ".Com" };
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url ) == maxUrlScore );
 
+		flattenedQuery = { "I", "love", "cooking", "mapo", "tofu", "recipe" };
+		dex::Url url1 = "https://www.ilovecooking.com/chinese/amazing-mapo-tofu-recipe";
+		dex::Url url2 = "https://www.ilovecooking.com/korean/tofu-stew-recipe";
+		dex::Url url3 = "https://www.ilovecooking.com/japanese/simple-udon-recipe";
+		dex::Url url4 = "https://www.amytriescooking.com/new-tofu-trend";
+		dex::Url url5 = "https://www.randomforum.com/unrelated-information";
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url1 ) > judge.rankerDynamic.scoreUrl( flattenedQuery, url2 ) );
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url2 ) > judge.rankerDynamic.scoreUrl( flattenedQuery, url3 ) );
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url3 ) > judge.rankerDynamic.scoreUrl( flattenedQuery, url4 ) );
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url4 ) > judge.rankerDynamic.scoreUrl( flattenedQuery, url5 ) );
+		}
 	SECTION( "simple dynamic scoring" )
 		{
 		dex::vector< size_t > ends = { 1000, 6000, 7000 };
@@ -645,7 +671,7 @@ TEST_CASE( "scoring" )
 		dex::vector< dex::string > titles;
 		dex::vector< dex::Url > urls;
 		dex::vector< dex::ranker::score > dynamicScores = judge.rankerDynamic.getDynamicScores( isrs, titleisrs, &matchingISR, &endisr, nullptr,
-				emphasized, titles, urls );
+				emphasized, titles, urls, {"potato"} );
 		REQUIRE( dynamicScores[ 0 ].getTotalScore( ) > dynamicScores[ 1 ].getTotalScore( ) );
 		REQUIRE( dynamicScores[ 1 ].getTotalScore( ) > dynamicScores[ 2 ].getTotalScore( ) );
 		}
