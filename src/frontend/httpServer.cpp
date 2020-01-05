@@ -27,6 +27,9 @@ dex::vector< dex::ranker::searchResult > tmpSearchResults =
 	{ "http://www.nicolehamilton.com/", "#1 teacher" }
 	};
 
+// Global variables for ranker
+dex::vector< dex::index::indexChunk * > indexChunkObjects;
+
 //  Multipurpose Internet Mail Extensions (MIME) types
 
 struct MimetypeMap
@@ -212,9 +215,6 @@ void *Talk( void *p )
 	}
 
 
-// Global variables for ranker
-dex::vector< dex::index::indexChunk * > indexChunkObjects;
-
 int main( int argc, char **argv )
 	{
 	if ( argc < 2 )
@@ -226,7 +226,6 @@ int main( int argc, char **argv )
 	int port = atoi( argv[ 1 ] );
 
 	std::cout << "Starting Server..." << std::endl;
-
 
 	struct sockaddr_in listenAddress, talkAddress;
 	socklen_t talkAddressLength;
@@ -283,8 +282,6 @@ int main( int argc, char **argv )
 			}
 		indexChunkObjects.pushBack( new dex::index::indexChunk( fd, false ) );
 		}
-
-
 
 	while ( ( talkAddressLength = sizeof( talkAddress ),
 			talkSockfd = accept( listenSockfd, ( struct sockaddr * )&talkAddress, &talkAddressLength ) )
