@@ -14,7 +14,6 @@ Thumbs.db
 html/
 logs/
 data/tmp/
-data/
 data/crawledLinks.txt
 data/toShip/
 src/mvp/data/tmp/
