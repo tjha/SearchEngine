@@ -28,15 +28,14 @@ int main( int argc, char **argv )
 		std::cerr << "No index chunks to be read! Exiting" << std::endl;
 		return 1;
 		}
+	std::cout << "Found " << indexChunkFilenames.size( ) << " index chunks" << std::endl;
 
 	for ( size_t index = 0;  index < indexChunkFilenames.size( );  ++index )
 		{
-		int fd = open( indexChunkFilenames[ index ].cStr( ), O_RDONLY, 0777 );
+		int fd = open( indexChunkFilenames[ index ].cStr( ), O_RDWR, 0777 );
 		indexChunkObjects.pushBack( new dex::index::indexChunk( fd, false ) );
 		close( fd );
 		}
-
-	std::cout << "Found " << indexChunkObjects.size( ) << " index chunks" << std::endl;
 
 	std::string input;
 	dex::string query;
@@ -53,12 +52,13 @@ int main( int argc, char **argv )
 				= dex::ranker::getTopN( 10, query, &rankerObject, indexChunkObjects );
 
 		if ( searchResultsPair.second == -1 )
-			std::cout << "Query passed in was malformed" << std::endl;
+			std::cout << "\nQuery passed in was malformed" << std::endl;
 		else
 			{
 			dex::vector< dex::ranker::searchResult > searchResults = searchResultsPair.first;
 			for ( size_t result = 0;  result < searchResults.size( );  ++result )
 				{
+				std::cout << "DOCUMENT " << result + 1 << ":\n";
 				std::cout << searchResults[ result ].title << '\n' << searchResults[ result ].url.completeUrl( )
 						<< '\n' << searchResults[ result ].score << '\n' << std::endl;
 				}
