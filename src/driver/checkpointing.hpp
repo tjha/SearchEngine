@@ -23,9 +23,9 @@
 
 namespace dex
 	{
-	dex::pair < size_t, size_t > getInstanceInfo( const char *fileName)
+	dex::pair< size_t, size_t > getInstanceInfo( const char *fileName)
 		{
-		dex::pair < size_t, size_t > toReturn;
+		dex::pair< size_t, size_t > toReturn;
 		toReturn.first = 0;
 		toReturn.second = 0;
 		if ( !dex::fileExists( fileName ) )
@@ -60,7 +60,7 @@ namespace dex
 		// allocate data to store
 		unsigned char *toStore = new unsigned char[ url.size( ) + html.size( ) + 14 ];
 		unsigned char *toStorePointer = toStore;
-		dex::utf::encoder < dex::string > stringEncoder;
+		dex::utf::encoder< dex::string > stringEncoder;
 		toStorePointer = stringEncoder( url, toStorePointer );
 		toStorePointer = stringEncoder( html, toStorePointer );
 		int toReturn = write( fileDescriptor, toStore, toStorePointer - toStore );
@@ -122,9 +122,9 @@ namespace dex
 			}
 		else
 			{
-			dex::encode::decoder < dex::vector < dex::Url > > UrlDecoder;
+			dex::encode::decoder< dex::vector< dex::Url > > UrlDecoder;
 			unsigned char *frontierPtr = ( unsigned char * )readFromFile( fileName );
-			dex::vector < dex::Url > out = UrlDecoder( frontierPtr );
+			dex::vector< dex::Url > out = UrlDecoder( frontierPtr );
 			for ( auto it = out.cbegin( );  it != out.cend( );  ++it )
 				{
 				frontier.putUrl( *it );
@@ -135,19 +135,19 @@ namespace dex
 
 	int saveFrontier ( const char * fileName, dex::frontier frontier )
 		{
-		dex::encode::encoder < dex::vector < dex::Url > > UrlEncoder;
+		dex::encode::encoder< dex::vector< dex::Url > > UrlEncoder;
 		dex::vector< unsigned char > encodedFrontier = UrlEncoder( frontier.getFrontier( ) );
-		return writeToFile( fileName, reinterpret_cast < char * >( encodedFrontier.data( ) ), encodedFrontier.size( ) );
+		return writeToFile( fileName, reinterpret_cast< char * >( encodedFrontier.data( ) ), encodedFrontier.size( ) );
 		}
 
 	int saveVisitedLinks ( const char * fileName, dex::vector< dex::string > links )
 		{
-		dex::encode::encoder < dex::vector < dex::string > > VectorStringEncoder;
+		dex::encode::encoder< dex::vector< dex::string > > VectorStringEncoder;
 		dex::vector< unsigned char > encodedFrontier = VectorStringEncoder( links );
-		return writeToFile( fileName, reinterpret_cast < char * >( encodedFrontier.data( ) ), encodedFrontier.size( ) );
+		return writeToFile( fileName, reinterpret_cast< char * >( encodedFrontier.data( ) ), encodedFrontier.size( ) );
 		}
 
-	int saveCrawledLinks( const char * fileName, dex::unorderedSet < dex::string > * crawled )
+	int saveCrawledLinks( const char * fileName, dex::unorderedSet< dex::string > * crawled )
 		{
 		string crawledData = "CRAWLED LINKS\n";
 		for ( auto it = crawled->begin( );  it != crawled->end( );  ++it )
@@ -157,9 +157,9 @@ namespace dex
 		return writeToFile( fileName, crawledData.cStr( ), crawledData.size( ) );
 		}
 
-	dex::unorderedSet < dex::string > * loadCrawledLinks( const char * fileName, size_t crawledLinksSize )
+	dex::unorderedSet< dex::string > * loadCrawledLinks( const char * fileName, size_t crawledLinksSize )
 		{
-		dex::unorderedSet < dex::string > * links = new dex::unorderedSet < dex::string >( crawledLinksSize );
+		dex::unorderedSet< dex::string > * links = new dex::unorderedSet< dex::string >( crawledLinksSize );
 		if ( !dex::fileExists( fileName ) )
 			return links;
 		// read in the frontier file
@@ -186,9 +186,9 @@ namespace dex
 		return links;
 		}
 
-	dex::unorderedSet < dex::Url > loadBrokenLinks ( const char * fileName )
+	dex::unorderedSet< dex::Url > loadBrokenLinks ( const char * fileName )
 		{
-		dex::unorderedSet < dex::Url > brokenLinks;
+		dex::unorderedSet< dex::Url > brokenLinks;
 		if ( !dex::fileExists( fileName ) )
 			return brokenLinks;
 		string linksList( readFromFile( fileName ) );
@@ -215,7 +215,7 @@ namespace dex
 		return brokenLinks;
 		}
 
-	int saveBrokenLinks ( const char * fileName, dex::unorderedSet < dex::Url > brokenLinks)
+	int saveBrokenLinks ( const char * fileName, dex::unorderedSet< dex::Url > brokenLinks)
 		{
 		string brokenLinksData = "BROKEN LINKS\n";
 		for ( auto it = brokenLinks.begin( );  it != brokenLinks.end( );  ++it )
@@ -225,7 +225,7 @@ namespace dex
 		return writeToFile( fileName, brokenLinksData.cStr( ), brokenLinksData.size( ) );
 		}
 
-	int saveLinksToShip( const char * folderPath, dex::vector < dex::Url > *linksToShip, int len )
+	int saveLinksToShip( const char * folderPath, dex::vector< dex::Url > *linksToShip, int len )
 		{
 
 		for ( int i = 0;  i < len;  ++i )

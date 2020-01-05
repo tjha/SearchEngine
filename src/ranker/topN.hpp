@@ -17,7 +17,7 @@ namespace dex{
 		double score;
 		};
 
-	documentInfo **findTopN( const dex::vector < double > &scores, const size_t N )
+	documentInfo **findTopN( const dex::vector< double > &scores, const size_t N )
 		{
 		// This should hold a sorted array of the top at most N scores that we have seen so far
 		documentInfo **topNArray = new documentInfo *[ N ]( );

@@ -17,18 +17,18 @@ TEST_CASE( "constructors and assignment ", "[unorderedMap]" )
 	{
 	SECTION ( "default constructor" )
 		{
-		unorderedMap < string, int > map;
+		unorderedMap< string, int > map;
 		REQUIRE( map.empty( ) );
 		REQUIRE( map.cbegin( ) == map.cend( ) );
 		}
 	SECTION ( "iterator constructor" )
 		{
-		unorderedMap < string, string > map1( 1 );
+		unorderedMap< string, string > map1( 1 );
 		map1[ "hello" ] = "world";
 		map1[ "hola" ] = "mundo";
 		map1[ "bonjour" ] = "monde";
 
-		unorderedMap < string, string > map2( map1.cbegin( ), map1.cend( ) );
+		unorderedMap< string, string > map2( map1.cbegin( ), map1.cend( ) );
 		REQUIRE( map2.size( ) == 3 );
 		REQUIRE( map2[ "hello" ] == "world" );
 		REQUIRE( map2[ "hola" ] == "mundo" );
@@ -40,18 +40,18 @@ TEST_CASE( "constructors and assignment ", "[unorderedMap]" )
 		REQUIRE( map2[ "hola" ] == "mundo" );
 		REQUIRE( map2[ "bonjour" ] == "monde" );
 
-		unorderedMap < string, string > map3( map1.cbegin( ), map1.cend( ) );
+		unorderedMap< string, string > map3( map1.cbegin( ), map1.cend( ) );
 		REQUIRE( map3.empty( ) );
 		REQUIRE( map3.count( "hello" ) == 0 );
 		}
 	SECTION ( "copy constructor" )
 		{
-		unorderedMap < string, string > map1( 1 );
+		unorderedMap< string, string > map1( 1 );
 		map1[ "hello" ] = "world";
 		map1[ "hola" ] = "mundo";
 		map1[ "bonjour" ] = "monde";
 
-		unorderedMap < string, string > map2( map1 );
+		unorderedMap< string, string > map2( map1 );
 		REQUIRE( map2.size( ) == 3 );
 		REQUIRE( map2[ "hello" ] == "world" );
 		REQUIRE( map2[ "hola" ] == "mundo" );
@@ -63,18 +63,18 @@ TEST_CASE( "constructors and assignment ", "[unorderedMap]" )
 		REQUIRE( map2[ "hola" ] == "mundo" );
 		REQUIRE( map2[ "bonjour" ] == "monde" );
 
-		unorderedMap < string, string > map3( map1 );
+		unorderedMap< string, string > map3( map1 );
 		REQUIRE( map3.empty( ) );
 		REQUIRE( map3.count( "hello" ) == 0 );
 		}
 	SECTION ( "operator=" )
 		{
-		unorderedMap < string, string > map1( 1 );
+		unorderedMap< string, string > map1( 1 );
 		map1[ "hello" ] = "world";
 		map1[ "hola" ] = "mundo";
 		map1[ "bonjour" ] = "monde";
 
-		unorderedMap < string, string > map2;
+		unorderedMap< string, string > map2;
 		map2 = map1;
 		REQUIRE( map2.size( ) == 3 );
 		REQUIRE( map2[ "hello" ] == "world" );
@@ -107,7 +107,7 @@ TEST_CASE( "element access", "[unorderedMap]" )
 	{
 	SECTION( "operator [ ]" )
 		{
-		unorderedMap < string, unsigned > map( 1 );
+		unorderedMap< string, unsigned > map( 1 );
 		REQUIRE( map.count( "beta" ) == 0 );
 		map[ "beta" ] = 1;
 		REQUIRE( map.count( "beta" ) == 1 );
@@ -138,7 +138,7 @@ TEST_CASE( "element access", "[unorderedMap]" )
 		}
 	SECTION( "at" )
 		{
-		unorderedMap < string, unsigned > map( 1 );
+		unorderedMap< string, unsigned > map( 1 );
 		map[ "beta" ] = 1;
 		map[ "gamma" ] = 2;
 		map[ "delta" ] = 3;
@@ -158,7 +158,7 @@ TEST_CASE( "element access", "[unorderedMap]" )
 
 	SECTION( "find" )
 		{
-		unorderedMap < string, unsigned > map( 1 );
+		unorderedMap< string, unsigned > map( 1 );
 		map[ "beta" ] = 1;
 		map[ "gamma" ] = 2;
 		map[ "delta" ] = 3;
@@ -174,7 +174,7 @@ TEST_CASE( "element access", "[unorderedMap]" )
 	
 	SECTION( "insertionWillRehash" )
 		{
-		unorderedMap < string, unsigned > map( 2 );
+		unorderedMap< string, unsigned > map( 2 );
 		map[ "beta" ] = 1;
 		REQUIRE( map.insertionWillRehash( "gamma" ) );
 		REQUIRE( !map.insertionWillRehash( "beta" ) );
@@ -192,13 +192,13 @@ TEST_CASE( "element removal", "[unorderedMap]" )
 	{
 	SECTION( "erase with one iterator" )
 		{
-		unorderedMap < string, char > map( 1 );
+		unorderedMap< string, char > map( 1 );
 		map[ "a" ] = 'a';
 		map[ "b" ] = 'b';
 		map[ "c" ] = 'c';
 		map[ "d" ] = 'd';
 
-		unorderedMap < string, char >::constIterator nextElement = map.find( ( ++map.cbegin( ) )->first );
+		unorderedMap< string, char >::constIterator nextElement = map.find( ( ++map.cbegin( ) )->first );
 		REQUIRE( map.erase( map.cbegin( ) ) == nextElement++ );
 		REQUIRE( map.erase( map.cbegin( ) ) == nextElement++ );
 		REQUIRE( map.erase( map.cbegin( ) ) == nextElement++ );
@@ -213,7 +213,7 @@ TEST_CASE( "element removal", "[unorderedMap]" )
 		}
 	SECTION( "erase with two iterators" )
 		{
-		unorderedMap < string, char > map( 1 );
+		unorderedMap< string, char > map( 1 );
 		map[ "a" ] = 'a';
 		map[ "b" ] = 'b';
 		map[ "c" ] = 'c';
@@ -235,7 +235,7 @@ TEST_CASE( "element removal", "[unorderedMap]" )
 		}
 	SECTION( "erase with one key" )
 		{
-		unorderedMap < string, char > map( 1 );
+		unorderedMap< string, char > map( 1 );
 		map[ "a" ] = 'a';
 		map[ "b" ] = 'b';
 		map[ "c" ] = 'c';
@@ -252,7 +252,7 @@ TEST_CASE( "element removal", "[unorderedMap]" )
 		}
 	SECTION( "clear" )
 		{
-		unorderedMap < string, char > map( 1 );
+		unorderedMap< string, char > map( 1 );
 
 		map.clear( );
 		REQUIRE( map.empty( ) );

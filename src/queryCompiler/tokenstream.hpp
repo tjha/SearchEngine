@@ -34,7 +34,7 @@ namespace dex
 				// Where we currently are in the input
 				size_t location { 0 };
 				// Which words in the input were emphasized
-				dex::unorderedSet < dex::string > emphasizedWords;
+				dex::unorderedSet< dex::string > emphasizedWords;
 
 				/**
 				 * Construct a token stream that uses a copy of the input

@@ -8,7 +8,6 @@
 #include "constraintSolver/constraintSolver.hpp"
 #include "queryCompiler/expression.hpp"
 #include "queryCompiler/tokenstream.hpp"
-#include "ranker/rankerObjects.hpp"
 #include "utils/basicString.hpp"
 #include "utils/utility.hpp"
 
@@ -16,21 +15,33 @@ namespace dex
 	{
 	namespace queryCompiler
 		{
+		// Information to pass to the ranker
+		class matchedDocuments
+			{
+			public:
+				~matchedDocuments( );
+				dex::vector< dex::string > flattenedQuery;
+				dex::constraintSolver::ISR *matchingDocumentISR;
+				dex::index::indexChunk *chunk;
+				dex::vector< bool > emphasizedWords;
+			};
+
 		class matchedDocumentsGenerator
 			{
 			private:
 				bool invalid;
 				dex::queryCompiler::expression *root;
 				tokenStream *stream;
-				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery;
-				dex::vector < bool > emphasizedWords;
+				dex::pair< dex::vector< dex::string >, dex::vector< dex::string > > flattenedQuery;
+				dex::vector< bool > emphasizedWords;
 				dex::string query;
 
 			public:
 				matchedDocumentsGenerator( dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream );
 				~matchedDocumentsGenerator( );
-				dex::matchedDocuments *operator( )( dex::index::indexChunk *chunk ) const;
+				dex::queryCompiler::matchedDocuments *operator( )( dex::index::indexChunk *chunk ) const;
 				dex::string getQuery( ) const;
+				bool isValid( ) const;
 			};
 
 		class parser
@@ -56,7 +67,7 @@ namespace dex
 				 * The public interface of the parser. Call this function,
 				 * rather than the private internal functions.
 				 */
-				matchedDocumentsGenerator parse( dex::string &in, bool infix = true );
+				matchedDocumentsGenerator parse( const dex::string &in, bool infix = true );
 			};
 		}
 	}

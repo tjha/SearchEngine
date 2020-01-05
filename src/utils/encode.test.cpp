@@ -21,8 +21,8 @@ TEST_CASE( "encode", "[types]" )
 	SECTION( "int" )
 		{
 		int i = 4;
-		encoder < int > tEncoder;
-		dex::vector < dex::byte > encoded = tEncoder ( i );
+		encoder< int > tEncoder;
+		dex::vector< dex::byte > encoded = tEncoder ( i );
 		REQUIRE( encoded.size( ) == 4 );
 		REQUIRE( encoded[ 3 ] == 4 );
 		REQUIRE( encoded[ 1 ] == 0 );
@@ -41,7 +41,7 @@ TEST_CASE( "encode", "[types]" )
 		REQUIRE( encoded[ 0 ] == 0x00 );
 		REQUIRE( encoded[ 2 ] == 0xFF );
 
-		decoder < int > IntegerDecoder;
+		decoder< int > IntegerDecoder;
 		i = 5;
 		encoded = tEncoder( i );
 		REQUIRE( i == IntegerDecoder( tEncoder( i ).data( ) ) );
@@ -55,8 +55,8 @@ TEST_CASE( "encode", "[types]" )
 
 	/*SECTION( "iterators" )
 		{
-		encoder < int > IntegerEncoder;
-		decoder < int > IntegerDecoder;
+		encoder< int > IntegerEncoder;
+		decoder< int > IntegerDecoder;
 		int i = 0xFF;
 		auto result = IntegerEncoder( i );
 		std::cout << *result;
@@ -66,8 +66,8 @@ TEST_CASE( "encode", "[types]" )
 	SECTION( "basicString" )
 		{
 		string magikarp = "magikarp";
-		encoder < string > StringEncoder;
-		decoder < string > StringDecoder;
+		encoder< string > StringEncoder;
+		decoder< string > StringDecoder;
 		vector< byte > encoded = StringEncoder( magikarp );
 		vector< byte > size;
 
@@ -91,8 +91,8 @@ TEST_CASE( "encode", "[types]" )
 		{
 		Url amazon("https://www.amazon.com/");
 		Url apple("https://www.apple.com/");
-		encoder < Url > UrlEncoder;
-		decoder < Url > UrlDecoder;
+		encoder< Url > UrlEncoder;
+		decoder< Url > UrlDecoder;
 		REQUIRE( 4 + 23 == UrlEncoder( amazon ).size( ) );
 		vector< unsigned char > encoded = UrlEncoder( amazon );
 		string decoded = decoder< string >( )(encoded.data( ));
@@ -100,12 +100,12 @@ TEST_CASE( "encode", "[types]" )
 		Url a = UrlDecoder( UrlEncoder ( amazon ).data( ) );
 		REQUIRE( amazon.completeUrl( ) == UrlDecoder( UrlEncoder ( amazon ).data( ) ).completeUrl( ) );
 		REQUIRE( apple.completeUrl( ) == UrlDecoder( UrlEncoder ( apple ).data( ) ).completeUrl( ) );
-		vector < Url > urls;
+		vector< Url > urls;
 		urls.pushBack( amazon );
 		urls.pushBack( apple );
-		encoder < vector < Url > > VectorUrlEncoder;
-		decoder < vector < Url > > VectorUrlDecoder;
-		vector < Url > encodeDecodeVector = VectorUrlDecoder( VectorUrlEncoder ( urls ).data( ) );
+		encoder< vector< Url > > VectorUrlEncoder;
+		decoder< vector< Url > > VectorUrlDecoder;
+		vector< Url > encodeDecodeVector = VectorUrlDecoder( VectorUrlEncoder ( urls ).data( ) );
 		for ( size_t i = 0;  i < urls.size( );  ++i )
 			{
 			REQUIRE( urls[ i ].completeUrl( ) == encodeDecodeVector[ i ].completeUrl( ) );
@@ -117,26 +117,26 @@ TEST_CASE( "encode", "[types]" )
 		string a = "abclkajsdf;lkjas;dlkfj";
 		string b = "curiousgeorgeandtheyellowbanana";
 		string c = "pokemonassemble";
-		vector < string > vec;
+		vector< string > vec;
 		vec.pushBack( a );
 		vec.pushBack( b );
 		vec.pushBack( c );
-		encoder < vector < string > > VectorStringEncoder;
-		decoder < vector < string > > VectorStringDecoder;
-		vector < byte > encoded = VectorStringEncoder( vec );
+		encoder< vector< string > > VectorStringEncoder;
+		decoder< vector< string > > VectorStringDecoder;
+		vector< byte > encoded = VectorStringEncoder( vec );
 		REQUIRE( encoded.size( ) == sizeof( int ) * 4 + a.size( ) + b.size( ) + c.size( ) );
 		REQUIRE( vec == VectorStringDecoder( VectorStringEncoder( vec ).data( ) ) );
 
 		int one = 123;
 		int two = 666;
 		int three = 0xFFFFFF;
-		vector < int > integers;
+		vector< int > integers;
 		integers.pushBack( one );
 		integers.pushBack( two );
 		integers.pushBack( three );
-		encoder < vector < int > > VectorIntegerEncoder;
-		decoder < vector < int > > VectorIntegerDecoder;
-		vector < byte > intsEncoded = VectorIntegerEncoder( integers );
+		encoder< vector< int > > VectorIntegerEncoder;
+		decoder< vector< int > > VectorIntegerDecoder;
+		vector< byte > intsEncoded = VectorIntegerEncoder( integers );
 		REQUIRE( intsEncoded.size( ) == sizeof( int ) * ( 1 + 3 ) );
 		REQUIRE( integers == VectorIntegerDecoder( VectorIntegerEncoder( integers ).data( ) ) );
 		}
@@ -144,12 +144,12 @@ TEST_CASE( "encode", "[types]" )
 	/*
 	SECTION( "unorderedSet" )
 		{
-		unorderedSet < dex::Url > links;
+		unorderedSet< dex::Url > links;
 		links.insert( Url("https://www.amazon.com/") );
 		links.insert( Url("https://www.apple.com/") );
 		links.insert( Url("https://www.nytimes.com/") );
-		encoder < unorderedSet < Url > > SetEncoder;
-		decoder < unorderedSet < Url > > SetDecoder;
+		encoder< unorderedSet< Url > > SetEncoder;
+		decoder< unorderedSet< Url > > SetDecoder;
 		unorderedSet< Url > decoded = SetDecoder( SetEncoder( links ).data( ) );
 		auto itDec = decoded.cbegin( );
 		for ( auto it = links.begin( );  it != links.cend( );  ++it )
@@ -163,8 +163,8 @@ TEST_CASE( "encode", "[types]" )
 	SECTION( "empty types" )
 		{
 		int i = 0;
-		encoder < int > tEncoder;
-		dex::vector < dex::byte > encoded = tEncoder ( i );
+		encoder< int > tEncoder;
+		dex::vector< dex::byte > encoded = tEncoder ( i );
 		REQUIRE( encoded.size( ) == 4 );
 		REQUIRE( encoded[ 0 ] == 0 );
 		}

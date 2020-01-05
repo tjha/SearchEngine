@@ -96,13 +96,13 @@ namespace dex
 			//		If we're in the response we're looking for specific fields, otherwise we're printing
 			// res is how we return any information back to the callee. If we get a redirect for example,
 			//		the URL we're being redirected to will be contained within res.
-			static void receive( const char *buffer, unsigned bytes, dex::vector < char > &response )
+			static void receive( const char *buffer, unsigned bytes, dex::vector< char > &response )
 				{
 				for ( unsigned i = 0;  i < bytes;  ++i )
 					response.pushBack( buffer[ i ] );
 				}
 
-			static int parseResponse( dex::vector < char > &response, dex::string &result, bool isRobot = false )
+			static int parseResponse( dex::vector< char > &response, dex::string &result, bool isRobot = false )
 				{
 				dex::string toSearch( response.cbegin( ), response.cend( ) );
 
@@ -296,7 +296,7 @@ namespace dex
 				char buffer[ 10240 ];
 				int bytes;
 				size_t totalBytes = 0;
-				dex::vector < char > response;
+				dex::vector< char > response;
 				response.reserve( maxPageSize );
 				// TODO receive all of the data, then POST PROCESS it
 				if ( protocol == HTTP )

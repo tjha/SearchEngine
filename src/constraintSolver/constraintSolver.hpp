@@ -35,7 +35,7 @@ namespace dex
 				virtual size_t nextDocument( ) = 0;
 
 				// Return the last returned value.
-				virtual size_t get( ) = 0;
+				virtual size_t get( ) const = 0;
 
 				virtual ~ISR( ) = default;
 			};
@@ -46,18 +46,18 @@ namespace dex
 				virtual size_t seek( size_t target ) = 0;
 				virtual size_t next( ) = 0;
 				virtual size_t nextDocument( ) = 0;
-				virtual size_t get( ) = 0;
-				virtual size_t documentSize( ) = 0;
+				virtual size_t get( ) const = 0;
+				virtual size_t documentSize( ) const = 0;
 			};
 
 		class andISR : public dex::constraintSolver::ISR
 			{
 			private:
 				// A vector of pointers to the ISRs we want to "and" together.
-				dex::vector < dex::constraintSolver::ISR * > factors;
+				dex::vector< dex::constraintSolver::ISR * > factors;
 				dex::constraintSolver::endOfDocumentISR *endOfDocISR;
 
-				dex::vector < size_t > locations;
+				dex::vector< size_t > locations;
 				size_t endOfDocLocation;
 
 				size_t toGet;
@@ -66,35 +66,35 @@ namespace dex
 				bool align( );
 
 			public:
-				andISR( dex::vector < dex::constraintSolver::ISR * > factors,
+				andISR( dex::vector< dex::constraintSolver::ISR * > factors,
 						dex::constraintSolver::endOfDocumentISR *endOfDocISR );
 				~andISR( );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
-				virtual size_t get( );
+				virtual size_t get( ) const;
 			};
 
 		class orISR : public dex::constraintSolver::ISR
 			{
 			private:
 				// A vector of pointers to the ISRs we want to "or" together.
-				dex::vector < dex::constraintSolver::ISR * > summands;
+				dex::vector< dex::constraintSolver::ISR * > summands;
 				dex::constraintSolver::endOfDocumentISR *endOfDocISR;
 
-				dex::vector < size_t > locations;
+				dex::vector< size_t > locations;
 				size_t endOfDocLocation;
 
 				size_t toGet;
 
 			public:
-				orISR( dex::vector < dex::constraintSolver::ISR * > summands,
+				orISR( dex::vector< dex::constraintSolver::ISR * > summands,
 						dex::constraintSolver::endOfDocumentISR *endOfDocISR );
 				~orISR( );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
-				virtual size_t get( );
+				virtual size_t get( ) const;
 			};
 
 		class notISR : public dex::constraintSolver::ISR
@@ -115,16 +115,16 @@ namespace dex
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
-				virtual size_t get( );
+				virtual size_t get( ) const;
 			};
 
 		class phraseISR : public dex::constraintSolver::ISR
 			{
 			private:
 				// A vector of pointers to the ISRs we want to find a phrase of.
-				dex::vector < dex::constraintSolver::ISR * > words;
+				dex::vector< dex::constraintSolver::ISR * > words;
 				dex::constraintSolver::endOfDocumentISR *endOfDocISR;
-				dex::vector < size_t > locations;
+				dex::vector< size_t > locations;
 
 				size_t toGet;
 
@@ -133,13 +133,13 @@ namespace dex
 				bool align( );
 
 			public:
-				phraseISR( dex::vector < dex::constraintSolver::ISR * > words,
+				phraseISR( dex::vector< dex::constraintSolver::ISR * > words,
 						dex::constraintSolver::endOfDocumentISR *endOfDocISR );
 				~phraseISR( );
 				virtual size_t seek( size_t target );
 				virtual size_t next( );
 				virtual size_t nextDocument( );
-				virtual size_t get( );
+				virtual size_t get( ) const;
 			};
 		}
 	}

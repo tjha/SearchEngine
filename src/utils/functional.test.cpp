@@ -10,7 +10,7 @@ using dex::hash;
 
 TEST_CASE( "hash", "[functional]" )
 	{
-	hash < int > intHasher;
+	hash< int > intHasher;
 	REQUIRE( intHasher( 1 ) != 1 );
 	REQUIRE( intHasher( 1 ) != intHasher( 2 ) );
 	}
