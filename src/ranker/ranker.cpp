@@ -576,6 +576,9 @@ void *dex::ranker::findAndScoreDocuments( void *args )
 dex::pair< dex::vector< dex::ranker::searchResult >, int > dex::ranker::getTopN( size_t n, dex::string query, dex::ranker::ranker *rankerPointer,
 dex::vector< dex::index::indexChunk * > chunkPointers, bool printInfo )
 	{
+	if ( query.empty( ) )
+		return { { }, -1 };
+
 	// Parse query passed in
 	dex::queryCompiler::parser parser;
 	dex::queryCompiler::matchedDocumentsGenerator generator = parser.parse( query );
