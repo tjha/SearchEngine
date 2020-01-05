@@ -319,47 +319,20 @@ dex::vector< dex::vector< dex::pair< size_t, double > > > dex::ranker::dynamicRa
 				if ( index != rarest )
 					{
 					// Position our ISRs such that ISR is pointing at first value past rarest location
-					while ( isrs[ index ]->get( ) < endDocument && isrs[ index ]->get( ) + rarest < isrs[ rarest ]->get( ) + index )
+					while ( isrs[ index ]->get( ) < endDocument
+							&& isrs[ index ]->get( ) + rarest < isrs[ rarest ]->get( ) + index )
 						{
 						previous[ index ] = isrs[ index ]->get( );
 						isrs[ index ]->next( );
 						}
 
-
 					// Take the value that is closest to our desired position for this span.
-					size_t closest;
-					// Check to see if either previous or ISR are not in the document
-					if ( previous[ index ] < beginDocument || isrs[ index ]->get( ) >= endDocument )
-						{
-						// If previous is out of bounds but ISR is in bounds, set closest to ISR
-						if ( previous[ index ] < beginDocument && isrs[ index ]->get( ) < endDocument )
-							{
-							closest = isrs[ index ]->get( );
-							}
-						// If previous is in bounds but ISR is out of bounds, set closest to previous
-						if ( previous[ index ] >= beginDocument && isrs[ index ]->get( ) >= endDocument )
-							{
-							closest = previous[ index ];
-							}
-						// If both are out of bounds, just set closest to ISR, it'll be caught later.
-						if ( previous[ index ] < beginDocument && isrs[ index ]->get( ) >= endDocument )
-							{
-							closest = isrs[ index ]->get( );
-							}
-						}
+					if ( previous[ index ] < beginDocument
+							|| ( isrs[ index ]->get( ) < endDocument
+									&& desiredPosition + desiredPosition >= isrs[ index ]->get( ) + previous[ index ] ) )
+						closestLocations[ index ] = isrs[ index ]->get( );
 					else
-						// When both ISR and previous are in the document
-						{
-						if ( desiredPosition + desiredPosition < isrs[ index ]->get( ) + previous[ index ] )
-							{
-							closest = previous[ index ];
-							}
-						else
-							{
-							closest = isrs[ index ]->get( );
-							}
-						}
-					closestLocations[ index ] = closest;
+						closestLocations[ index ] = previous[ index ];
 					}
 				}
 			// closestLocations now contains the locations of all of our words in the span
