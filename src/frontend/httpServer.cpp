@@ -147,6 +147,9 @@ void *Talk( void *p )
 	if ( path.empty( ) )
 		path = "index.html";
 
+	// adjust path so it can be found in repository
+	path.insert( 0, "data/html/" );
+
 	int file;
 	if ( !pathIsLegal( path ) || ( file = open( path.cStr( ), O_RDONLY ) ) == -1 )
 		{
@@ -158,11 +161,13 @@ void *Talk( void *p )
 	// ranker stuff
 	dex::ranker::ranker rankerObject;
 	dex::pair< dex::vector< dex::ranker::searchResult >, int > searchResultsPair = dex::ranker::getTopN( 10, query, &rankerObject, indexChunkObjects );
-	if ( searchResultsPair.second == -1 )
+
+	if ( !query.empty( ) && searchResultsPair.second == -1 )
 		{
 		// THE QUERY PASSED IN WAS BAD, DO SOMETHING
 		return nullptr;
 		}
+
 	dex::vector< dex::ranker::searchResult > searchResults = searchResultsPair.first;
 	// TODO: populate webpage with content
 	std::cout << request << std::endl;
