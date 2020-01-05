@@ -650,40 +650,58 @@ TEST_CASE( "scoring" )
 		REQUIRE( dynamicScores[ 1 ].getTotalScore( ) > dynamicScores[ 2 ].getTotalScore( ) );
 		}
 
-	
-	SECTION( "dynamic scoring" )
+	}
+
+TEST_CASE( "Real Chunks" )
+	{
+	dex::string filePath = "test_in.dex";
+	int fd = open( filePath.cStr( ), O_RDWR | O_CREAT | O_TRUNC, 0777 );
+
+	REQUIRE( fd != -1 );
+		// Scope to make sure we call the destructor
 		{
-		dex::string filePath = "test_in.dex";
-		int fd = open( filePath.cStr( ), O_RDWR | O_CREAT | O_TRUNC, 0777 );
+		dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fd );
+		dex::string url = "www.robinhood.com/shortthehousingmarket";
+		dex::vector< dex::string > title = { "learn", "to", "short", "the", "housing", "market" };
+		dex::string titleString = "Learn to short the housing market";
+		dex::vector< dex::string > body = { "short", "the", "housing", "market" };
 
-		REQUIRE( fd != -1 );
-			// Scope to make sure we call the destructor
-			{
-			dex::index::indexChunk initializingIndexChunk = dex::index::indexChunk( fd );
-			dex::string url = "www.robinhood.com/shortthehousingmarket";
-			dex::vector< dex::string > title = { "learn", "to", "short", "the", "housing", "market" };
-			dex::string titleString = "Learn to short the housing market";
-			dex::vector< dex::string > body = { "short", "the", "housing", "market" };
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
 
-			REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+		url = "goldmansachs.com/unrelated/garbo/garbo/stuff";
+		title = { "buy", "bonds", "in", "the", "housing", "market" };
+		titleString = "buy bonds in the housing market";
+		body = { "short", "the", "not", "a", "a", "a", "housing", "market" };
 
-			url = "goldmansachs.com/unrelated/garbo/garbo/stuff";
-			title = { "buy", "bonds", "in", "the", "housing", "market" };
-			titleString = "buy bonds in the housing market";
-			body = { "short", "the", "not", "a", "a", "a", "housing", "market" };
+		REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
+		}
+	dex::index::indexChunk *chunkPointer = new dex::index::indexChunk( fd, false );
+	dex::vector < dex::index::indexChunk * > pointers;
+	pointers.pushBack( chunkPointer );
 
-			REQUIRE( initializingIndexChunk.addDocument( url, title, titleString, body ) );
-			}
-
-		dex::index::indexChunk *chunkPointer = new dex::index::indexChunk( fd, false );
+	SECTION( "getTopN basic functionality" )
+		{
 		dex::ranker::ranker rankerObject;
-		dex::vector < dex::index::indexChunk * > pointers;
-		pointers.pushBack( chunkPointer );
-
 		dex::string query = "short the housing market";
 		dex::pair< dex::vector< dex::ranker::searchResult >, int > results = dex::ranker::getTopN( 10, query,
 				&rankerObject, pointers, false );
-		delete chunkPointer;
-		close( fd );
+		REQUIRE( results.second == 0 );
+		REQUIRE( results.first.size( ) == 2 );
+
+		query = "buy bonds";
+		results = dex::ranker::getTopN( 10, query, &rankerObject, pointers, false );
+		REQUIRE( results.second == 0 );
+		REQUIRE( results.first.size( ) == 1 );
 		}
+
+	SECTION( "malformed query" )
+		{
+		dex::ranker::ranker rankerObject;
+		dex::string query = "";
+		dex::pair< dex::vector< dex::ranker::searchResult >, int > results = dex::ranker::getTopN( 10, query,
+				&rankerObject, pointers, false );
+		REQUIRE( results.second == -1 );
+		}
+	delete chunkPointer;
+	close( fd );
 	}
