@@ -110,6 +110,12 @@ serve: $(BUILD_DIR)/frontend/httpServer.o\
 	$(CXX) $(CXXFLAGS) -O3 -g3 $^ -o $(BUILD_DIR)/server.exe;
 	./$(BUILD_DIR)/server.exe $(PORT)
 
+cli: $(BUILD_DIR)/frontend/cli.o $(BUILD_DIR)/constraintSolver/constraintSolver.o $(BUILD_DIR)/indexer/indexer.o\
+		$(BUILD_DIR)/ranker/ranker.o $(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
+		$(BUILD_DIR)/queryCompiler/tokenstream.o
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -O3 -g3 $^ -o $(BUILD_DIR)/frontend/cli.exe
+
 printOS:
 	$(info Your OS is '$(UNAME_S)')
 
