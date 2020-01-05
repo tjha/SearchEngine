@@ -150,6 +150,9 @@ namespace dex
 			SeenSet.insert( directory );
 
 			DIR *dir = opendir( directory.cStr( ) );
+			if ( !dir )
+				return results;
+
 			struct dirent* entry;
 
 			// Loop through all files and directories in current directory

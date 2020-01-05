@@ -101,6 +101,15 @@ indexerDriver: $(BUILD_DIR)/indexer/driver.o $(BUILD_DIR)/indexer/indexer.o\
 	mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/indexerDriver.exe
 
+PORT=8000
+serve: $(BUILD_DIR)/frontend/httpServer.o\
+		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
+		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
+		$(BUILD_DIR)/indexer/indexer.o $(BUILD_DIR)/ranker/ranker.o
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -O3 -g3 $^ -o $(BUILD_DIR)/server.exe;
+	./$(BUILD_DIR)/server.exe $(PORT)
+
 printOS:
 	$(info Your OS is '$(UNAME_S)')
 
