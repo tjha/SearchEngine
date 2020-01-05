@@ -16,18 +16,18 @@ TEST_CASE( "constructors and assignment ", "[unorderedSet]" )
 	{
 	SECTION ( "default constructor" )
 		{
-		unorderedSet < string > set;
+		unorderedSet< string > set;
 		REQUIRE( set.empty( ) );
 		REQUIRE( set.cbegin( ) == set.cend( ) );
 		}
 	SECTION ( "iterator constructor" )
 		{
-		unorderedSet < string > set1( 1 );
+		unorderedSet< string > set1( 1 );
 		set1.insert( "hello" );
 		set1.insert( "hola" );
 		set1.insert( "bonjour" );
 
-		unorderedSet < string > set2( set1.cbegin( ), set1.cend( ) );
+		unorderedSet< string > set2( set1.cbegin( ), set1.cend( ) );
 		REQUIRE( set2.size( ) == 3 );
 		REQUIRE( set2.count( "hello" ) == 1 );
 		REQUIRE( set2.count( "hola" ) == 1 );
@@ -39,18 +39,18 @@ TEST_CASE( "constructors and assignment ", "[unorderedSet]" )
 		REQUIRE( set2.count( "hola" ) == 1 );
 		REQUIRE( set2.count( "bonjour" ) == 1 );
 
-		unorderedSet < string > set3( set1.cbegin( ), set1.cend( ) );
+		unorderedSet< string > set3( set1.cbegin( ), set1.cend( ) );
 		REQUIRE( set3.empty( ) );
 		REQUIRE( set3.count( "hello" ) == 0 );
 		}
 	SECTION ( "copy constructor" )
 		{
-		unorderedSet < string > set1( 1 );
+		unorderedSet< string > set1( 1 );
 		set1.insert( "hello" );
 		set1.insert( "hola" );
 		set1.insert( "bonjour" );
 
-		unorderedSet < string > set2( set1 );
+		unorderedSet< string > set2( set1 );
 		REQUIRE( set2.size( ) == 3 );
 		REQUIRE( set2.count( "hello" ) == 1 );
 		REQUIRE( set2.count( "hola" ) == 1 );
@@ -62,18 +62,18 @@ TEST_CASE( "constructors and assignment ", "[unorderedSet]" )
 		REQUIRE( set2.count( "hola" ) == 1 );
 		REQUIRE( set2.count( "bonjour" ) == 1 );
 
-		unorderedSet < string > set3( set1 );
+		unorderedSet< string > set3( set1 );
 		REQUIRE( set3.empty( ) );
 		REQUIRE( set3.count( "hello" ) == 0 );
 		}
 	SECTION ( "operator=" )
 		{
-		unorderedSet < string > set1( 1 );
+		unorderedSet< string > set1( 1 );
 		set1.insert( "hello" );
 		set1.insert( "hola" );
 		set1.insert( "bonjour" );
 
-		unorderedSet < string > set2;
+		unorderedSet< string > set2;
 		set2 = set1;
 		REQUIRE( set2.size( ) == 3 );
 		REQUIRE( set2.count( "hello" ) == 1 );
@@ -106,7 +106,7 @@ TEST_CASE( "element insertion", "[unorderedSet]" )
 	{
 	SECTION( "insert (single element)" )
 		{
-		unorderedSet < string > set( 1 );
+		unorderedSet< string > set( 1 );
 		REQUIRE( set.count( "beta" ) == 0 );
 		set.insert( "beta" );
 		REQUIRE( set.count( "beta" ) == 1 );
@@ -132,7 +132,7 @@ TEST_CASE( "element insertion", "[unorderedSet]" )
 		}
 	SECTION( "insert (range)" )
 		{
-		unorderedSet < string > set1( 1 ), set2( 1 );
+		unorderedSet< string > set1( 1 ), set2( 1 );
 		set1.insert( "beta" );
 		set1.insert( "gamma" );
 		set1.insert( "delta" );
@@ -150,7 +150,7 @@ TEST_CASE( "element insertion", "[unorderedSet]" )
 
 	SECTION( "find" )
 		{
-		unorderedSet < string > set( 1 );
+		unorderedSet< string > set( 1 );
 		set.insert( "beta" );
 		set.insert( "gamma" );
 		set.insert( "delta" );
@@ -168,13 +168,13 @@ TEST_CASE( "element removal", "[unorderedSet]" )
 	{
 	SECTION( "erase with one iterator" )
 		{
-		unorderedSet < string > set( 1 );
+		unorderedSet< string > set( 1 );
 		set.insert( "a" );
 		set.insert( "b" );
 		set.insert( "c" );
 		set.insert( "d" );
 
-		unorderedSet < string >::constIterator nextElement = set.find( *( ++set.cbegin( ) ) );
+		unorderedSet< string >::constIterator nextElement = set.find( *( ++set.cbegin( ) ) );
 		REQUIRE( set.erase( set.cbegin( ) ) == nextElement++ );
 		REQUIRE( set.erase( set.cbegin( ) ) == nextElement++ );
 		REQUIRE( set.erase( set.cbegin( ) ) == nextElement++ );
@@ -189,7 +189,7 @@ TEST_CASE( "element removal", "[unorderedSet]" )
 		}
 	SECTION( "erase with two iterators" )
 		{
-		unorderedSet < string > set( 1 );
+		unorderedSet< string > set( 1 );
 		set.insert( "a" );
 		set.insert( "b" );
 		set.insert( "c" );
@@ -211,7 +211,7 @@ TEST_CASE( "element removal", "[unorderedSet]" )
 		}
 	SECTION( "erase with one key" )
 		{
-		unorderedSet < string > set( 1 );
+		unorderedSet< string > set( 1 );
 		set.insert( "a" );
 		set.insert( "b" );
 		set.insert( "c" );
@@ -228,7 +228,7 @@ TEST_CASE( "element removal", "[unorderedSet]" )
 		}
 	SECTION( "clear" )
 		{
-		unorderedSet < string > set( 1 );
+		unorderedSet< string > set( 1 );
 
 		set.clear( );
 		REQUIRE( set.empty( ) );

@@ -12,12 +12,12 @@ namespace dex
 		class endOfDocumentISR : public constraintSolver::endOfDocumentISR
 			{
 			private:
-				dex::vector < size_t > internal;
+				dex::vector< size_t > internal;
 				size_t pos;
 				size_t toGet;
 			public:
 				endOfDocumentISR( ) : toGet( npos ) { }
-				endOfDocumentISR( dex::vector < size_t > vecIn ) : internal( vecIn ), pos( 0 ), toGet( npos ) { }
+				endOfDocumentISR( dex::vector< size_t > vecIn ) : internal( vecIn ), pos( 0 ), toGet( 0 ) { }
 				endOfDocumentISR &operator =( const endOfDocumentISR other )
 					{
 					internal = other.internal;
@@ -54,11 +54,11 @@ namespace dex
 					{
 					return toGet = next( );
 					}
-				size_t get( )
+				size_t get( ) const
 					{
 					return toGet;
 					}
-				size_t documentSize( )
+				size_t documentSize( ) const
 					{
 					if ( pos == 0 )
 						{
@@ -71,7 +71,7 @@ namespace dex
 		class ISR : public constraintSolver::ISR
 			{
 			private:
-				dex::vector < size_t > internal;
+				dex::vector< size_t > internal;
 				dex::string word;
 				size_t pos;
 				dex::rankerTesting::endOfDocumentISR ends;
@@ -80,8 +80,8 @@ namespace dex
 
 				const static size_t npos = size_t ( -1 );
 				ISR( ) : toGet ( npos ) { }
-				ISR( dex::string word, dex::vector < size_t > vecIn, dex::rankerTesting::endOfDocumentISR endsIn ) :
-					internal( vecIn ), word( word ), pos( 0 ), ends( endsIn ), toGet( npos ) { }
+				ISR( dex::string word, dex::vector< size_t > vecIn, dex::rankerTesting::endOfDocumentISR endsIn ) :
+					internal( vecIn ), word( word ), pos( 0 ), ends( endsIn ), toGet( 0 ) { }
 
 				void reset( )
 					{
@@ -130,7 +130,7 @@ namespace dex
 					ends.seek( internal[ pos ] );
 					return toGet = seek( ends.next( ) );
 					}
-				size_t get( )
+				size_t get( ) const 
 					{
 					return toGet;
 					}

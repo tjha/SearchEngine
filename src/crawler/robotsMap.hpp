@@ -20,7 +20,7 @@ namespace dex
 		{
 		private:
 			// Takes in a domain, returns a robotTxt* and the lock pointer associated with it.
-			dex::unorderedMap < dex::string, dex::pair < dex::RobotTxt*, dex::sharedReaderLock* > > mainMap;
+			dex::unorderedMap< dex::string, dex::pair< dex::RobotTxt*, dex::sharedReaderLock* > > mainMap;
 			dex::sharedReaderLock mapLock;
 			size_t maximumSize;
 
@@ -72,7 +72,7 @@ namespace dex
 				if ( !existsNoLock( domain ) )
 					{
 					dex::sharedReaderLock *m = new dex::sharedReaderLock( );
-					dex::pair < dex::RobotTxt*, dex::sharedReaderLock* > p( nullptr, m );
+					dex::pair< dex::RobotTxt*, dex::sharedReaderLock* > p( nullptr, m );
 					m->writeLock( );
 					mainMap[ domain ] = p;
 					m->releaseWriteLock( );
@@ -81,7 +81,7 @@ namespace dex
 					// insert it back into the map later.
 					return -1;
 					}
-				dex::pair < dex::RobotTxt*, dex::sharedReaderLock* > p = mainMap[ domain ];
+				dex::pair< dex::RobotTxt*, dex::sharedReaderLock* > p = mainMap[ domain ];
 				p.second->writeLock( );
 				if ( p.first == nullptr )
 					{
@@ -174,7 +174,7 @@ namespace dex
 				// If the robot already exists
 				if ( mainMap.count( str ) > 0 )
 					{
-					dex::pair < dex::RobotTxt*, dex::sharedReaderLock* > p = mainMap[ str ];
+					dex::pair< dex::RobotTxt*, dex::sharedReaderLock* > p = mainMap[ str ];
 					p.second->writeLock( );
 					if ( p.first )
 						delete p.first;
@@ -186,7 +186,7 @@ namespace dex
 				else
 					{
 					dex::sharedReaderLock *m = new dex::sharedReaderLock( );
-					dex::pair < dex::RobotTxt*, dex::sharedReaderLock* > p( r, m );
+					dex::pair< dex::RobotTxt*, dex::sharedReaderLock* > p( r, m );
 					mainMap[ str ] = p;
 					}
 				mapLock.releaseWriteLock( );
@@ -229,7 +229,7 @@ namespace dex
 				return 0;
 				}
 
-			dex::pair < dex::RobotTxt*, dex::sharedReaderLock* > getPair( const dex::string &str )
+			dex::pair< dex::RobotTxt*, dex::sharedReaderLock* > getPair( const dex::string &str )
 				{
 				mapLock.readLock( );
 				if ( existsNoLock( str ) )
@@ -238,12 +238,12 @@ namespace dex
 					return mainMap[ str ];
 					}
 				mapLock.releaseReadLock( );
-				return dex::pair < dex::RobotTxt*, dex::sharedReaderLock* >( nullptr, nullptr );
+				return dex::pair< dex::RobotTxt*, dex::sharedReaderLock* >( nullptr, nullptr );
 				}
 
-			dex::vector < dex::RobotTxt > getAllRobots( )
+			dex::vector< dex::RobotTxt > getAllRobots( )
 				{
-				dex::vector < dex::RobotTxt > robots;
+				dex::vector< dex::RobotTxt > robots;
 				mapLock.readLock( );
 				for ( auto it = mainMap.begin( );  it != mainMap.end( );  ++it )
 					{

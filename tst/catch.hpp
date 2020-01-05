@@ -490,7 +490,7 @@ namespace Catch {
     struct StreamEndStop {
         std::string operator+() const;
     };
-    template<typename T>
+    template <typename T>
     T const& operator + ( T const& value, StreamEndStop ) {
         return value;
     }
@@ -795,78 +795,78 @@ struct is_unique<T0, T1, Rest...> : std::integral_constant
 #define INTERNAL_CATCH_VA_NARGS_IMPL(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, N, ...) N
 
 #define INTERNAL_CATCH_TYPE_GEN\
-    template<typename...> struct TypeList {};\
-    template<typename...Ts>\
+    template <typename...> struct TypeList {};\
+    template <typename...Ts>\
     constexpr auto get_wrapper() noexcept -> TypeList<Ts...> { return {}; }\
     \
-    template<template<typename...> class L1, typename...E1, template<typename...> class L2, typename...E2> \
+    template <template <typename...> class L1, typename...E1, template <typename...> class L2, typename...E2> \
     constexpr auto append(L1<E1...>, L2<E2...>) noexcept -> L1<E1...,E2...> { return {}; }\
-    template< template<typename...> class L1, typename...E1, template<typename...> class L2, typename...E2, typename...Rest>\
+    template < template <typename...> class L1, typename...E1, template <typename...> class L2, typename...E2, typename...Rest>\
     constexpr auto append(L1<E1...>, L2<E2...>, Rest...) noexcept -> decltype(append(L1<E1...,E2...>{}, Rest{}...)) { return {}; }\
-    template< template<typename...> class L1, typename...E1, typename...Rest>\
+    template < template <typename...> class L1, typename...E1, typename...Rest>\
     constexpr auto append(L1<E1...>, TypeList<mpl_::na>, Rest...) noexcept -> L1<E1...> { return {}; }\
     \
-    template< template<typename...> class Container, template<typename...> class List, typename...elems>\
+    template < template <typename...> class Container, template <typename...> class List, typename...elems>\
     constexpr auto rewrap(List<elems...>) noexcept -> TypeList<Container<elems...>> { return {}; }\
-    template< template<typename...> class Container, template<typename...> class List, class...Elems, typename...Elements>\
+    template < template <typename...> class Container, template <typename...> class List, class...Elems, typename...Elements>\
     constexpr auto rewrap(List<Elems...>,Elements...) noexcept -> decltype(append(TypeList<Container<Elems...>>{}, rewrap<Container>(Elements{}...))) { return {}; }\
     \
-    template<template <typename...> class Final, template< typename...> class...Containers, typename...Types>\
+    template <template <typename...> class Final, template < typename...> class...Containers, typename...Types>\
     constexpr auto create(TypeList<Types...>) noexcept -> decltype(append(Final<>{}, rewrap<Containers>(Types{}...)...)) { return {}; }\
-    template<template <typename...> class Final, template <typename...> class List, typename...Ts>\
+    template <template <typename...> class Final, template <typename...> class List, typename...Ts>\
     constexpr auto convert(List<Ts...>) noexcept -> decltype(append(Final<>{},TypeList<Ts>{}...)) { return {}; }
 
 #define INTERNAL_CATCH_NTTP_1(signature, ...)\
-    template<INTERNAL_CATCH_REMOVE_PARENS(signature)> struct Nttp{};\
-    template<INTERNAL_CATCH_REMOVE_PARENS(signature)>\
+    template <INTERNAL_CATCH_REMOVE_PARENS(signature)> struct Nttp{};\
+    template <INTERNAL_CATCH_REMOVE_PARENS(signature)>\
     constexpr auto get_wrapper() noexcept -> Nttp<__VA_ARGS__> { return {}; } \
     \
-    template< template<INTERNAL_CATCH_REMOVE_PARENS(signature)> class Container, template<INTERNAL_CATCH_REMOVE_PARENS(signature)> class List, INTERNAL_CATCH_REMOVE_PARENS(signature)>\
+    template < template <INTERNAL_CATCH_REMOVE_PARENS(signature)> class Container, template <INTERNAL_CATCH_REMOVE_PARENS(signature)> class List, INTERNAL_CATCH_REMOVE_PARENS(signature)>\
     constexpr auto rewrap(List<__VA_ARGS__>) noexcept -> TypeList<Container<__VA_ARGS__>> { return {}; }\
     template< template<INTERNAL_CATCH_REMOVE_PARENS(signature)> class Container, template<INTERNAL_CATCH_REMOVE_PARENS(signature)> class List, INTERNAL_CATCH_REMOVE_PARENS(signature), typename...Elements>\
     constexpr auto rewrap(List<__VA_ARGS__>,Elements...elems) noexcept -> decltype(append(TypeList<Container<__VA_ARGS__>>{}, rewrap<Container>(elems...))) { return {}; }\
-    template<template <typename...> class Final, template<INTERNAL_CATCH_REMOVE_PARENS(signature)> class...Containers, typename...Types>\
+    template <template <typename...> class Final, template <INTERNAL_CATCH_REMOVE_PARENS(signature)> class...Containers, typename...Types>\
     constexpr auto create(TypeList<Types...>) noexcept -> decltype(append(Final<>{}, rewrap<Containers>(Types{}...)...)) { return {}; }
 
 #define INTERNAL_CATCH_DECLARE_SIG_TEST0(TestName)
 #define INTERNAL_CATCH_DECLARE_SIG_TEST1(TestName, signature)\
-    template<INTERNAL_CATCH_REMOVE_PARENS(signature)>\
+    template <INTERNAL_CATCH_REMOVE_PARENS(signature)>\
     static void TestName()
 #define INTERNAL_CATCH_DECLARE_SIG_TEST_X(TestName, signature, ...)\
-    template<INTERNAL_CATCH_REMOVE_PARENS(signature)>\
+    template <INTERNAL_CATCH_REMOVE_PARENS(signature)>\
     static void TestName()
 
 #define INTERNAL_CATCH_DEFINE_SIG_TEST0(TestName)
 #define INTERNAL_CATCH_DEFINE_SIG_TEST1(TestName, signature)\
-    template<INTERNAL_CATCH_REMOVE_PARENS(signature)>\
+    template <INTERNAL_CATCH_REMOVE_PARENS(signature)>\
     static void TestName()
 #define INTERNAL_CATCH_DEFINE_SIG_TEST_X(TestName, signature,...)\
-    template<INTERNAL_CATCH_REMOVE_PARENS(signature)>\
+    template <INTERNAL_CATCH_REMOVE_PARENS(signature)>\
     static void TestName()
 
 #define INTERNAL_CATCH_NTTP_REGISTER0(TestFunc, signature)\
-    template<typename Type>\
+    template <typename Type>\
     void reg_test(TypeList<Type>, Catch::NameAndTags nameAndTags)\
     {\
         Catch::AutoReg( Catch::makeTestInvoker(&TestFunc<Type>), CATCH_INTERNAL_LINEINFO, Catch::StringRef(), nameAndTags);\
     }
 
 #define INTERNAL_CATCH_NTTP_REGISTER(TestFunc, signature, ...)\
-    template<INTERNAL_CATCH_REMOVE_PARENS(signature)>\
+    template <INTERNAL_CATCH_REMOVE_PARENS(signature)>\
     void reg_test(Nttp<__VA_ARGS__>, Catch::NameAndTags nameAndTags)\
     {\
         Catch::AutoReg( Catch::makeTestInvoker(&TestFunc<__VA_ARGS__>), CATCH_INTERNAL_LINEINFO, Catch::StringRef(), nameAndTags);\
     }
 
 #define INTERNAL_CATCH_NTTP_REGISTER_METHOD0(TestName, signature, ...)\
-    template<typename Type>\
+    template <typename Type>\
     void reg_test(TypeList<Type>, Catch::StringRef className, Catch::NameAndTags nameAndTags)\
     {\
         Catch::AutoReg( Catch::makeTestInvoker(&TestName<Type>::test), CATCH_INTERNAL_LINEINFO, className, nameAndTags);\
     }
 
 #define INTERNAL_CATCH_NTTP_REGISTER_METHOD(TestName, signature, ...)\
-    template<INTERNAL_CATCH_REMOVE_PARENS(signature)>\
+    template <INTERNAL_CATCH_REMOVE_PARENS(signature)>\
     void reg_test(Nttp<__VA_ARGS__>, Catch::StringRef className, Catch::NameAndTags nameAndTags)\
     {\
         Catch::AutoReg( Catch::makeTestInvoker(&TestName<__VA_ARGS__>::test), CATCH_INTERNAL_LINEINFO, className, nameAndTags);\
@@ -874,23 +874,23 @@ struct is_unique<T0, T1, Rest...> : std::integral_constant
 
 #define INTERNAL_CATCH_DECLARE_SIG_TEST_METHOD0(TestName, ClassName)
 #define INTERNAL_CATCH_DECLARE_SIG_TEST_METHOD1(TestName, ClassName, signature)\
-    template<typename TestType> \
+    template <typename TestType> \
     struct TestName : INTERNAL_CATCH_REMOVE_PARENS(ClassName)<TestType> { \
         void test();\
     }
 
 #define INTERNAL_CATCH_DECLARE_SIG_TEST_METHOD_X(TestName, ClassName, signature, ...)\
-    template<INTERNAL_CATCH_REMOVE_PARENS(signature)> \
+    template <INTERNAL_CATCH_REMOVE_PARENS(signature)> \
     struct TestName : INTERNAL_CATCH_REMOVE_PARENS(ClassName)<__VA_ARGS__> { \
         void test();\
     }
 
 #define INTERNAL_CATCH_DEFINE_SIG_TEST_METHOD0(TestName)
 #define INTERNAL_CATCH_DEFINE_SIG_TEST_METHOD1(TestName, signature)\
-    template<typename TestType> \
+    template <typename TestType> \
     void INTERNAL_CATCH_MAKE_NAMESPACE(TestName)::TestName<TestType>::test()
 #define INTERNAL_CATCH_DEFINE_SIG_TEST_METHOD_X(TestName, signature, ...)\
-    template<INTERNAL_CATCH_REMOVE_PARENS(signature)> \
+    template <INTERNAL_CATCH_REMOVE_PARENS(signature)> \
     void INTERNAL_CATCH_MAKE_NAMESPACE(TestName)::TestName<__VA_ARGS__>::test()
 
 #ifndef CATCH_CONFIG_TRADITIONAL_MSVC_PREPROCESSOR
@@ -922,7 +922,7 @@ struct is_unique<T0, T1, Rest...> : std::integral_constant
 #include <type_traits>
 
 namespace Catch {
-template<typename T>
+template <typename T>
 struct always_false : std::false_type {};
 
 template <typename> struct true_given : std::true_type {};
@@ -948,7 +948,7 @@ namespace mpl_{
 // end catch_meta.hpp
 namespace Catch {
 
-template<typename C>
+template <typename C>
 class TestInvokerAsMethod : public ITestInvoker {
     void (C::*m_testAsMethod)();
 public:
@@ -962,7 +962,7 @@ public:
 
 auto makeTestInvoker( void(*testAsFunction)() ) noexcept -> ITestInvoker*;
 
-template<typename C>
+template <typename C>
 auto makeTestInvoker( void (C::*testAsMethod)() ) noexcept -> ITestInvoker* {
     return new(std::nothrow) TestInvokerAsMethod<C>( testAsMethod );
 }
@@ -1079,7 +1079,7 @@ struct AutoReg : NonCopyable {
             INTERNAL_CATCH_TYPE_GEN\
             INTERNAL_CATCH_NTTP_GEN(INTERNAL_CATCH_REMOVE_PARENS(Signature))\
             INTERNAL_CATCH_NTTP_REG_GEN(TestFunc,INTERNAL_CATCH_REMOVE_PARENS(Signature))\
-            template<typename...Types> \
+            template <typename...Types> \
             struct TestName{\
                 TestName(){\
                     int index = 0;                                    \
@@ -1117,12 +1117,12 @@ struct AutoReg : NonCopyable {
     #define INTERNAL_CATCH_TEMPLATE_PRODUCT_TEST_CASE2(TestName, TestFuncName, Name, Tags, Signature, TmplTypes, TypesList) \
         CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS                      \
         CATCH_INTERNAL_SUPPRESS_ZERO_VARIADIC_WARNINGS                \
-        template<typename TestType> static void TestFuncName();       \
+        template <typename TestType> static void TestFuncName();       \
         namespace {\
         namespace INTERNAL_CATCH_MAKE_NAMESPACE(TestName) {                                     \
             INTERNAL_CATCH_TYPE_GEN                                                  \
             INTERNAL_CATCH_NTTP_GEN(INTERNAL_CATCH_REMOVE_PARENS(Signature))         \
-            template<typename... Types>                               \
+            template <typename... Types>                               \
             struct TestName {                                         \
                 void reg_tests() {                                          \
                     int index = 0;                                    \
@@ -1143,7 +1143,7 @@ struct AutoReg : NonCopyable {
         }                                                             \
         CATCH_INTERNAL_UNSUPPRESS_GLOBALS_WARNINGS                    \
         CATCH_INTERNAL_UNSUPPRESS_ZERO_VARIADIC_WARNINGS              \
-        template<typename TestType>                                   \
+        template <typename TestType>                                   \
         static void TestFuncName()
 
 #ifndef CATCH_CONFIG_TRADITIONAL_MSVC_PREPROCESSOR
@@ -1164,11 +1164,11 @@ struct AutoReg : NonCopyable {
 
     #define INTERNAL_CATCH_TEMPLATE_LIST_TEST_CASE_2(TestName, TestFunc, Name, Tags, TmplList)\
         CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS \
-        template<typename TestType> static void TestFunc();       \
+        template <typename TestType> static void TestFunc();       \
         namespace {\
         namespace INTERNAL_CATCH_MAKE_NAMESPACE(TestName){\
         INTERNAL_CATCH_TYPE_GEN\
-        template<typename... Types>                               \
+        template <typename... Types>                               \
         struct TestName {                                         \
             void reg_tests() {                                          \
                 int index = 0;                                    \
@@ -1184,7 +1184,7 @@ struct AutoReg : NonCopyable {
             }();                                                        \
         }}\
         CATCH_INTERNAL_UNSUPPRESS_GLOBALS_WARNINGS                    \
-        template<typename TestType>                                   \
+        template <typename TestType>                                   \
         static void TestFunc()
 
     #define INTERNAL_CATCH_TEMPLATE_LIST_TEST_CASE(Name, Tags, TmplList) \
@@ -1199,7 +1199,7 @@ struct AutoReg : NonCopyable {
             INTERNAL_CATCH_NTTP_GEN(INTERNAL_CATCH_REMOVE_PARENS(Signature))\
             INTERNAL_CATCH_DECLARE_SIG_TEST_METHOD(TestName, ClassName, INTERNAL_CATCH_REMOVE_PARENS(Signature));\
             INTERNAL_CATCH_NTTP_REG_METHOD_GEN(TestName, INTERNAL_CATCH_REMOVE_PARENS(Signature))\
-            template<typename...Types> \
+            template <typename...Types> \
             struct TestNameClass{\
                 TestNameClass(){\
                     int index = 0;                                    \
@@ -1237,7 +1237,7 @@ struct AutoReg : NonCopyable {
     #define INTERNAL_CATCH_TEMPLATE_PRODUCT_TEST_CASE_METHOD_2(TestNameClass, TestName, ClassName, Name, Tags, Signature, TmplTypes, TypesList)\
         CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS \
         CATCH_INTERNAL_SUPPRESS_ZERO_VARIADIC_WARNINGS \
-        template<typename TestType> \
+        template <typename TestType> \
             struct TestName : INTERNAL_CATCH_REMOVE_PARENS(ClassName <TestType>) { \
                 void test();\
             };\
@@ -1245,7 +1245,7 @@ struct AutoReg : NonCopyable {
         namespace INTERNAL_CATCH_MAKE_NAMESPACE(TestNameClass) {\
             INTERNAL_CATCH_TYPE_GEN                  \
             INTERNAL_CATCH_NTTP_GEN(INTERNAL_CATCH_REMOVE_PARENS(Signature))\
-            template<typename...Types>\
+            template <typename...Types>\
             struct TestNameClass{\
                 void reg_tests(){\
                     int index = 0;\
@@ -1266,7 +1266,7 @@ struct AutoReg : NonCopyable {
         }\
         CATCH_INTERNAL_UNSUPPRESS_GLOBALS_WARNINGS \
         CATCH_INTERNAL_UNSUPPRESS_ZERO_VARIADIC_WARNINGS \
-        template<typename TestType> \
+        template <typename TestType> \
         void TestName<TestType>::test()
 
 #ifndef CATCH_CONFIG_TRADITIONAL_MSVC_PREPROCESSOR
@@ -1287,14 +1287,14 @@ struct AutoReg : NonCopyable {
 
     #define INTERNAL_CATCH_TEMPLATE_LIST_TEST_CASE_METHOD_2( TestNameClass, TestName, ClassName, Name, Tags, TmplList) \
         CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS \
-        template<typename TestType> \
+        template <typename TestType> \
         struct TestName : INTERNAL_CATCH_REMOVE_PARENS(ClassName <TestType>) { \
             void test();\
         };\
         namespace {\
         namespace INTERNAL_CATCH_MAKE_NAMESPACE(TestName){ \
             INTERNAL_CATCH_TYPE_GEN\
-            template<typename...Types>\
+            template <typename...Types>\
             struct TestNameClass{\
                 void reg_tests(){\
                     int index = 0;\
@@ -1310,7 +1310,7 @@ struct AutoReg : NonCopyable {
             }(); \
         }}\
         CATCH_INTERNAL_UNSUPPRESS_GLOBALS_WARNINGS \
-        template<typename TestType> \
+        template <typename TestType> \
         void TestName<TestType>::test()
 
 #define INTERNAL_CATCH_TEMPLATE_LIST_TEST_CASE_METHOD(ClassName, Name, Tags, TmplList) \
@@ -1424,7 +1424,7 @@ namespace Catch {
 
         auto str() const -> std::string;
 
-        template<typename T>
+        template <typename T>
         auto operator << ( T const& value ) -> ReusableStringStream& {
             *m_oss << value;
             return *this;
@@ -1456,7 +1456,7 @@ namespace Catch {
 
         virtual Detail::EnumInfo const& registerEnum( StringRef enumName, StringRef allEnums, std::vector<int> const& values ) = 0;
 
-        template<typename E>
+        template <typename E>
         Detail::EnumInfo const& registerEnum( StringRef enumName, StringRef allEnums, std::initializer_list<E> values ) {
             std::vector<int> intValues;
             intValues.reserve( values.size() );
@@ -1532,41 +1532,41 @@ namespace Catch {
 
         std::string rawMemoryToString( const void *object, std::size_t size );
 
-        template<typename T>
+        template <typename T>
         std::string rawMemoryToString( const T& object ) {
           return rawMemoryToString( &object, sizeof(object) );
         }
 
-        template<typename T>
+        template <typename T>
         class IsStreamInsertable {
-            template<typename SS, typename TT>
+            template <typename SS, typename TT>
             static auto test(int)
                 -> decltype(std::declval<SS&>() << std::declval<TT>(), std::true_type());
 
-            template<typename, typename>
+            template <typename, typename>
             static auto test(...)->std::false_type;
 
         public:
             static const bool value = decltype(test<std::ostream, const T&>(0))::value;
         };
 
-        template<typename E>
+        template <typename E>
         std::string convertUnknownEnumToString( E e );
 
-        template<typename T>
+        template <typename T>
         typename std::enable_if<
             !std::is_enum<T>::value && !std::is_base_of<std::exception, T>::value,
         std::string>::type convertUnstreamable( T const& ) {
             return Detail::unprintableString;
         }
-        template<typename T>
+        template <typename T>
         typename std::enable_if<
             !std::is_enum<T>::value && std::is_base_of<std::exception, T>::value,
          std::string>::type convertUnstreamable(T const& ex) {
             return ex.what();
         }
 
-        template<typename T>
+        template <typename T>
         typename std::enable_if<
             std::is_enum<T>::value
         , std::string>::type convertUnstreamable( T const& value ) {
@@ -1575,7 +1575,7 @@ namespace Catch {
 
 #if defined(_MANAGED)
         //! Convert a CLR string to a utf8 std::string
-        template<typename T>
+        template <typename T>
         std::string clrReferenceToString( T^ ref ) {
             if (ref == nullptr)
                 return std::string("null");
@@ -1622,7 +1622,7 @@ namespace Catch {
             return ::Catch::StringMaker<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::convert(e);
         }
 
-        template<typename E>
+        template <typename E>
         std::string convertUnknownEnumToString( E e ) {
             return ::Catch::Detail::stringify(static_cast<typename std::underlying_type<E>::type>(e));
         }
@@ -1638,45 +1638,45 @@ namespace Catch {
 
     // Some predefined specializations
 
-    template<>
+    template <>
     struct StringMaker<std::string> {
         static std::string convert(const std::string& str);
     };
 
 #ifdef CATCH_CONFIG_CPP17_STRING_VIEW
-    template<>
+    template <>
     struct StringMaker<std::string_view> {
         static std::string convert(std::string_view str);
     };
 #endif
 
-    template<>
+    template <>
     struct StringMaker<char const *> {
         static std::string convert(char const * str);
     };
-    template<>
+    template <>
     struct StringMaker<char *> {
         static std::string convert(char * str);
     };
 
 #ifdef CATCH_CONFIG_WCHAR
-    template<>
+    template <>
     struct StringMaker<std::wstring> {
         static std::string convert(const std::wstring& wstr);
     };
 
 # ifdef CATCH_CONFIG_CPP17_STRING_VIEW
-    template<>
+    template <>
     struct StringMaker<std::wstring_view> {
         static std::string convert(std::wstring_view str);
     };
 # endif
 
-    template<>
+    template <>
     struct StringMaker<wchar_t const *> {
         static std::string convert(wchar_t const * str);
     };
-    template<>
+    template <>
     struct StringMaker<wchar_t *> {
         static std::string convert(wchar_t * str);
     };
@@ -1684,19 +1684,19 @@ namespace Catch {
 
     // TBD: Should we use `strnlen` to ensure that we don't go out of the buffer,
     //      while keeping string semantics?
-    template<int SZ>
+    template <int SZ>
     struct StringMaker<char[SZ]> {
         static std::string convert(char const* str) {
             return ::Catch::Detail::stringify(std::string{ str });
         }
     };
-    template<int SZ>
+    template <int SZ>
     struct StringMaker<signed char[SZ]> {
         static std::string convert(signed char const* str) {
             return ::Catch::Detail::stringify(std::string{ reinterpret_cast<char const *>(str) });
         }
     };
-    template<int SZ>
+    template <int SZ>
     struct StringMaker<unsigned char[SZ]> {
         static std::string convert(unsigned char const* str) {
             return ::Catch::Detail::stringify(std::string{ reinterpret_cast<char const *>(str) });
@@ -1704,66 +1704,66 @@ namespace Catch {
     };
 
 #if defined(CATCH_CONFIG_CPP17_BYTE)
-    template<>
+    template <>
     struct StringMaker<std::byte> {
         static std::string convert(std::byte value);
     };
 #endif // defined(CATCH_CONFIG_CPP17_BYTE)
-    template<>
+    template <>
     struct StringMaker<int> {
         static std::string convert(int value);
     };
-    template<>
+    template <>
     struct StringMaker<long> {
         static std::string convert(long value);
     };
-    template<>
+    template <>
     struct StringMaker<long long> {
         static std::string convert(long long value);
     };
-    template<>
+    template <>
     struct StringMaker<unsigned int> {
         static std::string convert(unsigned int value);
     };
-    template<>
+    template <>
     struct StringMaker<unsigned long> {
         static std::string convert(unsigned long value);
     };
-    template<>
+    template <>
     struct StringMaker<unsigned long long> {
         static std::string convert(unsigned long long value);
     };
 
-    template<>
+    template <>
     struct StringMaker<bool> {
         static std::string convert(bool b);
     };
 
-    template<>
+    template <>
     struct StringMaker<char> {
         static std::string convert(char c);
     };
-    template<>
+    template <>
     struct StringMaker<signed char> {
         static std::string convert(signed char c);
     };
-    template<>
+    template <>
     struct StringMaker<unsigned char> {
         static std::string convert(unsigned char c);
     };
 
-    template<>
+    template <>
     struct StringMaker<std::nullptr_t> {
         static std::string convert(std::nullptr_t);
     };
 
-    template<>
+    template <>
     struct StringMaker<float> {
         static std::string convert(float value);
         static int precision;
     };
 
-    template<>
+    template <>
     struct StringMaker<double> {
         static std::string convert(double value);
         static int precision;
@@ -1802,7 +1802,7 @@ namespace Catch {
 #endif
 
     namespace Detail {
-        template<typename InputIterator>
+        template <typename InputIterator>
         std::string rangeToString(InputIterator first, InputIterator last) {
             ReusableStringStream rss;
             rss << "{ ";
@@ -1817,7 +1817,7 @@ namespace Catch {
     }
 
 #ifdef __OBJC__
-    template<>
+    template <>
     struct StringMaker<NSString*> {
         static std::string convert(NSString * nsstring) {
             if (!nsstring)
@@ -1825,7 +1825,7 @@ namespace Catch {
             return std::string("@") + [nsstring UTF8String];
         }
     };
-    template<>
+    template <>
     struct StringMaker<NSObject*> {
         static std::string convert(NSObject* nsObject) {
             return ::Catch::Detail::stringify([nsObject description]);
@@ -1858,7 +1858,7 @@ namespace Catch {
 #if defined(CATCH_CONFIG_ENABLE_PAIR_STRINGMAKER)
 #include <utility>
 namespace Catch {
-    template<typename T1, typename T2>
+    template <typename T1, typename T2>
     struct StringMaker<std::pair<T1, T2> > {
         static std::string convert(const std::pair<T1, T2>& pair) {
             ReusableStringStream rss;
@@ -1876,7 +1876,7 @@ namespace Catch {
 #if defined(CATCH_CONFIG_ENABLE_OPTIONAL_STRINGMAKER) && defined(CATCH_CONFIG_CPP17_OPTIONAL)
 #include <optional>
 namespace Catch {
-    template<typename T>
+    template <typename T>
     struct StringMaker<std::optional<T> > {
         static std::string convert(const std::optional<T>& optional) {
             ReusableStringStream rss;
@@ -1896,7 +1896,7 @@ namespace Catch {
 #include <tuple>
 namespace Catch {
     namespace Detail {
-        template<
+        template <
             typename Tuple,
             std::size_t N = 0,
             bool = (N < std::tuple_size<Tuple>::value)
@@ -1909,7 +1909,7 @@ namespace Catch {
             }
         };
 
-        template<
+        template <
             typename Tuple,
             std::size_t N
         >
@@ -1919,7 +1919,7 @@ namespace Catch {
 
     }
 
-    template<typename ...Types>
+    template <typename ...Types>
     struct StringMaker<std::tuple<Types...>> {
         static std::string convert(const std::tuple<Types...>& tuple) {
             ReusableStringStream rss;
@@ -1935,14 +1935,14 @@ namespace Catch {
 #if defined(CATCH_CONFIG_ENABLE_VARIANT_STRINGMAKER) && defined(CATCH_CONFIG_CPP17_VARIANT)
 #include <variant>
 namespace Catch {
-    template<>
+    template <>
     struct StringMaker<std::monostate> {
         static std::string convert(const std::monostate&) {
             return "{ }";
         }
     };
 
-    template<typename... Elements>
+    template <typename... Elements>
     struct StringMaker<std::variant<Elements...>> {
         static std::string convert(const std::variant<Elements...>& variant) {
             if (variant.valueless_by_exception()) {
@@ -1984,13 +1984,13 @@ namespace Catch {
     };
 #endif
 
-    template<typename Range>
+    template <typename Range>
     std::string rangeToString( Range const& range ) {
         return ::Catch::Detail::rangeToString( begin( range ), end( range ) );
     }
 
     // Handle vector<bool> specially
-    template<typename Allocator>
+    template <typename Allocator>
     std::string rangeToString( std::vector<bool, Allocator> const& v ) {
         ReusableStringStream rss;
         rss << "{ ";
@@ -2006,7 +2006,7 @@ namespace Catch {
         return rss.str();
     }
 
-    template<typename R>
+    template <typename R>
     struct StringMaker<R, typename std::enable_if<is_range<R>::value && !::Catch::Detail::IsStreamInsertable<R>::value>::type> {
         static std::string convert( R const& range ) {
             return rangeToString( range );
@@ -2069,7 +2069,7 @@ struct ratio_string<std::milli> {
 
     ////////////
     // std::chrono::duration specializations
-    template<typename Value, typename Ratio>
+    template <typename Value, typename Ratio>
     struct StringMaker<std::chrono::duration<Value, Ratio>> {
         static std::string convert(std::chrono::duration<Value, Ratio> const& duration) {
             ReusableStringStream rss;
@@ -2077,7 +2077,7 @@ struct ratio_string<std::milli> {
             return rss.str();
         }
     };
-    template<typename Value>
+    template <typename Value>
     struct StringMaker<std::chrono::duration<Value, std::ratio<1>>> {
         static std::string convert(std::chrono::duration<Value, std::ratio<1>> const& duration) {
             ReusableStringStream rss;
@@ -2085,7 +2085,7 @@ struct ratio_string<std::milli> {
             return rss.str();
         }
     };
-    template<typename Value>
+    template <typename Value>
     struct StringMaker<std::chrono::duration<Value, std::ratio<60>>> {
         static std::string convert(std::chrono::duration<Value, std::ratio<60>> const& duration) {
             ReusableStringStream rss;
@@ -2093,7 +2093,7 @@ struct ratio_string<std::milli> {
             return rss.str();
         }
     };
-    template<typename Value>
+    template <typename Value>
     struct StringMaker<std::chrono::duration<Value, std::ratio<3600>>> {
         static std::string convert(std::chrono::duration<Value, std::ratio<3600>> const& duration) {
             ReusableStringStream rss;
@@ -2105,14 +2105,14 @@ struct ratio_string<std::milli> {
     ////////////
     // std::chrono::time_point specialization
     // Generic time_point cannot be specialized, only std::chrono::time_point<system_clock>
-    template<typename Clock, typename Duration>
+    template <typename Clock, typename Duration>
     struct StringMaker<std::chrono::time_point<Clock, Duration>> {
         static std::string convert(std::chrono::time_point<Clock, Duration> const& time_point) {
             return ::Catch::Detail::stringify(time_point.time_since_epoch()) + " since epoch";
         }
     };
     // std::chrono::time_point<system_clock> specialization
-    template<typename Duration>
+    template <typename Duration>
     struct StringMaker<std::chrono::time_point<std::chrono::system_clock, Duration>> {
         static std::string convert(std::chrono::time_point<std::chrono::system_clock, Duration> const& time_point) {
             auto converted = std::chrono::system_clock::to_time_t(time_point);
@@ -2141,7 +2141,7 @@ struct ratio_string<std::milli> {
 
 #define INTERNAL_CATCH_REGISTER_ENUM( enumName, ... ) \
 namespace Catch { \
-    template<> struct StringMaker<enumName> { \
+    template <> struct StringMaker<enumName> { \
         static std::string convert( enumName value ) { \
             static const auto& enumInfo = ::Catch::getMutableRegistryHub().getMutableEnumValuesRegistry().registerEnum( #enumName, #__VA_ARGS__, { __VA_ARGS__ } ); \
             return enumInfo.lookup( static_cast<int>( value ) ); \
@@ -2190,7 +2190,7 @@ namespace Catch {
 
     void formatReconstructedExpression( std::ostream &os, std::string const& lhs, StringRef op, std::string const& rhs );
 
-    template<typename LhsT, typename RhsT>
+    template <typename LhsT, typename RhsT>
     class BinaryExpr  : public ITransientExpression {
         LhsT m_lhs;
         StringRef m_op;
@@ -2209,56 +2209,56 @@ namespace Catch {
             m_rhs( rhs )
         {}
 
-        template<typename T>
+        template <typename T>
         auto operator && ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
             static_assert(always_false<T>::value,
             "chained comparisons are not supported inside assertions, "
             "wrap the expression inside parentheses, or decompose it");
         }
 
-        template<typename T>
+        template <typename T>
         auto operator || ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
             static_assert(always_false<T>::value,
             "chained comparisons are not supported inside assertions, "
             "wrap the expression inside parentheses, or decompose it");
         }
 
-        template<typename T>
+        template <typename T>
         auto operator == ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
             static_assert(always_false<T>::value,
             "chained comparisons are not supported inside assertions, "
             "wrap the expression inside parentheses, or decompose it");
         }
 
-        template<typename T>
+        template <typename T>
         auto operator != ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
             static_assert(always_false<T>::value,
             "chained comparisons are not supported inside assertions, "
             "wrap the expression inside parentheses, or decompose it");
         }
 
-        template<typename T>
+        template <typename T>
         auto operator > ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
             static_assert(always_false<T>::value,
             "chained comparisons are not supported inside assertions, "
             "wrap the expression inside parentheses, or decompose it");
         }
 
-        template<typename T>
+        template <typename T>
         auto operator < ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
             static_assert(always_false<T>::value,
             "chained comparisons are not supported inside assertions, "
             "wrap the expression inside parentheses, or decompose it");
         }
 
-        template<typename T>
+        template <typename T>
         auto operator >= ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
             static_assert(always_false<T>::value,
             "chained comparisons are not supported inside assertions, "
             "wrap the expression inside parentheses, or decompose it");
         }
 
-        template<typename T>
+        template <typename T>
         auto operator <= ( T ) const -> BinaryExpr<LhsT, RhsT const&> const {
             static_assert(always_false<T>::value,
             "chained comparisons are not supported inside assertions, "
@@ -2266,7 +2266,7 @@ namespace Catch {
         }
     };
 
-    template<typename LhsT>
+    template <typename LhsT>
     class UnaryExpr : public ITransientExpression {
         LhsT m_lhs;
 
@@ -2282,35 +2282,35 @@ namespace Catch {
     };
 
     // Specialised comparison functions to handle equality comparisons between ints and pointers (NULL deduces as an int)
-    template<typename LhsT, typename RhsT>
+    template <typename LhsT, typename RhsT>
     auto compareEqual( LhsT const& lhs, RhsT const& rhs ) -> bool { return static_cast<bool>(lhs == rhs); }
-    template<typename T>
+    template <typename T>
     auto compareEqual( T* const& lhs, int rhs ) -> bool { return lhs == reinterpret_cast<void const*>( rhs ); }
-    template<typename T>
+    template <typename T>
     auto compareEqual( T* const& lhs, long rhs ) -> bool { return lhs == reinterpret_cast<void const*>( rhs ); }
-    template<typename T>
+    template <typename T>
     auto compareEqual( int lhs, T* const& rhs ) -> bool { return reinterpret_cast<void const*>( lhs ) == rhs; }
-    template<typename T>
+    template <typename T>
     auto compareEqual( long lhs, T* const& rhs ) -> bool { return reinterpret_cast<void const*>( lhs ) == rhs; }
 
-    template<typename LhsT, typename RhsT>
+    template <typename LhsT, typename RhsT>
     auto compareNotEqual( LhsT const& lhs, RhsT&& rhs ) -> bool { return static_cast<bool>(lhs != rhs); }
-    template<typename T>
+    template <typename T>
     auto compareNotEqual( T* const& lhs, int rhs ) -> bool { return lhs != reinterpret_cast<void const*>( rhs ); }
-    template<typename T>
+    template <typename T>
     auto compareNotEqual( T* const& lhs, long rhs ) -> bool { return lhs != reinterpret_cast<void const*>( rhs ); }
-    template<typename T>
+    template <typename T>
     auto compareNotEqual( int lhs, T* const& rhs ) -> bool { return reinterpret_cast<void const*>( lhs ) != rhs; }
-    template<typename T>
+    template <typename T>
     auto compareNotEqual( long lhs, T* const& rhs ) -> bool { return reinterpret_cast<void const*>( lhs ) != rhs; }
 
-    template<typename LhsT>
+    template <typename LhsT>
     class ExprLhs {
         LhsT m_lhs;
     public:
         explicit ExprLhs( LhsT lhs ) : m_lhs( lhs ) {}
 
-        template<typename RhsT>
+        template <typename RhsT>
         auto operator == ( RhsT const& rhs ) -> BinaryExpr<LhsT, RhsT const&> const {
             return { compareEqual( m_lhs, rhs ), m_lhs, "==", rhs };
         }
@@ -2318,7 +2318,7 @@ namespace Catch {
             return { m_lhs == rhs, m_lhs, "==", rhs };
         }
 
-        template<typename RhsT>
+        template <typename RhsT>
         auto operator != ( RhsT const& rhs ) -> BinaryExpr<LhsT, RhsT const&> const {
             return { compareNotEqual( m_lhs, rhs ), m_lhs, "!=", rhs };
         }
@@ -2326,31 +2326,31 @@ namespace Catch {
             return { m_lhs != rhs, m_lhs, "!=", rhs };
         }
 
-        template<typename RhsT>
+        template <typename RhsT>
         auto operator > ( RhsT const& rhs ) -> BinaryExpr<LhsT, RhsT const&> const {
             return { static_cast<bool>(m_lhs > rhs), m_lhs, ">", rhs };
         }
-        template<typename RhsT>
+        template <typename RhsT>
         auto operator < ( RhsT const& rhs ) -> BinaryExpr<LhsT, RhsT const&> const {
             return { static_cast<bool>(m_lhs < rhs), m_lhs, "<", rhs };
         }
-        template<typename RhsT>
+        template <typename RhsT>
         auto operator >= ( RhsT const& rhs ) -> BinaryExpr<LhsT, RhsT const&> const {
             return { static_cast<bool>(m_lhs >= rhs), m_lhs, ">=", rhs };
         }
-        template<typename RhsT>
+        template <typename RhsT>
         auto operator <= ( RhsT const& rhs ) -> BinaryExpr<LhsT, RhsT const&> const {
             return { static_cast<bool>(m_lhs <= rhs), m_lhs, "<=", rhs };
         }
 
-        template<typename RhsT>
+        template <typename RhsT>
         auto operator && ( RhsT const& ) -> BinaryExpr<LhsT, RhsT const&> const {
             static_assert(always_false<RhsT>::value,
             "operator&& is not supported inside assertions, "
             "wrap the expression inside parentheses, or decompose it");
         }
 
-        template<typename RhsT>
+        template <typename RhsT>
         auto operator || ( RhsT const& ) -> BinaryExpr<LhsT, RhsT const&> const {
             static_assert(always_false<RhsT>::value,
             "operator|| is not supported inside assertions, "
@@ -2364,13 +2364,13 @@ namespace Catch {
 
     void handleExpression( ITransientExpression const& expr );
 
-    template<typename T>
+    template <typename T>
     void handleExpression( ExprLhs<T> const& expr ) {
         handleExpression( expr.makeUnaryExpr() );
     }
 
     struct Decomposer {
-        template<typename T>
+        template <typename T>
         auto operator <= ( T const& lhs ) -> ExprLhs<T const&> {
             return ExprLhs<T const&>{ lhs };
         }
@@ -2521,7 +2521,7 @@ namespace Catch {
             }
         }
 
-        template<typename T>
+        template <typename T>
         void handleExpr( ExprLhs<T> const& expr ) {
             handleExpr( expr.makeUnaryExpr() );
         }
@@ -2573,7 +2573,7 @@ namespace Catch {
 
     struct MessageStream {
 
-        template<typename T>
+        template <typename T>
         MessageStream& operator << ( T const& value ) {
             m_stream << value;
             return *this;
@@ -2587,7 +2587,7 @@ namespace Catch {
                         SourceLineInfo const& lineInfo,
                         ResultWas::OfType type );
 
-        template<typename T>
+        template <typename T>
         MessageBuilder& operator << ( T const& value ) {
             m_stream << value;
             return *this;
@@ -2617,12 +2617,12 @@ namespace Catch {
 
         void captureValue( size_t index, std::string const& value );
 
-        template<typename T>
+        template <typename T>
         void captureValues( size_t index, T const& value ) {
             captureValue( index, Catch::Detail::stringify( value ) );
         }
 
-        template<typename T, typename... Ts>
+        template <typename T, typename... Ts>
         void captureValues( size_t index, T const& value, Ts const&... values ) {
             captureValue( index, Catch::Detail::stringify(value) );
             captureValues( index+1, values... );
@@ -2974,7 +2974,7 @@ namespace Catch {
     };
 
     class ExceptionTranslatorRegistrar {
-        template<typename T>
+        template <typename T>
         class ExceptionTranslator : public IExceptionTranslator {
         public:
 
@@ -2999,7 +2999,7 @@ namespace Catch {
         };
 
     public:
-        template<typename T>
+        template <typename T>
         ExceptionTranslatorRegistrar( std::string(*translateFunction)( T& ) ) {
             getMutableRegistryHub().registerTranslator
                 ( new ExceptionTranslator<T>( translateFunction ) );
@@ -3131,7 +3131,7 @@ namespace literals {
     Detail::Approx operator "" _a(unsigned long long val);
 } // end namespace literals
 
-template<>
+template <>
 struct StringMaker<Catch::Detail::Approx> {
     static std::string convert(Catch::Detail::Approx const& value);
 };
@@ -3183,9 +3183,9 @@ namespace Catch {
 namespace Matchers {
     namespace Impl {
 
-        template<typename ArgT> struct MatchAllOf;
-        template<typename ArgT> struct MatchAnyOf;
-        template<typename ArgT> struct MatchNotOf;
+        template <typename ArgT> struct MatchAllOf;
+        template <typename ArgT> struct MatchAnyOf;
+        template <typename ArgT> struct MatchNotOf;
 
         class MatcherUntypedBase {
         public:
@@ -3205,7 +3205,7 @@ namespace Matchers {
 #    pragma clang diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 
-        template<typename ObjectT>
+        template <typename ObjectT>
         struct MatcherMethod {
             virtual bool match( ObjectT const& arg ) const = 0;
         };
@@ -3213,7 +3213,7 @@ namespace Matchers {
 #if defined(__OBJC__)
         // Hack to fix Catch GH issue #1661. Could use id for generic Object support.
         // use of const for Object pointers is very uncommon and under ARC it causes some kind of signature mismatch that breaks compilation
-        template<>
+        template <>
         struct MatcherMethod<NSString*> {
             virtual bool match( NSString* arg ) const = 0;
         };
@@ -3223,7 +3223,7 @@ namespace Matchers {
 #    pragma clang diagnostic pop
 #endif
 
-        template<typename T>
+        template <typename T>
         struct MatcherBase : MatcherUntypedBase, MatcherMethod<T> {
 
             MatchAllOf<T> operator && ( MatcherBase const& other ) const;
@@ -3231,7 +3231,7 @@ namespace Matchers {
             MatchNotOf<T> operator ! () const;
         };
 
-        template<typename ArgT>
+        template <typename ArgT>
         struct MatchAllOf : MatcherBase<ArgT> {
             bool match( ArgT const& arg ) const override {
                 for( auto matcher : m_matchers ) {
@@ -3263,7 +3263,7 @@ namespace Matchers {
 
             std::vector<MatcherBase<ArgT> const*> m_matchers;
         };
-        template<typename ArgT>
+        template <typename ArgT>
         struct MatchAnyOf : MatcherBase<ArgT> {
 
             bool match( ArgT const& arg ) const override {
@@ -3297,7 +3297,7 @@ namespace Matchers {
             std::vector<MatcherBase<ArgT> const*> m_matchers;
         };
 
-        template<typename ArgT>
+        template <typename ArgT>
         struct MatchNotOf : MatcherBase<ArgT> {
 
             MatchNotOf( MatcherBase<ArgT> const& underlyingMatcher ) : m_underlyingMatcher( underlyingMatcher ) {}
@@ -3312,15 +3312,15 @@ namespace Matchers {
             MatcherBase<ArgT> const& m_underlyingMatcher;
         };
 
-        template<typename T>
+        template <typename T>
         MatchAllOf<T> MatcherBase<T>::operator && ( MatcherBase const& other ) const {
             return MatchAllOf<T>() && *this && other;
         }
-        template<typename T>
+        template <typename T>
         MatchAnyOf<T> MatcherBase<T>::operator || ( MatcherBase const& other ) const {
             return MatchAnyOf<T>() || *this || other;
         }
-        template<typename T>
+        template <typename T>
         MatchNotOf<T> MatcherBase<T>::operator ! () const {
             return MatchNotOf<T>( *this );
         }
@@ -3417,7 +3417,7 @@ public:
     // The user has to explicitly specify type to the function, because
     // inferring std::function<bool(T const&)> is hard (but possible) and
     // requires a lot of TMP.
-    template<typename T>
+    template <typename T>
     Generic::PredicateMatcher<T> Predicate(std::function<bool(T const&)> const& predicate, std::string const& description = "") {
         return Generic::PredicateMatcher<T>(predicate, description);
     }
@@ -3503,7 +3503,7 @@ namespace Catch {
 namespace Matchers {
 
     namespace Vector {
-        template<typename T>
+        template <typename T>
         struct ContainsElementMatcher : MatcherBase<std::vector<T>> {
 
             ContainsElementMatcher(T const &comparator) : m_comparator( comparator) {}
@@ -3524,7 +3524,7 @@ namespace Matchers {
             T const& m_comparator;
         };
 
-        template<typename T>
+        template <typename T>
         struct ContainsMatcher : MatcherBase<std::vector<T>> {
 
             ContainsMatcher(std::vector<T> const &comparator) : m_comparator( comparator ) {}
@@ -3554,7 +3554,7 @@ namespace Matchers {
             std::vector<T> const& m_comparator;
         };
 
-        template<typename T>
+        template <typename T>
         struct EqualsMatcher : MatcherBase<std::vector<T>> {
 
             EqualsMatcher(std::vector<T> const &comparator) : m_comparator( comparator ) {}
@@ -3577,7 +3577,7 @@ namespace Matchers {
             std::vector<T> const& m_comparator;
         };
 
-        template<typename T>
+        template <typename T>
         struct ApproxMatcher : MatcherBase<std::vector<T>> {
 
             ApproxMatcher(std::vector<T> const& comparator) : m_comparator( comparator ) {}
@@ -3613,7 +3613,7 @@ namespace Matchers {
             mutable Catch::Detail::Approx approx = Catch::Detail::Approx::custom();
         };
 
-        template<typename T>
+        template <typename T>
         struct UnorderedEqualsMatcher : MatcherBase<std::vector<T>> {
             UnorderedEqualsMatcher(std::vector<T> const& target) : m_target(target) {}
             bool match(std::vector<T> const& vec) const override {
@@ -3637,27 +3637,27 @@ namespace Matchers {
     // The following functions create the actual matcher objects.
     // This allows the types to be inferred
 
-    template<typename T>
+    template <typename T>
     Vector::ContainsMatcher<T> Contains( std::vector<T> const& comparator ) {
         return Vector::ContainsMatcher<T>( comparator );
     }
 
-    template<typename T>
+    template <typename T>
     Vector::ContainsElementMatcher<T> VectorContains( T const& comparator ) {
         return Vector::ContainsElementMatcher<T>( comparator );
     }
 
-    template<typename T>
+    template <typename T>
     Vector::EqualsMatcher<T> Equals( std::vector<T> const& comparator ) {
         return Vector::EqualsMatcher<T>( comparator );
     }
 
-    template<typename T>
+    template <typename T>
     Vector::ApproxMatcher<T> Approx( std::vector<T> const& comparator ) {
         return Vector::ApproxMatcher<T>( comparator );
     }
 
-    template<typename T>
+    template <typename T>
     Vector::UnorderedEqualsMatcher<T> UnorderedEquals(std::vector<T> const& target) {
         return Vector::UnorderedEqualsMatcher<T>(target);
     }
@@ -3668,7 +3668,7 @@ namespace Matchers {
 // end catch_matchers_vector.h
 namespace Catch {
 
-    template<typename ArgT, typename MatcherT>
+    template <typename ArgT, typename MatcherT>
     class MatchExpr : public ITransientExpression {
         ArgT const& m_arg;
         MatcherT m_matcher;
@@ -3695,7 +3695,7 @@ namespace Catch {
 
     void handleExceptionMatchExpr( AssertionHandler& handler, StringMatcher const& matcher, StringRef const& matcherString  );
 
-    template<typename ArgT, typename MatcherT>
+    template <typename ArgT, typename MatcherT>
     auto makeMatchExpr( ArgT const& arg, MatcherT const& matcher, StringRef const& matcherString  ) -> MatchExpr<ArgT, MatcherT> {
         return MatchExpr<ArgT, MatcherT>( arg, matcher, matcherString );
     }
@@ -3833,13 +3833,13 @@ namespace Generators {
 
     // !TBD move this into its own location?
     namespace pf{
-        template<typename T, typename... Args>
+        template <typename T, typename... Args>
         std::unique_ptr<T> make_unique( Args&&... args ) {
             return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
         }
     }
 
-    template<typename T>
+    template <typename T>
     struct IGenerator : GeneratorUntypedBase {
         virtual ~IGenerator() = default;
 
@@ -3851,7 +3851,7 @@ namespace Generators {
         using type = T;
     };
 
-    template<typename T>
+    template <typename T>
     class SingleValueGenerator final : public IGenerator<T> {
         T m_value;
     public:
@@ -3866,7 +3866,7 @@ namespace Generators {
         }
     };
 
-    template<typename T>
+    template <typename T>
     class FixedValuesGenerator final : public IGenerator<T> {
         static_assert(!std::is_same<T, bool>::value,
             "ValuesGenerator does not support bools because of std::vector<bool>"
@@ -3909,7 +3909,7 @@ namespace Generators {
         return GeneratorWrapper<T>(pf::make_unique<FixedValuesGenerator<T>>(values));
     }
 
-    template<typename T>
+    template <typename T>
     class Generators : public IGenerator<T> {
         std::vector<GeneratorWrapper<T>> m_generators;
         size_t m_current = 0;
@@ -3920,11 +3920,11 @@ namespace Generators {
         void populate(T&& val) {
             m_generators.emplace_back(value(std::move(val)));
         }
-        template<typename U>
+        template <typename U>
         void populate(U&& val) {
             populate(T(std::move(val)));
         }
-        template<typename U, typename... Gs>
+        template <typename U, typename... Gs>
         void populate(U&& valueOrGenerator, Gs... moreGenerators) {
             populate(std::forward<U>(valueOrGenerator));
             populate(std::forward<Gs>(moreGenerators)...);
@@ -3953,7 +3953,7 @@ namespace Generators {
         }
     };
 
-    template<typename... Ts>
+    template <typename... Ts>
     GeneratorWrapper<std::tuple<Ts...>> table( std::initializer_list<std::tuple<typename std::decay<Ts>::type...>> tuples ) {
         return values<std::tuple<Ts...>>( tuples );
     }
@@ -3962,26 +3962,26 @@ namespace Generators {
     template <typename T>
     struct as {};
 
-    template<typename T, typename... Gs>
+    template <typename T, typename... Gs>
     auto makeGenerators( GeneratorWrapper<T>&& generator, Gs... moreGenerators ) -> Generators<T> {
         return Generators<T>(std::move(generator), std::forward<Gs>(moreGenerators)...);
     }
-    template<typename T>
+    template <typename T>
     auto makeGenerators( GeneratorWrapper<T>&& generator ) -> Generators<T> {
         return Generators<T>(std::move(generator));
     }
-    template<typename T, typename... Gs>
+    template <typename T, typename... Gs>
     auto makeGenerators( T&& val, Gs... moreGenerators ) -> Generators<T> {
         return makeGenerators( value( std::forward<T>( val ) ), std::forward<Gs>( moreGenerators )... );
     }
-    template<typename T, typename U, typename... Gs>
+    template <typename T, typename U, typename... Gs>
     auto makeGenerators( as<T>, U&& val, Gs... moreGenerators ) -> Generators<T> {
         return makeGenerators( value( T( std::forward<U>( val ) ) ), std::forward<Gs>( moreGenerators )... );
     }
 
     auto acquireGeneratorTracker( SourceLineInfo const& lineInfo ) -> IGeneratorTracker&;
 
-    template<typename L>
+    template <typename L>
     // Note: The type after -> is weird, because VS2015 cannot parse
     //       the expression used in the typedef inside, when it is in
     //       return type. Yeah.
@@ -4304,7 +4304,7 @@ namespace Catch {
 namespace Catch {
 
     // An optional type
-    template<typename T>
+    template <typename T>
     class Option {
     public:
         Option() : nullableValue( nullptr ) {}
@@ -5033,7 +5033,7 @@ namespace Catch {
         void escape();
         bool isControlChar( char c ) const;
 
-        template<typename T>
+        template <typename T>
         void addPattern() {
             std::string token = m_patternName;
             for( std::size_t i = 0; i < m_escapeChars.size(); ++i )
@@ -5300,7 +5300,7 @@ namespace Catch {
         bool shouldReportAllAssertions = false;
     };
 
-    template<typename T>
+    template <typename T>
     struct LazyStat : Option<T> {
         LazyStat& operator=( T const& _value ) {
             Option<T>::operator=( _value );
@@ -5531,7 +5531,7 @@ namespace Catch {
 
     std::string serializeFilters( std::vector<std::string> const& container );
 
-    template<typename DerivedT>
+    template <typename DerivedT>
     struct StreamingReporterBase : IStreamingReporter {
 
         StreamingReporterBase( ReporterConfig const& _config )
@@ -5601,9 +5601,9 @@ namespace Catch {
         ReporterPreferences m_reporterPrefs;
     };
 
-    template<typename DerivedT>
+    template <typename DerivedT>
     struct CumulativeReporterBase : IStreamingReporter {
-        template<typename T, typename ChildNodeT>
+        template <typename T, typename ChildNodeT>
         struct Node {
             explicit Node( T const& _value ) : value( _value ) {}
             virtual ~Node() {}
@@ -5758,7 +5758,7 @@ namespace Catch {
         ReporterPreferences m_reporterPrefs;
     };
 
-    template<char C>
+    template <char C>
     char const* getLineOfChars() {
         static char line[CATCH_CONFIG_CONSOLE_WIDTH] = {0};
         if( !*line ) {
@@ -5844,7 +5844,7 @@ namespace Catch {
 
 namespace Catch {
 
-    template<typename T>
+    template <typename T>
     class ReporterRegistrar {
 
         class ReporterFactory : public IReporterFactory {
@@ -5865,7 +5865,7 @@ namespace Catch {
         }
     };
 
-    template<typename T>
+    template <typename T>
     class ListenerRegistrar {
 
         class ListenerFactory : public IReporterFactory {
@@ -6047,7 +6047,7 @@ namespace Catch {
 
             ScopedElement& writeText( std::string const& text, bool indent = true );
 
-            template<typename T>
+            template <typename T>
             ScopedElement& writeAttribute( std::string const& name, T const& attribute ) {
                 m_writer->writeAttribute( name, attribute );
                 return *this;
@@ -6073,7 +6073,7 @@ namespace Catch {
 
         XmlWriter& writeAttribute( std::string const& name, bool attribute );
 
-        template<typename T>
+        template <typename T>
         XmlWriter& writeAttribute( std::string const& name, T const& attribute ) {
             ReusableStringStream rss;
             rss << attribute;
@@ -8486,15 +8486,15 @@ namespace Catch { namespace clara {
 namespace detail {
 
     // Traits for extracting arg and return type of lambdas (for single argument lambdas)
-    template<typename L>
+    template <typename L>
     struct UnaryLambdaTraits : UnaryLambdaTraits<decltype( &L::operator() )> {};
 
-    template<typename ClassT, typename ReturnT, typename... Args>
+    template <typename ClassT, typename ReturnT, typename... Args>
     struct UnaryLambdaTraits<ReturnT( ClassT::* )( Args... ) const> {
         static const bool isValid = false;
     };
 
-    template<typename ClassT, typename ReturnT, typename ArgT>
+    template <typename ClassT, typename ReturnT, typename ArgT>
     struct UnaryLambdaTraits<ReturnT( ClassT::* )( ArgT ) const> {
         static const bool isValid = true;
         using ArgType = typename std::remove_const<typename std::remove_reference<ArgT>::type>::type;
@@ -8630,7 +8630,7 @@ namespace detail {
         Type m_type;
     };
 
-    template<typename T>
+    template <typename T>
     class ResultValueBase : public ResultBase {
     public:
         auto value() const -> T const & {
@@ -8669,16 +8669,16 @@ namespace detail {
         };
     };
 
-    template<>
+    template <>
     class ResultValueBase<void> : public ResultBase {
     protected:
         using ResultBase::ResultBase;
     };
 
-    template<typename T = void>
+    template <typename T = void>
     class BasicResult : public ResultValueBase<T> {
     public:
-        template<typename U>
+        template <typename U>
         explicit BasicResult( BasicResult<U> const &other )
         :   ResultValueBase<T>( other.type() ),
             m_errorMessage( other.errorMessage() )
@@ -8686,7 +8686,7 @@ namespace detail {
             assert( type() != ResultBase::Ok );
         }
 
-        template<typename U>
+        template <typename U>
         static auto ok( U const &value ) -> BasicResult { return { ResultBase::Ok, value }; }
         static auto ok() -> BasicResult { return { ResultBase::Ok }; }
         static auto logicError( std::string const &message ) -> BasicResult { return { ResultBase::LogicError, message }; }
@@ -8749,7 +8749,7 @@ namespace detail {
         std::string right;
     };
 
-    template<typename T>
+    template <typename T>
     inline auto convertInto( std::string const &source, T& target ) -> ParserResult {
         std::stringstream ss;
         ss << source;
@@ -8775,7 +8775,7 @@ namespace detail {
         return ParserResult::ok( ParseResultType::Matched );
     }
 #ifdef CLARA_CONFIG_OPTIONAL_TYPE
-    template<typename T>
+    template <typename T>
     inline auto convertInto( std::string const &source, CLARA_CONFIG_OPTIONAL_TYPE<T>& target ) -> ParserResult {
         T temp;
         auto result = convertInto( source, temp );
@@ -8806,7 +8806,7 @@ namespace detail {
         virtual auto isFlag() const -> bool { return true; }
     };
 
-    template<typename T>
+    template <typename T>
     struct BoundValueRef : BoundValueRefBase {
         T &m_ref;
 
@@ -8817,7 +8817,7 @@ namespace detail {
         }
     };
 
-    template<typename T>
+    template <typename T>
     struct BoundValueRef<std::vector<T>> : BoundValueRefBase {
         std::vector<T> &m_ref;
 
@@ -8845,26 +8845,26 @@ namespace detail {
         }
     };
 
-    template<typename ReturnType>
+    template <typename ReturnType>
     struct LambdaInvoker {
         static_assert( std::is_same<ReturnType, ParserResult>::value, "Lambda must return void or clara::ParserResult" );
 
-        template<typename L, typename ArgType>
+        template <typename L, typename ArgType>
         static auto invoke( L const &lambda, ArgType const &arg ) -> ParserResult {
             return lambda( arg );
         }
     };
 
-    template<>
+    template <>
     struct LambdaInvoker<void> {
-        template<typename L, typename ArgType>
+        template <typename L, typename ArgType>
         static auto invoke( L const &lambda, ArgType const &arg ) -> ParserResult {
             lambda( arg );
             return ParserResult::ok( ParseResultType::Matched );
         }
     };
 
-    template<typename ArgType, typename L>
+    template <typename ArgType, typename L>
     inline auto invokeLambda( L const &lambda, std::string const &arg ) -> ParserResult {
         ArgType temp{};
         auto result = convertInto( arg, temp );
@@ -8873,7 +8873,7 @@ namespace detail {
            : LambdaInvoker<typename UnaryLambdaTraits<L>::ReturnType>::invoke( lambda, temp );
     }
 
-    template<typename L>
+    template <typename L>
     struct BoundLambda : BoundValueRefBase {
         L m_lambda;
 
@@ -8885,7 +8885,7 @@ namespace detail {
         }
     };
 
-    template<typename L>
+    template <typename L>
     struct BoundFlagLambda : BoundFlagRefBase {
         L m_lambda;
 
@@ -8915,18 +8915,18 @@ namespace detail {
         }
     };
 
-    template<typename DerivedT>
+    template <typename DerivedT>
     class ComposableParserImpl : public ParserBase {
     public:
-        template<typename T>
+        template <typename T>
         auto operator|( T const &other ) const -> Parser;
 
-		template<typename T>
+		template <typename T>
         auto operator+( T const &other ) const -> Parser;
     };
 
     // Common code and state for Args and Opts
-    template<typename DerivedT>
+    template <typename DerivedT>
     class ParserRefImpl : public ComposableParserImpl<DerivedT> {
     protected:
         Optionality m_optionality = Optionality::Optional;
@@ -8937,13 +8937,13 @@ namespace detail {
         explicit ParserRefImpl( std::shared_ptr<BoundRef> const &ref ) : m_ref( ref ) {}
 
     public:
-        template<typename T>
+        template <typename T>
         ParserRefImpl( T &ref, std::string const &hint )
         :   m_ref( std::make_shared<BoundValueRef<T>>( ref ) ),
             m_hint( hint )
         {}
 
-        template<typename LambdaT>
+        template <typename LambdaT>
         ParserRefImpl( LambdaT const &ref, std::string const &hint )
         :   m_ref( std::make_shared<BoundLambda<LambdaT>>( ref ) ),
             m_hint(hint)
@@ -8982,7 +8982,7 @@ namespace detail {
         std::shared_ptr<std::string> m_name;
         std::shared_ptr<BoundValueRefBase> m_ref;
 
-        template<typename LambdaT>
+        template <typename LambdaT>
         static auto makeRef(LambdaT const &lambda) -> std::shared_ptr<BoundValueRefBase> {
             return std::make_shared<BoundLambda<LambdaT>>( lambda) ;
         }
@@ -8994,7 +8994,7 @@ namespace detail {
             m_ref = std::make_shared<BoundValueRef<std::string>>( ref );
         }
 
-        template<typename LambdaT>
+        template <typename LambdaT>
         explicit ExeName( LambdaT const& lambda ) : ExeName() {
             m_ref = std::make_shared<BoundLambda<LambdaT>>( lambda );
         }
@@ -9059,15 +9059,15 @@ namespace detail {
         std::vector<std::string> m_optNames;
 
     public:
-        template<typename LambdaT>
+        template <typename LambdaT>
         explicit Opt( LambdaT const &ref ) : ParserRefImpl( std::make_shared<BoundFlagLambda<LambdaT>>( ref ) ) {}
 
         explicit Opt( bool &ref ) : ParserRefImpl( std::make_shared<BoundFlagRef>( ref ) ) {}
 
-        template<typename LambdaT>
+        template <typename LambdaT>
         Opt( LambdaT const &ref, std::string const &hint ) : ParserRefImpl( ref, hint ) {}
 
-        template<typename T>
+        template <typename T>
         Opt( T &ref, std::string const &hint ) : ParserRefImpl( ref, hint ) {}
 
         auto operator[]( std::string const &optName ) -> Opt & {
@@ -9196,15 +9196,15 @@ namespace detail {
             return *this;
         }
 
-        template<typename T>
+        template <typename T>
         auto operator|( T const &other ) const -> Parser {
             return Parser( *this ) |= other;
         }
 
         // Forward deprecated interface with '+' instead of '|'
-        template<typename T>
+        template <typename T>
         auto operator+=( T const &other ) -> Parser & { return operator|=( other ); }
-        template<typename T>
+        template <typename T>
         auto operator+( T const &other ) const -> Parser { return operator|( other ); }
 
         auto getHelpColumns() const -> std::vector<HelpColumns> {
@@ -9325,8 +9325,8 @@ namespace detail {
         }
     };
 
-    template<typename DerivedT>
-    template<typename T>
+    template <typename DerivedT>
+    template <typename T>
     auto ComposableParserImpl<DerivedT>::operator|( T const &other ) const -> Parser {
         return Parser() | static_cast<DerivedT const &>( *this ) | other;
     }
@@ -11881,7 +11881,7 @@ namespace Catch {
     void addSingleton( ISingleton* singleton );
     void cleanupSingletons();
 
-    template<typename SingletonImplT, typename InterfaceT = SingletonImplT, typename MutableInterfaceT = InterfaceT>
+    template <typename SingletonImplT, typename InterfaceT = SingletonImplT, typename MutableInterfaceT = InterfaceT>
     class Singleton : SingletonImplT, public ISingleton {
 
         static auto getInternal() -> Singleton* {
@@ -12597,7 +12597,7 @@ namespace Catch {
 
         void useConfigData( ConfigData const& configData );
 
-        template<typename CharT>
+        template <typename CharT>
         int run(int argc, CharT const * const argv[]) {
             if (m_startupExceptions)
                 return 1;
@@ -12999,7 +12999,7 @@ namespace Catch {
     Catch::IStream::~IStream() = default;
 
     namespace Detail { namespace {
-        template<typename WriterF, std::size_t bufferSize=256>
+        template <typename WriterF, std::size_t bufferSize=256>
         class StreamBufImpl : public std::streambuf {
             char data[bufferSize];
             WriterF m_writer;
@@ -14322,7 +14322,7 @@ namespace Detail {
     }
 }
 
-template<typename T>
+template <typename T>
 std::string fpToString( T value, int precision ) {
     if (Catch::isnan(value)) {
         return "nan";
@@ -15589,7 +15589,7 @@ public:
         }
     }
 
-    template<typename T>
+    template <typename T>
     friend TablePrinter& operator << (TablePrinter& tp, T const& value) {
         tp.m_oss << value;
         return tp;

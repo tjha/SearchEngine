@@ -3,13 +3,13 @@
 // the phrase "CTRLF" (with no quotes)
 //
 // We omit the following functions:
-//    std::basic_string( initializer_list < charT > );
-//    std::basic_string::operator=( std::initializer_list < charT > );
-//    std::basic_string::operator+=( std::initializer_list < charT > );
-//    std::basic_string::append( std::initializer_list < charT > );
-//    std::basic_string::assign( std::basic_string < charT > && ) noexcept;
-//    std::basic_string::insert( const_iterator, initializer_list < charT > );
-//    std::basic_string::replace( const_iterator, const_iterator, initializer_list < charT > );
+//    std::basic_string( initializer_list< charT > );
+//    std::basic_string::operator=( std::initializer_list< charT > );
+//    std::basic_string::operator+=( std::initializer_list< charT > );
+//    std::basic_string::append( std::initializer_list< charT > );
+//    std::basic_string::assign( std::basic_string< charT > && ) noexcept;
+//    std::basic_string::insert( const_iterator, initializer_list< charT > );
+//    std::basic_string::replace( const_iterator, const_iterator, initializer_list< charT > );
 //    std::basic_string::get_allocator( ) const;
 //
 // 2019-12-07: Increase efficiency of iterators (at the cost of safety) and find: jasina
@@ -83,7 +83,7 @@ namespace dex
 				stringSize = 0;
 				array = new charT[ arraySize ]( );
 				}
-			basicString( const basicString < charT > &other, size_t position = 0, size_t length = npos )
+			basicString( const basicString< charT > &other, size_t position = 0, size_t length = npos )
 				{
 				if ( position > other.size( ) )
 					throw outOfRangeException( );
@@ -121,7 +121,7 @@ namespace dex
 				array[ stringSize ] = charT { };
 				}
 			template < class InputIt,
-					typename = typename dex::enableIf < !dex::isIntegral< InputIt >::value >::type >
+					typename = typename dex::enableIf< !dex::isIntegral< InputIt >::value >::type >
 			basicString( InputIt first, InputIt last )
 				{
 				// This is an uber-naive way to allocate memory. Maybe we should change this later.
@@ -139,7 +139,7 @@ namespace dex
 
 				array[ stringSize ] = charT { };
 				}
-			basicString( basicString < charT > &&other )
+			basicString( basicString< charT > &&other )
 				{
 				arraySize = other.arraySize;
 				array = other.array;
@@ -158,23 +158,23 @@ namespace dex
 				}
 
 			// CTRLF Assignment
-			basicString < charT > &operator=( const basicString < charT > &other )
+			basicString< charT > &operator=( const basicString< charT > &other )
 				{
 				return assign( other );
 				}
-			basicString < charT > &operator=( const charT *other )
+			basicString< charT > &operator=( const charT *other )
 				{
 				basicString temporaryString( other );
 				swap( temporaryString );
 				return *this;
 				}
-			basicString < charT > &operator=( charT c )
+			basicString< charT > &operator=( charT c )
 				{
 				resize( 1 );
 				array[ 0 ] = c;
 				return *this;
 				}
-			basicString < charT > &operator=( basicString < charT > &&other )
+			basicString< charT > &operator=( basicString< charT > &&other )
 				{
 				swap( other );
 				return *this;
@@ -254,20 +254,20 @@ namespace dex
 			class _iterator
 				{
 				private:
-					friend class basicString < charT >;
+					friend class basicString< charT >;
 					typename
-							dex::conditional < isConst, const basicString < charT > *, basicString < charT > * >::type
+							dex::conditional< isConst, const basicString< charT > *, basicString< charT > * >::type
 							string;
 					size_t position;
 					_iterator(
 							typename
-									dex::conditional < isConst, const basicString < charT > *, basicString < charT > * >::type
+									dex::conditional< isConst, const basicString< charT > *, basicString< charT > * >::type
 									string,
 							size_t position ) :
 							string( string ), position( position ) { }
 				public:
-					template < typename = typename dex::enableIf < isConst > >
-					_iterator( const _iterator < false, isForward > &other ) :
+					template < typename = typename dex::enableIf< isConst > >
+					_iterator( const _iterator< false, isForward > &other ) :
 							string( other.string ), position( other.position ) { }
 
 					friend bool operator==( const _iterator &a, const _iterator &b )
@@ -279,13 +279,13 @@ namespace dex
 						return a.position != b.position;
 						}
 
-					typename dex::conditional < isConst, const charT &, charT & >::type operator*( ) const
+					typename dex::conditional< isConst, const charT &, charT & >::type operator*( ) const
 						{
 						if ( isForward )
 							return ( *string )[ position ];
 						return ( *string )[ string->size( ) - position - 1 ];
 						}
-					typename dex::conditional < isConst, const charT *, charT * >::type operator->( ) const
+					typename dex::conditional< isConst, const charT *, charT * >::type operator->( ) const
 						{
 						if ( isForward )
 							return &( ( *string )[ position ] );
@@ -356,14 +356,14 @@ namespace dex
 						}
 
 					typename
-							dex::conditional < isConst, const charT &, charT & >::type operator[ ]( const size_t index ) const
+							dex::conditional< isConst, const charT &, charT & >::type operator[ ]( const size_t index ) const
 						{
 						return ( *string )[ index ];
 						}
 				};
 
 		public:
-			typedef _iterator < false, true > iterator;
+			typedef _iterator< false, true > iterator;
 			iterator begin( )
 				{
 				return iterator( this, 0 );
@@ -373,7 +373,7 @@ namespace dex
 				return iterator( this, size( ) );
 				}
 
-			typedef _iterator < true, true > constIterator;
+			typedef _iterator< true, true > constIterator;
 			constIterator cbegin( ) const
 				{
 				return constIterator( this, 0 );
@@ -383,7 +383,7 @@ namespace dex
 				return constIterator( this, size( ) );
 				}
 
-			typedef _iterator < false, false > reverseIterator;
+			typedef _iterator< false, false > reverseIterator;
 			reverseIterator rbegin( )
 				{
 				return reverseIterator( this, 0 );
@@ -393,7 +393,7 @@ namespace dex
 				return reverseIterator( this, size( ) );
 				}
 
-			typedef _iterator < true, false > constReverseIterator;
+			typedef _iterator< true, false > constReverseIterator;
 			constReverseIterator crbegin( ) const
 				{
 				return constReverseIterator( this, 0 );
@@ -455,48 +455,48 @@ namespace dex
 				}
 
 			// CTRLF Modifiers
-			basicString < charT > &operator+=( const basicString &other )
+			basicString< charT > &operator+=( const basicString &other )
 				{
 				return append( other );
 				}
-			basicString < charT > &operator+=( const charT *other )
+			basicString< charT > &operator+=( const charT *other )
 				{
 				return append( other );
 				}
-			basicString < charT > &operator+=( charT character )
+			basicString< charT > &operator+=( charT character )
 				{
 				return append( 1, character );
 				}
 
-			basicString < charT > &append( const basicString < charT > &other )
+			basicString< charT > &append( const basicString< charT > &other )
 				{
 				return append( other.cbegin( ), other.cend( ) );
 				}
-			basicString < charT > &append( const basicString < charT > &other, size_t position, size_t length )
+			basicString< charT > &append( const basicString< charT > &other, size_t position, size_t length )
 				{
 				return append( other.cbegin( ) + position, other.cbegin( ) + position + length );
 				}
-			basicString < charT > &append( const charT *other )
+			basicString< charT > &append( const charT *other )
 				{
 				// Technically less efficient, but is more clear and avoids code duplication.
 				return append( other, other + cStringLength( other ) );
 				}
-			basicString < charT > &append( const charT *other, size_t length )
+			basicString< charT > &append( const charT *other, size_t length )
 				{
 				return append( other, other + length );
 				}
-			basicString < charT > &append( size_t number, charT character )
+			basicString< charT > &append( size_t number, charT character )
 				{
 				resize( size( ) + number, character );
 				return *this;
 				}
-			basicString < charT > &append( charT character )
+			basicString< charT > &append( charT character )
 				{
 				return append( 1, character );
 				}
 			template < class InputIt,
-					typename = typename dex::enableIf < !dex::isIntegral< InputIt >::value >::type >
-			basicString < charT > &append( InputIt first, InputIt last )
+					typename = typename dex::enableIf< !dex::isIntegral< InputIt >::value >::type >
+			basicString< charT > &append( InputIt first, InputIt last )
 				{
 				insert( cend( ), first, last );
 				return *this;
@@ -507,46 +507,46 @@ namespace dex
 				resize( size( ) + 1, character );
 				}
 
-			basicString < charT > &assign( const basicString < charT > &other )
+			basicString< charT > &assign( const basicString< charT > &other )
 				{
 				basicString temporaryString( other );
 				swap( temporaryString );
 				return *this;
 				}
-			basicString < charT > &assign( const basicString < charT > &other, size_t position, size_t length )
+			basicString< charT > &assign( const basicString< charT > &other, size_t position, size_t length )
 				{
 				basicString temporaryString = other.substr( position, length );
 				swap( temporaryString );
 				return *this;
 				}
-			basicString < charT > &assign( const charT *other )
+			basicString< charT > &assign( const charT *other )
 				{
 				basicString temporaryString( other );
 				swap( temporaryString );
 				return *this;
 				}
-			basicString < charT > &assign( const charT *other, size_t length )
+			basicString< charT > &assign( const charT *other, size_t length )
 				{
 				basicString temporaryString( other, length );
 				swap( temporaryString );
 				return *this;
 				}
-			basicString < charT > &assign( size_t length, charT character )
+			basicString< charT > &assign( size_t length, charT character )
 				{
 				basicString temporaryString( length, character );
 				swap( temporaryString );
 				return *this;
 				}
 			template < class InputIt,
-					typename = typename dex::enableIf < !dex::isIntegral< InputIt >::value >::type >
-			basicString < charT > &assign( InputIt first, InputIt last )
+					typename = typename dex::enableIf< !dex::isIntegral< InputIt >::value >::type >
+			basicString< charT > &assign( InputIt first, InputIt last )
 				{
 				basicString temporaryString( first, last );
 				swap( temporaryString );
 				return *this;
 				}
 
-			basicString < charT > &insert( size_t position, const basicString < charT > &other )
+			basicString< charT > &insert( size_t position, const basicString< charT > &other )
 				{
 				if ( position > size( ) )
 					throw dex::outOfRangeException( );
@@ -554,7 +554,7 @@ namespace dex
 				insert( cbegin( ) + position, other.cbegin( ), other.cend( ) );
 				return *this;
 				}
-			basicString < charT > &insert( size_t position, const basicString < charT > &other,
+			basicString< charT > &insert( size_t position, const basicString< charT > &other,
 					size_t subposition, size_t sublength )
 				{
 				if ( position > size( ) || subposition > other.size( ) )
@@ -564,7 +564,7 @@ namespace dex
 						other.cbegin( ) + subposition + sublength );
 				return *this;
 				}
-			basicString < charT > &insert( size_t position, const charT *other )
+			basicString< charT > &insert( size_t position, const charT *other )
 				{
 				if ( position > size( ) )
 					throw dex::outOfRangeException( );
@@ -574,7 +574,7 @@ namespace dex
 				insert( cbegin( ) + position, other, other + length );
 				return *this;
 				}
-			basicString < charT > &insert( size_t position, const charT *other, size_t length )
+			basicString< charT > &insert( size_t position, const charT *other, size_t length )
 				{
 				if ( position > size( ) )
 					throw dex::outOfRangeException( );
@@ -583,7 +583,7 @@ namespace dex
 				insert( cbegin( ) + position, other, other + length );
 				return *this;
 				}
-			basicString < charT > &insert( size_t position, size_t length, charT character )
+			basicString< charT > &insert( size_t position, size_t length, charT character )
 				{
 				if ( position > size( ) )
 					throw dex::outOfRangeException( );
@@ -591,7 +591,7 @@ namespace dex
 				insert( cbegin( ) + position, length, character );
 				return *this;
 				}
-			basicString < charT > &insert( size_t position, charT character )
+			basicString< charT > &insert( size_t position, charT character )
 				{
 				return insert( position, 1, character );
 				}
@@ -606,7 +606,7 @@ namespace dex
 				return insert( first, 1, character );
 				}
 			template < class InputIt,
-					typename = typename dex::enableIf < !dex::isIntegral< InputIt >::value >::type >
+					typename = typename dex::enableIf< !dex::isIntegral< InputIt >::value >::type >
 			iterator insert( constIterator insertionPoint, InputIt first, InputIt last )
 				{
 				size_t originalSize = size( );
@@ -614,7 +614,7 @@ namespace dex
 				return begin( ) + ( ( insertionPoint - cbegin( ) ) + size( ) - originalSize );
 				}
 
-			basicString < charT > &erase( size_t position = 0, size_t length = npos )
+			basicString< charT > &erase( size_t position = 0, size_t length = npos )
 				{
 				if ( position > size( ) )
 					throw dex::outOfRangeException( );
@@ -636,39 +636,39 @@ namespace dex
 				return begin( ) + ( first - cbegin( ) );
 				}
 
-			basicString < charT > &replace( size_t position, size_t length, const basicString < charT > &other )
+			basicString< charT > &replace( size_t position, size_t length, const basicString< charT > &other )
 				{
 				return replace( cbegin( ) + position, cbegin( ) + position + length, other );
 				}
-			basicString < charT > &replace( constIterator first, constIterator last, const basicString < charT > &other )
+			basicString< charT > &replace( constIterator first, constIterator last, const basicString< charT > &other )
 				{
 				return replace( first, last, other.cbegin( ), other.cend( ) );
 				}
-			basicString < charT > &replace( size_t position, size_t length,
-					const basicString < charT > &other, size_t subposition, size_t sublength )
+			basicString< charT > &replace( size_t position, size_t length,
+					const basicString< charT > &other, size_t subposition, size_t sublength )
 				{
 				return replace( cbegin( ) + position, cbegin( ) + position + length,
 						other.cbegin( ) + subposition, other.cbegin( ) + subposition + sublength );
 				}
-			basicString < charT > &replace( size_t position, size_t length, const charT *other )
+			basicString< charT > &replace( size_t position, size_t length, const charT *other )
 				{
 				return replace( cbegin( ) + position, cbegin( ) + position + length, other );
 				}
-			basicString < charT > &replace( constIterator first, constIterator last, const charT *other )
+			basicString< charT > &replace( constIterator first, constIterator last, const charT *other )
 				{
 				return replace( first, last, other, other + cStringLength( other ) );
 				}
-			basicString < charT > &replace( size_t position, size_t length, const charT *other, size_t n )
+			basicString< charT > &replace( size_t position, size_t length, const charT *other, size_t n )
 				{
 				replace( cbegin( ) + position, cbegin( ) + ( position + length ), other, other + n );
 				return *this;
 				}
-			basicString < charT > &replace( constIterator first, constIterator last, const charT *other, size_t n )
+			basicString< charT > &replace( constIterator first, constIterator last, const charT *other, size_t n )
 				{
 				replace( first, last, other, n );
 				return *this;
 				}
-			basicString < charT > &replace( size_t position, size_t length, size_t n, charT c )
+			basicString< charT > &replace( size_t position, size_t length, size_t n, charT c )
 				{
 				return replace( cbegin( ) + position, cbegin( ) + position + length, n, c );
 				}
@@ -696,7 +696,7 @@ namespace dex
 					}
 				}
 		public:
-			basicString < charT > &replace( constIterator first, constIterator last, size_t n, charT c )
+			basicString< charT > &replace( constIterator first, constIterator last, size_t n, charT c )
 				{
 				shiftAtPoint( n, first, last );
 
@@ -706,8 +706,8 @@ namespace dex
 				return *this;
 				}
 			template < class InputIt,
-					typename = typename dex::enableIf < !dex::isIntegral< InputIt >::value >::type >
-			basicString < charT > &replace( constIterator first, constIterator last,
+					typename = typename dex::enableIf< !dex::isIntegral< InputIt >::value >::type >
+			basicString< charT > &replace( constIterator first, constIterator last,
 					InputIt inputFirst, InputIt inputLast )
 				{
 				size_t insertionLength = 0;
@@ -902,7 +902,7 @@ namespace dex
 				return findLastNotOf( &c, position, 1 );
 				}
 
-			basicString < charT > substr( size_t position = 0, size_t length = npos ) const
+			basicString< charT > substr( size_t position = 0, size_t length = npos ) const
 				{
 				return basicString( *this, position, length );
 				}
@@ -949,10 +949,10 @@ namespace dex
 				return dex::lexicographicalCompare( cbegin( ) + position, cbegin( ) + position + length, other, other + n );
 				}
 
-			basicString < charT > stripWhitespace( ) const
+			basicString< charT > stripWhitespace( ) const
 				{
 				const charT * whitespace = " \v\f\t\r\n";
-				basicString < charT > stripped = basicString( *this );
+				basicString< charT > stripped = basicString( *this );
 				size_t frontStripped = stripped.findFirstNotOf( whitespace );
 				size_t backStripped = stripped.findLastNotOf( whitespace);
 				if ( frontStripped == npos || backStripped == npos )
@@ -960,10 +960,10 @@ namespace dex
 				return stripped.substr( frontStripped, backStripped - frontStripped + 1);
 				}
 
-			basicString < charT > replaceWhitespace( const basicString < charT > &replace = "" ) const
+			basicString< charT > replaceWhitespace( const basicString< charT > &replace = "" ) const
 				{
 				const charT * whitespace = " \v\f\t\r\n";
-				basicString < charT > stripped = basicString( *this );
+				basicString< charT > stripped = basicString( *this );
 
 				for ( size_t i = stripped.findFirstOf( whitespace );  i != npos;  i = stripped.findFirstOf( whitespace ) )
 					stripped.replace( i, 1, replace );
@@ -971,33 +971,33 @@ namespace dex
 				return stripped;
 				}
 
-			friend basicString < charT > operator+( const basicString < charT > &lhs, const charT *rhs )
+			friend basicString< charT > operator+( const basicString< charT > &lhs, const charT *rhs )
 				{
-				basicString < charT > ret;
-				ret.reserve( lhs.size( ) + basicString < charT >::cStringLength( rhs ) );
+				basicString< charT > ret;
+				ret.reserve( lhs.size( ) + basicString< charT >::cStringLength( rhs ) );
 				return ret.append( lhs ).append( rhs );
 				}
-			friend basicString < charT > operator+( const charT *lhs, const basicString < charT > &rhs )
+			friend basicString< charT > operator+( const charT *lhs, const basicString< charT > &rhs )
 				{
-				basicString < charT > ret;
-				ret.reserve( basicString < charT >::cStringLength( lhs ) + rhs.size( ) );
+				basicString< charT > ret;
+				ret.reserve( basicString< charT >::cStringLength( lhs ) + rhs.size( ) );
 				return ret.append( lhs ).append( rhs );
 				}
-			friend basicString < charT > operator+( const basicString < charT > &lhs, const basicString < charT > &rhs )
+			friend basicString< charT > operator+( const basicString< charT > &lhs, const basicString< charT > &rhs )
 				{
-				basicString < charT > ret;
+				basicString< charT > ret;
 				ret.reserve( lhs.size( ) + rhs.size( ) );
 				return ret.append( lhs ).append( rhs );
 				}
-			friend basicString < charT > operator+( const basicString < charT > &lhs, const charT &rhs )
+			friend basicString< charT > operator+( const basicString< charT > &lhs, const charT &rhs )
 				{
-				basicString < charT > ret;
+				basicString< charT > ret;
 				ret.reserve( lhs.size( ) + 1 );
 				return ret.append( lhs ).append( rhs );
 				}
-			friend basicString < charT > operator+( const charT &lhs, const basicString < charT > &rhs )
+			friend basicString< charT > operator+( const charT &lhs, const basicString< charT > &rhs )
 				{
-				basicString < charT > ret;
+				basicString< charT > ret;
 				ret.reserve( rhs.size( ) + 1 );
 				return ret.append( lhs ).append( rhs );
 				}
@@ -1005,111 +1005,111 @@ namespace dex
 
 	// CTRLF Non-member Functions
 	template < class charT >
-	void swap( basicString < charT > &a, basicString < charT > &b )
+	void swap( basicString< charT > &a, basicString< charT > &b )
 		{
 		a.swap( b );
 		}
 
 	template < class charT >
-	std::ostream &operator<<( std::ostream &os, const basicString < charT > &str )
+	std::ostream &operator<<( std::ostream &os, const basicString< charT > &str )
 		{
-		for ( typename basicString < charT >::constIterator it = str.cbegin( );  it != str.cend( );  ++it )
+		for ( typename basicString< charT >::constIterator it = str.cbegin( );  it != str.cend( );  ++it )
 			os << *it;
 		return os;
 		}
 
 	template < class charT >
-	bool operator==( const basicString < charT > &lhs, const basicString < charT > &rhs )
+	bool operator==( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return !lhs.compare( rhs );
 		}
 	template < class charT >
-	bool operator==( const charT *lhs, const basicString < charT > &rhs )
+	bool operator==( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return !rhs.compare( lhs );
 		}
 	template < class charT >
-	bool operator==( const basicString < charT > &lhs, const charT *rhs )
+	bool operator==( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return !lhs.compare( rhs );
 		}
 	template < class charT >
-	bool operator!=( const basicString < charT > &lhs, const basicString < charT > &rhs )
+	bool operator!=( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return lhs.compare( rhs );
 		}
 	template < class charT >
-	bool operator!=( const charT *lhs, const basicString < charT > &rhs )
+	bool operator!=( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return rhs.compare( lhs );
 		}
 	template < class charT >
-	bool operator!=( const basicString < charT > &lhs, const charT *rhs )
+	bool operator!=( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs );
 		}
 	template < class charT >
-	bool operator>( const basicString < charT > &lhs, const basicString < charT > &rhs )
+	bool operator>( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return lhs.compare( rhs ) > 0;
 		}
 	template < class charT >
-	bool operator>( const charT *lhs, const basicString < charT > &rhs )
+	bool operator>( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return rhs.compare( lhs ) < 0;
 		}
 	template < class charT >
-	bool operator>( const basicString < charT > &lhs, const charT *rhs )
+	bool operator>( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs ) > 0;
 		}
 	template < class charT >
-	bool operator<( const basicString < charT > &lhs, const basicString < charT > &rhs )
+	bool operator<( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return lhs.compare( rhs ) < 0;
 		}
 	template < class charT >
-	bool operator<( const charT *lhs, const basicString < charT > &rhs )
+	bool operator<( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return rhs.compare( lhs ) > 0;
 		}
 	template < class charT >
-	bool operator<( const basicString < charT > &lhs, const charT *rhs )
+	bool operator<( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs ) < 0;
 		}
 	template < class charT >
-	bool operator>=( const basicString < charT > &lhs, const basicString < charT > &rhs )
+	bool operator>=( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return lhs.compare( rhs ) >= 0;
 		}
 	template < class charT >
-	bool operator>=( const charT *lhs, const basicString < charT > &rhs )
+	bool operator>=( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return rhs.compare( lhs ) <= 0;
 		}
 	template < class charT >
-	bool operator>=( const basicString < charT > &lhs, const charT *rhs )
+	bool operator>=( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs ) >= 0;
 		}
 	template < class charT >
-	bool operator<=( const basicString < charT > &lhs, const basicString < charT > &rhs )
+	bool operator<=( const basicString< charT > &lhs, const basicString< charT > &rhs )
 		{
 		return lhs.compare( rhs ) <= 0;
 		}
 	template < class charT >
-	bool operator<=( const charT *lhs, const basicString < charT > &rhs )
+	bool operator<=( const charT *lhs, const basicString< charT > &rhs )
 		{
 		return rhs.compare( lhs ) >= 0;
 		}
 	template < class charT >
-	bool operator<=( const basicString < charT > &lhs, const charT *rhs )
+	bool operator<=( const basicString< charT > &lhs, const charT *rhs )
 		{
 		return lhs.compare( rhs ) <= 0;
 		}
 
-	typedef dex::basicString < char > string;
+	typedef dex::basicString< char > string;
 
 	inline string toString( long i )
 		{
@@ -1162,7 +1162,7 @@ namespace dex
 		return toReturn;
 		}
 
-	template < > struct hash < dex::string >
+	template < > struct hash< dex::string >
 		{
 		private:
 			static const unsigned long prime = 16777619;
@@ -1182,7 +1182,7 @@ namespace dex
 				}
 		};
 
-	template < > struct hash < const dex::string >
+	template < > struct hash< const dex::string >
 		{
 		private:
 			static const unsigned long prime = 16777619;

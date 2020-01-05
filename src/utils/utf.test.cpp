@@ -22,7 +22,7 @@ TEST_CASE( "decode", "[utf]" )
 
 	SECTION( "unsigned long" )
 		{
-		decoder < unsigned long > unsignedLongDecoder;
+		decoder< unsigned long > unsignedLongDecoder;
 		SECTION( "one byte" )
 			{
 			array[ 0 ] = 0b00000000;
@@ -207,8 +207,8 @@ TEST_CASE( "encode and decode", "[utf]" )
 		{
 		unsigned long number = 1;
 		unsigned char array[ 10 ];
-		decoder < unsigned long > unsignedLongDecoder;
-		encoder <unsigned long > unsignedLongEncoder;
+		decoder< unsigned long > unsignedLongDecoder;
+		encoder<unsigned long > unsignedLongEncoder;
 
 		for ( unsigned bits = 1;  number != 0x80000000;  number <<= 1, ++bits )
 			{
@@ -282,23 +282,23 @@ TEST_CASE( "encode and decode", "[utf]" )
 		{
 		SECTION( "vector of unsigneds" )
 			{
-			vector < unsigned > v;
+			vector< unsigned > v;
 			v.pushBack( 123 );
 			v.pushBack( 456 );
 			v.pushBack( 789 );
 			unsigned char array[ 100 ];
 
-			REQUIRE( v == decoder < vector < unsigned > >( )( encoder < vector < unsigned > >( )( v ).data( ) ) );
-			REQUIRE( v == decoder < vector < unsigned >, vector < unsigned char >::constIterator >( )(
-				encoder < vector < unsigned > >( )( v ).cbegin( ) ) );
+			REQUIRE( v == decoder< vector< unsigned > >( )( encoder< vector< unsigned > >( )( v ).data( ) ) );
+			REQUIRE( v == decoder< vector< unsigned >, vector< unsigned char >::constIterator >( )(
+				encoder< vector< unsigned > >( )( v ).cbegin( ) ) );
 
-			REQUIRE( encoder < vector < unsigned > >( )( v, array ) - array == 1 + 1 + 2 + 2 );
-			REQUIRE( v == decoder< vector < unsigned > >( )( array ) );
+			REQUIRE( encoder< vector< unsigned > >( )( v, array ) - array == 1 + 1 + 2 + 2 );
+			REQUIRE( v == decoder< vector< unsigned > >( )( array ) );
 			}
 
 		SECTION( "vector of vectors of unsigneds" )
 			{
-			vector < vector < unsigned > > v;
+			vector< vector< unsigned > > v;
 			v.resize( 3 );
 			v[ 0 ].resize( 1 );
 			v[ 1 ].resize( 3 );
@@ -314,12 +314,12 @@ TEST_CASE( "encode and decode", "[utf]" )
 			v[ 2 ][ 4 ] = 234;
 			unsigned char array[ 100 ];
 
-			vector < unsigned char > encodedV = encoder < vector < vector < unsigned > > >( )( v );
-			REQUIRE( v == decoder < vector < vector< unsigned > > >( )( encodedV.data( ) ) );
+			vector< unsigned char > encodedV = encoder< vector< vector< unsigned > > >( )( v );
+			REQUIRE( v == decoder< vector< vector< unsigned > > >( )( encodedV.data( ) ) );
 
-			REQUIRE( encoder < vector < vector < unsigned > > >( )( v, array ) - array ==
+			REQUIRE( encoder< vector< vector< unsigned > > >( )( v, array ) - array ==
 					1 + 1 + 1 + 1 + 2 + 4 + 2 + 1 + 2 + 1 + 3 + 5 + 2 );
-			REQUIRE( v == decoder < vector < vector< unsigned > > >( )( array ) );
+			REQUIRE( v == decoder< vector< vector< unsigned > > >( )( array ) );
 			}
 		}
 
@@ -329,26 +329,26 @@ TEST_CASE( "encode and decode", "[utf]" )
 		unsigned char array[ 1 << 19 ];
 
 		string s = "I am a string!";
-		REQUIRE( s == decoder < string >( )( ( encoder < string >( )( s ) ).data( ) ) );
-		REQUIRE( encoder < string >( )( s, array ) - array == s.size( ) + 1 );
-		REQUIRE( s == decoder < string >( )( array ) );
+		REQUIRE( s == decoder< string >( )( ( encoder< string >( )( s ) ).data( ) ) );
+		REQUIRE( encoder< string >( )( s, array ) - array == s.size( ) + 1 );
+		REQUIRE( s == decoder< string >( )( array ) );
 
 		s.clear( );
-		REQUIRE( s == decoder < string >( )( ( encoder < string >( )( s ) ).data( ) ) );
-		REQUIRE( encoder < string >( )( s, array ) - array == s.size( ) + 1 );
-		REQUIRE( s == decoder < string >( )( array ) );
+		REQUIRE( s == decoder< string >( )( ( encoder< string >( )( s ) ).data( ) ) );
+		REQUIRE( encoder< string >( )( s, array ) - array == s.size( ) + 1 );
+		REQUIRE( s == decoder< string >( )( array ) );
 
-		vector < string > words = {
+		vector< string > words = {
 			string( 1 << 17, '1' ),
-			string( 1 << 4, static_cast < char >( 203 ) ),
+			string( 1 << 4, static_cast< char >( 203 ) ),
 			string( 1 << 13, 'a' ),
 			string( 1 << 12, 1 ),
 			string( 1 << 3, 'r' ),
 			string( 1 << 14, 'u' )
 		};
 
-		encoder < string > stringEncoder;
-		decoder < string > stringDecoder;
+		encoder< string > stringEncoder;
+		decoder< string > stringDecoder;
 
 		unsigned char *readerHead = array;
 
@@ -362,7 +362,7 @@ TEST_CASE( "encode and decode", "[utf]" )
 
 	SECTION( "unordered map" )
 		{
-		unorderedMap < string, unsigned > mappy;
+		unorderedMap< string, unsigned > mappy;
 		mappy[ "alpha" ] = 100;
 		mappy[ "beta" ] = 200;
 		mappy[ "gamma" ] = 300;
@@ -370,8 +370,8 @@ TEST_CASE( "encode and decode", "[utf]" )
 		unsigned char array[ 100 ];
 		unsigned char *next;
 
-		unorderedMap < string, unsigned > mappyCopy = decoder < unorderedMap < string, unsigned > >( )(
-				encoder < unorderedMap < string, unsigned > >( )( mappy ).data( ) );
+		unorderedMap< string, unsigned > mappyCopy = decoder< unorderedMap< string, unsigned > >( )(
+				encoder< unorderedMap< string, unsigned > >( )( mappy ).data( ) );
 
 		REQUIRE( mappyCopy.size( ) == 4 );
 		REQUIRE( mappyCopy[ "alpha" ] == 100 );
@@ -379,9 +379,9 @@ TEST_CASE( "encode and decode", "[utf]" )
 		REQUIRE( mappyCopy[ "gamma" ] == 300 );
 		REQUIRE( mappyCopy[ "delta" ] == 400 );
 
-		REQUIRE( encoder < unorderedMap < string, unsigned > >( )( mappy, array ) - array ==
+		REQUIRE( encoder< unorderedMap< string, unsigned > >( )( mappy, array ) - array ==
 				1 + 1 + 5 + 1 + 1 + 4 + 2 + 1 + 5 + 2 + 1 + 5 + 2 );
-		mappyCopy = decoder < unorderedMap < string, unsigned > >( )( array, &next );
+		mappyCopy = decoder< unorderedMap< string, unsigned > >( )( array, &next );
 		REQUIRE( next - array == 1 + 1 + 5 + 1 + 1 + 4 + 2 + 1 + 5 + 2 + 1 + 5 + 2 );
 
 		REQUIRE( mappyCopy.size( ) == 4 );
@@ -393,7 +393,7 @@ TEST_CASE( "encode and decode", "[utf]" )
 
 	SECTION( "unordered set" )
 		{
-		unorderedSet < string > set;
+		unorderedSet< string > set;
 		set.insert( "alpha" );
 		set.insert( "beta" );
 		set.insert( "gamma" );
@@ -401,8 +401,8 @@ TEST_CASE( "encode and decode", "[utf]" )
 		unsigned char array[ 100 ];
 		unsigned char *next;
 
-		unorderedSet < string > setCopy = decoder < unorderedSet < string > >( )(
-				encoder < unorderedSet < string > >( )( set ).data( ) );
+		unorderedSet< string > setCopy = decoder< unorderedSet< string > >( )(
+				encoder< unorderedSet< string > >( )( set ).data( ) );
 
 		REQUIRE( set.size( ) == 4 );
 		REQUIRE( set.count( "alpha" ) );
@@ -410,8 +410,8 @@ TEST_CASE( "encode and decode", "[utf]" )
 		REQUIRE( set.count( "gamma" ) );
 		REQUIRE( set.count( "delta" ) );
 
-		REQUIRE( encoder < unorderedSet < string > >( )( set, array ) - array == 1 + 1 + 5 + 1 + 4 + 1 + 5 + 1 + 5 );
-		setCopy = decoder < unorderedSet < string > >( )( array, &next );
+		REQUIRE( encoder< unorderedSet< string > >( )( set, array ) - array == 1 + 1 + 5 + 1 + 4 + 1 + 5 + 1 + 5 );
+		setCopy = decoder< unorderedSet< string > >( )( array, &next );
 		REQUIRE( next - array == 1 + 1 + 5 + 1 + 4 + 1 + 5 + 1 + 5 );
 
 		REQUIRE( set.size( ) == 4 );

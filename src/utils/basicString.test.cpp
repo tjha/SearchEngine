@@ -598,7 +598,7 @@ TEST_CASE( "hashing works", "[string]" )
 	// These are known to be collisions with the algorithm that we're using.
 	string a = "costarring";
 	string b = "liquid";
-	dex::hash < string > hasher;
+	dex::hash< string > hasher;
 	REQUIRE( hasher( a ) == hasher( b ) );
 
 	a = "declinate";

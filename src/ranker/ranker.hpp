@@ -11,10 +11,11 @@
 #include <pthread.h>
 #include "constraintSolver/constraintSolver.hpp"
 #include "queryCompiler/parser.hpp"
-#include "indexer/index.hpp"
+#include "indexer/indexer.hpp"
 #include "utils/url.hpp"
 #include "utils/utility.hpp"
 #include "utils/vector.hpp"
+#include <iostream>
 
 namespace dex
 	{
@@ -25,12 +26,41 @@ namespace dex
 		class dynamicRanker;
 		class ranker;
 
+		class score
+			{
+			private:
+				double totalScore;
+			public:
+				score( );
+				double staticUrlScore;
+				double staticTitleScore;
+				double dynamicBodySpanScore;
+				double dynamicTitleSpanScore;
+				double dynamicBagOfWordsScore;
+				double getTotalScore( ) const;
+				void setStaticUrlScore( double score );
+				void setStaticTitleScore( double score );
+				void setDynamicBodySpanScore( double score );
+				void setDynamicTitleSpanScore( double score );
+				void setDynamicBagOfWordsScore( double score );
+				friend std::ostream &operator<<( std::ostream &os, const dex::ranker::score &score)
+					{
+					os << "Static URL Score: " << score.staticUrlScore << "\n"
+							<< "Static Title Score: " << score.staticTitleScore << "\n"
+							<< "Dynamic Body Span Score: " << score.dynamicBodySpanScore << "\n"
+							<< "Dynamic Title Span Score: " << score.dynamicTitleSpanScore << "\n"
+							<< "Dynamic Bag of Words Score: " << score.dynamicBagOfWordsScore << "\n"
+							<< "Total Score: " << score.getTotalScore( );
+					return os;
+					}
+			};
+
 		// What is returned after scoring documents
 		struct searchResult
 			{
 			dex::Url url;
 			dex::string title;
-			double score;
+			dex::ranker::score score;
 			};
 
 		// All the information necessary for scoring documents in a chunk
@@ -50,16 +80,16 @@ namespace dex
 				// for example: { { 10, 50 }, { 25, 15 } }
 				// means that any title with length 10 or fewer gets a score of 50
 				// any title between 11 and 25 gets a score of 15
-				dex::vector < dex::pair < size_t, double > > titleWeights;
+				dex::vector< dex::pair< size_t, double > > titleWeights;
 				// increase to make the staticUrl scoring higher
 				double urlWeight;
 
 			public:
-				staticRanker( dex::vector < dex::pair < size_t, double > > titleWeights, double urlWeight );
+				staticRanker( dex::vector< dex::pair< size_t, double > > titleWeights, double urlWeight );
 
 				double staticScoreUrl( const dex::Url &url ) const;
 				double staticScoreTitle( const dex::string &title ) const;
-				double getStaticScore( const dex::string &title, const dex::Url &url, bool printInfo = false ) const;
+				dex::ranker::score getStaticScore( const dex::string &title, const dex::Url &url, bool printInfo = false ) const;
 			};
 
 		class dynamicRanker
@@ -81,30 +111,31 @@ namespace dex
 
 				// Returns the word count of all the documents in the index chunk for the ISRs passed.
 				// also returns the titles and urls corresponding to each document in documentTitles and documentUrls
-				dex::vector < dex::vector < size_t > > getDocumentInfo( 
-						dex::vector < constraintSolver::ISR * > &isrs,
+				dex::vector< dex::vector< size_t > > getDocumentInfo( 
+						dex::vector< constraintSolver::ISR * > &isrs,
 						constraintSolver::ISR *matching,
 						constraintSolver::endOfDocumentISR *ends,
 						dex::index::indexChunk *chunk,
-						dex::vector < dex::string > &documentTitles,
-						dex::vector < dex::Url > &documentUrls ) const;
+						dex::vector< dex::string > &documentTitles,
+						dex::vector< dex::Url > &documentUrls,
+						bool printInfo = false ) const;
 
 				// For a given ordering returns the kendallTau coefficient
 				// a correct ordering would look like this:
 				// { 0, 1, 2, 3 }
 				// the worst ording would look like this:
 				// { 3, 2, 1, 0 }
-				double kendallsTau( const dex::vector < size_t > &ordering ) const;
+				double kendallsTau( const dex::vector< size_t > &ordering ) const;
 
 				// Get the spans that occur in each document for the ISRs passed in
 				// pair corresponds to span size found along with the kendall tau coefficient associated
 				// with the ordering of the span.
-				dex::vector < dex::vector < dex::pair < size_t, double > > > getDesiredSpans(
+				dex::vector< dex::vector< dex::pair< size_t, double > > > getDesiredSpans(
 						// Vector of ISRs should be arranged such that the words of the ISRs line up with the order of the query
-						vector < constraintSolver::ISR * > &isrs,
+						vector< constraintSolver::ISR * > &isrs,
 						constraintSolver::ISR *matching,
 						constraintSolver::endOfDocumentISR *ends,
-						const vector < vector < size_t > > &wordCount ) const;
+						const vector< vector< size_t > > &wordCount ) const;
 
 				double scoreBodySpan( size_t queryLength, size_t spanLength, double tau ) const;
 				double scoreTitleSpan( size_t queryLength, size_t spanLength, double tau ) const;
@@ -112,17 +143,17 @@ namespace dex
 				// Returns bag of words scoring of the number of words in the given document
 				double scoreBagOfWords(
 						// Number of each query word for a given document
-						const vector < size_t > &wordCount,
+						const vector< size_t > &wordCount,
 						const size_t documentLength,
 						// Emphasized is a vector containing whether or not the word at that index was emphasized
-						const vector < bool > &emphasized ) const;
+						const vector< bool > &emphasized ) const;
 
 				// getDynamicScores returns a vector of dynamic scores for the matching documents passed in.
 				// titles and urls are more return variables that correspond to the matching documents passed in.
-				vector < double > getDynamicScores( vector < constraintSolver::ISR * > &bodyISRs,
-					vector < constraintSolver::ISR * > &titleISRs, constraintSolver::ISR *matching,
-					constraintSolver::endOfDocumentISR *ends, index::indexChunk *chunk, const vector < bool > &emphasized,
-					vector < dex::string > &titles, vector < dex::Url > &urls, bool printInfo = false ) const;
+				vector< dex::ranker::score > getDynamicScores( vector< constraintSolver::ISR * > &bodyISRs,
+					vector< constraintSolver::ISR * > &titleISRs, constraintSolver::ISR *matching,
+					constraintSolver::endOfDocumentISR *ends, index::indexChunk *chunk, const vector< bool > &emphasized,
+					vector< dex::string > &titles, vector< dex::Url > &urls, bool printInfo = false ) const;
 			};
 
 		class ranker
@@ -132,8 +163,8 @@ namespace dex
 				dynamicRanker rankerDynamic;
 				ranker(
 					// pair of < maximum length of title, score awarded to title >
-					const dex::vector < dex::pair < size_t, double > > &staticTitleWeights
-							= dex::vector < dex::pair < size_t, double > >( { { 15, 50 }, { 25, 40 }, { 50, 20 } } ),
+					const dex::vector< dex::pair< size_t, double > > &staticTitleWeights
+							= dex::vector< dex::pair< size_t, double > >( { { 15, 50 }, { 25, 40 }, { 50, 20 } } ),
 
 					// score weighting for URL
 					const double staticUrlWeight = 1,
@@ -154,20 +185,20 @@ namespace dex
 				);
 
 				// titles and urls act as extra return values
-				pair < vector < double >, int > scoreDocuments(
+				pair< vector< dex::ranker::score >, int > scoreDocuments(
 					dex::queryCompiler::matchedDocuments *documents,
 					constraintSolver::endOfDocumentISR *ends,
-					vector < dex::string > &titles,
-					vector < dex::Url > &urls,
+					vector< dex::string > &titles,
+					vector< dex::Url > &urls,
 					bool printInfo = true ) const;
 			};
 
 		// When given a scoreRequest, search a chunk for all matching documents and return their searchResult objects
 		void *findAndScoreDocuments( void *args );
 		// Returns the N highest scoring documents in our index for a given query
-		dex::pair < dex::vector < dex::ranker::searchResult >, int > getTopN(
+		dex::pair< dex::vector< dex::ranker::searchResult >, int > getTopN(
 				size_t n, dex::string query, dex::ranker::ranker *rankerPointer,
-				dex::vector < dex::index::indexChunk * > chunkPointers, bool printInfo = false );
+				dex::vector< dex::index::indexChunk * > chunkPointers, bool printInfo = false );
 		}
 	}
 

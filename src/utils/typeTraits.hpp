@@ -19,7 +19,7 @@ namespace dex
 		};
 
 	template < class classIfTrue, class classIfFalse >
-	struct conditional < false, classIfTrue, classIfFalse >
+	struct conditional< false, classIfTrue, classIfFalse >
 		{
 		typedef classIfFalse type;
 		};
@@ -29,7 +29,7 @@ namespace dex
 	struct enableIf { };
 
 	template < class classIfTrue >
-	struct enableIf < true, classIfTrue >
+	struct enableIf< true, classIfTrue >
 		{
 		typedef classIfTrue type;
 		};
@@ -43,142 +43,142 @@ namespace dex
 		};
 
 	template < >
-	struct isIntegral < bool >
+	struct isIntegral< bool >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const bool >
+	struct isIntegral< const bool >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < char >
+	struct isIntegral< char >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < unsigned char >
+	struct isIntegral< unsigned char >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const char >
+	struct isIntegral< const char >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const unsigned char >
+	struct isIntegral< const unsigned char >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < char16_t >
+	struct isIntegral< char16_t >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const char16_t >
+	struct isIntegral< const char16_t >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < char32_t >
+	struct isIntegral< char32_t >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const char32_t >
+	struct isIntegral< const char32_t >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < wchar_t >
+	struct isIntegral< wchar_t >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const wchar_t >
+	struct isIntegral< const wchar_t >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < short >
+	struct isIntegral< short >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < unsigned short >
+	struct isIntegral< unsigned short >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const short >
+	struct isIntegral< const short >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const unsigned short >
+	struct isIntegral< const unsigned short >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < int >
+	struct isIntegral< int >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < unsigned >
+	struct isIntegral< unsigned >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const int >
+	struct isIntegral< const int >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const unsigned >
+	struct isIntegral< const unsigned >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < long >
+	struct isIntegral< long >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < unsigned long >
+	struct isIntegral< unsigned long >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const long >
+	struct isIntegral< const long >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const unsigned long >
+	struct isIntegral< const unsigned long >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < long long >
+	struct isIntegral< long long >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < unsigned long long >
+	struct isIntegral< unsigned long long >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const long long >
+	struct isIntegral< const long long >
 		{
 		static const bool value = true;
 		};
 	template < >
-	struct isIntegral < const unsigned long long >
+	struct isIntegral< const unsigned long long >
 		{
 		static const bool value = true;
 		};

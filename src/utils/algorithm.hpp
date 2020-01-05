@@ -14,7 +14,7 @@
 
 namespace dex
 	{
-	template< class InputIt, class T >
+	template < class InputIt, class T >
 	InputIt find( InputIt first, InputIt last, const T& value )
 		{
 		for ( ;  first != last;  ++first )
@@ -41,7 +41,7 @@ namespace dex
 			}
 		}
 
-	template< class ForwardIt1, class ForwardIt2 >
+	template < class ForwardIt1, class ForwardIt2 >
 	ForwardIt1 findEnd( ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first, ForwardIt2 s_last )
 		{
 		if ( s_first == s_last )

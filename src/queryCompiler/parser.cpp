@@ -6,6 +6,13 @@
 #include "queryCompiler/expression.hpp"
 #include "queryCompiler/parser.hpp"
 
+
+dex::queryCompiler::matchedDocuments::~matchedDocuments( )
+	{
+	if ( matchingDocumentISR )
+		delete matchingDocumentISR;
+	}
+
 dex::queryCompiler::matchedDocumentsGenerator::matchedDocumentsGenerator(
 		dex::queryCompiler::expression *root, dex::queryCompiler::tokenStream *stream ) : root( root ), stream( stream )
 	{
@@ -49,9 +56,9 @@ dex::queryCompiler::matchedDocuments *dex::queryCompiler::matchedDocumentsGenera
 	return new dex::queryCompiler::matchedDocuments
 		{
 		flattenedQuery.first,  // flattened query vector of strings
-		isr,            // matching document ISR
-		chunk,                          // index chunk
-		emphasizedWords                 // emphasized words in order of flattenedQuery.
+		isr,                   // matching document ISR
+		chunk,                 // index chunk
+		emphasizedWords        // emphasized words in order of flattenedQuery.
 		};
 	}
 
@@ -253,7 +260,7 @@ dex::queryCompiler::expression *dex::queryCompiler::parser::parsePrefix( )
 	return findPhrase( );
 	}
 
-dex::queryCompiler::matchedDocumentsGenerator dex::queryCompiler::parser::parse( dex::string &in, bool infix )
+dex::queryCompiler::matchedDocumentsGenerator dex::queryCompiler::parser::parse( const dex::string &in, bool infix )
 	{
 	stream = new tokenStream( in, infix );
 	dex::queryCompiler::expression *root;

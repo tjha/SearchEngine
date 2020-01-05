@@ -16,12 +16,14 @@ namespace dex
 	namespace queryCompiler
 		{
 		// Information to pass to the ranker
-		struct matchedDocuments
+		class matchedDocuments
 			{
-			dex::vector < dex::string > flattenedQuery;
-			dex::constraintSolver::ISR *matchingDocumentISR;
-			dex::index::indexChunk *chunk;
-			dex::vector < bool > emphasizedWords;
+			public:
+				~matchedDocuments( );
+				dex::vector< dex::string > flattenedQuery;
+				dex::constraintSolver::ISR *matchingDocumentISR;
+				dex::index::indexChunk *chunk;
+				dex::vector< bool > emphasizedWords;
 			};
 
 		class matchedDocumentsGenerator
@@ -30,8 +32,8 @@ namespace dex
 				bool invalid;
 				dex::queryCompiler::expression *root;
 				tokenStream *stream;
-				dex::pair < dex::vector < dex::string >, dex::vector < dex::string > > flattenedQuery;
-				dex::vector < bool > emphasizedWords;
+				dex::pair< dex::vector< dex::string >, dex::vector< dex::string > > flattenedQuery;
+				dex::vector< bool > emphasizedWords;
 				dex::string query;
 
 			public:
@@ -65,7 +67,7 @@ namespace dex
 				 * The public interface of the parser. Call this function,
 				 * rather than the private internal functions.
 				 */
-				matchedDocumentsGenerator parse( dex::string &in, bool infix = true );
+				matchedDocumentsGenerator parse( const dex::string &in, bool infix = true );
 			};
 		}
 	}

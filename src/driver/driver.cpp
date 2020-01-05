@@ -60,7 +60,7 @@ int ids[ numWorkers ];
 dex::robotsMap robotsCache( robotsMapSize );
 pthread_mutex_t robotsLock = PTHREAD_MUTEX_INITIALIZER;
 
-dex::unorderedSet < dex::string > * crawledLinks;
+dex::unorderedSet< dex::string > * crawledLinks;
 dex::sharedReaderLock crawledLock;
 
 // This is used to hash URLs
@@ -152,7 +152,7 @@ int writePerformance( dex::string &toWrite )
 // workers.
 size_t getUrlInstance( const dex::Url &url )
 	{
-	dex::hash < dex::string > hasher;
+	dex::hash< dex::string > hasher;
 	unsigned long h = hasher( url.completeUrl( ) );
 	return h % numInstances;
 	}
@@ -320,8 +320,7 @@ void *worker( void *args )
 
 				addToCrawled( toCrawl );
 
-
-				dex::vector < dex::Url > links;
+				dex::vector< dex::Url > links;
 				try
 					{
 					dex::HTMLparser parser( toCrawl, result, false );
@@ -334,7 +333,7 @@ void *worker( void *args )
 
 				pthread_mutex_lock( &frontierLock );
 
-				dex::vector < dex::Url > inboundLinks;
+				dex::vector< dex::Url > inboundLinks;
 				inboundLinks.reserve( links.size( ) );
 				for ( auto it = links.begin( );  it != links.end( );  ++it )
 					{
@@ -419,7 +418,7 @@ int main( )
 			{
 			// setup logging file for this run
 			// goodbye error code 13
-			dex::pair < size_t, size_t > instanceInfo = dex::getInstanceInfo( "data/instanceInfo.txt" );
+			dex::pair< size_t, size_t > instanceInfo = dex::getInstanceInfo( "data/instanceInfo.txt" );
 			numInstances = instanceInfo.first;
 			instanceId = instanceInfo.second;
 			if ( numInstances == 0 && instanceId == 0 )
