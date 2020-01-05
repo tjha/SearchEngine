@@ -79,9 +79,9 @@ The `driver.cpp` spins up 100 threads that are all crawler workers. We use the p
 Saving the HTML for the index, and saving the work done by the crawler is handled in `checkpointing.hpp` so the crawler doesn't have to restart every time it crashes.
 
 ### Parser
-The parser code is contained in src/parser/. The HTMLParser class contains the methods used in text-based HTML parsing to extract links, anchor text, and document text. It follows a simple approach where tags are itertively identified by their positions in the document to determine the type of content contained within. Steps were also taken to avoid parsing of content within script and comment tags.
+The parser code is contained in `src/parser/`. The `HTMLParser` class contains the methods used in text-based HTML parsing to extract links, anchor text, and document text. It follows a simple approach where tags are itertively identified by their positions in the document to determine the type of content contained within. Steps are taken to avoid parsing of content within script and comment tags.
 
-An HTML document is parsed when the HTMLParser object is initialized through its constructor. This constructor requires the document url, its text in string format, and a boolean to indicate whether the crawler or indexer is creating this object. The boolean provides allows to avoid parsing of unnecessary content for the crawler and indexer respectively.
+An HTML document is parsed when the HTMLParser object is initialized through its constructor. This constructor requires the document's URL, its text in string format, and a boolean to indicate whether the crawler or indexer is creating this object. The boolean helps to avoid parsing of unnecessary content for the crawler and indexer, respectively.
 
 ### Indexer
 The indexer code is all in `src/indexer/`. We build our index into chunks, which contain an inverse word index for a set of URLs. We also define index stream readers (ISRs) for reading through the chunks. These ISRs have functions `next`, `nextDocument`, `seek`, and `get`, which allow for quick navigation.
@@ -98,9 +98,9 @@ The source for the query compiler can be found in `src/queryCompiler/`. The code
 In terms of the actual language, we support NOT (~), AND (&), OR (|), and PHRASE (""). There is also an option to choose between infix and prefix notations.
 
 ### Ranker
-The source for the ranker can be found in `src/ranker`. This ranks any documents for the frontend that are returned by the constraint solver. Static ranking involves simple heuristics for the title and url of the document. Dynamic ranking involves finding spans for the query in the document title and body and using a bag of words scoring strategy for the document body. Scoring a span takes into account the length and the ordering of the span. Spans currently must have all words in the query, partial spanning has not been implemented.
+The source for the ranker can be found in `src/ranker`. This ranks any documents for the frontend that are returned by the constraint solver. Static ranking involves simple heuristics for the title and URL of the document. Dynamic ranking involves finding spans for the query in the document title and body and using a bag of words scoring strategy for the document body. Scoring a span takes into account the length and the ordering of the span. Spans currently must have all words in the query; partial spanning has not been implemented.
 ### Frontend
 
-The frontend provides an entry-point for search queries. The server runs on `src/frontend/httpServer.cpp` and listens on port 8000. It is an extension of the server lab assignment and is modified to serve the HTML and CSS files for rendering the content of the search engine.
+The frontend provides an entry-point for search queries. The server runs on `src/frontend/httpServer.cpp` and listens on port `8000`. It serves the HTML and CSS files for rendering the content of the search engine.
 
 We provide an easter egg for a search query "Team Socket".
