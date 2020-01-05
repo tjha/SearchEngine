@@ -29,6 +29,7 @@ int main( int argc, char **argv )
 		return 1;
 		}
 	std::cout << "Found " << indexChunkFilenames.size( ) << " index chunks" << std::endl;
+	std::cout << "Please enter ':wq' to stop searching" << std::endl;
 
 	for ( size_t index = 0;  index < indexChunkFilenames.size( );  ++index )
 		{
@@ -48,6 +49,11 @@ int main( int argc, char **argv )
 			break;
 
 		query = dex::string( input.data( ) );
+		if ( query == ":wq" || query == ":q!" || query == "Michigan Alabama Halftime Score" )
+			{
+			std::cout << "Exiting Search Engine" << std::endl;
+			return 0;
+			}
 		dex::pair< dex::vector< dex::ranker::searchResult >, int > searchResultsPair
 				= dex::ranker::getTopN( 10, query, &rankerObject, indexChunkObjects );
 
