@@ -38,7 +38,7 @@ TEST_CASE( "static ranking", "[ranker]" )
 	double maxBagOfWordsScore = 0;
 	double wordsWeight = 1000;
 
-	dex::ranker::ranker judge( titleWeights, urlWeight,
+	dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 
 	SECTION( "static title scoring" )
@@ -176,7 +176,7 @@ TEST_CASE( "kendall's tau", "[ranker]" )
 	double maxBodySpanScore = 0;
 	double maxTitleSpanScore = 0;
 	double wordsWeight = 1000;
-	dex::ranker::ranker judge( titleWeights, urlWeight,
+	dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 				maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 	dex::vector< size_t > ordering0 = { 0, 1, 2, 3 };
 	REQUIRE( judge.rankerDynamic.kendallsTau( ordering0 ) == 1 );
@@ -216,7 +216,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		dex::vector< dex::constraintSolver::ISR * > isrs;
 		isrs.pushBack( &duoISR );
 		isrs.pushBack( &mushuISR );
-		dex::ranker::ranker judge( titleWeights, urlWeight,
+		dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 				maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 		dex::vector< dex::vector< size_t > > wordCount;
 		dex::vector< dex::string > titles;
@@ -249,7 +249,7 @@ TEST_CASE( "basic spanning", "[ranker]" )
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
 
-		dex::ranker::ranker judge( titleWeights, urlWeight,
+		dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 		dex::vector< dex::vector< size_t > > wordCount;
 		dex::vector< dex::string > titles;
@@ -304,7 +304,7 @@ TEST_CASE( "edge cases", "[ranker]" )
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
 		dex::vector< size_t > heuristics = { 1, 3, 4, 5 };
-		dex::ranker::ranker judge( titleWeights, urlWeight,
+		dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 		dex::vector< dex::vector< size_t > > wordCount;
 		dex::vector< dex::string > titles;
@@ -335,7 +335,7 @@ TEST_CASE( "edge cases", "[ranker]" )
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
 		dex::vector< size_t > heuristics = { 1, 3, 4, 5 };
-		dex::ranker::ranker judge( titleWeights, urlWeight,
+		dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 		dex::vector< dex::vector< size_t > > wordCount;
 		dex::vector< dex::string > titles;
@@ -387,7 +387,7 @@ TEST_CASE( "spanning multiple documents" )
 		isrs.pushBack( &foxISR );
 
 		dex::vector< size_t > heuristics = { 1, 3, 4, 5 };
-		dex::ranker::ranker judge( titleWeights, urlWeight,
+		dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 		dex::vector< dex::vector< size_t > > wordCount;
 		dex::vector< dex::string > titles;
@@ -436,7 +436,7 @@ TEST_CASE( "spanning multiple documents" )
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
 
-		dex::ranker::ranker judge( titleWeights, urlWeight,
+		dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 		dex::vector< dex::vector< size_t > > wordCount;
 		dex::vector< dex::string > titles;
@@ -486,7 +486,7 @@ TEST_CASE( "spanning multiple documents" )
 		isrs.pushBack( &brownISR );
 		isrs.pushBack( &foxISR );
 
-		dex::ranker::ranker judge( titleWeights, urlWeight,
+		dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 		dex::vector< dex::vector< size_t > > wordCount;
 		dex::vector< dex::string > titles;
@@ -547,7 +547,7 @@ TEST_CASE( "spanning multiple documents" )
 		isrs.pushBack( &foxISR );
 
 		dex::vector< size_t > heuristics = { 1, 3, 4, 5 };
-		dex::ranker::ranker judge( titleWeights, urlWeight,
+		dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 		dex::vector< dex::vector< size_t > > wordCount;
 		dex::vector< dex::string > titles;
@@ -594,10 +594,7 @@ TEST_CASE( "scoring" )
 	size_t maxTitleSpanScore = 100;
 	double wordsWeight = 1000;
 
-
-	SECTION( "simple dynamic scoring" )
-		{
-		dex::vector< size_t > ends = { 1000, 6000, 7000 };
+	dex::vector< size_t > ends = { 1000, 6000, 7000 };
 		dex::rankerTesting::endOfDocumentISR endisr( ends );
 		dex::rankerTesting::ISR matchingISR( "", ends, endisr );
 		dex::vector< size_t > quick = {
@@ -639,17 +636,20 @@ TEST_CASE( "scoring" )
 		titleisrs.pushBack( &titlequickISR );
 		titleisrs.pushBack( &titlebrownISR );
 		titleisrs.pushBack( &titlefoxISR );
-		dex::ranker::ranker judge( titleWeights, urlWeight,
+
+	SECTION( "simple dynamic scoring" )
+		{
+		
+		dex::ranker::ranker judge( 3, titleWeights, urlWeight,
 			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight );
 		dex::vector< bool > emphasized = { false, false, false };
 		dex::vector< dex::string > titles;
 		dex::vector< dex::Url > urls;
 		dex::vector< dex::ranker::score > dynamicScores = judge.rankerDynamic.getDynamicScores( isrs, titleisrs, &matchingISR, &endisr, nullptr,
-				emphasized, titles, urls );
+				emphasized, titles, urls, { "quick", "brown", "fox" } );
 		REQUIRE( dynamicScores[ 0 ].getTotalScore( ) > dynamicScores[ 1 ].getTotalScore( ) );
 		REQUIRE( dynamicScores[ 1 ].getTotalScore( ) > dynamicScores[ 2 ].getTotalScore( ) );
 		}
-
 	}
 
 TEST_CASE( "Real Chunks" )
@@ -678,6 +678,31 @@ TEST_CASE( "Real Chunks" )
 	dex::index::indexChunk *chunkPointer = new dex::index::indexChunk( fd, false );
 	dex::vector < dex::index::indexChunk * > pointers;
 	pointers.pushBack( chunkPointer );
+
+	SECTION( "dynamic scoring, no doc info" )
+		{
+		dex::ranker::ranker rankerObject( 0x11110 );
+		dex::string query = "short the";
+		dex::queryCompiler::parser parser;
+		dex::queryCompiler::matchedDocumentsGenerator generator = parser.parse( query );
+		pthread_mutex_t generatorLock = PTHREAD_MUTEX_INITIALIZER;
+		dex::pair< dex::vector< dex::ranker::searchResult >, int > *result;
+		dex::ranker::scoreRequest request;
+		request.generatorPointer = &generator;
+		request.generatorLockPointer = &generatorLock;
+		request.chunkPointer = pointers[ 0 ];
+		request.rankerPointer = &rankerObject;
+		request.printInfo = false;
+		result = dex::ranker::findAndScoreDocuments( &request );
+
+		REQUIRE( result->second == 0 );
+		REQUIRE( result->first.size( ) == 2 );
+		REQUIRE( result->first[ 0 ].title == "Learn to short the housing market" );
+		REQUIRE( result->first[ 1 ].title == "buy bonds in the housing market" );
+		REQUIRE( result->first[ 0 ].url == "http://www.robinhood.com/shortthehousingmarket" );
+		REQUIRE( result->first[ 1 ].url == "http://goldmansachs.com/unrelated/garbo/garbo/stuff" );
+		delete result;
+		}
 
 	SECTION( "getTopN basic functionality" )
 		{
