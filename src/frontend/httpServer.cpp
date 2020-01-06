@@ -76,7 +76,7 @@ off_t FileSize( int f )
 
 bool pathIsLegal( dex::string path )
 	{
-	return path.find( "/../" ) == dex::string::npos && ( path.size( ) < 3 || path.substr( path.size( ) - 3, 3) != "/.." ); // TODO ask stephen about path
+	return path.find( "/../" ) == dex::string::npos && ( path.size( ) < 3 || path.substr( path.size( ) - 3, 3) != "/.." );
 	}
 
 dex::string outputResult( dex::ranker::searchResult &result )
@@ -272,7 +272,6 @@ int main( int argc, char **argv )
 		}
 
 	// Create indexChunkObjects
-	// TODO: have Stephen take a look at this :)
 	dex::string indexChunkDirector( argv[ 2 ] ); // Top directory of search
 	dex::string pattern = "_in.dex";
 	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirector, pattern );
