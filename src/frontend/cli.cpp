@@ -85,6 +85,7 @@ int main( int argc, char **argv )
 					std::cout << '\t' << searchResults[ result ].url.completeUrl( ) << std::endl;
 					std::cout << '\t' << searchResults[ result ].score << std::endl;
 					}
+				}
 			}
 		}
 
