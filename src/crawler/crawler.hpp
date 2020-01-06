@@ -72,11 +72,8 @@ namespace dex
 		HTTPS = 1
 		};
 
-	class crawler // TODO make namespace because no private members
+	class crawler
 		{
-		// This is a class that is stateless, so every function within is static.
-		// We're keeping it a class so that we can make the interface clear when
-		// you're using it.
 		private:
 			const static size_t maxPageSize = 5000000;
 			static dex::string makeGetMessage( const dex::string &path, const dex::string &host )
@@ -298,7 +295,6 @@ namespace dex
 				size_t totalBytes = 0;
 				dex::vector< char > response;
 				response.reserve( maxPageSize );
-				// TODO receive all of the data, then POST PROCESS it
 				if ( protocol == HTTP )
 					{
 					while ( ( bytes = recv( socketFD, buffer, sizeof( buffer ), 0 ) ) > 0 )
