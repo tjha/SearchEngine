@@ -18,6 +18,8 @@
 #include "utils/basicString.hpp"
 #include "utils/file.hpp"
 
+dex::string pathToHtml( "src/frontend/" );
+
 // Temporary searchResults
 
 dex::vector< dex::ranker::searchResult > tmpSearchResults =
@@ -147,6 +149,9 @@ void *Talk( void *p )
 	if ( path.empty( ) )
 		path = "index.html";
 
+	// adjust path so it can be found in repo
+	path.insert( 0, pathToHtml );
+
 	int file;
 	if ( !pathIsLegal( path ) || ( file = open( path.cStr( ), O_RDONLY ) ) == -1 )
 		{
@@ -157,31 +162,32 @@ void *Talk( void *p )
 
 	// ranker stuff
 	dex::ranker::ranker rankerObject;
-	dex::pair< dex::vector< dex::ranker::searchResult >, int > searchResultsPair = dex::ranker::getTopN( 10, query, &rankerObject, indexChunkObjects );
-	if ( searchResultsPair.second == -1 )
+	dex::pair< dex::vector< dex::ranker::searchResult >, int > searchResultsPair = dex::ranker::getTopN
+			( 10, query, &rankerObject, indexChunkObjects );
+	if ( !query.empty( ) && searchResultsPair.second == -1 )
 		{
 		// THE QUERY PASSED IN WAS BAD, DO SOMETHING
+		dex::string responseHeader = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+		send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
 		return nullptr;
 		}
 	dex::vector< dex::ranker::searchResult > searchResults = searchResultsPair.first;
-	// TODO: populate webpage with content
-	std::cout << request << std::endl;
 
 	struct stat fileInfo;
 	fstat( file, &fileInfo );
 	char *map = ( char * )mmap( nullptr, fileInfo.st_size, PROT_READ, MAP_PRIVATE, file, 0 );
 	dex::string content;
 	size_t resultsSize = 0;
-	if ( path == "results.html" )
+	if ( path == pathToHtml + "results.html" )
 		{
 		content = dex::string( map );
 		content.insert( content.find( "placeholder=" ) + 13, query );
 		for ( size_t i = 0;  i < searchResults.size( );  ++i )
 			{
-			std::cout << "i = " << i << std::endl;
 			dex::string searchRes( outputResult( searchResults[ searchResults.size( ) - i - 1 ] ) );
 			resultsSize += searchRes.size( );
 			content.insert( content.find( "class=\"results\">" ) + 16, searchRes );
+			std::cout << i << ": " << searchRes << std::endl;
 			}
 		}
 
@@ -198,7 +204,7 @@ void *Talk( void *p )
 		+ "\r\nConnection: close\r\nContent-Type: " + Mimetype( path ) + "\r\n\r\n";
 	send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
 
-	if ( path == "results.html" )
+	if ( path == pathToHtml + "results.html" )
 		send( socket, content.data( ), content.size( ), 0 );
 	else
 		{
@@ -217,9 +223,9 @@ void *Talk( void *p )
 
 int main( int argc, char **argv )
 	{
-	if ( argc < 2 )
+	if ( argc < 3 )
 		{
-		std::cerr << "Usage: server port" << std::endl;
+		std::cerr << "Usage: ./build/server.exe port path/to/index/chunks" << std::endl;
 		return 1;
 		}
 
@@ -267,7 +273,7 @@ int main( int argc, char **argv )
 
 	// Create indexChunkObjects
 	// TODO: have Stephen take a look at this :)
-	dex::string indexChunkDirector = "../smallerIndexChunks/"; // Top directory of search
+	dex::string indexChunkDirector( argv[ 2 ] ); // Top directory of search
 	dex::string pattern = "_in.dex";
 	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirector, pattern );
 	indexChunkObjects.reserve( indexChunkFilenames.size( ) );

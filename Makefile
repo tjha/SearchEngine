@@ -102,13 +102,14 @@ indexerDriver: $(BUILD_DIR)/indexer/driver.o $(BUILD_DIR)/indexer/indexer.o\
 	$(CXX) $(CXXFLAGS) $^ -o $(BUILD_DIR)/indexerDriver.exe
 
 PORT=8000
+PATH_TO_INDEX_CHUNKS=data/indexChunks/
 serve: $(BUILD_DIR)/frontend/httpServer.o\
 		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
 		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
 		$(BUILD_DIR)/indexer/indexer.o $(BUILD_DIR)/ranker/ranker.o
 	mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $^ -o $(BUILD_DIR)/server.exe;
-	./$(BUILD_DIR)/server.exe $(PORT)
+	./$(BUILD_DIR)/server.exe $(PORT) $(PATH_TO_INDEX_CHUNKS)
 
 cli: $(BUILD_DIR)/frontend/cli.o $(BUILD_DIR)/constraintSolver/constraintSolver.o $(BUILD_DIR)/indexer/indexer.o\
 		$(BUILD_DIR)/ranker/ranker.o $(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
