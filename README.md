@@ -60,6 +60,8 @@ The frontend is served on an http server that listens on the port number specifi
 
 `make server` builds `httpServer.cpp` and serves on port 8000 (defined in Makefile).
 
+To run the CLI version of our interface, first build with `make cli`, and then run with `./build/frontend/cli.exe path/to/index/chunk/directory`.
+
 ## Components
 
 ### Crawler
