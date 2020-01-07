@@ -59,6 +59,11 @@ namespace dex
 
 	class HTMLparser
 	{
+	private:
+		bool isAlpha( const char c )
+			{
+			return ( 'A' <= c && c <= 'Z' ) || ( 'a' <= c && c <= 'z' );
+			}
 
 	public:
 		//dex::string htmlFile;
@@ -233,7 +238,7 @@ namespace dex
 		{
 		return anchors;
 		}
-	
+
 	vector< string > HTMLparser::ReturnTitle ( )
 		{
 		return title ;
@@ -329,41 +334,28 @@ namespace dex
 
 	void HTMLparser::removePunctuation( string &word )
 		{
-		static const char DELIMITERS[ ] = { '\n', '\t', '\r', ',', '.', '?', '>',
-														'<', '!', '[', ']', '{', '}', '|',
-														'\\', '_', '=', '+', ')', '(', '*',
-														'&', '^', '%', '$', '#', '@', '~',
-														'`', '\'', '\"', ';', ':', '/', '8',
-														'1', '2', '3', '4', '5', '6', '7',
-														'9', '0'};
-
-		// TODO: Improve implementation by avoiding 36 loops over word for each
-		//       delimiter in array
-		if ( word == "" )
-			{
+		if ( word.empty( ) )
 			return;
-			}
-		string t = word;
 
-		for( std::size_t i = 0; i < 44; i++ )
+		string strippedWord;
+		strippedWord.reserve( word.size( ) );
+		for ( size_t index = 0;  index != word.size( );  ++index )
 			{
-			std::size_t ind = word.find( DELIMITERS[ i ] );
-			while( ind != string::npos )
-				{
-				word = word.replace( ind , 1, " " );
-				ind = word.find( DELIMITERS[ i ]);
-				}
+			if ( isAlpha( word[ index ] ) )
+				strippedWord.pushBack( word[ index ] );
+			else
+				switch ( word[ index ] )
+					{
+					case '-':
+					case '_':
+						break;
+					default:
+						strippedWord.pushBack( ' ' );
+						break;
+					}
 			}
 
-		std::size_t ind = word.find( '-' );
-
-		while( ind != string::npos )
-			{
-
-			word = word.erase( ind , 1 );
-			ind = word.find( '-' );
-			}
-
+		word.swap( strippedWord );
 		}
 
 	std::size_t spaceDelimitedTargetPosition( dex::string target,
