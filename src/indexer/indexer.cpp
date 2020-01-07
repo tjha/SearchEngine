@@ -77,9 +77,6 @@ bool dex::index::indexChunk::postsMetadata::append( uint32_t location, postsChun
 // indexChunk
 dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	{
-	// TOOO: Add some sort of magic number
-
-	// TODO: Throw exceptions so we know that this failed
 	if ( fileDescriptor == -1 )
 		throw dex::exception( );
 
@@ -167,25 +164,19 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 
 	urlsToOffsets[ url ] = documentOffset;
 
-	// TODO: This can be made more efficient by creating an auxillary vector of words we want to insert. At the same
-	// time, we would populate uniqueWords
-	dex::unorderedSet< const dex::string > uniqueWords( 2 * ( body.size( ) + title.size( ) ) );
-	for ( dex::vector< dex::string >::constIterator it = body.cbegin( );  it != body.cend( );  ++it )
-		uniqueWords.insert( dex::porterStemmer::stem( *it ) );
-	for ( dex::vector< dex::string >::constIterator it = title.cbegin( );  it != title.cend( );  ++it )
-		uniqueWords.insert( dex::porterStemmer::stem( "#" + *it ) );
-
 	// Update the count of how many documents each word appears in.
-	for ( dex::unorderedSet< const dex::string >::constIterator uniqueWord = uniqueWords.cbegin( );
-			uniqueWord != uniqueWords.cend( );  ++postsMetadataArray[ dictionary[ *( uniqueWord++ ) ] ].documentCount )
+	for ( dex::unorderedMap< dex::string, uint32_t >::constIterator it = postsMetadataChanges.cbegin( );
+			it != postsMetadataChanges.cend( );  ++postsMetadataArray[ dictionary[ ( it++ )->first ] ].documentCount )
 		{
-		postsMetadataArray[ dictionary[ *uniqueWord ] ].occurenceCount += postsMetadataChanges[ *uniqueWord ];
+		postsMetadata &datum = postsMetadataArray[ dictionary[ it->first ] ];
+		++datum.documentCount;
+		datum.occurenceCount += it->second;
 		}
 
 	offsetsToEndOfDocumentMetadatas[ *location ] = endOfDocumentMetadataType
 		{
 		static_cast< uint32_t >( title.size( ) + 1 + body.size( ) + 1 ),
-		static_cast< uint32_t >( uniqueWords.size( ) ),
+		static_cast< uint32_t >( postsMetadataChanges.size( ) ),
 		url,
 		titleString,
 		};

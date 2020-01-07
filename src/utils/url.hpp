@@ -192,8 +192,6 @@ namespace dex
 				return completeUrl;
 				}
 
-			// TODO only compute this when you need to which should be
-			// 	at url creation and when you set Url
 			string completeUrl( ) const
 				{
 				return complete;

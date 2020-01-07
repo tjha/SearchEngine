@@ -474,22 +474,6 @@ namespace dex
 					}
 			};
 
-		// TODO not sure if this should actually go into utf-8 or in a separate
-		// encoding function
-		/*
-		template < class InputIt >
-		class decoder< dex::RobotTxt, InputIt >
-			{
-			public:
-				dex::RobotTxt operator( )( InputIt encoding, InputIt *advancedEncoding = nullptr ) const
-					{
-					InputIt *localAdvancedEncoding = &encoding;
-					decoder< dex::basicString > StringDecoder;
-					decoder< int > IntegerDecoder;
-					decoder< dex::unorderedSet< dex::string > > PathDecoder;
-					}
-			};*/
-
 		// We'll say a byte is a sentinel if it looks like 11111111
 		const unsigned char sentinel = 0xFF;
 		template < class InputIt >
