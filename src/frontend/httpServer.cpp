@@ -81,8 +81,8 @@ bool pathIsLegal( dex::string path )
 
 dex::string outputResult( dex::ranker::searchResult &result )
 	{
-	return "<li class=\"result\"><a href=" + result.url.completeUrl( ) +
-			"\">" + result.url.getDomain( ) + "</a> " + result.title + "</li>";
+	return "\t\t\t\t\t<li class=\"result\"><a href=" + result.url.completeUrl( ) +
+			">" + result.url.getDomain( ) + "</a> " + result.title + "</li>\n";
 	}
 
 void *Talk( void *p )
@@ -186,7 +186,7 @@ void *Talk( void *p )
 			{
 			dex::string searchRes( outputResult( searchResults[ searchResults.size( ) - i - 1 ] ) );
 			resultsSize += searchRes.size( );
-			content.insert( content.find( "class=\"results\">" ) + 16, searchRes );
+			content.insert( content.find( "class=\"results\">" ) + 17, searchRes );
 			std::cout << i << ": " << searchRes << std::endl;
 			}
 		}
