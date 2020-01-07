@@ -97,7 +97,7 @@ The source for the query compiler can be found in `src/queryCompiler/`. The code
 * `expression.cpp` and `expression.hpp`, which are responsible for making an internal parse tree;
 * and `parser.cpp` and `parser.hpp`, which are responsible for constructing the parse tree, as well as providing an interface to the ranker.
 
-In terms of the actual language, we support NOT (~), AND (&), OR (|), and PHRASE (""). There is also an option to choose between infix and prefix notations.
+In terms of the actual language, we support the "logical operators" NOT (~), AND (&), OR (|), and PHRASE (""). We additionally support an operator ($) for emphasis, which affects only the ranker. Finally, there is also an option to choose between infix and prefix notations.
 
 ### Ranker
 The source for the ranker can be found in `src/ranker`. This ranks any documents for the frontend that are returned by the constraint solver. Static ranking involves simple heuristics for the title and URL of the document. Dynamic ranking involves finding spans for the query in the document title and body and using a bag of words scoring strategy for the document body. Scoring a span takes into account the length and the ordering of the span. Spans currently must have all words in the query; partial spanning has not been implemented.
