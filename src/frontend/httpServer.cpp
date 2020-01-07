@@ -273,7 +273,7 @@ int main( int argc, char **argv )
 
 	// Create indexChunkObjects
 	dex::string indexChunkDirector( argv[ 2 ] ); // Top directory of search
-	dex::string pattern = "_in.dex";
+	dex::string pattern = ".dex";
 	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirector, pattern );
 	indexChunkObjects.reserve( indexChunkFilenames.size( ) );
 	for ( dex::vector< dex::string >::constIterator filenameIterator = indexChunkFilenames.cbegin( );
