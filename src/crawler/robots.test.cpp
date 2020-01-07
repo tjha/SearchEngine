@@ -116,15 +116,6 @@ TEST_CASE( "constructors and operator=", "[robotTxt]")
 		robots.pushBack( rob2 );
 		robots.pushBack( rob3 );
 		robots.pushBack( rob4 );
-
-		REQUIRE( rob1.compress( ) == rob5.compress( ) );
-		for ( int i = 0;  i < 4;  ++i )
-			{
-			for ( int j = i + 1;  j < 4;  ++j )
-				{
-				REQUIRE( robots[ i ].compress( ) != robots[ j ].compress( ) );
-				}
-			}
 		}
 	}
 

@@ -98,8 +98,6 @@ int main ( int argc, char ** argv )
 					titleString += ( titleWord + " " );
 					}
 
-				// TODO this should go in parser but didn't want to break dependent functionality
-				// TODO add default argument for anchorText in indexer.hpp
 				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{
@@ -117,7 +115,6 @@ int main ( int argc, char ** argv )
 				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{
-					// TODO: Throw an exception. Should not fail to add a document to a new index chunk
 					throw dex::fileWriteException( );
 					}
 				documentsProcessed++;

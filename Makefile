@@ -7,21 +7,17 @@ TEST_DIR := tst
 # Where to output
 BUILD_DIR := build
 
-CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -Werror -g3 -O3 -pthread -ltls
-# TODO: Is this block necessary?
-UNAME_S := $(shell uname -s)
+CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -O3 -pthread
+
+ifeq ($(tls),yes)
+	CXXFLAGS := $(CXXFLAGS) -ltls
+	UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-	CXXFLAGS := $(CXXFLAGS) -L/opt/libressl/lib
-	CXXFLAGS := $(CXXFLAGS) -I/opt/libressl/include
+	CXXFLAGS := $(CXXFLAGS) -L/opt/libressl/lib -I/opt/libressl/include
 endif
 ifeq ($(UNAME_S),Darwin)
-	CXXFLAGS := $(CXXFLAGS) -L/usr/local/opt/libressl/lib
-	CXXFLAGS := $(CXXFLAGS) -I/usr/local/opt/libressl/include
+	CXXFLAGS := $(CXXFLAGS) -L/usr/local/opt/libressl/lib -I/usr/local/opt/libressl/include
 endif
-
-# TODO: -Werror
-ifeq ($(tls),no)
-	CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -pthread
 endif
 
 CXXFLAGS := $(CXXFLAGS) -I $(SOURCE_DIR)/ -I $(TEST_DIR)/

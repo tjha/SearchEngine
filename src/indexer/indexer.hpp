@@ -129,7 +129,6 @@ namespace dex
 				// static const uint32_t postsChunkArraySize = 1L << 10;
 				// static const uint32_t postsMetadataArraySize = 1L << 10;
 
-				// TODO: Double check these very carefully.
 				// Note: these sizes should be such that they are block-aligned. The required offest for block alignment
 				// is surrounded by parentheses.
 				static const size_t endOfDocumentMetadataTypeMemorySize = 7 + ( 1 ) + 7 + ( 1 )
