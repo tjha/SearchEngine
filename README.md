@@ -88,6 +88,8 @@ An HTML document is parsed when the HTMLParser object is initialized through its
 ### Indexer
 The indexer code is all in `src/indexer/`. We build our index into chunks, which contain an inverse word index for a set of URLs. We also define index stream readers (ISRs) for reading through the chunks. These ISRs have functions `next`, `nextDocument`, `seek`, and `get`, which allow for quick navigation.
 
+To build the indexChunks, one can run the indexerDriver (compiled with `make indexerDriver`). It takes as arguments the location of the HTML and the location where the indexChunks will be written. It sequentially builds indexChunks until each runs out of room and the next is created. If the process is killed before it finishes, the final indexChunk it was in the process of creating will not be valid.
+
 ### Constraint Solver
 The constraint solver lives in `src/constraintSolver/`. We define ISRs recursively for NOT, AND, OR, and PHRASE. These ISRs are used by the query compiler to construct advanced queries.
 
