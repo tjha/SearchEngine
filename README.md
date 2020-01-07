@@ -56,9 +56,17 @@ Sanity Checks:
 
 ### Frontend
 
-The frontend is served on an http server that listens on the port number specified by a command line argument.
+The frontend is served on an http server that listens on the port number
+specified by a command line argument. It also needs a directory passed in as
+the second argument to specify where the indexChunks exist on the local
+machine. Usage: `./build/server.exe <port> <path/to/index/chunks>`
 
-`make server` builds `httpServer.cpp` and serves on port 8000 (defined in Makefile).
+In order to test the frontend you can build test index chunks and run the
+server using them. `make test case=src/frontend/chunks tls=no; mkdir
+data/indexChunks; mv test_* data/indexChunks/; make serve tls=no` to do so.
+
+`make serve` will run automatically on port 8000 and with the indexChunks build
+in `data/indexChunks/`.
 
 To run the CLI version of our interface, first build with `make cli`, and then run with `./build/frontend/cli.exe path/to/index/chunk/directory`.
 
