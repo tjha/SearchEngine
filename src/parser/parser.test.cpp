@@ -391,7 +391,7 @@ TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
 		string filename = "tst/parserTests/man7_all_pages.html";
 		string htmlDoc;
 		htmlDoc = readFromFile( filename.cStr( ) );
-      dex::Url url( "http://man7.org/linux/man-pages/dir_all_alphabetic.html" );
+		dex::Url url( "http://man7.org/linux/man-pages/dir_all_alphabetic.html" );
 		HTMLparser testParser( url, htmlDoc, false );
 
 		SECTION( "Expected Links" )
@@ -402,7 +402,7 @@ TEST_CASE( "man7_all_pages: stress testing for GetLinks function" )
 			vector< string > expectedLinks;
 
 			// Validate correct number of links were extracted
-			REQUIRE ( links.size( ) == 10813 ); // TODO: figure out why not 10812
+			REQUIRE ( links.size( ) == 10813 );
 
 			}
 	}
