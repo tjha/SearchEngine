@@ -211,7 +211,7 @@ dex::vector< dex::vector< size_t > > dex::ranker::dynamicRanker::getDocumentInfo
 				isrs[ isrIndex ]->next( );
 				}
 			}
-		// get the wordCount, title, and url of the document
+		// get the wordCount of the document
 		wordCount.pushBack( currentWordCount );
 		if ( chunk )
 			{
@@ -285,6 +285,7 @@ dex::vector< dex::vector< dex::pair< size_t, double > > > dex::ranker::dynamicRa
 	dex::vector< size_t > previous( isrCount, 0 );
 
 	size_t rarest = 0;
+	// chunkPointer is passed if docInfo is off and we need to find rarest by ourselves
 	if ( chunkPointer )
 		{
 		documentTitlesPointer->clear( );
@@ -472,18 +473,22 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 			}
 		}
 
-	size_t beginDocument = 0;
-	size_t endDocument = matching->seek( 0 );
-	for ( size_t i = 0;  i < wordCount.size( );  ++i )
+	// If you've found the wordCount (docInfo is on) then calculate the bagOfWords score
+	if ( ( rankerMode & rankerModeValues::docInfo ) > 0 )
 		{
-		double dynamicWordScore = scoreBagOfWords( wordCount[ i ], endDocument - beginDocument, emphasized );
-		scores[ i ].setDynamicBagOfWordsScore( dex::min( dynamicWordScore, maxBagOfWordsScore ) );
-		if ( printInfo )
+		size_t beginDocument = 0;
+		size_t endDocument = matching->seek( 0 );
+		for ( size_t i = 0;  i < wordCount.size( );  ++i )
 			{
-			std::cout << "Index: " << i << ", Bag of Words Score: " << scores[ i ].dynamicBagOfWordsScore << std::endl;
+			double dynamicWordScore = scoreBagOfWords( wordCount[ i ], endDocument - beginDocument, emphasized );
+			scores[ i ].setDynamicBagOfWordsScore( dex::min( dynamicWordScore, maxBagOfWordsScore ) );
+			if ( printInfo )
+				{
+				std::cout << "Index: " << i << ", Bag of Words Score: " << scores[ i ].dynamicBagOfWordsScore << std::endl;
+				}
+			beginDocument = endDocument;
+			endDocument = matching->next( );
 			}
-		beginDocument = endDocument;
-		endDocument = matching->next( );
 		}
 
 	// score titleSpans
