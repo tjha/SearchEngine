@@ -212,19 +212,18 @@ namespace dex
 							*wordMetadata = postsMetadata( *postsChunkCount );
 
 							// Add a new postsChunk
-							uint32_t newPostsChunkOffset = ( *postsChunkCount )++;
+							uint32_t newPostsChunkOffset = *postsChunkCount;
 							postsChunkArray[ newPostsChunkOffset ] = postsChunk( );
 							wordMetadata->firstPostsChunkOffset = newPostsChunkOffset;
+							++( *postsChunkCount );
 
 							newWords[ decoratedWordToAdd ] = newWordIndex;
 							}
 						else
-							{
 							if ( dictionary.count( decoratedWordToAdd ) )
 								wordMetadata = &postsMetadataArray[ dictionary[ decoratedWordToAdd ] ];
 							else
 								wordMetadata = &postsMetadataArray[ newWords[ decoratedWordToAdd ] ];
-							}
 
 						// This loop will exectue at most once, unless things go terribly wrong somehow.
 						while ( !wordMetadata->append( newLocation, postsChunkArray ) )
@@ -234,7 +233,8 @@ namespace dex
 
 							postsChunkArray[ wordMetadata->lastPostsChunkOffset ].nextPostsChunkOffset = *postsChunkCount;
 							postsChunkArray[ *postsChunkCount ] = postsChunk( );
-							wordMetadata->lastPostsChunkOffset = ( *postsChunkCount )++;
+							wordMetadata->lastPostsChunkOffset = *postsChunkCount;
+							++( *postsChunkCount );
 							}
 
 						++postsMetadataChanges[ decoratedWordToAdd ];
