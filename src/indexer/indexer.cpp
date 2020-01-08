@@ -152,6 +152,10 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	if ( url.size( ) > maxURLLength || titleString.size( ) > maxTitleLength )
 		return true;
 
+	// Ensure we never add too many docs
+	if ( urlsToOffsets.size( ) >= maxURLCount )
+		return false;
+
 	dex::unorderedMap< dex::string, uint32_t > postsMetadataChanges;
 
 	uint32_t documentOffset = *location;
