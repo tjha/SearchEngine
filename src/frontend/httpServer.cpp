@@ -164,14 +164,12 @@ void *Talk( void *p )
 	dex::ranker::ranker rankerObject;
 	dex::pair< dex::vector< dex::ranker::searchResult >, int > searchResultsPair = dex::ranker::getTopN
 			( 10, query, &rankerObject, indexChunkObjects );
-	if ( !query.empty( ) && searchResultsPair.second == -1 )
+	dex::vector< dex::ranker::searchResult > searchResults;
+	if ( !query.empty( ) && searchResultsPair.second != -1 )
 		{
-		// THE QUERY PASSED IN WAS BAD, DO SOMETHING
-		dex::string responseHeader = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
-		send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
-		return nullptr;
+		// results returned
+		searchResults = searchResultsPair.first;
 		}
-	dex::vector< dex::ranker::searchResult > searchResults = searchResultsPair.first;
 
 	struct stat fileInfo;
 	fstat( file, &fileInfo );
@@ -223,7 +221,7 @@ void *Talk( void *p )
 
 int main( int argc, char **argv )
 	{
-	if ( argc < 3 )
+	if ( argc != 3 )
 		{
 		std::cerr << "Usage: ./build/server.exe port path/to/index/chunks" << std::endl;
 		return 1;
@@ -272,9 +270,9 @@ int main( int argc, char **argv )
 		}
 
 	// Create indexChunkObjects
-	dex::string indexChunkDirector( argv[ 2 ] ); // Top directory of search
+	dex::string indexChunkDirectory( argv[ 2 ] ); // Top directory of search
 	dex::string pattern = ".dex";
-	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirector, pattern );
+	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirectory, pattern );
 	indexChunkObjects.reserve( indexChunkFilenames.size( ) );
 	for ( dex::vector< dex::string >::constIterator filenameIterator = indexChunkFilenames.cbegin( );
 			filenameIterator != indexChunkFilenames.cend( );  filenameIterator++ )
