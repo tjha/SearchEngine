@@ -46,9 +46,7 @@ bool dex::index::indexChunk::postsChunk::append( uint32_t delta )
 // postMetadata
 dex::index::indexChunk::postsMetadata::postsMetadata( uint32_t chunkOffset ) :
 		occurenceCount( 0 ), documentCount( 0 ), firstPostsChunkOffset( chunkOffset ),
-		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ), synchronizationPoints( )
-	{
-	}
+		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ), synchronizationPoints( ) { }
 
 bool dex::index::indexChunk::postsMetadata::append( uint32_t location, postsChunk *postsChunkArray )
 	{
@@ -58,15 +56,16 @@ bool dex::index::indexChunk::postsMetadata::append( uint32_t location, postsChun
 
 	if ( successful )
 		{
-		// The first 8 bits of the 31-bit location determine our synchronization point. We only update the table if we
+		// The first 11 bits of the 31-bit location determine our synchronization point. We only update the table if we
 		// haven't been "this high" before.
 		for ( synchronizationPoint *syncPoint = synchronizationPoints + ( location >> 20 );
 				syncPoint >= synchronizationPoints && ~syncPoint->inverseLocation == syncPoint->npos;  --syncPoint )
-			{
-			syncPoint->postsChunkArrayOffset = lastPostsChunkOffset;
-			syncPoint->postsChunkOffset = originalPostOffset;
-			syncPoint->inverseLocation = ~lastLocation;
-			}
+			*syncPoint = synchronizationPoint
+				{
+				lastPostsChunkOffset,
+				originalPostOffset,
+				~lastLocation
+				};
 
 		lastLocation = location;
 		}
@@ -156,7 +155,7 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 	if ( urlsToOffsets.size( ) >= maxURLCount )
 		return false;
 
-	dex::unorderedMap< dex::string, uint32_t > postsMetadataChanges;
+	dex::unorderedMap< dex::string, uint32_t > postsMetadataChanges( 2 * ( body.size( ) + title.size( ) ) );
 
 	uint32_t documentOffset = *location;
 	if ( !append( body.cbegin( ), body.cend( ), postsMetadataChanges ) )
@@ -171,7 +170,7 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 
 	// Update the count of how many documents each word appears in.
 	for ( dex::unorderedMap< dex::string, uint32_t >::constIterator it = postsMetadataChanges.cbegin( );
-			it != postsMetadataChanges.cend( );  ++postsMetadataArray[ dictionary[ ( it++ )->first ] ].documentCount )
+			it != postsMetadataChanges.cend( );  ++it )
 		{
 		postsMetadata &datum = postsMetadataArray[ dictionary[ it->first ] ];
 		++datum.documentCount;
@@ -186,8 +185,10 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 		titleString,
 		};
 
-	postsMetadataArray[ 0 ].append( ( *location )++, postsChunkArray );
+	// Add end of document
+	postsMetadataArray[ 0 ].append( *location, postsChunkArray );
 	++postsMetadataArray[ 0 ].occurenceCount;
+	++( *location );
 
 	return true;
 	}
@@ -195,9 +196,7 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 void dex::index::indexChunk::printDictionary( )
 	{
 	for ( auto it = dictionary.cbegin( );  it != dictionary.cend( );  ++it )
-		{
 		std::cout << it->first << std::endl;
-		}
 	}
 
 dex::index::indexChunk::indexStreamReader::indexStreamReader(
