@@ -82,7 +82,7 @@ bool pathIsLegal( dex::string path )
 dex::string outputResult( dex::ranker::searchResult &result )
 	{
 	return "\t\t\t\t\t<li class=\"result\"><a href=" + result.url.completeUrl( ) +
-			">" + result.url.getDomain( ) + "</a> " + result.title + "</li>\n";
+			">" + result.url.completeUrl( ) + "</a> " + result.title + "</li>\n";
 	}
 
 void *Talk( void *p )
