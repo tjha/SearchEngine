@@ -87,7 +87,6 @@ dex::string outputResult( dex::ranker::searchResult &result )
 
 void *Talk( void *p )
 	{
-	std::cout << "New Request" << std::endl;
 	size_t bufferSize = 10240;
 	char buffer[ bufferSize ];
 	int bytes;
@@ -141,10 +140,6 @@ void *Talk( void *p )
 		return nullptr;
 		}
 
-	std::cout << "Path: " << path << std::endl;
-	std::cout << "Query: " << query << std::endl;
-	std::cout << "Trigger: " << toggle << std::endl << std::endl;
-
 	// reroute no path to index.html
 	if ( path.empty( ) )
 		path = "index.html";
@@ -178,6 +173,7 @@ void *Talk( void *p )
 	size_t resultsSize = 0;
 	if ( path == pathToHtml + "results.html" )
 		{
+		std::cout << "?query=" << query << std::endl;
 		content = dex::string( map );
 		content.insert( content.find( "placeholder=" ) + 13, query );
 		for ( size_t i = 0;  i < searchResults.size( );  ++i )
@@ -188,8 +184,6 @@ void *Talk( void *p )
 			std::cout << i << ": " << searchRes << std::endl;
 			}
 		}
-
-	std::cout << "Inserting results complete." << std::endl;
 
 	if ( map == MAP_FAILED )
 		return nullptr;
