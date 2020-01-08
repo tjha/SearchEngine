@@ -104,7 +104,7 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	encodedOffsetsToEndOfDocumentMetadatas = reinterpret_cast< byte * >( filePointer )
 			+ offsetsToEndOfDocumentMetadatasMemoryOffset;
 
-	encodedDictionary = reinterpret_cast< byte * >( filePointer ) + dictionaryOffset;
+	encodedDictionary = reinterpret_cast< byte * >( filePointer ) + dictionaryMemoryOffset;
 
 	postsMetadataArray = reinterpret_cast< postsMetadata * >(
 			reinterpret_cast< byte * >( filePointer ) + postsMetadataArrayMemoryOffset );
@@ -148,6 +148,7 @@ dex::index::indexChunk::~indexChunk( )
 bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vector< dex::string > &title,
 		const dex::string &titleString, const dex::vector< dex::string > &body )
 	{
+	// Ignore documents that have long URLs or titles
 	if ( url.size( ) > maxURLLength || titleString.size( ) > maxTitleLength )
 		return true;
 
