@@ -114,43 +114,41 @@ namespace dex
 					};
 
 				// These consts can be adjusted if necessary.
-				static const uint32_t maxURLCount = 1L << 17;
-				static const uint32_t maxURLLength = 1L << 10;
-				static const uint32_t maxTitleLength = 1 << 10;
-				static const uint32_t maxWordLength = 64;
-				static const uint32_t postsChunkArraySize = 1L << 23;
-				static const uint32_t postsMetadataArraySize = 1L << 23;
-
-				// Keep these for testing
-				// static const uint32_t maxURLCount = 1L << 8;
+				// static const uint32_t maxURLCount = 1L << 17;
 				// static const uint32_t maxURLLength = 1L << 10;
 				// static const uint32_t maxTitleLength = 1 << 10;
 				// static const uint32_t maxWordLength = 64;
-				// static const uint32_t postsChunkArraySize = 1L << 10;
-				// static const uint32_t postsMetadataArraySize = 1L << 10;
+				// static const uint32_t postsChunkArraySize = 1L << 23;
+				// static const uint32_t postsMetadataArraySize = 1L << 23;
+
+				// Keep these for testing
+				static const uint32_t maxURLCount = 1L << 8;
+				static const uint32_t maxURLLength = 1L << 10;
+				static const uint32_t maxTitleLength = 1 << 10;
+				static const uint32_t maxWordLength = 64;
+				static const uint32_t postsChunkArraySize = 1L << 10;
+				static const uint32_t postsMetadataArraySize = 1L << 10;
 
 				// Note: these sizes should be such that they are block-aligned. The required offest for block alignment
 				// is surrounded by parentheses.
-				static const size_t endOfDocumentMetadataTypeMemorySize = 7 + ( 1 ) + 7 + ( 1 )
-						+ ( 7 + maxURLLength + ( 1 ) )
-						+ ( 7 + maxTitleLength + ( 1 ) );
-				static const size_t urlsToOffsetsMemorySize = 7 + maxURLCount * ( 7 + maxURLLength + ( 1 ) + 7 + ( 1 ) ) + ( 1 );
-				static const size_t offsetsToEndOfDocumentMetadatasMemorySize =
-						7 + maxURLCount * ( 7 + endOfDocumentMetadataTypeMemorySize + ( 1 ) ) + ( 1 );
-				static const size_t dictionaryMemorySize = 7
-						+ ( 7 + maxWordLength + 7 + ( 2 ) ) * postsMetadataArraySize + ( 1 );
+				static const size_t endOfDocumentMetadataTypeMemorySize
+						= 8 + 8 + ( 8 + maxURLLength ) + ( 8 + maxTitleLength );
+				static const size_t urlsToOffsetsMemorySize = 8 + maxURLCount * ( ( 8 + maxURLLength ) + 8 );
+				static const size_t offsetsToEndOfDocumentMetadatasMemorySize
+						= 8 + maxURLCount * ( 8 + endOfDocumentMetadataTypeMemorySize );
+				static const size_t dictionaryMemorySize = 8 + postsMetadataArraySize * ( ( 8 + maxWordLength ) + 8 );
 				static const size_t postsMetadataArrayMemorySize = postsMetadataArraySize * sizeof( postsMetadata );
 				static const size_t postsChunkArrayMemorySize = postsChunkArraySize * sizeof( postsChunk );
 
-				static const size_t urlsToOffsetsMemoryOffset = 200;
-				static const size_t offsetsToEndOfDocumentMetadatasMemoryOffset =
-						urlsToOffsetsMemoryOffset + 2 * urlsToOffsetsMemorySize;
-				static const size_t dictionaryOffset =
-						offsetsToEndOfDocumentMetadatasMemoryOffset + 2 * offsetsToEndOfDocumentMetadatasMemorySize;
-				static const size_t postsMetadataArrayMemoryOffset = dictionaryOffset + 2 * dictionaryMemorySize;
-				static const size_t postsChunkArrayMemoryOffset =
-						postsMetadataArrayMemoryOffset + 2 * postsMetadataArrayMemorySize;
-				static const size_t fileSize = postsChunkArrayMemoryOffset + 2 * postsChunkArrayMemorySize;
+				static const size_t urlsToOffsetsMemoryOffset = 1 << 10;
+				static const size_t offsetsToEndOfDocumentMetadatasMemoryOffset
+						= urlsToOffsetsMemoryOffset + urlsToOffsetsMemorySize;
+				static const size_t dictionaryMemoryOffset
+						= offsetsToEndOfDocumentMetadatasMemoryOffset + offsetsToEndOfDocumentMetadatasMemorySize;
+				static const size_t postsMetadataArrayMemoryOffset = dictionaryMemoryOffset + dictionaryMemorySize;
+				static const size_t postsChunkArrayMemoryOffset
+						= postsMetadataArrayMemoryOffset + postsMetadataArrayMemorySize;
+				static const size_t fileSize = postsChunkArrayMemoryOffset + postsChunkArrayMemorySize;
 
 				// Our mmaped file.
 				void *filePointer;
