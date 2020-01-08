@@ -35,6 +35,7 @@ TEST_CASE( "create index chunk" )
 	initializingIndexChunk.addDocument( url, title, titleString, body );
 
 	close( fd );
+	remove( filePath );
 	}
 
 TEST_CASE( "create index chunk with bad HTML" )
@@ -63,6 +64,7 @@ TEST_CASE( "create index chunk with bad HTML" )
 		REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
 
 		close( fd );
+		remove( filePath );
 		}
 
 	SECTION( "empty body vector" )
@@ -89,6 +91,7 @@ TEST_CASE( "create index chunk with bad HTML" )
 		REQUIRE( initializingIndexChunk.addDocument( url2, title2, titleString2, body2 ) );
 
 		close( fd );
+		remove( filePath );
 		}
 	}
 
@@ -148,6 +151,7 @@ TEST_CASE( "Basic ISR functions for body and title" )
 		}
 
 	close( fd );
+	remove( filePath );
 	}
 
 TEST_CASE( "ISR functions on one document" )
@@ -217,6 +221,7 @@ TEST_CASE( "ISR functions on one document" )
 		}
 
 	close( fd );
+	remove( filePath );
 	}
 
 TEST_CASE( "ISR functions on multiple documents" )
@@ -273,6 +278,7 @@ TEST_CASE( "ISR functions on multiple documents" )
 		REQUIRE( andISR.seek( 7 ) == 15 );
 
 		close( fd );
+		remove( filePath );
 		}
 
 	SECTION( "ISR functions with empty title and body vectors" )
@@ -325,6 +331,7 @@ TEST_CASE( "ISR functions on multiple documents" )
 		REQUIRE( hamiltonISR.next( ) == 41 );
 
 		close( fd );
+		remove( filePath );
 		}
 	}
 
@@ -372,6 +379,7 @@ TEST_CASE( "ONE BIG DOC" )
 			}
 
 		close( fd );
+		remove( filePath );
 		}
 
 	SECTION( "Interweaving of linked posting lists" )
@@ -418,6 +426,9 @@ TEST_CASE( "ONE BIG DOC" )
 		for ( size_t location = offset;  location < offset + body2.size( );  ++location )
 			REQUIRE( dosISR.next( ) == location + 1 );
 		REQUIRE( dosISR.next( ) == dosISR.npos );
+
+		close( fd );
+		remove( filePath );
 		}
 	}
 
@@ -469,6 +480,7 @@ TEST_CASE( "Read indexChunk from a file" )
 		REQUIRE( wordISR.next( ) == wordISR.npos );
 
 		close( fd );
+		remove( filePath );
 		}
 	SECTION( "ISR funtions on one document" )
 		{
@@ -538,5 +550,6 @@ TEST_CASE( "Read indexChunk from a file" )
 		REQUIRE( andISR.next( ) == 6 );
 
 		close( fd );
+		remove( filePath );
 		}
 	}
