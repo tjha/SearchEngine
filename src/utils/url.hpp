@@ -216,6 +216,7 @@ namespace dex
 				{
 				return host;
 				}
+
 			void setHost( const string &h )
 				{
 				host = h;
