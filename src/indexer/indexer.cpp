@@ -30,12 +30,9 @@ dex::index::indexChunk::postsChunk::postsChunk( ) : nextPostsChunkOffset( 0 ), c
 
 bool dex::index::indexChunk::postsChunk::append( uint32_t delta )
 	{
-	// We're "full" if we can't insert a "widest" UTF-8 character. Write a sentinel instead.
-	if ( currentPostOffset + 8 > postsChunkSize )
-		{
-		posts[ currentPostOffset ] = dex::utf::sentinel;
+	// We're "full" if we can't insert a "widest" UTF-8 character (estimated 8 characters, to be safe) and a sentinel.
+	if ( currentPostOffset + 9 >= postsChunkSize )
 		return false;
-		}
 
 	currentPostOffset = dex::utf::encoder< uint32_t >( )( delta, posts + currentPostOffset ) - posts;
 	posts[ currentPostOffset ] = dex::utf::sentinel;
