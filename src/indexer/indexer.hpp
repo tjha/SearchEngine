@@ -344,9 +344,9 @@ namespace dex
 					dex::vector< unsigned char > encodedDataNext = dex::utf::encoder< uint32_t >( )
 							( data.numberUniqueWords );
 					encodedData.insert( encodedData.cend( ), encodedDataNext.cbegin( ), encodedDataNext.cend( ) );
-					encodedDataNext =  dex::utf::encoder< dex::string >( )( data.url );
+					encodedDataNext = dex::utf::encoder< dex::string >( )( data.url );
 					encodedData.insert( encodedData.cend( ), encodedDataNext.cbegin( ), encodedDataNext.cend( ) );
-					encodedDataNext =  dex::utf::encoder< dex::string >( )( data.title );
+					encodedDataNext = dex::utf::encoder< dex::string >( )( data.title );
 					encodedData.insert( encodedData.cend( ), encodedDataNext.cbegin( ), encodedDataNext.cend( ) );
 					return encodedData;
 					}
