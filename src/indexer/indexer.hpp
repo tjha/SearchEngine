@@ -174,6 +174,8 @@ namespace dex
 				postsMetadata *postsMetadataArray;
 				postsChunk *postsChunkArray;
 
+				bool initializing;
+
 			public:
 				indexChunk( int fileDescriptor, bool initialize = true );
 				~indexChunk( );
