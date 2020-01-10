@@ -622,11 +622,11 @@ namespace dex
 				erase( cbegin( ) + position, cbegin( ) + position + dex::min( length, size( ) - position ) );
 				return *this;
 				}
-			iterator erase ( constIterator first )
+			iterator erase( constIterator first )
 				{
 				return erase(first, cend( ) );
 				}
-			iterator erase ( constIterator first, constIterator last )
+			iterator erase( constIterator first, constIterator last )
 				{
 				// Return if the iterators passed are to different strings.
 				if( first.string != this || last.string != this || first > last )
