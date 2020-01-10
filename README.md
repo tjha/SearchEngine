@@ -36,7 +36,7 @@ numInstances=<number of machines>
 instanceId=<this machine's ID>
 ```
 
-Create a folder called socket-html next to your SearchEngine folder. This will contain the HTML that the crawler finds. Finally, run `source scripts/startCron.sh`, and you're done! It should be running.
+Create a folder called socket-html next to your SearchEngine folder. This will contain the HTML that the crawler finds. Finally, run `source scripts/startCron.sh`, and you're done! It should be running. To stop the crawl run `source scripts/stopCron.sh`.
 
 The way this whole thing works is by running a cron job in the background that periodically checks to see if a crawler process is running. If no crawler process is running, cron starts a new crawler. We know that the crawler process will die every once in a while because of Amazon killing it or due to segfaults, but this cron job ensures that our driver process will be up and running most of the time.
 
