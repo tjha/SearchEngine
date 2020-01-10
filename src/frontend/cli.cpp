@@ -89,7 +89,10 @@ int main( int argc, char **argv )
 		}
 
 	while ( !indexChunks.empty( ) )
+		{
 		delete indexChunks.back( );
+		indexChunks.popBack( );
+		}
 
 	std::cout << "Exiting Search Engine" << std::endl;
 
