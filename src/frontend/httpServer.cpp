@@ -33,7 +33,6 @@ dex::vector< dex::ranker::searchResult > tmpSearchResults =
 dex::vector< dex::index::indexChunk * > indexChunkObjects;
 
 //  Multipurpose Internet Mail Extensions (MIME) types
-
 struct MimetypeMap
 	{
 	const char *Extension,
