@@ -84,6 +84,11 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		result = write( fileDescriptor, "", 1 );
 		if ( result == -1 )
 			throw dex::exception( );
+		initializing = true;
+		}
+	else
+		{
+		initializing = false;
 		}
 
 	filePointer = mmap( nullptr, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0 );
@@ -132,10 +137,13 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 dex::index::indexChunk::~indexChunk( )
 	{
-	dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( urlsToOffsets, encodedURLsToOffsets );
-	dex::utf::encoder< dex::unorderedMap< uint32_t, endOfDocumentMetadataType > >( )
-			( offsetsToEndOfDocumentMetadatas, encodedOffsetsToEndOfDocumentMetadatas );
-	dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( dictionary, encodedDictionary );
+	if ( initializing )
+		{
+		dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( urlsToOffsets, encodedURLsToOffsets );
+		dex::utf::encoder< dex::unorderedMap< uint32_t, endOfDocumentMetadataType > >( )
+				( offsetsToEndOfDocumentMetadatas, encodedOffsetsToEndOfDocumentMetadatas );
+		dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( dictionary, encodedDictionary );
+		}
 
 	msync( filePointer, fileSize, MS_SYNC );
 	munmap( filePointer, fileSize );
@@ -144,6 +152,9 @@ dex::index::indexChunk::~indexChunk( )
 bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vector< dex::string > &title,
 		const dex::string &titleString, const dex::vector< dex::string > &body )
 	{
+	if ( !initializing )
+		throw dex::exception( );
+
 	// Ignore documents that have long URLs or titles
 	if ( url.size( ) > maxURLLength || titleString.size( ) > maxTitleLength )
 		return true;
