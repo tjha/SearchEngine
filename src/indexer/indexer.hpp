@@ -122,12 +122,12 @@ namespace dex
 				// static const uint32_t postsMetadataArraySize = 1L << 23;
 
 				// Keep these for testing
-				static const uint32_t maxURLCount = 1L << 8;
+				static const uint32_t maxURLCount = 1L << 17;
 				static const uint32_t maxURLLength = 1L << 10;
 				static const uint32_t maxTitleLength = 1 << 10;
 				static const uint32_t maxWordLength = 64;
-				static const uint32_t postsChunkArraySize = 1L << 10;
-				static const uint32_t postsMetadataArraySize = 1L << 10;
+				static const uint32_t postsChunkArraySize = 1L << 17;
+				static const uint32_t postsMetadataArraySize = 1L << 17;
 
 				// Note: these sizes should be such that they are block-aligned. The required offest for block alignment
 				// is surrounded by parentheses.
