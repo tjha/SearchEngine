@@ -38,7 +38,7 @@ const string startPattern = "_forIndexer";
 const string intermediatePattern = "_processing";
 const string finishedPattern = "_processed";
 // TODO SET THIS VALUE TO SOMETHING LEGIT
-const size_t maxBytesToProcess = 10000;
+const size_t maxBytesToProcess = 1000000000000;
 
 int renameFile( const string &fileName, const string &patternStart, const string &patternEnd )
 	{
@@ -63,8 +63,7 @@ int renameAll( const string &dirPath, const string &patternStart, const string &
 	return 0;
 	}
 
-int createIndexChunk( vector< string > toProcess, string patternIntermediate, string patternEnd,
-		size_t maxBytesToProcess, string outputFolder )
+int createIndexChunk( vector< string > toProcess, size_t maxBytesToProcess, string outputFolder )
 	{
 	// Setup statistics file
 	unsigned documentsProcessed = 0;
@@ -89,7 +88,11 @@ int createIndexChunk( vector< string > toProcess, string patternIntermediate, st
 		// If adding this file would make our index chunk too large, break out of the for loop we're done here.
 		size_t filesize = getFileSize( fileName.cStr( ) );
 		if ( filesize + totalBytesProcessed >= maxBytesToProcess )
+			{
+			std::cout << "Too many bytes processed by indexerDriver\n";
+			std::cout << "\tfilesize[" << filesize << "]\n";
 			break;
+			}
 
 		cout << "About to read file: " << fileName << "\n";
 		// Decode the current file
@@ -117,7 +120,7 @@ int createIndexChunk( vector< string > toProcess, string patternIntermediate, st
 				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{
-					cerr << "somehow failed to add a document into the index chunk" << endl;
+					// cerr << "somehow failed to add a document into the index chunk" << endl;
 					throw fileWriteException( );
 					}
 				++documentsProcessed;
@@ -180,9 +183,16 @@ int main( int argc, char ** argv )
 		{
 		// Otherwise we use new files for this index chunk
 		toProcess = matchingFilenames( batch, startPattern );
+		std::cout << "toProcess " << toProcess.size( ) << " documents _forIndexer\n";
+		}
+	else
+		{
+		std::cout << "toProcess " << toProcess.size( ) << " documents _processing\n";
 		}
 	try
-		createIndexChunk( toProcess, intermediatePattern, finishedPattern, maxBytesToProcess, outputFolder );
+		{
+		createIndexChunk( toProcess, maxBytesToProcess, outputFolder );
+		}
 	catch ( ... )
 		{
 		return 1;
@@ -190,5 +200,6 @@ int main( int argc, char ** argv )
 
 	if ( renameAll( batch, intermediatePattern, finishedPattern ) == -1 )
 			cerr << "Failed to rename processed html files" << endl;
+	std::cout << "Finished processing all HTML\n";
 	return 0;
 	}
