@@ -226,9 +226,13 @@ namespace dex
 		void *findAndScoreDocuments( void *args );
 		dex::pair< dex::vector< dex::ranker::searchResult >, int > *findAndScoreDocuments( dex::ranker::scoreRequest * req);
 		// Returns the N highest scoring documents in our index for a given query
+		// numChunksToConcurrentlyRank lets you adjust the number of index chunks you'd like
+		// to rank at the same time using threads. If too many chunks are ranked at once, we run out of
+		// memory and the system thrashes.
 		dex::pair< dex::vector< dex::ranker::searchResult >, int > getTopN(
 				size_t n, dex::string query, dex::ranker::ranker *rankerPointer,
-				dex::vector< dex::index::indexChunk * > chunkPointers, bool printInfo = false );
+				dex::vector< dex::index::indexChunk * > chunkPointers, size_t numChunksToConcurrentlyRank = static_cast< size_t > ( -1 ),
+				bool printInfo = false );
 		}
 	}
 

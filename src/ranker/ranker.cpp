@@ -1,6 +1,7 @@
 // ranker.cpp
 // This ranks the stuff
 
+// 2020-01-13: Add maximum number of chunks to concurrently rank to prevent thrashing: combsc
 // 2020-01-12: done stuff in the past but I wasn't writing it down... finished implementing
 //             dynamic URL ranking.
 // 2020-01-02: Cleaned up memory usage when dealing with threads, fixed topN: combsc
@@ -685,7 +686,7 @@ dex::pair< dex::vector< dex::ranker::searchResult >, int > *dex::ranker::findAnd
 	}
 
 dex::pair< dex::vector< dex::ranker::searchResult >, int > dex::ranker::getTopN( size_t n, dex::string query, dex::ranker::ranker *rankerPointer,
-dex::vector< dex::index::indexChunk * > chunkPointers, bool printInfo )
+dex::vector< dex::index::indexChunk * > chunkPointers, size_t numChunksToConcurrentlyRank, bool printInfo )
 	{
 	// Parse query passed in
 	dex::queryCompiler::parser parser;
@@ -700,45 +701,51 @@ dex::vector< dex::index::indexChunk * > chunkPointers, bool printInfo )
 	dex::vector< double > scores;
 	dex::vector< dex::ranker::scoreRequest > requests;
 	requests.resize( chunkPointers.size( ) );
-	for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
-		{
-		// build our scoreRequest object and make a thread that scores documents
-		requests[ index ].generatorPointer = &generator;
-		requests[ index ].generatorLockPointer = &generatorLock;
-		requests[ index ].chunkPointer = chunkPointers[ index ];
-		requests[ index ].rankerPointer = rankerPointer;
-		requests[ index ].printInfo = printInfo;
-		if ( printInfo )
-			std::cout << "Create with chunk: " << requests[ index ].chunkPointer << std::endl;
-		pthread_create( &workerThreads[ index ], nullptr, dex::ranker::findAndScoreDocuments,
-				( void * ) &requests[ index ] );
-		}
-
 	bool errorReturned = false;
-	for ( size_t index = 0;  index < chunkPointers.size( );  ++index )
+	for ( size_t chunkBatch = 0;  chunkBatch < ( chunkPointers.size( ) / numChunksToConcurrentlyRank ) + 1;  ++chunkBatch )
 		{
-		void *returnValue;
-		pthread_join( workerThreads[ index ], &returnValue );
-		dex::pair< dex::vector< dex::ranker::searchResult >, int > *returnedResults =
-				( dex::pair< dex::vector< dex::ranker::searchResult >, int > * ) returnValue;
-		// If the query results in an error, propogate up.
-		if ( returnedResults->second == -1 )
-			errorReturned = true;
-		// Otherwise, add the results from this index chunk to the results and scores vectors
-		else
-			for ( size_t index = 0;  index < returnedResults->first.size( );  ++index )
-				{
-				dex::ranker::searchResult result = returnedResults->first[ index ];
-				results.pushBack( result );
-				scores.pushBack( result.score.getTotalScore( ) );
-				}
-		delete returnedResults;
+		for ( size_t index = chunkBatch * numChunksToConcurrentlyRank;  index < ( chunkBatch + 1 ) * numChunksToConcurrentlyRank &&
+				index < chunkPointers.size( ) ;  ++index )
+			{
+			// build our scoreRequest object and make a thread that scores documents
+			requests[ index ].generatorPointer = &generator;
+			requests[ index ].generatorLockPointer = &generatorLock;
+			requests[ index ].chunkPointer = chunkPointers[ index ];
+			requests[ index ].rankerPointer = rankerPointer;
+			requests[ index ].printInfo = printInfo;
+			if ( printInfo )
+				std::cout << "Create with chunk: " << requests[ index ].chunkPointer << std::endl;
+			pthread_create( &workerThreads[ index ], nullptr, dex::ranker::findAndScoreDocuments,
+					( void * ) &requests[ index ] );
+			}
+
+		for ( size_t index = chunkBatch * numChunksToConcurrentlyRank;  index < ( chunkBatch + 1 ) * numChunksToConcurrentlyRank &&
+				index < chunkPointers.size( ) ;  ++index )
+			{
+			void *returnValue;
+			pthread_join( workerThreads[ index ], &returnValue );
+			dex::pair< dex::vector< dex::ranker::searchResult >, int > *returnedResults =
+					( dex::pair< dex::vector< dex::ranker::searchResult >, int > * ) returnValue;
+			// If the query results in an error, propogate up.
+			if ( returnedResults->second == -1 )
+				errorReturned = true;
+			// Otherwise, add the results from this index chunk to the results and scores vectors
+			else
+				for ( size_t index = 0;  index < returnedResults->first.size( );  ++index )
+					{
+					dex::ranker::searchResult result = returnedResults->first[ index ];
+					results.pushBack( result );
+					scores.pushBack( result.score.getTotalScore( ) );
+					}
+			delete returnedResults;
+			}
 		}
 	if ( errorReturned )
-		{
-		delete [ ] workerThreads;
-		return { { }, -1 };
-		}
+	{
+	delete [ ] workerThreads;
+	return { { }, -1 };
+	}
+	
 
 	// Out of all the documents returned, find the topN documents
 	dex::documentInfo **topN;
