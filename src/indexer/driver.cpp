@@ -71,6 +71,12 @@ int createIndexChunk( vector< string > toProcess, size_t maxBytesToProcess, stri
 	time_t start = time( nullptr );
 	int statisticsFileDescriptor = open( ( outputFolder + "statistics.txt").cStr( ), O_RDWR | O_CREAT, 0777 );
 
+	if ( statisticsFileDescriptor == -1 )
+		{
+		std::cerr << "Could not open statistics file: " << outputFolder + "statistics.txt" << std::endl;
+		throw fileOpenException( );
+		}
+
 	// declare variables needed
 	size_t totalDocumentsProcessed = 0;
 	size_t totalBytesProcessed = 0;
@@ -82,7 +88,7 @@ int createIndexChunk( vector< string > toProcess, size_t maxBytesToProcess, stri
 	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
 	index::indexChunk *initializingIndexChunk = new index::indexChunk( fileDescriptor );
 
-	for ( unsigned index = 0;  index < toProcess.size( );  ++index )
+	for ( unsigned index = 1;  index < toProcess.size( );  ++index )
 		{
 		string fileName = toProcess[ index ];
 		// If adding this file would make our index chunk too large, break out of the for loop we're done here.
@@ -120,7 +126,7 @@ int createIndexChunk( vector< string > toProcess, size_t maxBytesToProcess, stri
 				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{
-					// cerr << "somehow failed to add a document into the index chunk" << endl;
+					// cout << "somehow failed to add a document into the index chunk" << endl;
 					throw fileWriteException( );
 					}
 				++documentsProcessed;
