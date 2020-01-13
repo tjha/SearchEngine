@@ -18,6 +18,8 @@
 #include "utils/basicString.hpp"
 #include "utils/file.hpp"
 
+dex::string pathToHtml( "src/frontend/" );
+
 // Temporary searchResults
 
 dex::vector< dex::ranker::searchResult > tmpSearchResults =
@@ -31,7 +33,6 @@ dex::vector< dex::ranker::searchResult > tmpSearchResults =
 dex::vector< dex::index::indexChunk * > indexChunkObjects;
 
 //  Multipurpose Internet Mail Extensions (MIME) types
-
 struct MimetypeMap
 	{
 	const char *Extension,
@@ -74,18 +75,17 @@ off_t FileSize( int f )
 
 bool pathIsLegal( dex::string path )
 	{
-	return path.find( "/../" ) == dex::string::npos && ( path.size( ) < 3 || path.substr( path.size( ) - 3, 3) != "/.." ); // TODO ask stephen about path
+	return path.find( "/../" ) == dex::string::npos && ( path.size( ) < 3 || path.substr( path.size( ) - 3, 3) != "/.." );
 	}
 
 dex::string outputResult( dex::ranker::searchResult &result )
 	{
-	return "<li class=\"result\"><a href=" + result.url.completeUrl( ) +
-			"\">" + result.url.getDomain( ) + "</a> " + result.title + "</li>";
+	return "\t\t\t\t\t<li class=\"result\"><a href=" + result.url.completeUrl( ) +
+			">" + result.url.completeUrl( ) + "</a> " + result.title + "</li>\n";
 	}
 
 void *Talk( void *p )
 	{
-	std::cout << "New Request" << std::endl;
 	size_t bufferSize = 10240;
 	char buffer[ bufferSize ];
 	int bytes;
@@ -139,13 +139,12 @@ void *Talk( void *p )
 		return nullptr;
 		}
 
-	std::cout << "Path: " << path << std::endl;
-	std::cout << "Query: " << query << std::endl;
-	std::cout << "Trigger: " << toggle << std::endl << std::endl;
-
 	// reroute no path to index.html
 	if ( path.empty( ) )
 		path = "index.html";
+
+	// adjust path so it can be found in repo
+	path.insert( 0, pathToHtml );
 
 	int file;
 	if ( !pathIsLegal( path ) || ( file = open( path.cStr( ), O_RDONLY ) ) == -1 )
@@ -157,35 +156,33 @@ void *Talk( void *p )
 
 	// ranker stuff
 	dex::ranker::ranker rankerObject;
-	dex::pair< dex::vector< dex::ranker::searchResult >, int > searchResultsPair = dex::ranker::getTopN( 10, query, &rankerObject, indexChunkObjects );
-	if ( searchResultsPair.second == -1 )
+	dex::pair< dex::vector< dex::ranker::searchResult >, int > searchResultsPair = dex::ranker::getTopN
+			( 10, query, &rankerObject, indexChunkObjects );
+	dex::vector< dex::ranker::searchResult > searchResults;
+	if ( !query.empty( ) && searchResultsPair.second != -1 )
 		{
-		// THE QUERY PASSED IN WAS BAD, DO SOMETHING
-		return nullptr;
+		// results returned
+		searchResults = searchResultsPair.first;
 		}
-	dex::vector< dex::ranker::searchResult > searchResults = searchResultsPair.first;
-	// TODO: populate webpage with content
-	std::cout << request << std::endl;
 
 	struct stat fileInfo;
 	fstat( file, &fileInfo );
 	char *map = ( char * )mmap( nullptr, fileInfo.st_size, PROT_READ, MAP_PRIVATE, file, 0 );
 	dex::string content;
 	size_t resultsSize = 0;
-	if ( path == "results.html" )
+	if ( path == pathToHtml + "results.html" )
 		{
+		std::cout << "?query=" << query << std::endl;
 		content = dex::string( map );
 		content.insert( content.find( "placeholder=" ) + 13, query );
 		for ( size_t i = 0;  i < searchResults.size( );  ++i )
 			{
-			std::cout << "i = " << i << std::endl;
 			dex::string searchRes( outputResult( searchResults[ searchResults.size( ) - i - 1 ] ) );
 			resultsSize += searchRes.size( );
-			content.insert( content.find( "class=\"results\">" ) + 16, searchRes );
+			content.insert( content.find( "class=\"results\">" ) + 17, searchRes );
+			std::cout << i << ": " << searchRes << std::endl;
 			}
 		}
-
-	std::cout << "Inserting results complete." << std::endl;
 
 	if ( map == MAP_FAILED )
 		return nullptr;
@@ -198,7 +195,7 @@ void *Talk( void *p )
 		+ "\r\nConnection: close\r\nContent-Type: " + Mimetype( path ) + "\r\n\r\n";
 	send( socket, responseHeader.data( ), responseHeader.size( ), 0 );
 
-	if ( path == "results.html" )
+	if ( path == pathToHtml + "results.html" )
 		send( socket, content.data( ), content.size( ), 0 );
 	else
 		{
@@ -217,9 +214,9 @@ void *Talk( void *p )
 
 int main( int argc, char **argv )
 	{
-	if ( argc < 2 )
+	if ( argc != 3 )
 		{
-		std::cerr << "Usage: server port" << std::endl;
+		std::cerr << "Usage: ./build/server.exe port path/to/index/chunks" << std::endl;
 		return 1;
 		}
 
@@ -266,10 +263,9 @@ int main( int argc, char **argv )
 		}
 
 	// Create indexChunkObjects
-	// TODO: have Stephen take a look at this :)
-	dex::string indexChunkDirector = "../smallerIndexChunks/"; // Top directory of search
-	dex::string pattern = "_in.dex";
-	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirector, pattern );
+	dex::string indexChunkDirectory( argv[ 2 ] ); // Top directory of search
+	dex::string pattern = ".dex";
+	dex::vector< dex::string > indexChunkFilenames = dex::matchingFilenames( indexChunkDirectory, pattern );
 	indexChunkObjects.reserve( indexChunkFilenames.size( ) );
 	for ( dex::vector< dex::string >::constIterator filenameIterator = indexChunkFilenames.cbegin( );
 			filenameIterator != indexChunkFilenames.cend( );  filenameIterator++ )

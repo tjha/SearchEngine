@@ -26,6 +26,12 @@ namespace dex
 		class dynamicRanker;
 		class ranker;
 
+		enum rankerModeValues
+			{
+			docInfo = 0x1 << 0,
+			dynamicUrlScore = 0x1 << 1
+			};
+
 		class score
 			{
 			private:
@@ -98,6 +104,7 @@ namespace dex
 		class dynamicRanker
 			{
 			private:
+				size_t rankerMode;
 				// used to prevent spamming, set a cap on how many points a document can get for spans found
 				double maxBodySpanScore;
 				double maxTitleSpanScore;
@@ -111,7 +118,7 @@ namespace dex
 				double maxUrlScore;
 
 			public:
-				dynamicRanker( double maxBodySpanScore, double maxTitleSpanScore, double emphasizedWordWeight,
+				dynamicRanker( size_t rankerMode, double maxBodySpanScore, double maxTitleSpanScore, double emphasizedWordWeight,
 						double maxBagOfWordsScore,  double wordsWeight, double maxUrlScore );
 
 				// Returns the word count of all the documents in the index chunk for the ISRs passed.
@@ -135,12 +142,20 @@ namespace dex
 				// Get the spans that occur in each document for the ISRs passed in
 				// pair corresponds to span size found along with the kendall tau coefficient associated
 				// with the ordering of the span.
+				// If documentInfo was not called, pass a chunkPointer, documentTitlesPointer, and documentUrlsPointer
+				// to ensure the function works properly.
+				// If chunkPointer is specified, wordCount is not used.
 				dex::vector< dex::vector< dex::pair< size_t, double > > > getDesiredSpans(
 						// Vector of ISRs should be arranged such that the words of the ISRs line up with the order of the query
 						vector< constraintSolver::ISR * > &isrs,
 						constraintSolver::ISR *matching,
 						constraintSolver::endOfDocumentISR *ends,
-						const vector< vector< size_t > > &wordCount ) const;
+						const vector< vector< size_t > > &wordCount,
+						dex::index::indexChunk *chunkPointer = nullptr,
+						dex::vector< dex::string > *documentTitlesPointer = nullptr,
+						dex::vector< dex::Url > *documentUrlsPointer = nullptr,
+						const dex::vector< dex::string > *flattenedQueryPointer = nullptr,
+						bool printInfo = false ) const;
 
 				double scoreBodySpan( size_t queryLength, size_t spanLength, double tau ) const;
 				double scoreTitleSpan( size_t queryLength, size_t spanLength, double tau ) const;
@@ -171,6 +186,8 @@ namespace dex
 				staticRanker rankerStatic;
 				dynamicRanker rankerDynamic;
 				ranker(
+					// Mode of the ranker you want on. Bitwise or the mode specifications together that you'd like on for this ranker.
+					size_t rankerMode = static_cast< size_t > ( -1 ),
 					// pair of < maximum length of title, score awarded to title >
 					const dex::vector< dex::pair< size_t, double > > &staticTitleWeights
 							= dex::vector< dex::pair< size_t, double > >( { { 15, 50 }, { 25, 40 }, { 50, 20 } } ),
@@ -207,6 +224,7 @@ namespace dex
 
 		// When given a scoreRequest, search a chunk for all matching documents and return their searchResult objects
 		void *findAndScoreDocuments( void *args );
+		dex::pair< dex::vector< dex::ranker::searchResult >, int > *findAndScoreDocuments( dex::ranker::scoreRequest * req);
 		// Returns the N highest scoring documents in our index for a given query
 		dex::pair< dex::vector< dex::ranker::searchResult >, int > getTopN(
 				size_t n, dex::string query, dex::ranker::ranker *rankerPointer,

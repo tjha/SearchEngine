@@ -1,6 +1,7 @@
 // tokenstream.cpp
 //
 // 2019-12-15: Done: jasina, medhak
+// 2020-01-05: Not quite, fixed tokenstream if passed an empty string: combsc
 
 #include <cstddef>
 #include "queryCompiler/expression.hpp"
@@ -56,6 +57,13 @@ char dex::queryCompiler::toLower( char c )
 
 dex::queryCompiler::tokenStream::tokenStream( const dex::string &in, bool infix )
 	{
+	if ( in == "" )
+		{
+		input = "";
+		location = 0;
+		emphasizedWords.clear( );
+		return;
+		}
 	input.reserve( in.size( ) );
 
 	// Intermediate value to help us figure out which words are emphasized

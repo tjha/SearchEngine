@@ -375,7 +375,6 @@ namespace dex
 
 			void rehash( size_t newSize )
 				{
-				// TODO: Maybe reuse precalculated hashes
 				swap( unorderedMap< Key, Value, Hash > ( cbegin( ), cend( ),
 						dex::max( newSize, size( ) * 2 ) ) );
 				}
@@ -394,17 +393,6 @@ namespace dex
 				dex::swap( other.tableSize, tableSize );
 				dex::swap( other.numberElements, numberElements );
 				dex::swap( other.ghostCount, ghostCount );
-				}
-
-			dex::string compress( )
-				{
-				dex::string compressed = "";
-				Key defaultKey;
-				for ( auto it = begin( );  it != cend( );  ++it )
-					{
-					compressed += it->first + "\n" + it->second.compress( ); // TODO compress passes in a string by ref to append to
-					}
-					return compressed;
 				}
 		};
 

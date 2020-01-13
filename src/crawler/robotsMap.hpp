@@ -255,20 +255,6 @@ namespace dex
 				return robots;
 				}
 
-			dex::string compress( )
-				{
-				dex::string toReturn;
-				mapLock.readLock( );
-				for ( auto it = mainMap.begin( );  it != mainMap.end( );  ++it )
-					{
-					it->second.second->readLock( );
-					toReturn += it->first + "\n" + it->second.first->compress( ) + "\n";
-					it->second.second->releaseReadLock( );
-					}
-				mapLock.releaseReadLock( );
-				return toReturn;
-				}
-
 			robotsMap( int max )
 				{
 				maximumSize = max;

@@ -364,20 +364,6 @@ namespace dex
 				return time( nullptr ) >= expireTime;
 				}
 
-			// TODO add encode and decode functions as vector< unsigned char > and
-			// are not human readable
-			// All of the information of the robot
-			dex::string compress( )
-				{
-				return "Domain:\t\t\t" + domain + "\n" +
-							"Crawl-Delay:\t\t" + dex::toString( crawlDelay ) + "\n" +
-							"Allowed-Visit-Time:\t" + ctime( &allowedVisitTime ) +
-							"Last-Visit:\t\t" + ctime( &lastTimeVisited ) + "\n" +
-							"Expire Time:\t\t" + ctime( &expireTime ) + "\n" +
-							"Allowed-Paths\n" + allowedPaths.compress( ) +
-							"Disallowed-Paths\n" + disallowedPaths.compress( );
-				}
-
 			// Need access to all member variables for encoding
 			dex::string getDomain( ) const
 				{

@@ -7,21 +7,17 @@ TEST_DIR := tst
 # Where to output
 BUILD_DIR := build
 
-CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -Werror -g3 -pthread -ltls
-# TODO: Is this block necessary?
-UNAME_S := $(shell uname -s)
+CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -O3 -pthread
+
+ifeq ($(tls),yes)
+	CXXFLAGS := $(CXXFLAGS) -ltls
+	UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-	CXXFLAGS := $(CXXFLAGS) -L/opt/libressl/lib
-	CXXFLAGS := $(CXXFLAGS) -I/opt/libressl/include
+	CXXFLAGS := $(CXXFLAGS) -L/opt/libressl/lib -I/opt/libressl/include
 endif
 ifeq ($(UNAME_S),Darwin)
-	CXXFLAGS := $(CXXFLAGS) -L/usr/local/opt/libressl/lib
-	CXXFLAGS := $(CXXFLAGS) -I/usr/local/opt/libressl/include
+	CXXFLAGS := $(CXXFLAGS) -L/usr/local/opt/libressl/lib -I/usr/local/opt/libressl/include
 endif
-
-# TODO: -Werror
-ifeq ($(tls),no)
-	CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g3 -pthread
 endif
 
 CXXFLAGS := $(CXXFLAGS) -I $(SOURCE_DIR)/ -I $(TEST_DIR)/
@@ -94,21 +90,28 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(HEADER_SOURCES)
 
 crawlerDriver: $(BUILD_DIR)/driver/driver.o
 	mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/driver.exe
+	$(CXX) $(CXXFLAGS) $^ -o $(BUILD_DIR)/driver.exe
 
 indexerDriver: $(BUILD_DIR)/indexer/driver.o $(BUILD_DIR)/indexer/indexer.o\
 		$(BUILD_DIR)/constraintSolver/constraintSolver.o
 	mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -O3 $^ -o $(BUILD_DIR)/indexerDriver.exe
+	$(CXX) $(CXXFLAGS) $^ -o $(BUILD_DIR)/indexerDriver.exe
 
 PORT=8000
+PATH_TO_INDEX_CHUNKS=data/indexChunks/
 serve: $(BUILD_DIR)/frontend/httpServer.o\
 		$(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
 		$(BUILD_DIR)/queryCompiler/tokenstream.o $(BUILD_DIR)/constraintSolver/constraintSolver.o\
 		$(BUILD_DIR)/indexer/indexer.o $(BUILD_DIR)/ranker/ranker.o
 	mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -O3 -g3 $^ -o $(BUILD_DIR)/server.exe;
-	./$(BUILD_DIR)/server.exe $(PORT)
+	$(CXX) $(CXXFLAGS) $^ -o $(BUILD_DIR)/server.exe;
+	./$(BUILD_DIR)/server.exe $(PORT) $(PATH_TO_INDEX_CHUNKS)
+
+cli: $(BUILD_DIR)/frontend/cli.o $(BUILD_DIR)/constraintSolver/constraintSolver.o $(BUILD_DIR)/indexer/indexer.o\
+		$(BUILD_DIR)/ranker/ranker.o $(BUILD_DIR)/queryCompiler/expression.o $(BUILD_DIR)/queryCompiler/parser.o\
+		$(BUILD_DIR)/queryCompiler/tokenstream.o
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $^ -o $(BUILD_DIR)/frontend/cli.exe
 
 printOS:
 	$(info Your OS is '$(UNAME_S)')
