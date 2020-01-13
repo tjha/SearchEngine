@@ -550,7 +550,6 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 
 	// If you've found the wordCount (docInfo is on) then calculate the bagOfWords score
 	if ( ( rankerMode & rankerModeValues::docInfo ) > 0 )
-		{
 		size_t beginDocument = 0;
 		size_t endDocument = matching->seek( 0 );
 		for ( size_t i = 0;  i < wordCount.size( );  ++i )
@@ -564,7 +563,6 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 			beginDocument = endDocument;
 			endDocument = matching->next( );
 			}
-		}
 
 	// score titleSpans
 	wordCount = getDocumentInfo( titleISRs, matching, ends, nullptr, titles, urls );
@@ -586,15 +584,18 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 			std::cout << "Index: " << i << ", Title Span Score: " << scores[ i ].dynamicTitleSpanScore << std::endl;
 			}
 		}
-	for ( size_t i = 0;  i < urls.size( );  ++i )
-		{
-		double urlScore = scoreUrl( flattenedQuery, urls[ i ] );
-		scores[ i ].setDynamicUrlScore( urlScore );
-		if ( printInfo )
+
+	// score Urls
+	if ( ( rankerMode & rankerModeValues::dynamicUrlScore ) > 0 )
+		for ( size_t i = 0;  i < urls.size( );  ++i )
 			{
-			std::cout << "Index: " << i << ", Url Score: " << scores[ i ].dynamicTitleSpanScore << std::endl;
+			double urlScore = scoreUrl( flattenedQuery, urls[ i ] );
+			scores[ i ].setDynamicUrlScore( urlScore );
+			if ( printInfo )
+				{
+				std::cout << "Index: " << i << ", Url Score: " << scores[ i ].dynamicTitleSpanScore << std::endl;
+				}
 			}
-		}
 	return scores;
 	}
 
