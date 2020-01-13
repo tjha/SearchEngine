@@ -240,7 +240,7 @@ dex::vector< dex::vector< size_t > > dex::ranker::dynamicRanker::getDocumentInfo
 
 double dex::ranker::dynamicRanker::kendallsTau( const dex::vector< size_t > &ordering ) const
 	{
-	if ( ordering.size( ) == 0 )
+	if ( ordering.empty( ) )
 		return 0;
 	double numOrderedPairs = 0;
 	double numUnorderedPairs = 0;
@@ -504,7 +504,7 @@ double dex::ranker::dynamicRanker::scoreUrl( const dex::vector< dex::string > &f
 			propFoundPoints += 1;
 		
 	propFoundPoints /= ( flattenedQuery.size( ) * 2 ); // Should be value between 0 and 1
-	tau = ( tau + 2 ) / 3; // Value between 1/3 and 1
+	tau = ( tau / 4 ) + 0.75; // Value between 1/2 and 1
 	return ( maxUrlScore * propFoundPoints * tau ) * 0.75;
 	}
 
@@ -543,9 +543,7 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 		
 		scores[ i ].setDynamicBodySpanScore( dex::min( bodySpanScore, maxBodySpanScore ) );
 		if ( printInfo )
-			{
 			std::cout << "Index " << i << ", Body Span Score: " << scores[ i ].dynamicBodySpanScore << std::endl;
-			}
 		}
 
 	// If you've found the wordCount (docInfo is on) then calculate the bagOfWords score
@@ -558,9 +556,7 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 			double dynamicWordScore = scoreBagOfWords( wordCount[ i ], endDocument - beginDocument, emphasized );
 			scores[ i ].setDynamicBagOfWordsScore( dex::min( dynamicWordScore, maxBagOfWordsScore ) );
 			if ( printInfo )
-				{
 				std::cout << "Index: " << i << ", Bag of Words Score: " << scores[ i ].dynamicBagOfWordsScore << std::endl;
-				}
 			beginDocument = endDocument;
 			endDocument = matching->next( );
 			}
@@ -582,9 +578,7 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 			}
 		scores[ i ].setDynamicTitleSpanScore( dex::min( titleSpanScore, maxTitleSpanScore ) );
 		if ( printInfo )
-			{
 			std::cout << "Index: " << i << ", Title Span Score: " << scores[ i ].dynamicTitleSpanScore << std::endl;
-			}
 		}
 
 	// score Urls
@@ -594,9 +588,7 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 			double urlScore = scoreUrl( flattenedQuery, urls[ i ] );
 			scores[ i ].setDynamicUrlScore( urlScore );
 			if ( printInfo )
-				{
 				std::cout << "Index: " << i << ", Url Score: " << scores[ i ].dynamicTitleSpanScore << std::endl;
-				}
 			}
 	return scores;
 	}
