@@ -611,15 +611,16 @@ TEST_CASE( "scoring" )
 		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url ) == maxUrlScore );
 
 		flattenedQuery = { "I", "love", "cooking", "mapo", "tofu", "recipe" };
-		dex::Url url1 = "https://www.ilovecooking.com/chinese/amazing-mapo-tofu-recipe";
-		dex::Url url2 = "https://www.ilovecooking.com/korean/tofu-stew-recipe";
-		dex::Url url3 = "https://www.ilovecooking.com/japanese/simple-udon-recipe";
-		dex::Url url4 = "https://www.amytriescooking.com/new-tofu-trend";
-		dex::Url url5 = "https://www.randomforum.com/unrelated-information";
-		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url1 ) > judge.rankerDynamic.scoreUrl( flattenedQuery, url2 ) );
-		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url2 ) > judge.rankerDynamic.scoreUrl( flattenedQuery, url3 ) );
-		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url3 ) > judge.rankerDynamic.scoreUrl( flattenedQuery, url4 ) );
-		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url4 ) > judge.rankerDynamic.scoreUrl( flattenedQuery, url5 ) );
+		dex::vector< dex::Url > urls;
+		urls.pushBack( "https://www.ilovecookingmapotofurecipe.com/" );
+		urls.pushBack( "https://www.ilovecookingmapo.com/tofurecipe" );
+		urls.pushBack( "https://www.ilovecooking.com/chinese/amazing-mapo-tofu-recipe" );
+		urls.pushBack( "https://www.ilovecooking.com/korean/tofu-stew-recipe" );
+		urls.pushBack( "https://www.ilovecooking.com/japanese/simple-udon-recipe" );
+		urls.pushBack( "https://www.amytriescooking.com/new-tofu-trend" );
+		urls.pushBack( "https://www.randomforum.com/unrelated-information" );
+		for ( size_t i = 0;  i < urls.size( );  ++i )
+			REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, urls[ i ] ) > judge.rankerDynamic.scoreUrl( flattenedQuery, urls[ i + 1] ) );
 		}
 	dex::vector< size_t > ends = { 1000, 6000, 7000 };
 	dex::rankerTesting::endOfDocumentISR endisr( ends );

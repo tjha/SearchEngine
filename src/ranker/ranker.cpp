@@ -1,6 +1,8 @@
 // ranker.cpp
 // This ranks the stuff
 
+// 2020-01-12: done stuff in the past but I wasn't writing it down... finished implementing
+//             dynamic URL ranking.
 // 2020-01-02: Cleaned up memory usage when dealing with threads, fixed topN: combsc
 // 2020-01-01: Got code working using get( ), made function for getting documentInfo
 //             moved maxNumSpans to dynamicScores instead of getDesiredSpans, add kendallTau,
@@ -238,6 +240,8 @@ dex::vector< dex::vector< size_t > > dex::ranker::dynamicRanker::getDocumentInfo
 
 double dex::ranker::dynamicRanker::kendallsTau( const dex::vector< size_t > &ordering ) const
 	{
+	if ( ordering.size( ) == 0 )
+		return 0;
 	double numOrderedPairs = 0;
 	double numUnorderedPairs = 0;
 	for ( size_t left = 0;  left < ordering.size( ) - 1;  ++left )
@@ -458,6 +462,7 @@ double dex::ranker::dynamicRanker::scoreUrl( const dex::vector< dex::string > &f
 	for ( size_t i = 0;  i < flattenedQuery.size( );  ++i )
 		locationsOfQuery[ i ] = lowerUrl.find( dex::toLower( flattenedQuery[ i ] ) );
 	
+	// Build the query
 	dex::string rebuiltQuery;
 	size_t querySize = 0;
 	for ( size_t i = 0;  i < flattenedQuery.size( );  ++i )
@@ -471,13 +476,17 @@ double dex::ranker::dynamicRanker::scoreUrl( const dex::vector< dex::string > &f
 
 	if ( rebuiltQuery == domain || ( domain.size( ) > rebuiltQuery.size( ) && domain[ rebuiltQuery.size( ) ] == '.' ) )
 		{
-		// This person is likely searching for this site's homepage.
+		// This person is likely searching for this site's homepage, so give max points if this page is the homepage
+		// Otherwise, return 3/4 of the max score possible.
 		if ( url.getPath( ) == "/" )
 			return maxUrlScore;
 		else
 			return maxUrlScore * 0.75;
 		}
 
+	// Since the query is no longer an exact match, maximum score we can return should be 0.75
+
+	// Query is not the domain of the site, create vector containing where each word of the query is found in the URL
 	dex::vector< size_t > foundLocations;
 	foundLocations.reserve( locationsOfQuery.size( ) );
 	for ( size_t i = 0;  i < locationsOfQuery.size( ); ++i )
@@ -485,11 +494,18 @@ double dex::ranker::dynamicRanker::scoreUrl( const dex::vector< dex::string > &f
 			foundLocations.pushBack( locationsOfQuery[ i ] );
 		
 	double tau = kendallsTau( foundLocations ); // value between -1 and 1
-	double propFound = static_cast< double > ( foundLocations.size( ) ) / locationsOfQuery.size( ); // value between 0 and 1
+	// Give more points for the more words that are in the URL. More points if they're found in the domain
+	double propFoundPoints = 0;
+	size_t domainEnd = url.getService( ).size( ) + url.getHost( ).size( );
+	for ( size_t i = 0;  i < foundLocations.size( ); ++i )
+		if ( foundLocations[ i ] < domainEnd )
+			propFoundPoints += 2;
+		else
+			propFoundPoints += 1;
+		
+	propFoundPoints /= ( flattenedQuery.size( ) * 2 ); // Should be value between 0 and 1
 	tau = ( tau + 2 ) / 3; // Value between 1/3 and 1
-	// This is our last check so we really only want it to maximally be 1/2 of the maximum score if it wasn't caught in our
-	// earlier explicit catches. This function can certainly be improved, just trying to get something in rather than nothing.
-	return ( maxUrlScore * propFound * tau ) / 2.0;
+	return ( maxUrlScore * propFoundPoints * tau ) * 0.75;
 	}
 
 dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( dex::vector< constraintSolver::ISR * > &bodyISRs,
