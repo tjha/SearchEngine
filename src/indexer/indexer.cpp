@@ -137,6 +137,7 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 dex::index::indexChunk::~indexChunk( )
 	{
+	std::cout << "==== DESTRUCTING INDEX CHUNK ====" << std::endl;
 	if ( initializing )
 		{
 		dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( urlsToOffsets, encodedURLsToOffsets );

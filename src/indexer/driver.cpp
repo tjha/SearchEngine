@@ -158,6 +158,7 @@ int createIndexChunk( vector< string > toProcess, size_t maxBytesToProcess, stri
 		}
 
 	close( fileDescriptor );
+	delete initializingIndexChunk;
 	return 0;
 	}
 
