@@ -593,49 +593,77 @@ TEST_CASE( "scoring" )
 	size_t maxBodySpanScore = 100;
 	size_t maxTitleSpanScore = 100;
 	double wordsWeight = 1000;
+	double maxUrlScore = 500;
 
+	SECTION( "url scores" )
+		{
+		dex::ranker::ranker judge( static_cast< size_t > ( -1 ), titleWeights, urlWeight,
+			maxBodySpanScore, maxTitleSpanScore, emphasizedWeight, maxBagOfWordsScore, wordsWeight, maxUrlScore );
+		
+		dex::Url url = "https://www.washingtonpost.com/";
+		dex::vector< dex::string > flattenedQuery = { "Washingtonpost" };
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url ) == maxUrlScore );
+		flattenedQuery = { "Washingtonpost.com" };
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url ) == maxUrlScore );
+		flattenedQuery = { "Washington", "Post" };
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url ) == maxUrlScore );
+		flattenedQuery = { "Washington" , "Post", ".Com" };
+		REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, url ) == maxUrlScore );
+
+		flattenedQuery = { "I", "love", "cooking", "mapo", "tofu", "recipe" };
+		dex::vector< dex::Url > urls;
+		urls.pushBack( "https://www.ilovecookingmapotofurecipe.com/" );
+		urls.pushBack( "https://www.ilovecookingmapo.com/tofurecipe" );
+		urls.pushBack( "https://www.ilovecooking.com/chinese/amazing-mapo-tofu-recipe" );
+		urls.pushBack( "https://www.ilovecooking.com/korean/tofu-stew-recipe" );
+		urls.pushBack( "https://www.ilovecooking.com/japanese/simple-udon-recipe" );
+		urls.pushBack( "https://www.amytriescooking.com/new-tofu-trend" );
+		urls.pushBack( "https://www.randomforum.com/unrelated-information" );
+		for ( size_t i = 0;  i < urls.size( );  ++i )
+			REQUIRE( judge.rankerDynamic.scoreUrl( flattenedQuery, urls[ i ] ) > judge.rankerDynamic.scoreUrl( flattenedQuery, urls[ i + 1] ) );
+		}
 	dex::vector< size_t > ends = { 1000, 6000, 7000 };
-		dex::rankerTesting::endOfDocumentISR endisr( ends );
-		dex::rankerTesting::ISR matchingISR( "", ends, endisr );
-		dex::vector< size_t > quick = {
-				62, 69, 84, 311, 421, 430, 566, 619, 794, 952,
-				3500, 5500,
-				6500 };
-		dex::rankerTesting::ISR quickISR( "quick", quick, endisr );
-		dex::vector< size_t > brown = {
-				83, 94, 170, 179, 216, 227, 400, 417, 422, 575, 795, 826, 828, 957,
-				3501, 5501,
-				6504 };
-		dex::rankerTesting::ISR brownISR( "brown", brown, endisr );
-		dex::vector< size_t > fox = {
-				284, 423, 580, 612, 796, 912, 958,
-				3502, 5502,
-				6508 };
-		dex::rankerTesting::ISR foxISR( "fox", fox, endisr );
-		dex::vector< dex::constraintSolver::ISR * > isrs;
-		isrs.pushBack( &quickISR );
-		isrs.pushBack( &brownISR );
-		isrs.pushBack( &foxISR );
+	dex::rankerTesting::endOfDocumentISR endisr( ends );
+	dex::rankerTesting::ISR matchingISR( "", ends, endisr );
+	dex::vector< size_t > quick = {
+			62, 69, 84, 311, 421, 430, 566, 619, 794, 952,
+			3500, 5500,
+			6500 };
+	dex::rankerTesting::ISR quickISR( "quick", quick, endisr );
+	dex::vector< size_t > brown = {
+			83, 94, 170, 179, 216, 227, 400, 417, 422, 575, 795, 826, 828, 957,
+			3501, 5501,
+			6504 };
+	dex::rankerTesting::ISR brownISR( "brown", brown, endisr );
+	dex::vector< size_t > fox = {
+			284, 423, 580, 612, 796, 912, 958,
+			3502, 5502,
+			6508 };
+	dex::rankerTesting::ISR foxISR( "fox", fox, endisr );
+	dex::vector< dex::constraintSolver::ISR * > isrs;
+	isrs.pushBack( &quickISR );
+	isrs.pushBack( &brownISR );
+	isrs.pushBack( &foxISR );
 
-		dex::vector< size_t > titlequick = {
-				60,
-				2000,
-				6500 };
-		dex::rankerTesting::ISR titlequickISR( "quick", titlequick, endisr );
-		dex::vector< size_t > titlebrown = {
-				61,
-				2002,
-				6504 };
-		dex::rankerTesting::ISR titlebrownISR( "brown", titlebrown, endisr );
-		dex::vector< size_t > titlefox = {
-				62,
-				2004,
-				6508 };
-		dex::rankerTesting::ISR titlefoxISR( "fox", titlefox, endisr );
-		dex::vector< dex::constraintSolver::ISR * > titleisrs;
-		titleisrs.pushBack( &titlequickISR );
-		titleisrs.pushBack( &titlebrownISR );
-		titleisrs.pushBack( &titlefoxISR );
+	dex::vector< size_t > titlequick = {
+			60,
+			2000,
+			6500 };
+	dex::rankerTesting::ISR titlequickISR( "quick", titlequick, endisr );
+	dex::vector< size_t > titlebrown = {
+			61,
+			2002,
+			6504 };
+	dex::rankerTesting::ISR titlebrownISR( "brown", titlebrown, endisr );
+	dex::vector< size_t > titlefox = {
+			62,
+			2004,
+			6508 };
+	dex::rankerTesting::ISR titlefoxISR( "fox", titlefox, endisr );
+	dex::vector< dex::constraintSolver::ISR * > titleisrs;
+	titleisrs.pushBack( &titlequickISR );
+	titleisrs.pushBack( &titlebrownISR );
+	titleisrs.pushBack( &titlefoxISR );
 
 	SECTION( "simple dynamic scoring" )
 		{

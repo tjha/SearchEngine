@@ -1,6 +1,8 @@
 // ranker.cpp
 // This ranks the stuff
 
+// 2020-01-12: done stuff in the past but I wasn't writing it down... finished implementing
+//             dynamic URL ranking.
 // 2020-01-02: Cleaned up memory usage when dealing with threads, fixed topN: combsc
 // 2020-01-01: Got code working using get( ), made function for getting documentInfo
 //             moved maxNumSpans to dynamicScores instead of getDesiredSpans, add kendallTau,
@@ -33,7 +35,7 @@
 #include <iostream>
 
 dex::ranker::score::score( ) : totalScore( 0 ), staticUrlScore( 0 ), staticTitleScore( 0 ),
-		dynamicBodySpanScore( 0 ), dynamicTitleSpanScore( 0 ), dynamicBagOfWordsScore( 0 ) { }
+		dynamicBodySpanScore( 0 ), dynamicTitleSpanScore( 0 ), dynamicBagOfWordsScore( 0 ), dynamicUrlScore( 0 ) { }
 
 double dex::ranker::score::getTotalScore( ) const
 	{
@@ -64,6 +66,11 @@ void dex::ranker::score::setDynamicBagOfWordsScore( double score )
 	{
 	totalScore += score - dynamicBagOfWordsScore;
 	dynamicBagOfWordsScore = score;
+	}
+void dex::ranker::score::setDynamicUrlScore( double score )
+	{
+	totalScore += score - dynamicUrlScore;
+	dynamicUrlScore = score;
 	}
 
 dex::ranker::staticRanker::staticRanker( dex::vector< dex::pair< size_t, double > > titleWeights, double urlWeight ) :
@@ -154,9 +161,10 @@ dex::ranker::score dex::ranker::staticRanker::getStaticScore( const dex::string 
 
 
 dex::ranker::dynamicRanker::dynamicRanker( size_t rankerMode, double maxBodySpanScore, double maxTitleSpanScore,
-		double emphasizedWordWeight, double maxBagOfWordsScore,  double wordsWeight ) :
+		double emphasizedWordWeight, double maxBagOfWordsScore,  double wordsWeight, double maxUrlScore ) :
 				rankerMode( rankerMode ), maxBodySpanScore( maxBodySpanScore ), maxTitleSpanScore( maxTitleSpanScore ),
-				emphasizedWordWeight( emphasizedWordWeight ), maxBagOfWordsScore( maxBagOfWordsScore ), wordsWeight( wordsWeight ) { }
+				emphasizedWordWeight( emphasizedWordWeight ), maxBagOfWordsScore( maxBagOfWordsScore ),
+				wordsWeight( wordsWeight ), maxUrlScore( maxUrlScore ){ }
 
 dex::ranker::ranker::ranker(
 		size_t mode,
@@ -166,11 +174,12 @@ dex::ranker::ranker::ranker(
 		const double maxTitleSpanScore,
 		const double emphasizedWordWeight,
 		const double maxBagOfWordsScore,
-		const double wordWeight
+		const double wordWeight,
+		const double maxUrlScore
 		) :
 				rankerStatic( staticTitleWeights, staticUrlWeight ),
 				rankerDynamic( mode, maxBodySpanScore, maxTitleSpanScore, emphasizedWordWeight,
-						maxBagOfWordsScore, wordWeight ) { }
+						maxBagOfWordsScore, wordWeight, maxUrlScore ) { }
 
 dex::vector< dex::vector< size_t > > dex::ranker::dynamicRanker::getDocumentInfo( 
 		dex::vector< constraintSolver::ISR * > &isrs,
@@ -231,6 +240,8 @@ dex::vector< dex::vector< size_t > > dex::ranker::dynamicRanker::getDocumentInfo
 
 double dex::ranker::dynamicRanker::kendallsTau( const dex::vector< size_t > &ordering ) const
 	{
+	if ( ordering.empty( ) )
+		return 0;
 	double numOrderedPairs = 0;
 	double numUnorderedPairs = 0;
 	for ( size_t left = 0;  left < ordering.size( ) - 1;  ++left )
@@ -433,6 +444,70 @@ double dex::ranker::dynamicRanker::scoreBagOfWords( const dex::vector< size_t > 
 	return score * wordsWeight;
 	}
 
+double dex::ranker::dynamicRanker::scoreUrl( const dex::vector< dex::string > &flattenedQuery, const dex::Url &url ) const
+	{
+	
+	// Strategy:
+	// Reward hits in the domain over hits in the path
+	// Reward ordering
+	// Shouldn't have to be a complete match
+	// something that is an "exact match" should get our maximum url score
+	// after that, the max score they should get is 3/4 our max score. This is to ensure
+	// that an exact match really stands out over any other matches.
+
+	
+	// first find the locations of the query in our url
+	dex::string lowerUrl = dex::toLower( url.completeUrl( ) );
+	dex::vector < size_t > locationsOfQuery( flattenedQuery.size( ) );
+	for ( size_t i = 0;  i < flattenedQuery.size( );  ++i )
+		locationsOfQuery[ i ] = lowerUrl.find( dex::toLower( flattenedQuery[ i ] ) );
+	
+	// Build the query
+	dex::string rebuiltQuery;
+	size_t querySize = 0;
+	for ( size_t i = 0;  i < flattenedQuery.size( );  ++i )
+		querySize += flattenedQuery.size( );
+	rebuiltQuery.reserve( querySize );
+	for ( size_t i = 0;  i < flattenedQuery.size( );  ++i )
+		rebuiltQuery += dex::toLower( flattenedQuery[ i ] );
+
+	dex::string domain = dex::toLower( url.getDomain( ) );
+	// Check to see if the query was the domain OR the domain is like: query.com
+
+	if ( rebuiltQuery == domain || ( domain.size( ) > rebuiltQuery.size( ) && domain[ rebuiltQuery.size( ) ] == '.' ) )
+		{
+		// This person is likely searching for this site's homepage, so give max points if this page is the homepage
+		// Otherwise, return 3/4 of the max score possible.
+		if ( url.getPath( ) == "/" )
+			return maxUrlScore;
+		else
+			return maxUrlScore * 0.75;
+		}
+
+	// Since the query is no longer an exact match, maximum score we can return should be 0.75
+
+	// Query is not the domain of the site, create vector containing where each word of the query is found in the URL
+	dex::vector< size_t > foundLocations;
+	foundLocations.reserve( locationsOfQuery.size( ) );
+	for ( size_t i = 0;  i < locationsOfQuery.size( ); ++i )
+		if ( locationsOfQuery[ i ] != dex::string::npos )
+			foundLocations.pushBack( locationsOfQuery[ i ] );
+		
+	double tau = kendallsTau( foundLocations ); // value between -1 and 1
+	// Give more points for the more words that are in the URL. More points if they're found in the domain
+	double propFoundPoints = 0;
+	size_t domainEnd = url.getService( ).size( ) + url.getHost( ).size( );
+	for ( size_t i = 0;  i < foundLocations.size( ); ++i )
+		if ( foundLocations[ i ] < domainEnd )
+			propFoundPoints += 2;
+		else
+			propFoundPoints += 1;
+		
+	propFoundPoints /= ( flattenedQuery.size( ) * 2 ); // Should be value between 0 and 1
+	tau = ( tau / 4 ) + 0.75; // Value between 1/2 and 1
+	return ( maxUrlScore * propFoundPoints * tau ) * 0.75;
+	}
+
 dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( dex::vector< constraintSolver::ISR * > &bodyISRs,
 		dex::vector< constraintSolver::ISR * > &titleISRs, dex::constraintSolver::ISR *matching,
 		dex::constraintSolver::endOfDocumentISR *ends, dex::index::indexChunk *chunk,
@@ -468,9 +543,7 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 		
 		scores[ i ].setDynamicBodySpanScore( dex::min( bodySpanScore, maxBodySpanScore ) );
 		if ( printInfo )
-			{
 			std::cout << "Index " << i << ", Body Span Score: " << scores[ i ].dynamicBodySpanScore << std::endl;
-			}
 		}
 
 	// If you've found the wordCount (docInfo is on) then calculate the bagOfWords score
@@ -483,9 +556,7 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 			double dynamicWordScore = scoreBagOfWords( wordCount[ i ], endDocument - beginDocument, emphasized );
 			scores[ i ].setDynamicBagOfWordsScore( dex::min( dynamicWordScore, maxBagOfWordsScore ) );
 			if ( printInfo )
-				{
 				std::cout << "Index: " << i << ", Bag of Words Score: " << scores[ i ].dynamicBagOfWordsScore << std::endl;
-				}
 			beginDocument = endDocument;
 			endDocument = matching->next( );
 			}
@@ -507,10 +578,18 @@ dex::vector< dex::ranker::score > dex::ranker::dynamicRanker::getDynamicScores( 
 			}
 		scores[ i ].setDynamicTitleSpanScore( dex::min( titleSpanScore, maxTitleSpanScore ) );
 		if ( printInfo )
-			{
 			std::cout << "Index: " << i << ", Title Span Score: " << scores[ i ].dynamicTitleSpanScore << std::endl;
-			}
 		}
+
+	// score Urls
+	if ( ( rankerMode & rankerModeValues::dynamicUrlScore ) > 0 )
+		for ( size_t i = 0;  i < urls.size( );  ++i )
+			{
+			double urlScore = scoreUrl( flattenedQuery, urls[ i ] );
+			scores[ i ].setDynamicUrlScore( urlScore );
+			if ( printInfo )
+				std::cout << "Index: " << i << ", Url Score: " << scores[ i ].dynamicTitleSpanScore << std::endl;
+			}
 	return scores;
 	}
 
