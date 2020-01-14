@@ -689,6 +689,8 @@ dex::pair< dex::vector< dex::ranker::searchResult >, int > dex::ranker::getTopN(
 dex::vector< dex::index::indexChunk * > chunkPointers, size_t numChunksToConcurrentlyRank, bool printInfo )
 	{
 	// Parse query passed in
+	if ( numChunksToConcurrentlyRank == 0 )
+		return { { }, -1 };
 	dex::queryCompiler::parser parser;
 	dex::queryCompiler::matchedDocumentsGenerator generator = parser.parse( query );
 	if ( !generator.isValid( ) )
@@ -702,7 +704,12 @@ dex::vector< dex::index::indexChunk * > chunkPointers, size_t numChunksToConcurr
 	dex::vector< dex::ranker::scoreRequest > requests;
 	requests.resize( chunkPointers.size( ) );
 	bool errorReturned = false;
-	for ( size_t chunkBatch = 0;  chunkBatch < ( chunkPointers.size( ) / numChunksToConcurrentlyRank ) + 1;  ++chunkBatch )
+	size_t numBatches;
+	if ( chunkPointers.size( ) % numChunksToConcurrentlyRank == 0 )
+		numBatches = chunkPointers.size( ) / numChunksToConcurrentlyRank;
+	else
+		numBatches = ( chunkPointers.size( ) / numChunksToConcurrentlyRank ) + 1;
+	for ( size_t chunkBatch = 0;  chunkBatch < numBatches;  ++chunkBatch )
 		{
 		for ( size_t index = chunkBatch * numChunksToConcurrentlyRank;  index < ( chunkBatch + 1 ) * numChunksToConcurrentlyRank &&
 				index < chunkPointers.size( ) ;  ++index )
