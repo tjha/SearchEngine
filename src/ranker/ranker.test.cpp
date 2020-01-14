@@ -777,12 +777,12 @@ TEST_CASE( "Real Chunks" )
 		REQUIRE( results.first.size( ) == 2 );
 
 		query = "buy bonds";
-		results = dex::ranker::getTopN( 10, query, &rankerObject, pointers, 1, false );
+		results = dex::ranker::getTopN( 10, query, &rankerObject, pointers, 1, { }, false );
 		REQUIRE( results.second == 0 );
 		REQUIRE( results.first.size( ) == 2 );
 
 		query = "short the housing market";
-		results = dex::ranker::getTopN( 10, query, &rankerObject, pointers, 1 );
+		results = dex::ranker::getTopN( 10, query, &rankerObject, pointers, 1, { }, false );
 		REQUIRE( results.second == 0 );
 		REQUIRE( results.first.size( ) == 3 );
 
@@ -790,6 +790,16 @@ TEST_CASE( "Real Chunks" )
 		results = dex::ranker::getTopN( 10, query, &rankerObject, pointers, 2 );
 		REQUIRE( results.second == 0 );
 		REQUIRE( results.first.size( ) == 3 );
+
+		query = "short the housing market";
+		results = dex::ranker::getTopN( 10, query, &rankerObject, pointers, 2, { "goldman" }, false );
+		REQUIRE( results.second == 0 );
+		REQUIRE( results.first.size( ) == 1 );
+
+		query = "short the housing market";
+		results = dex::ranker::getTopN( 10, query, &rankerObject, pointers, 2, { "goldman", "hood.com" }, false );
+		REQUIRE( results.second == 0 );
+		REQUIRE( results.first.size( ) == 0 );
 		}
 
 	SECTION( "malformed query" )

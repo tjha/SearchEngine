@@ -1,7 +1,8 @@
 // ranker.cpp
 // This ranks the stuff
 
-// 2020-01-13: Add maximum number of chunks to concurrently rank to prevent thrashing: combsc
+// 2020-01-13: Add maximum number of chunks to concurrently rank to prevent thrashing
+//             add ability to blacklist domains from searches: combsc
 // 2020-01-12: done stuff in the past but I wasn't writing it down... finished implementing
 //             dynamic URL ranking.
 // 2020-01-02: Cleaned up memory usage when dealing with threads, fixed topN: combsc
@@ -685,8 +686,9 @@ dex::pair< dex::vector< dex::ranker::searchResult >, int > *dex::ranker::findAnd
 			( findAndScoreDocuments( static_cast< void * > ( request ) ) );
 	}
 
-dex::pair< dex::vector< dex::ranker::searchResult >, int > dex::ranker::getTopN( size_t n, dex::string query, dex::ranker::ranker *rankerPointer,
-dex::vector< dex::index::indexChunk * > chunkPointers, size_t numChunksToConcurrentlyRank, bool printInfo )
+dex::pair< dex::vector< dex::ranker::searchResult >, int > dex::ranker::getTopN( size_t n, dex::string query,
+		dex::ranker::ranker *rankerPointer, dex::vector< dex::index::indexChunk * > chunkPointers, size_t numChunksToConcurrentlyRank,
+		dex::vector< dex::string > blacklistedDomains, bool printInfo )
 	{
 	// Parse query passed in
 	if ( numChunksToConcurrentlyRank == 0 )
@@ -740,9 +742,16 @@ dex::vector< dex::index::indexChunk * > chunkPointers, size_t numChunksToConcurr
 			else
 				for ( size_t index = 0;  index < returnedResults->first.size( );  ++index )
 					{
-					dex::ranker::searchResult result = returnedResults->first[ index ];
-					results.pushBack( result );
-					scores.pushBack( result.score.getTotalScore( ) );
+					bool canAdd = true;
+					for ( dex::string blacklisted : blacklistedDomains )
+						if ( returnedResults->first[ index ].url.getHost( ).find( blacklisted ) != dex::string::npos )
+							canAdd = false;
+					if ( canAdd )
+						{
+						dex::ranker::searchResult result = returnedResults->first[ index ];
+						results.pushBack( result );
+						scores.pushBack( result.score.getTotalScore( ) );
+						}
 					}
 			delete returnedResults;
 			}
