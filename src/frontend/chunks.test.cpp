@@ -379,7 +379,7 @@ TEST_CASE( "ranker" )
 
 
 		dex::pair< dex::vector< dex::ranker::searchResult >, int > results = dex::ranker::getTopN( 2, "short the housing market",
-				&rankerObject, indexChunkPointers, false );
+				&rankerObject, indexChunkPointers );
 		REQUIRE( results.second == 0 );
 		}
 
@@ -462,7 +462,7 @@ TEST_CASE( "ranker" )
 
 		REQUIRE( indexChunkPointers.size( ) == 3 );
 		dex::pair< dex::vector< dex::ranker::searchResult >, int > results = dex::ranker::getTopN( 4, "and",
-				&rankerObject, indexChunkPointers, false );
+				&rankerObject, indexChunkPointers );
 		REQUIRE( results.second == 0 );
 		REQUIRE( results.first.size( ) == 4 );
 		for ( size_t i = 0;  i < results.first.size( ) - 1;  ++i )
@@ -474,7 +474,7 @@ TEST_CASE( "ranker" )
 		dex::ranker::ranker rankerObject;
 		dex::string query = "short market";
 		dex::pair< dex::vector< dex::ranker::searchResult >, int > results = dex::ranker::getTopN( 10, query,
-				&rankerObject, indexChunkPointers, false );
+				&rankerObject, indexChunkPointers );
 		// for ( size_t i = 0;  i < results.first.size( );  ++i )
 		// 	{
 		// 	std::cout << std::endl << results.first[ i ].title << std::endl << results.first[ i ].url.completeUrl( ) << std::endl;
