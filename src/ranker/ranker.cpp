@@ -704,6 +704,7 @@ dex::pair< dex::vector< dex::ranker::searchResult >, int > dex::ranker::getTopN(
 	dex::vector< dex::ranker::searchResult > results;
 	dex::vector< double > scores;
 	dex::vector< dex::ranker::scoreRequest > requests;
+	dex::unorderedSet< dex::string > urlsSeen;
 	requests.resize( chunkPointers.size( ) );
 	bool errorReturned = false;
 	size_t numBatches;
@@ -743,9 +744,16 @@ dex::pair< dex::vector< dex::ranker::searchResult >, int > dex::ranker::getTopN(
 				for ( size_t index = 0;  index < returnedResults->first.size( );  ++index )
 					{
 					bool canAdd = true;
+					dex::Url url = returnedResults->first[ index ].url;
+					// Check to see if domain was blacklisted
 					for ( dex::string blacklisted : blacklistedDomains )
-						if ( returnedResults->first[ index ].url.getHost( ).find( blacklisted ) != dex::string::npos )
+						if ( url.getHost( ).find( blacklisted ) != dex::string::npos )
 							canAdd = false;
+					// Check to see if we've seen this URL before.
+					if ( urlsSeen.find( url.completeUrl( ) ) != urlsSeen.end( ) )
+						canAdd = false;
+					else
+						urlsSeen.insert( url.completeUrl( ) );
 					if ( canAdd )
 						{
 						dex::ranker::searchResult result = returnedResults->first[ index ];
