@@ -3,8 +3,8 @@
 # jhirsh
 # restart the indexerDriver script
 
-batchName=~/someHtml/batch/
-outputFolder=~/indexChunks3/
+batchName=~/socket-html/html/
+outputFolder=~/indexChunks/
 
 # watch -n 30 "if ps -e | grep indexerDriver; then ./build/indexerDriver.exe \
 #	$batchName $outputFolder; fi \

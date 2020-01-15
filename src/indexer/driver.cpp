@@ -38,7 +38,8 @@ const string startPattern = "_forIndexer";
 const string intermediatePattern = "_processing";
 const string finishedPattern = "_processed";
 // TODO SET THIS VALUE TO SOMETHING LEGIT
-const size_t maxBytesToProcess = 1000000000000;
+const size_t maxBytesToProcess = 10000000000;
+// const size_t maxBytesToProcess = 100000000;
 
 int renameFile( const string &fileName, const string &patternStart, const string &patternEnd )
 	{
@@ -126,7 +127,7 @@ int createIndexChunk( vector< string > toProcess, size_t maxBytesToProcess, stri
 				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
 						parser.ReturnWords( ) ) )
 					{
-					// cout << "somehow failed to add a document into the index chunk" << endl;
+					cout << "somehow failed to add a document into the index chunk" << endl;
 					throw fileWriteException( );
 					}
 				++documentsProcessed;
@@ -146,11 +147,20 @@ int createIndexChunk( vector< string > toProcess, size_t maxBytesToProcess, stri
 					}
 				++totalDocumentsProcessed;
 				}
-			catch ( ... )
+			// catch ( ... )
+			catch ( dex::outOfRangeException e )
 				{
-				// cerr << "Skipping malformed html: " << url.completeUrl( ) << "\n";
+				cout << "Parser threw out of range exception\n";
 				continue;
 				}
+			catch ( fileWriteException )
+				{
+				// cerr << "Skipping malformed html: " << url.completeUrl( ) << "\n";
+				cout << "\tSkipping malformed html\n";
+				// cout << "\tSkipping malformed html\tpostsMetadataCount[" << initializingIndexChunk->dictionary.size( ) << "]\tpostsChunkCount[" << initializingIndexChunk->postsChunkCount << "]\n";
+				continue;
+				}
+			// std::cout << "Adding valid html document\n";
 			}
 		if ( renameFile( fileName, startPattern, intermediatePattern ) == -1 )
 			{
@@ -196,14 +206,18 @@ int main( int argc, char ** argv )
 		{
 		std::cout << "toProcess " << toProcess.size( ) << " documents _processing\n";
 		}
+	/*
 	try
 		{
 		createIndexChunk( toProcess, maxBytesToProcess, outputFolder );
 		}
 	catch ( ... )
 		{
+		cout << "Messed up in createIndexChunk\n";
 		return 1;
 		}
+	*/
+	createIndexChunk( toProcess, maxBytesToProcess, outputFolder );
 
 	if ( renameAll( batch, intermediatePattern, finishedPattern ) == -1 )
 			cerr << "Failed to rename processed html files" << endl;
