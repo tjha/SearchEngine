@@ -232,7 +232,7 @@ namespace dex
 		dex::pair< dex::vector< dex::ranker::searchResult >, int > getTopN(
 				size_t n, dex::string query, dex::ranker::ranker *rankerPointer,
 				dex::vector< dex::index::indexChunk * > chunkPointers, size_t numChunksToConcurrentlyRank = static_cast< size_t > ( -1 ),
-				bool printInfo = false );
+				dex::vector< dex::string > blacklistedDomains = { }, bool printInfo = false );
 		}
 	}
 
