@@ -38,8 +38,8 @@ const string startPattern = "_forIndexer";
 const string intermediatePattern = "_processing";
 const string finishedPattern = "_processed";
 // TODO SET THIS VALUE TO SOMETHING LEGIT
-const size_t maxBytesToProcess = 10000000000;
-// const size_t maxBytesToProcess = 100000000;
+// const size_t maxBytesToProcess = 10000000000;
+const size_t maxBytesToProcess = 400000000;
 
 int renameFile( const string &fileName, const string &patternStart, const string &patternEnd )
 	{
@@ -128,7 +128,10 @@ int createIndexChunk( vector< string > toProcess, size_t maxBytesToProcess, stri
 						parser.ReturnWords( ) ) )
 					{
 					cout << "somehow failed to add a document into the index chunk" << endl;
-					throw fileWriteException( );
+					cout << "postsMetadataCount[" << initializingIndexChunk->dictionary.size( ) << "]\tpostsChunkCount[" << *initializingIndexChunk->postsChunkCount << "]\tdocumentsCount[" << initializingIndexChunk->urlsToOffsets.size( ) << "]\n";
+					// This shouldn't be an exception - should close the indexChunk
+					index = toProcess.size( );
+					break;
 					}
 				++documentsProcessed;
 

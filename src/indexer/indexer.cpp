@@ -161,16 +161,25 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 
 	// Ensure we never add too many docs
 	if ( urlsToOffsets.size( ) >= maxURLCount )
+		{
+		std::cout << "Too many documents!!!\n";
 		return false;
+		}
 
 	dex::unorderedMap< dex::string, uint32_t > postsMetadataChanges( 2 * ( body.size( ) + title.size( ) ) );
 
 	uint32_t documentOffset = *location;
 	if ( !append( body.cbegin( ), body.cend( ), postsMetadataChanges ) )
+		{
+		std::cout << "Failed to add body!!!\n";
 		return false;
+		}
 	++( *location );
 	if ( !append( title.cbegin( ), title.cend( ), postsMetadataChanges, "#" ) )
+		{
+		std::cout << "Failed to add title!!!\n";
 		return false;
+		}
 
 	*maxLocation = *location;
 

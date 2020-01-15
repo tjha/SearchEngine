@@ -126,8 +126,8 @@ namespace dex
 				static const uint32_t maxURLLength = 1L << 10;
 				static const uint32_t maxTitleLength = 1 << 10;
 				static const uint32_t maxWordLength = 64;
-				static const uint32_t postsChunkArraySize = 1L << 17;
-				static const uint32_t postsMetadataArraySize = 1L << 17;
+				static const uint32_t postsChunkArraySize = 1L << 23;
+				static const uint32_t postsMetadataArraySize = 1L << 23;
 
 				// Note: these sizes should be such that they are block-aligned. The required offest for block alignment
 				// is surrounded by parentheses.
@@ -204,9 +204,16 @@ namespace dex
 						postsMetadata *wordMetadata = nullptr;
 						if ( !dictionary.count( decoratedWordToAdd ) && !newWords.count( decoratedWordToAdd ) )
 							{
-							if ( dictionary.size( ) + newWords.size( ) >= postsMetadataArraySize
-									|| *postsChunkCount >= postsChunkArraySize )
+							if ( dictionary.size( ) + newWords.size( ) >= postsMetadataArraySize )
+								{
+								std::cout << "Too many postsMetadata\n";
 								return false;
+								}
+							if ( *postsChunkCount >= postsChunkArraySize )
+								{
+								std::cout << "Too many postsChunks\n";
+								return false;
+								}
 
 							// Add a new postsMetaData.
 							uint32_t newWordIndex = dictionary.size( ) + newWords.size( );
@@ -231,7 +238,10 @@ namespace dex
 						while ( !wordMetadata->append( newLocation, postsChunkArray ) )
 							{
 							if ( *postsChunkCount >= postsChunkArraySize )
+								{
+								std::cout << "Cannot append to a postsChunk outside postsChunkArray\n";
 								return false;
+								}
 
 							postsChunkArray[ wordMetadata->lastPostsChunkOffset ].nextPostsChunkOffset = *postsChunkCount;
 							postsChunkArray[ *postsChunkCount ] = postsChunk( );
