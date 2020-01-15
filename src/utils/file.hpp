@@ -133,7 +133,7 @@ namespace dex
 		}
 
 	// Provides vector of all filenames within path that match end-pattern
-	vector< string > matchingFilenames( string dirPath, const string &pattern )
+	vector< string > matchingFilenames( const string &dirPath, const string &pattern )
 		{
 		// using vector as stack for DFS (pushBack and popBack)
 		vector< string > Frontier;

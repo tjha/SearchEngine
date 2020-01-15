@@ -30,12 +30,9 @@ dex::index::indexChunk::postsChunk::postsChunk( ) : nextPostsChunkOffset( 0 ), c
 
 bool dex::index::indexChunk::postsChunk::append( uint32_t delta )
 	{
-	// We're "full" if we can't insert a "widest" UTF-8 character. Write a sentinel instead.
-	if ( currentPostOffset + 8 > postsChunkSize )
-		{
-		posts[ currentPostOffset ] = dex::utf::sentinel;
+	// We're "full" if we can't insert a "widest" UTF-8 character (estimated 8 characters, to be safe) and a sentinel.
+	if ( currentPostOffset + 9 >= postsChunkSize )
 		return false;
-		}
 
 	currentPostOffset = dex::utf::encoder< uint32_t >( )( delta, posts + currentPostOffset ) - posts;
 	posts[ currentPostOffset ] = dex::utf::sentinel;
@@ -46,9 +43,7 @@ bool dex::index::indexChunk::postsChunk::append( uint32_t delta )
 // postMetadata
 dex::index::indexChunk::postsMetadata::postsMetadata( uint32_t chunkOffset ) :
 		occurenceCount( 0 ), documentCount( 0 ), firstPostsChunkOffset( chunkOffset ),
-		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ), synchronizationPoints( )
-	{
-	}
+		lastPostsChunkOffset( chunkOffset ), lastLocation( 0 ), synchronizationPoints( ) { }
 
 bool dex::index::indexChunk::postsMetadata::append( uint32_t location, postsChunk *postsChunkArray )
 	{
@@ -58,15 +53,16 @@ bool dex::index::indexChunk::postsMetadata::append( uint32_t location, postsChun
 
 	if ( successful )
 		{
-		// The first 8 bits of the 31-bit location determine our synchronization point. We only update the table if we
+		// The first 11 bits of the 31-bit location determine our synchronization point. We only update the table if we
 		// haven't been "this high" before.
 		for ( synchronizationPoint *syncPoint = synchronizationPoints + ( location >> 20 );
 				syncPoint >= synchronizationPoints && ~syncPoint->inverseLocation == syncPoint->npos;  --syncPoint )
-			{
-			syncPoint->postsChunkArrayOffset = lastPostsChunkOffset;
-			syncPoint->postsChunkOffset = originalPostOffset;
-			syncPoint->inverseLocation = ~lastLocation;
-			}
+			*syncPoint = synchronizationPoint
+				{
+				lastPostsChunkOffset,
+				originalPostOffset,
+				~lastLocation
+				};
 
 		lastLocation = location;
 		}
@@ -88,6 +84,11 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 		result = write( fileDescriptor, "", 1 );
 		if ( result == -1 )
 			throw dex::exception( );
+		initializing = true;
+		}
+	else
+		{
+		initializing = false;
 		}
 
 	filePointer = mmap( nullptr, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0 );
@@ -104,7 +105,7 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 	encodedOffsetsToEndOfDocumentMetadatas = reinterpret_cast< byte * >( filePointer )
 			+ offsetsToEndOfDocumentMetadatasMemoryOffset;
 
-	encodedDictionary = reinterpret_cast< byte * >( filePointer ) + dictionaryOffset;
+	encodedDictionary = reinterpret_cast< byte * >( filePointer ) + dictionaryMemoryOffset;
 
 	postsMetadataArray = reinterpret_cast< postsMetadata * >(
 			reinterpret_cast< byte * >( filePointer ) + postsMetadataArrayMemoryOffset );
@@ -136,10 +137,13 @@ dex::index::indexChunk::indexChunk( int fileDescriptor, bool initialize )
 
 dex::index::indexChunk::~indexChunk( )
 	{
-	dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( urlsToOffsets, encodedURLsToOffsets );
-	dex::utf::encoder< dex::unorderedMap< uint32_t, endOfDocumentMetadataType > >( )
-			( offsetsToEndOfDocumentMetadatas, encodedOffsetsToEndOfDocumentMetadatas );
-	dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( dictionary, encodedDictionary );
+	if ( initializing )
+		{
+		dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( urlsToOffsets, encodedURLsToOffsets );
+		dex::utf::encoder< dex::unorderedMap< uint32_t, endOfDocumentMetadataType > >( )
+				( offsetsToEndOfDocumentMetadatas, encodedOffsetsToEndOfDocumentMetadatas );
+		dex::utf::encoder< dex::unorderedMap< dex::string, uint32_t > >( )( dictionary, encodedDictionary );
+		}
 
 	msync( filePointer, fileSize, MS_SYNC );
 	munmap( filePointer, fileSize );
@@ -148,17 +152,34 @@ dex::index::indexChunk::~indexChunk( )
 bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vector< dex::string > &title,
 		const dex::string &titleString, const dex::vector< dex::string > &body )
 	{
+	if ( !initializing )
+		throw dex::exception( );
+
+	// Ignore documents that have long URLs or titles
 	if ( url.size( ) > maxURLLength || titleString.size( ) > maxTitleLength )
 		return true;
 
-	dex::unorderedMap< dex::string, uint32_t > postsMetadataChanges;
+	// Ensure we never add too many docs
+	if ( urlsToOffsets.size( ) >= maxURLCount )
+		{
+		std::cout << "Too many documents!!!\n";
+		return false;
+		}
+
+	dex::unorderedMap< dex::string, uint32_t > postsMetadataChanges( 2 * ( body.size( ) + title.size( ) ) );
 
 	uint32_t documentOffset = *location;
 	if ( !append( body.cbegin( ), body.cend( ), postsMetadataChanges ) )
+		{
+		std::cout << "Failed to add body!!!\n";
 		return false;
+		}
 	++( *location );
 	if ( !append( title.cbegin( ), title.cend( ), postsMetadataChanges, "#" ) )
+		{
+		std::cout << "Failed to add title!!!\n";
 		return false;
+		}
 
 	*maxLocation = *location;
 
@@ -166,7 +187,7 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 
 	// Update the count of how many documents each word appears in.
 	for ( dex::unorderedMap< dex::string, uint32_t >::constIterator it = postsMetadataChanges.cbegin( );
-			it != postsMetadataChanges.cend( );  ++postsMetadataArray[ dictionary[ ( it++ )->first ] ].documentCount )
+			it != postsMetadataChanges.cend( );  ++it )
 		{
 		postsMetadata &datum = postsMetadataArray[ dictionary[ it->first ] ];
 		++datum.documentCount;
@@ -181,8 +202,10 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 		titleString,
 		};
 
-	postsMetadataArray[ 0 ].append( ( *location )++, postsChunkArray );
+	// Add end of document
+	postsMetadataArray[ 0 ].append( *location, postsChunkArray );
 	++postsMetadataArray[ 0 ].occurenceCount;
+	++( *location );
 
 	return true;
 	}
@@ -190,9 +213,7 @@ bool dex::index::indexChunk::addDocument( const dex::string &url, const dex::vec
 void dex::index::indexChunk::printDictionary( )
 	{
 	for ( auto it = dictionary.cbegin( );  it != dictionary.cend( );  ++it )
-		{
 		std::cout << it->first << std::endl;
-		}
 	}
 
 dex::index::indexChunk::indexStreamReader::indexStreamReader(

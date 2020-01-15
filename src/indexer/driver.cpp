@@ -1,7 +1,7 @@
 // Index Driver process html files into index chunks
 //
 // 2019-12-11:	edited to call correct functions to index and use lexicoComp: jhirsh, loghead
-//             brought in dex::matchingFilenames, write statistics: combsc
+//             brought in matchingFilenames, write statistics: combsc
 // 2019-12-10:	edits to attach to indexer.hpp functions: combsc, loghead
 // 2019-12-08:	created index driver to read through directory: jhirsh
 //
@@ -18,144 +18,212 @@
 #include "utils/utf.hpp"
 #include "utils/vector.hpp"
 
-using dex::string;
-using dex::vector;
+using namespace dex;
+using std::cerr;
+using std::cout;
+using std::endl;
 
-int openFile( int indexChunkCount, dex::string outputFolder )
+int openFile( int indexChunkCount, string outputFolder )
 	{
-	std::cout << "outputFolder = " << outputFolder << std::endl <<
-			"toString = " << dex::toString( indexChunkCount ) << std::endl;
-	outputFolder += dex::toString( indexChunkCount );
+	cout << "outputFolder = " << outputFolder << endl << "toString = " << toString( indexChunkCount ) << endl;
+	outputFolder += toString( indexChunkCount );
 	outputFolder += "_in.dex";
 	const char * filePath = outputFolder.cStr( );
-	std::cout << "filePath " << filePath << std::endl;
-	return open( filePath, O_RDWR | O_CREAT, 0777 );
+	cout << "filePath " << filePath << endl;
+	return open( filePath, O_RDWR | O_CREAT | O_TRUNC, 0777 );
 	}
 
-int main ( int argc, char ** argv )
+const string indexChunkPattern = ".dex";
+const string startPattern = "_forIndexer";
+const string intermediatePattern = "_processing";
+const string finishedPattern = "_processed";
+// TODO SET THIS VALUE TO SOMETHING LEGIT
+// const size_t maxBytesToProcess = 10000000000;
+const size_t maxBytesToProcess = 400000000;
+
+int renameFile( const string &fileName, const string &patternStart, const string &patternEnd )
+	{
+	string newFilename( fileName );
+	newFilename.replace( newFilename.cend( ) - patternStart.size( ) + 1, newFilename.cend( ),
+			patternEnd.cbegin( ), patternEnd.cend( ) );
+	int renamed = rename( fileName.cStr( ) , newFilename.cStr( ) );
+	if ( renamed == -1 )
+		{
+		cerr << "Failed to rename " + fileName << endl;
+		return -1;
+		}
+	return 0;
+	}
+
+int renameAll( const string &dirPath, const string &patternStart, const string &patternEnd )
+	{
+	vector< string > matches = matchingFilenames( dirPath, patternStart );
+	for ( size_t i = 0;  i < matches.size( );  ++i )
+		if ( renameFile( string( matches[ i ] ), patternStart, patternEnd ) == -1 )
+			return -1;
+	return 0;
+	}
+
+int createIndexChunk( vector< string > toProcess, size_t maxBytesToProcess, string outputFolder )
+	{
+	// Setup statistics file
+	unsigned documentsProcessed = 0;
+	const unsigned checkpoint = 100;
+	time_t start = time( nullptr );
+	int statisticsFileDescriptor = open( ( outputFolder + "statistics.txt").cStr( ), O_RDWR | O_CREAT, 0777 );
+
+	if ( statisticsFileDescriptor == -1 )
+		{
+		std::cerr << "Could not open statistics file: " << outputFolder + "statistics.txt" << std::endl;
+		throw fileOpenException( );
+		}
+
+	// declare variables needed
+	size_t totalDocumentsProcessed = 0;
+	size_t totalBytesProcessed = 0;
+	utf::decoder< string > stringDecoder;
+
+	// initialize index chunk
+	vector< string > existingIndexChunks = matchingFilenames( outputFolder, indexChunkPattern );
+	int indexChunkCount = existingIndexChunks.size( );
+	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
+	index::indexChunk *initializingIndexChunk = new index::indexChunk( fileDescriptor );
+
+	for ( unsigned index = 1;  index < toProcess.size( );  ++index )
+		{
+		string fileName = toProcess[ index ];
+		// If adding this file would make our index chunk too large, break out of the for loop we're done here.
+		size_t filesize = getFileSize( fileName.cStr( ) );
+		if ( filesize + totalBytesProcessed >= maxBytesToProcess )
+			{
+			std::cout << "Too many bytes processed by indexerDriver\n";
+			std::cout << "\tfilesize[" << filesize << "]\n";
+			break;
+			}
+
+		cout << "About to read file: " << fileName << "\n";
+		// Decode the current file
+		unsigned char *savedHtml = reinterpret_cast< unsigned char * >( readFromFile( fileName.cStr( ), 0 ) );
+		unsigned char *ptr = savedHtml;
+
+		// Iterate through the documents in our html file
+		while ( static_cast< size_t >( ptr - savedHtml ) < filesize )
+			{
+			// retrieve the saved url + html pair
+			Url url = Url( stringDecoder( ptr, &ptr ).cStr( ) );
+			string html = stringDecoder( ptr, &ptr );
+			try
+				{
+				HTMLparser parser( url, html, true );
+
+				string titleString;
+				titleString.reserve( 25 );
+				for ( auto &titleWord : parser.ReturnTitle( ) )
+					titleString += ( titleWord + " " );
+
+				// Attempt to add this section of our html file into the index chunk
+				// The constants should be large enough such that we can fit maxBytesToProcess in
+				// before the index chunk fills up
+				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
+						parser.ReturnWords( ) ) )
+					{
+					cout << "somehow failed to add a document into the index chunk" << endl;
+					cout << "postsMetadataCount[" << initializingIndexChunk->dictionary.size( ) << "]\tpostsChunkCount[" << *initializingIndexChunk->postsChunkCount << "]\tdocumentsCount[" << initializingIndexChunk->urlsToOffsets.size( ) << "]\n";
+					// This shouldn't be an exception - should close the indexChunk
+					index = toProcess.size( );
+					break;
+					}
+				++documentsProcessed;
+
+				if ( documentsProcessed % checkpoint == 0 )
+					{
+					string toWrite = toString( documentsProcessed ) + " documents processed in " +
+										toString( time( nullptr ) - start ) + " seconds\n";
+					int error = write( statisticsFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
+					if ( error == -1 )
+						{
+						cerr << "Failed to write to statistics file " << endl;
+						throw fileWriteException( );
+						}
+					documentsProcessed = 0;
+					start = time( nullptr );
+					}
+				++totalDocumentsProcessed;
+				}
+			// catch ( ... )
+			catch ( dex::outOfRangeException e )
+				{
+				cout << "Parser threw out of range exception\n";
+				continue;
+				}
+			catch ( fileWriteException )
+				{
+				// cerr << "Skipping malformed html: " << url.completeUrl( ) << "\n";
+				cout << "\tSkipping malformed html\n";
+				// cout << "\tSkipping malformed html\tpostsMetadataCount[" << initializingIndexChunk->dictionary.size( ) << "]\tpostsChunkCount[" << initializingIndexChunk->postsChunkCount << "]\n";
+				continue;
+				}
+			// std::cout << "Adding valid html document\n";
+			}
+		if ( renameFile( fileName, startPattern, intermediatePattern ) == -1 )
+			{
+			cerr << "Failed to rename " << fileName << endl;
+			throw fileWriteException( );
+			}
+		totalBytesProcessed += filesize;
+		cout << "processed " + fileName << endl;
+		cout << "total documents processed = " << totalDocumentsProcessed << endl << "total bytes processed = "
+				<< totalBytesProcessed << endl;
+		}
+
+	close( fileDescriptor );
+	delete initializingIndexChunk;
+	return 0;
+	}
+
+int main( int argc, char ** argv )
 	{
 	if ( argc != 3 )
 		{
-		std::cerr << "Usage ./build/indexer.exe <batch-name> <chunk-output-folder>";
-		exit( 1 );
+		cerr << "Usage ./build/indexer.exe <batch-name> <chunk-output-folder>";
+		return 1;
 		}
 
 	string batch = argv[ 1 ];
 	string outputFolder = argv[ 2 ];
 	if ( outputFolder.back( ) != '/' )
-		{
 		outputFolder.pushBack( '/' );
-		}
-	//dex::makeDirectory( outputFolder.cStr( ) );
-	dex::vector< dex::string > toProcess;
-	toProcess = dex::matchingFilenames( batch, "_forIndexer" );
-	dex::vector< dex::string > toDelete;
-	toDelete = dex::matchingFilenames( batch, "_processed" );
-	for ( int index = 0;  index < toDelete.size( );  index++ )
+	//makeDirectory( outputFolder.cStr( ) );
+	vector< string > toProcess;
+	// Check to see if there was a crash on the previous run
+	// If there was a crash, the files we pass in to use are the previous files that were
+	// successfully processed before the driver crashed
+	toProcess = matchingFilenames( batch, intermediatePattern );
+	if ( toProcess.size( ) == 0 )
 		{
-		if ( remove( toDelete[ index ].cStr( ) ) != 0 )
-			std::cout << "error deleting " << toDelete[ index ] << "\n";
+		// Otherwise we use new files for this index chunk
+		toProcess = matchingFilenames( batch, startPattern );
+		std::cout << "toProcess " << toProcess.size( ) << " documents _forIndexer\n";
 		}
-
-	dex::utf::decoder< dex::string > stringDecoder;
-	dex::vector< dex::string > existingIndexChunks = dex::matchingFilenames( outputFolder, "_in.dex");
-	int indexChunkCount = existingIndexChunks.size( );
-	int fileDescriptor = openFile( indexChunkCount++, outputFolder );
-	dex::index::indexChunk *initializingIndexChunk = new dex::index::indexChunk( fileDescriptor );
-
-
-	unsigned documentsProcessed = 0;
-	unsigned checkpoint = 100;
-	time_t start = time( nullptr );
-	int statisticsFileDescriptor = open( ( outputFolder + "statistics.txt").cStr( ), O_RDWR | O_CREAT, 0777 );
-	size_t totalDocumentsProcessed = 0;
-	size_t totalBytesProcessed = 0;
-	for ( unsigned index = 0;  index < toProcess.size( );  ++index )
+	else
 		{
-		dex::string fileName = toProcess[ index ];
-		// Decode the current file
-
-		std::cout << "About to read file: " << fileName << "\n";
-		// Decode the current file
-		unsigned char *savedHtml = reinterpret_cast< unsigned char * >( dex::readFromFile( fileName.cStr( ), 0 ) );
-		unsigned char *ptr = savedHtml;
-		size_t filesize = dex::getFileSize( fileName.cStr( ) );
-		while ( static_cast< size_t >( ptr - savedHtml ) < filesize )
-			{
-			// retrieve the saved url + html pair
-			dex::Url url = dex::Url( stringDecoder( ptr, &ptr ).cStr( ) );
-			dex::string html = stringDecoder( ptr, &ptr );
-			// std::cout << "HTML: \n " << html << "\n";
-			try
-				{
-				// std::cout << "\tAbout to add url: " << url.completeUrl( ) << "\n";
-				dex::HTMLparser parser( url, html, true );
-
-				dex::string titleString;
-				titleString.reserve( 25 );
-				for ( auto &titleWord: parser.ReturnTitle( ) )
-					{
-					titleString += ( titleWord + " " );
-					}
-
-				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
-						parser.ReturnWords( ) ) )
-					{
-					toDelete = dex::matchingFilenames( batch, "_processed" );
-					for ( int index = 0;  index < toDelete.size( );  index++ )
-						{
-						if ( remove( toDelete[ index ].cStr( ) ) != 0 )
-							std::cout << "error deleting " << toDelete[ index ] << "\n";
-						}
-					close( fileDescriptor );
-					fileDescriptor = openFile( indexChunkCount++, outputFolder );
-					delete initializingIndexChunk;
-					initializingIndexChunk = new dex::index::indexChunk( fileDescriptor );
-					}
-				if ( !initializingIndexChunk->addDocument( url.completeUrl( ), parser.ReturnTitle( ), titleString,
-						parser.ReturnWords( ) ) )
-					{
-					throw dex::fileWriteException( );
-					}
-				documentsProcessed++;
-				if ( documentsProcessed % checkpoint == 0 )
-					{
-					dex::string toWrite = dex::toString( documentsProcessed ) + " documents processed in " +
-										dex::toString( time( nullptr ) - start ) + " seconds\n";
-					int error = write( statisticsFileDescriptor, toWrite.cStr( ), toWrite.size( ) );
-					if ( error == -1 )
-						{
-						std::cout << "Failed to write to statistics file " << std::endl;
-						throw dex::fileWriteException( );
-						}
-					documentsProcessed = 0;
-					start = time( nullptr );
-					}
-				totalDocumentsProcessed++;
-				}
-			catch ( ... )
-				{
-				// std::cout << "Skipping malformed html: " << url.completeUrl( ) << "\n";
-				continue;
-				}
-			}
-		totalBytesProcessed += filesize;
-		std::cout << "processed " + fileName << std::endl;
-		std::cout << "total documents processed = " << totalDocumentsProcessed << std::endl << "total bytes processed = "
-				<< totalBytesProcessed << std::endl;
-		string newFilename( fileName );
-		newFilename.erase( newFilename.end( ) - sizeof( "forIndexer" ) + 1 );
-		newFilename += "processed";
-		int renamed = rename( fileName.cStr( ) , ( newFilename ).cStr( ) );
-		if ( renamed == -1 )
-			{
-			std::cout << "Failed to rename " + fileName << std::endl;
-			throw dex::fileWriteException( );
-			}
-		close( fileDescriptor );
+		std::cout << "toProcess " << toProcess.size( ) << " documents _processing\n";
 		}
+	/*
+	try
+		{
+		createIndexChunk( toProcess, maxBytesToProcess, outputFolder );
+		}
+	catch ( ... )
+		{
+		cout << "Messed up in createIndexChunk\n";
+		return 1;
+		}
+	*/
+	createIndexChunk( toProcess, maxBytesToProcess, outputFolder );
 
+	if ( renameAll( batch, intermediatePattern, finishedPattern ) == -1 )
+			cerr << "Failed to rename processed html files" << endl;
+	std::cout << "Finished processing all HTML\n";
+	return 0;
 	}
-
-
-

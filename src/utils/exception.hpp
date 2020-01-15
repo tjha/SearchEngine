@@ -41,6 +41,15 @@ namespace dex
 				}
 		};
 
+	class fileOpenException : public exception
+		{
+		public:
+			virtual const char *what( )
+				{
+				return "File Open Exception";
+				}
+		};
+
 	class fileWriteException : public exception
 		{
 		public:
